@@ -1,0 +1,4 @@
+FROM fuzzyhash-worker
+
+#WORKDIR /var/www/
+#COPY ./ /var/www/

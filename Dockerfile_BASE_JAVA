@@ -1,0 +1,7 @@
+FROM openjdk:8-jdk-slim-buster as firmwaredroid-base-java
+
+COPY --from=firmwaredroid-base / /
+
+WORKDIR /var/www/
+COPY . /var/www/
+

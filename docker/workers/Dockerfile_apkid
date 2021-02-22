@@ -1,0 +1,7 @@
+FROM apkid-worker
+
+#WORKDIR /var/www/
+#COPY ./ /var/www/
+
+
+

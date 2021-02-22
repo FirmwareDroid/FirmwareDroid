@@ -1,0 +1,4 @@
+FROM firmwaredroid-base as quark_engine-worker
+
+RUN pip install git+git://github.com/quark-engine/quark-engine.git
+RUN pip install -r ./requirements/requirements_quark_engine.txt

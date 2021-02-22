@@ -1,0 +1,192 @@
+[
+  {
+    "application_information": [
+      [
+        "application_name",
+        [
+          "Nexus 6P Home Screen"
+        ]
+      ],
+      [
+        "application_version",
+        [
+          "6.0-2294819"
+        ]
+      ],
+      [
+        "package_name",
+        [
+          "com.google.android.launcher.layouts.angler"
+        ]
+      ],
+      [
+        "description",
+        [
+          "N/A",
+          "N/A"
+        ]
+      ]
+    ]
+  },
+  {
+    "analysis_results": [
+      [
+        "telephony_identifiers_leakage",
+        []
+      ],
+      [
+        "device_settings_harvesting",
+        []
+      ],
+      [
+        "location_lookup",
+        []
+      ],
+      [
+        "connection_interfaces_exfiltration",
+        []
+      ],
+      [
+        "telephony_services_abuse",
+        []
+      ],
+      [
+        "audio_video_eavesdropping",
+        []
+      ],
+      [
+        "suspicious_connection_establishment",
+        []
+      ],
+      [
+        "PIM_data_leakage",
+        []
+      ],
+      [
+        "code_execution",
+        []
+      ]
+    ]
+  },
+  {
+    "apk_file": [
+      [
+        "file_name",
+        [
+          "AnglerLayout.apk"
+        ]
+      ],
+      [
+        "fingerprint",
+        [
+          "MD5: dc1a2afdda3ef406e3b4d3e43518fe79",
+          "SHA-1: 699754d489e0a401d720d6ba89953ed94672be68",
+          "SHA-256: 13c6ce436b4e6f98e39c42ad7c4f8ff0366ddaff99dc42caa3ab2f340f2eb469"
+        ]
+      ],
+      [
+        "file_list",
+        [
+          "AndroidManifest.xml",
+          "res/xml/partner_default_layout.xml",
+          "resources.arsc",
+          "META-INF/MANIFEST.MF",
+          "META-INF/CERT.SF",
+          "META-INF/CERT.RSA"
+        ]
+      ],
+      [
+        "certificate_information",
+        [
+          "APK is signed: Truen",
+          "Certificate #0",
+          "Issuer:",
+          "Common Name: Android, Organizational Unit: Android, Organization: Google Inc., Locality: Mountain View, State/Province: California, Country: US",
+          "Subject:",
+          "Common Name: Android, Organizational Unit: Android, Organization: Google Inc., Locality: Mountain View, State/Province: California, Country: US",
+          "Serial number: 12910758416476043154",
+          "Hash algorithm: sha1",
+          "Signature algorithm: rsassa_pkcs1v15",
+          "SHA-1 thumbprint: fb3d459b0ff5afeadaf1c975d004e1c5f2a519f9",
+          "SHA-256 thumbprint: 54111602892ebfe31d076ef1eaa2164d7dcab919a68a4da4f63a3d1cc4dbe201",
+          ""
+        ]
+      ]
+    ]
+  },
+  {
+    "androidmanifest.xml": [
+      [
+        "main_activity",
+        [
+          null
+        ]
+      ],
+      [
+        "sdk_versions",
+        [
+          "Declared target SDK: 23",
+          "Effective target SDK: 23",
+          "Min SDK: 23",
+          "Max SDK: None"
+        ]
+      ],
+      [
+        "activities",
+        []
+      ],
+      [
+        "services",
+        []
+      ],
+      [
+        "receivers",
+        [
+          "com.google.android.launcher.layouts.angler..PartnerCustomizationReceiver"
+        ]
+      ],
+      [
+        "providers",
+        []
+      ],
+      [
+        "permissions",
+        [
+          "Asked: []",
+          "Implied: []",
+          "Declared: []"
+        ]
+      ],
+      [
+        "features",
+        []
+      ],
+      [
+        "libraries",
+        []
+      ]
+    ]
+  },
+  {
+    "apis_used": [
+      [
+        "classes_list",
+        []
+      ],
+      [
+        "internal_classes_list",
+        []
+      ],
+      [
+        "classes_hierarchy",
+        []
+      ],
+      [
+        "intents_sent",
+        []
+      ]
+    ]
+  }
+]
+
+

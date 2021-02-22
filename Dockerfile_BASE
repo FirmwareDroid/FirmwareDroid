@@ -1,0 +1,38 @@
+########################################################
+# Firmwaredroid docker core                            #
+# Base dependency for all docker workers               #
+########################################################
+FROM python:3.8-buster as firmwaredroid-base
+
+########################################################
+# Apt installation                                     #
+########################################################
+RUN apt-get update -y && \
+    apt-get -y install --no-install-recommends apt-utils && \
+    apt-get -y install liblzo2-dev
+
+
+########################################################
+# Code and User generation                             #
+########################################################
+ENV GROUP_ID=1000 \
+    USER_ID=1000
+
+# Copy code source and install requirements
+WORKDIR /var/www/
+COPY . /var/www/
+
+########################################################
+# Python requirements                                  #
+########################################################
+RUN /usr/local/bin/python -m pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+
+# Add local user
+RUN groupadd -r www -g $GROUP_ID
+RUN useradd -r -g $GROUP_ID -u $USER_ID www -s /bin/sh
+#TODO CHANGE USER HERE AS SOON AS WE HAVE UNIT-TESTS
+#USER www
+
+

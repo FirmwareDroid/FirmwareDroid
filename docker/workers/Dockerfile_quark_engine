@@ -1,0 +1,4 @@
+FROM quark_engine-worker
+
+#WORKDIR /var/www/
+#COPY ./ /var/www/

@@ -1,0 +1,3 @@
+FROM firmwaredroid-base-java as qark-worker
+
+RUN pip install -r ./requirements/requirements_qark.txt

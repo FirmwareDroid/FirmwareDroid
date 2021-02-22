@@ -1,0 +1,4 @@
+FROM firmwaredroid-base as exodus-worker
+RUN apt-get -y install dexdump
+RUN pip install -r ./requirements/requirements_exodus.txt
+

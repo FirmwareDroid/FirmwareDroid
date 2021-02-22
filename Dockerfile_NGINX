@@ -1,0 +1,3 @@
+FROM nginx:1.18-alpine
+COPY --from=firmwaredroid-frontend /usr/src/app/build /usr/share/nginx/build
+CMD ["nginx", "-g", "daemon off;"]

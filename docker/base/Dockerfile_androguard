@@ -1,0 +1,2 @@
+FROM firmwaredroid-base as androguard-worker
+RUN pip install -r ./requirements/requirements_androguard.txt

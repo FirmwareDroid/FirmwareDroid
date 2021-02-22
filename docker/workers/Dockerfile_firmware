@@ -1,0 +1,4 @@
+FROM firmware-worker
+
+#WORKDIR /var/www/
+#COPY ./ /var/www/

@@ -1,0 +1,2 @@
+FROM firmwaredroid-base as androwarn-worker
+RUN pip install -r ./requirements/requirements_androwarn.txt

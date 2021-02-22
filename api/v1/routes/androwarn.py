@@ -1,0 +1,61 @@
+import flask
+from flask import request, jsonify
+from flask_restx import Api, Resource
+from api.v1.common.rq_job_creator import enqueue_jobs
+from api.v1.model.serializers import object_id_list
+from api.v1.parser.request_util import check_app_mode
+from scripts.auth.basic_auth import requires_basic_authorization
+from model import AndrowarnReport
+from scripts.static_analysis.Androwarn.androwarn_wrapper import start_androwarn_analysis
+
+api = Api()
+ns = api.namespace('androwarn',
+                   description='Operations related to analyze Android apps with the Androwarn tool.',
+                   prefix='androwarn')
+
+
+@ns.route('/<int:mode>')
+@ns.expect(object_id_list)
+class CreateAndrowarnReport(Resource):
+    @ns.doc('post')
+    @requires_basic_authorization
+    def post(self, mode):
+        """
+        Analysis apps with androwarn.
+        :param mode: If mode = 1 all apps in the database will be used for the report instead of the given json.
+        :return: job-id of the rq worker.
+        """
+        app = flask.current_app
+        android_app_id_list = check_app_mode(mode, request)
+        enqueue_jobs(app.rq_task_queue_androwarn, start_androwarn_analysis, android_app_id_list)
+        return "", 200
+
+
+@ns.route('/<string:androwarn_id>')
+class GetAndrowarnReport(Resource):
+    @ns.doc("get")
+    @requires_basic_authorization
+    def get(self, androwarn_id):
+        """
+        Gets the json report of an androwarn report.
+        :param androwarn_id: the Object-Id of the report.
+        :return:
+        """
+        response = {}
+        androwarn_report = AndrowarnReport.objects.get(pk=androwarn_id)
+        json = androwarn_report.report_file_json.read()
+        if json:
+            response = json.decode('utf-8')
+        return jsonify(response)
+
+
+@ns.route('/count/')
+class AndrowarnReportCount(Resource):
+    @ns.doc('get')
+    @requires_basic_authorization
+    def get(self):
+        """
+        Gets the number of Androwarn reports in the database.
+        :return: int - count of Androwarn reports
+        """
+        return AndrowarnReport.objects.count()

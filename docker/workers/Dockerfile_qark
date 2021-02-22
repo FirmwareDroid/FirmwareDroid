@@ -1,0 +1,4 @@
+FROM qark-worker
+
+#WORKDIR /var/www/
+#COPY ./ /var/www/

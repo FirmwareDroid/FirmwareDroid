@@ -1,0 +1,2 @@
+FROM firmwaredroid-base as virustotal-worker
+RUN pip install -r ./requirements/requirements_virustotal.txt

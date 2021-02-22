@@ -1,0 +1,32 @@
+{
+  "apkid_version": "2.1.0",
+  "rules_sha256": "483054ecc92cf199d8c84057c54b6d6fce8fef9b173a855a9075dd27d32b7b8b",
+  "files": [
+    {
+      "filename": "/Volumes/TomsBackupHub/00_file_storage/app_extract/7d1af2730028c28d2092171d6bb07099/app/Quickoffice.apk",
+      "matches": {
+        "file_type": [
+          "APK"
+        ]
+      }
+    },
+    {
+      "filename": "/Volumes/TomsBackupHub/00_file_storage/app_extract/7d1af2730028c28d2092171d6bb07099/app/Quickoffice.apk!classes.dex",
+      "matches": {
+        "file_type": [
+          "DEX"
+        ],
+        "anti_vm": [
+          "Build.BOARD check",
+          "subscriber ID check"
+        ],
+        "anti_disassembly": [
+          "illegal class name"
+        ],
+        "compiler": [
+          "dx"
+        ]
+      }
+    }
+  ]
+}

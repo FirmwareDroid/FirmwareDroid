@@ -1,0 +1,23 @@
+# root files
+.gitignore
+.gitmodules
+.travis.yml
+.gitlab-ci.yml
+docker-compose.yml
+LICENSE
+README.md
+
+# folders
+venv
+.idea
+__pycache__
+firmware-droid-client/build/*
+firmware-droid-client/.idea/*
+firmware-droid-client/node_modules/*
+mongodb_data/*
+
+# files
+00_file_storage/app_extract/*
+00_file_storage/import_failed/*
+00_file_storage/import/*
+00_file_storage/store/*
