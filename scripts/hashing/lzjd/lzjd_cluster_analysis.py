@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scripts.hashing.fuzzy_hash_common import get_fuzzy_hash_documents_by_regex, filter_fuzzy_hash_documents_by_firmware
 from model import LzjdHash
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 
 
 def start_cluster_analysis(regex_filter, firmware_id_list):

@@ -1,0 +1,102 @@
+version: '3'
+services:
+  web:
+    build: .
+    container_name: flask-web
+    working_dir: /var/www
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    expose:
+      - "5000"
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    depends_on:
+      - database
+      - redis
+    networks:
+      - backend
+      - frontend
+
+  database:
+    image: mongo:4.2.8-bionic
+    container_name: mongo-db
+    restart: unless-stopped
+    command: mongod --auth
+    env_file:
+      - ./.env
+    ports:
+      - "27017:27017"
+    volumes:
+      - ${LOCAL_DB_PATH}:/data/db
+      - $PWD/env/mongo/:/docker-entrypoint-initdb.d/
+    networks:
+      - backend
+
+  firmware-worker-default-2:
+    build:
+      context: .
+      dockerfile: ./docker/workers/Dockerfile_firmware
+    container_name: firmware-worker-default-2
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name firmware-worker-default-2 --url redis://redis:6379/ default
+    networks:
+      - backend
+
+  fuzzyhash-worker-2:
+    build:
+      context: .
+      dockerfile: ./docker/workers/Dockerfile_fuzzyhash
+    container_name: fuzzyhash-worker-2
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - firmware-worker
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - ./.env
+    command: rqworker --name fuzzyhash-worker-2 --url redis://redis:6379/ fuzzyhash
+    networks:
+      - backend
+    privileged: true
+
+  fuzzyhash-worker-3:
+    build:
+      context: .
+      dockerfile: ./docker/workers/Dockerfile_fuzzyhash
+    container_name: fuzzyhash-worker-3
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - firmware-worker
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - ./.env
+    command: rqworker --name fuzzyhash-worker-3 --url redis://redis:6379/ fuzzyhash
+    networks:
+      - backend
+    privileged: true
+
+#  certbot:
+#    image: certbot/certbot:latest
+#    depends_on:
+#      - nginx
+#    command: certonly --webroot --webroot-path=${CERT_WEBROOT_PATH} --email ${CERT_EMAIL} --agree-tos --no-eff-email -d ${CERT_DOMAIN}
+#    volumes:
+#      - $PWD/env/certbot/conf:/etc/letsencrypt
+#      - $PWD/env/certbot/logs:/var/log/letsencrypt
+#      - $PWD/env/certbot/data:/var/www/certbot

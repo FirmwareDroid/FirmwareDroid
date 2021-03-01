@@ -7,7 +7,7 @@ import flask
 from multiprocessing import Lock, Manager, get_context
 from mongoengine import DoesNotExist
 
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.database.database import multiprocess_disconnect_all
 from scripts.utils.string_utils.string_util import filter_mongodb_dict_chars
 from scripts.utils.mulitprocessing_util.mp_util import create_managed_queue, multiprocess_initializer

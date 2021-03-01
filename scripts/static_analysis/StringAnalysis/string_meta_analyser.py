@@ -5,7 +5,7 @@ import re
 from bson import ObjectId
 
 from model import StringMetaAnalysis, AndroGuardStringAnalysis
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.static_analysis.StringAnalysis.entropy_calculation import set_entropy
 from scripts.static_analysis.StringAnalysis.language_detection import set_language
 from scripts.static_analysis.StringAnalysis.word_tokenizer import set_string_lengths, string_is_numeric
@@ -172,7 +172,7 @@ def detect_android_packagename(string_value):
     :param string_value: str
     :return: True - if packagename detected.
     """
-    package_name_regex = "^([A-Za-z]{1}[A-Za-z\d_]*\.)+[A-Za-z][A-Za-z\d_]*$"
+    package_name_regex = r"^([A-Za-z]{1}[A-Za-z\d_]*\.)+[A-Za-z][A-Za-z\d_]*$"
     return regex_search([package_name_regex], string_value)
 
 
@@ -182,7 +182,7 @@ def detect_android_permission(string_value):
     :param string_value: str
     :return: True - if detected.
     """
-    package_name_regex = "^(android[.]permission[.])[A-Za-z][A-Za-z\d_]*$"
+    package_name_regex = r"^(android[.]permission[.])[A-Za-z][A-Za-z\d_]*$"
     return regex_search([package_name_regex], string_value)
 
 

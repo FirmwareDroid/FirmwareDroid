@@ -4,7 +4,7 @@ import shutil
 import time
 import flask
 from scripts.firmware.system_partition_util import expand_and_mount
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.firmware.ext4_mount_util import is_path_mounted, exec_umount
 from model import FirmwareFile
 from scripts.utils.mulitprocessing_util.mp_util import start_process_pool

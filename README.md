@@ -9,36 +9,6 @@ FirmwareDroid is a tool made for analysing Android firmware images. It is made t
 of extracting and scanning pre-installed apps. It is a docker based webserver including several analysis tools and made
 for scanning apps at scale.
 
-#### v1.0
-FirmwareDroid automates the process of extracting and analysing pre-installed apps from Android firmware. The framework
-uses a set of docker containers for scanning Android apps and stores the results of the scanner within a MongoDb. The
-tool includes a statistics API to automate the analysis process of scanner reports. 
-Currently the main focus is on analysing pre-installed apps.
-
-- Android Firmware - (currently only system partition):
-  - Indexing / Search
-    - Fuzzy hashing: Search for similar binaries within the dataset with
-      - ssdeep
-      - tlsh
-  - Exporting files (regex based, apk based)
-    - Automatically exports pre-installed apps to the filesystem.
-  - Statistics
-- Scanners:
-  - AndroGuard
-    - App meta data (certificates, permissions, manifest)
-  - Androwarn (vulnerabilities, privacy scan)
-  - Qark (vulnerabilities)
-  - APKiD (compiler-, packer-, anti-vm-, anti-disassembly-detection)
-  - Virustotal (malware scanner)
-  - Exodus (ad-tracker detection)
-  - Quark-Engine (malware scoring)
-- Endpoints:
-  - REST API available under "/docs" route.
-  - RQ-Dashboard: "/rq-dashboard"
-- Other:
-  - adb integration (experimental):
-    - monkey runner for testing
-  
 ## Requirements
 Tested on Debian and OS X (Big Sur)
 

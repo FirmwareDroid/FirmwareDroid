@@ -4,10 +4,10 @@ import os
 import flask
 from mongoengine import DoesNotExist
 from api.v1.common.rq_job_creator import enqueue_jobs
-from scripts.database.query_util import get_all_document_ids
+from scripts.database.query_document import get_all_document_ids
 from scripts.firmware.firmware_version_detect import detect_firmware_version
-from model import AndroidApp, AndroidFirmware, FirmwareFile, AndroGuardReport, AppCertificate
-from scripts.rq_tasks.task_util import create_app_context
+from model import AndroidApp, AndroidFirmware, FirmwareFile
+from scripts.rq_tasks.flask_context_creator import create_app_context
 
 ANDROID_APP_REFERENCES = ["androguard_report_reference",
                           "virus_total_report_reference",

@@ -8,10 +8,10 @@ from multiprocessing import Manager, Lock
 from threading import Thread
 import flask
 import timeout_decorator
-from scripts.database.query_util import get_filtered_list
+from scripts.database.query_document import get_filtered_list
 from scripts.database.database import multiprocess_disconnect_all
 from model import QarkReport, QarkIssue, AndroidApp
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.mulitprocessing_util.mp_util import create_managed_queue
 
 lock = Lock()

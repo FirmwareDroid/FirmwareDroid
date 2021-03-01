@@ -9,7 +9,7 @@ from bson import ObjectId
 from scripts.graph.networkx_graph_wrapper import create_weighted_graph, graph_to_gexf_file
 from model import TlshHash, TlshClusterAnalysis, TlshSimiliarityLookup
 from scripts.hashing.tlsh.tlsh_hasher import tlsh_compare_hashs
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.file_utils.file_util import object_to_temporary_json_file, create_reference_file
 from scripts.utils.string_utils.string_util import filter_mongodb_dict_chars
 

@@ -6,7 +6,7 @@ from scripts.dynamic_analysis.emulator_control.monkey.monkey_wrapper import run_
 from model import AndroidApp
 from scripts.dynamic_analysis.emulator_control.adb.adb_wrapper import load_adb_rsa_signer, connect_adb_device_tcp, \
     is_device_available, is_app_installed, install_app, push_file
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 
 
 def start_dynamic_analysis(emulator_url, emulator_port, android_app_id_list):

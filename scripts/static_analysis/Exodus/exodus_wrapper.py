@@ -1,6 +1,6 @@
-from scripts.database.query_util import get_filtered_list
+from scripts.database.query_document import get_filtered_list
 from model import ExodusReport, AndroidApp
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 
 
 def start_exodus_scan(android_app_id_list):

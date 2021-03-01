@@ -9,7 +9,7 @@ from scripts.firmware.system_partition_util import create_system_img_path
 from scripts.hashing.fuzzy_hash_creator import hash_firmware_files
 from model import AndroidFirmware
 from threading import Thread
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.firmware.firmware_file_indexer import create_firmware_file_list, add_firmware_file_references
 from scripts.firmware.const_regex import SYSTEM_IMG_PATTERN_LIST, BUILD_PROP_PATTERN_LIST
 from scripts.firmware.android_app_import import find_android_apps, extract_android_apps

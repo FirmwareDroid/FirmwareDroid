@@ -6,7 +6,7 @@ import mongoengine
 from flask_mongoengine import MongoEngine
 from mongoengine import connection
 from model import AndroidFirmware
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 
 
 def init_db(app):

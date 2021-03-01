@@ -6,7 +6,7 @@ from scripts.firmware.ext4_mount_util import is_path_mounted, exec_umount
 from scripts.hashing.fuzzy_hash_creator import hash_firmware_files
 from model import FirmwareFile, AndroidFirmware
 from scripts.utils.mulitprocessing_util.mp_util import start_process_pool, start_threads
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.hashing import md5_from_file
 from scripts.utils.file_utils.file_util import  create_temp_directories
 

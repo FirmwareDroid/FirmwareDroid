@@ -4,7 +4,7 @@ from scripts.graph.networkx_graph_wrapper import create_weighted_graph_file
 from scripts.hashing.fuzzy_hash_common import get_fuzzy_hash_documents_by_regex, filter_fuzzy_hash_documents_by_firmware
 from model import SsDeepClusterAnalysis, SsDeepHash
 from scripts.hashing.ssdeep.ssdeep_hasher import ssdeep_compare_hashs
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.string_utils.string_util import filter_mongodb_dict_chars
 from scripts.utils.file_utils.file_util import object_to_temporary_json_file, create_reference_file
 

@@ -1,9 +1,9 @@
 import logging
 from model import FirmwareStatisticsReport, AndroidFirmware, AndroidApp
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.string_utils.string_util import filter_mongodb_dict_chars
 from scripts.statistics.statistics_common import dict_to_title_format
-from scripts.database.query_util import create_document_list_by_ids
+from scripts.database.query_document import create_document_list_by_ids
 
 BUILD_VERSION_RELEASE = "ro_build_version_release"
 PRODUCT_MANUFACTURER = "ro_product_manufacturer"

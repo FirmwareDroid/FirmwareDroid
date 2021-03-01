@@ -3,9 +3,9 @@ import os
 import logging
 import tempfile
 import flask
-from scripts.database.query_util import get_filtered_list
+from scripts.database.query_document import get_filtered_list
 from model import ApkidReport, AndroidApp
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.mulitprocessing_util.mp_util import start_process_pool
 
 

@@ -2,10 +2,10 @@ import json
 import logging
 import os
 
-from scripts.database.query_util import get_filtered_list
+from scripts.database.query_document import get_filtered_list
 from model import UserAccount, AndroidApp
 from model.VirusTotalReport import VirusTotalReport
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.string_utils.string_util import filter_mongodb_dict_chars
 
 

@@ -1,6 +1,6 @@
 import logging
 from api.v1.parser.json_parser import parse_json_object_id_list
-from scripts.database.query_util import get_all_document_ids
+from scripts.database.query_document import get_all_document_ids
 from model import AndroidApp, AndroidFirmware
 
 

@@ -6,7 +6,7 @@ from bson import ObjectId
 from mongoengine import Q
 from scripts.hashing.tlsh.tlsh_cluster_analysis import start_tlsh_clustering
 from model import TlshSimiliarityLookup, TlshHash, TlshEvaluation
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.file_utils.file_util import object_to_temporary_json_file, store_json_file, stream_to_json_file
 
 TABLE_LENGTH = 70  # min: 1, max:70

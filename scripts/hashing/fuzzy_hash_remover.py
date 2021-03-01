@@ -1,8 +1,8 @@
 from mongoengine import DoesNotExist
-from scripts.database.delete_util import delete_referenced_document_instance, delete_document_attribute
+from scripts.database.delete_document import delete_referenced_document_instance, delete_document_attribute
 from model import AndroidFirmware
 from model.FirmwareFile import FUZZY_HASH_ATTRIBUTE_NAMES
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 
 
 def remove_fuzzy_hashes(firmware_id_list):

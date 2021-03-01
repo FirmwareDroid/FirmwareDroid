@@ -1,7 +1,7 @@
 import logging
 
 from model import AndroidFirmware
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 
 
 def detect_firmware_version(firmware_id_list):

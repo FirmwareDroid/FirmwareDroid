@@ -20,7 +20,7 @@ def estimate_number_of_words(string_value):
     :param string_value: str
     :return: estimated number of words. Does not count camel case or concatenated words.
     """
-    pattern = re.compile('\w+')
+    pattern = re.compile(r'\w+')
     matches = re.findall(pattern, string_value)
     return len(matches)
 

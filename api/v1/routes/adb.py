@@ -1,4 +1,3 @@
-import flask
 from flask import request
 from flask_restx import Resource, Namespace
 from api.v1.model.serializers import object_id_list

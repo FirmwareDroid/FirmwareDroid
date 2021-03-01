@@ -6,7 +6,7 @@ import flask
 from multiprocessing import Manager, get_context
 from threading import Thread
 from scripts.database.database import multiprocess_disconnect_all
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 
 
 def create_managed_queue(document_obj_list, manager):

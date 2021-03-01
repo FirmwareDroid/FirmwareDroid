@@ -4,7 +4,7 @@ import tempfile
 import flask
 from scripts.firmware.ext4_mount_util import exec_umount
 from model import ComparerReportFirmware, FirmwareFile, AndroidFirmware
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.extractor.expand_archives import extract_and_mount_all
 
 

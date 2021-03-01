@@ -6,7 +6,7 @@ from model import AndroidFirmware
 from scripts.firmware.firmware_file_exporter import get_firmware_file_abs_path, expand_and_mount
 from scripts.hashing.ssdeep.ssdeep_hasher import start_ssdeep_hashing
 from scripts.hashing.tlsh.tlsh_hasher import start_tlsh_hashing
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.mulitprocessing_util.mp_util import start_process_pool
 from scripts.utils.file_utils.file_util import create_temp_directories
 

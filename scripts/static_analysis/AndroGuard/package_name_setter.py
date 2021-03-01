@@ -1,6 +1,6 @@
 import logging
 from model import AndroidApp
-from scripts.rq_tasks.task_util import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 
 
 def set_android_app_package_names(android_app_id_list):

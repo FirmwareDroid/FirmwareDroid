@@ -12,7 +12,6 @@ from flask_marshmallow import Marshmallow
 from marshmallow import fields
 from mongoengine import DoesNotExist, NotUniqueError
 from redis import Redis
-
 from api.v1.converter.BoolConverter import BoolConverter
 from scripts.auth.basic_auth import basic_auth
 from config import ApplicationConfig
