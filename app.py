@@ -1,3 +1,4 @@
+import time
 import rq
 import os
 import logging
@@ -11,8 +12,10 @@ from flask_jwt_extended import JWTManager
 from flask_marshmallow import Marshmallow
 from marshmallow import fields
 from mongoengine import DoesNotExist, NotUniqueError
+from pymongo.errors import OperationFailure
 from redis import Redis
 from api.v1.converter.BoolConverter import BoolConverter
+from scripts.config.app_settings import get_application_setting
 from scripts.auth.basic_auth import basic_auth
 from config import ApplicationConfig
 from model import UserAccount
@@ -64,6 +67,7 @@ def create_app():
     setup_rq_dashboard(app_instance)
     setup_marshmallow(app_instance)
     app_instance.mongo_db = init_db(app_instance)
+    setup_application_settings()
     setup_default_users(app_instance)
     setup_cors(app_instance)
     setup_folders(app_instance)
@@ -215,6 +219,22 @@ def setup_folders(app_instance):
             message = "Could not create folder: " + path
             logging.error(message)
             print(message)
+
+
+def setup_application_settings():
+    """
+    Initializes the application settings.
+    """
+    connection_attempts = 0
+    while connection_attempts < 50:
+        try:
+            get_application_setting()
+        except OperationFailure:
+            logging.warning(f"Attempt Mongo-DB connect failed. Reattempt {connection_attempts}")
+        time.sleep(45)
+        connection_attempts += 1
+    raise ConnectionError("Cannot connect to mongo-db! "
+                          "Maybe the DB was not initialized correctly or is temporarily unavailable.")
 
 
 def clear_cache(app_instance):

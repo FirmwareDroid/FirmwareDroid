@@ -34,6 +34,24 @@ services:
     networks:
       - backend
 
+  nginx:
+    container_name: nginx-frontend
+    build:
+      context: ./
+      dockerfile: Dockerfile_NGINX
+    restart: unless-stopped
+    depends_on:
+      - web
+    volumes:
+      - $PWD/env/nginx:/etc/nginx/conf.d
+      - $PWD/env/certbot/conf:/etc/letsencrypt
+      - $PWD/env/certbot/www:/var/www/certbot
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - frontend
+
   firmware-worker-default-2:
     build:
       context: .

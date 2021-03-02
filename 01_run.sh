@@ -2,6 +2,7 @@
 
 ########################################################################
 # FirmwareDroid run script.
+# Allows to start FirmwareDroid with different environment settings.
 # Version: 1.0
 # Created: 01.03.2021
 # Author: Thomas Sutter
@@ -53,24 +54,39 @@ shift $((OPTIND - 1))
 echo "Environment set: $environment"
 echo "Running mode set: $running_mode"
 
-# Set docker-compose file
+# Set docker-compose file and environment
 if [ $environment == 1 ]; then
   compose_file="docker-compose.tst.yml"
+  export FLASK_ENV="testing"
+  export FLASK_DEBUG="True"
+  export APP_ENV="testing"
+  export APP_DEBUG="True"
 elif [ $environment == 2 ]; then
   compose_file="docker-compose.pro.yml"
+  export FLASK_ENV="production"
+  export FLASK_DEBUG="False"
+  export APP_ENV="production"
+  export APP_DEBUG="False"
 else
   compose_file="docker-compose.dev.yml"
+  export FLASK_ENV="development"
+  export FLASK_DEBUG="True"
+  export APP_ENV="development"
+  export APP_DEBUG="True"
 fi
-echo $compose_file
+
 
 # Run build
-if [ $running_mode == 1 ]; then
+if [ $running_mode == 2 ]; then
+  echo "Building all docker images"
   bash "./make/build_images_all.sh"
-elif [ $running_mode == 2 ]; then
+elif [ $running_mode == 1 ]; then
+  echo "Building intermediate docker images"
   bash "./make/build_images_intermediate.sh"
 fi
-
 compose_path=$PWD"/"$compose_file
-echo $compose_path
+echo "########################################
+Starting FirmwareDroid now
+#######################################"
 # Run app
 docker-compose -f $PWD"/docker-compose.yml" -f $compose_path up

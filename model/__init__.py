@@ -36,3 +36,4 @@ from .TlshClusterAnalysis import TlshClusterAnalysis
 from .LzjdHash import LzjdHash
 from .TlshSimiliarityLookup import TlshSimiliarityLookup
 from .TlshEvaluation import TlshEvaluation
+from .ApplicationSetting import ApplicationSetting
