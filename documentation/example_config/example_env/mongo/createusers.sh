@@ -1,19 +1,38 @@
 #!/bin/bash
-####################################################################################################################
-# This scripts creates two users for MongoDB. One administrator and one user for FimrwareDroid
-# Script is only executed at first creation of the database and can be removed afterwards.
-# Use the same users and passwords as in .env file defined.
-####################################################################################################################
-# Configuration
-# Admin User
-MONGODB_ADMIN_USER=${MONGODB_ADMIN_USER:-"administrator"}
-MONGODB_ADMIN_PASS=${MONGODB_ADMIN_PASS:-"CHANGE_THIS_SECRET"}
-# Application Database User
-MONGODB_APPLICATION_DATABASE=${MONGODB_APPLICATION_DATABASE:-"FirmwareDroid"}
-MONGODB_APPLICATION_USER=${MONGODB_APPLICATION_USER:-"mongodbuser"}
-MONGODB_APPLICATION_PASS=${MONGODB_APPLICATION_PASS:-"CHANGE_THIS_SECRET"}
-##########################################################################################
 
+if [ "$APP_ENV" == "testing" ]; then
+  # Admin User
+  MONGODB_ADMIN_USER=${TST_MONGO_INITDB_ROOT_USERNAME}
+  MONGODB_ADMIN_PASS=${TST_MONGO_INITDB_ROOT_PASSWORD}
+
+  # Application Database User
+  MONGODB_APPLICATION_DATABASE=${TST_MONGODB_DATABASE}
+  MONGODB_APPLICATION_USER=${TST_MONGODB_USERNAME}
+  MONGODB_APPLICATION_PASS=${TST_MONGODB_PASSWORD}
+
+elif [ "$APP_ENV" == "development" ]; then
+  # Admin User
+  MONGODB_ADMIN_USER=${DEV_MONGO_INITDB_ROOT_USERNAME}
+  MONGODB_ADMIN_PASS=${DEV_MONGO_INITDB_ROOT_PASSWORD}
+
+  # Application Database User
+  MONGODB_APPLICATION_DATABASE=${DEV_MONGODB_DATABASE}
+  MONGODB_APPLICATION_USER=${DEV_MONGODB_USERNAME}
+  MONGODB_APPLICATION_PASS=${DEV_MONGODB_PASSWORD}
+
+else # Production
+  # Admin User
+  MONGODB_ADMIN_USER=${MONGO_INITDB_ROOT_USERNAME}
+  MONGODB_ADMIN_PASS=${MONGO_INITDB_ROOT_PASSWORD}
+
+  # Application Database User
+  MONGODB_APPLICATION_DATABASE=${MONGODB_DATABASE}
+  MONGODB_APPLICATION_USER=${MONGODB_USERNAME}
+  MONGODB_APPLICATION_PASS=${MONGODB_PASSWORD}
+fi
+
+
+ 
 # Wait for MongoDB to boot
 RET=1
 while [[ RET -ne 0 ]]; do
@@ -25,7 +44,12 @@ done
  
 # Create the admin user
 echo "=> Creating admin user with a password in MongoDB"
-mongo admin --eval "db.createUser({user: '$MONGODB_ADMIN_USER', pwd: '$MONGODB_ADMIN_PASS', roles:[{role:'root',db:'admin'}]});"
+mongo admin --eval "db.createUser({user: '$MONGODB_ADMIN_USER', pwd: '$MONGODB_ADMIN_PASS', roles:[{role:'root',db:'admin'}]});" || command_failed=1
+
+if [ ${command_failed:-0} -eq 1 ]
+then
+ echo "Could not create admin user. Continue."
+fi
  
 sleep 1
  
@@ -35,7 +59,7 @@ sleep 1
 # Then it switches to the REST API database and runs the createUser command 
 # to actually create the user and assign it to the database.
 if [ "$MONGODB_APPLICATION_DATABASE" != "admin" ]; then
-    echo "=> Creating an ${MONGODB_APPLICATION_DATABASE} user with a password in MongoDB"
+    echo "=> Creating an ${MONGODB_APPLICATION_USER} user in ${MONGODB_APPLICATION_DATABASE} with a password in MongoDB"
     mongo admin -u $MONGODB_ADMIN_USER -p $MONGODB_ADMIN_PASS << EOF
 use $MONGODB_APPLICATION_DATABASE
 db.createUser({user: '$MONGODB_APPLICATION_USER', pwd: '$MONGODB_APPLICATION_PASS', roles:[{role:'dbOwner', db:'$MONGODB_APPLICATION_DATABASE'}]})
