@@ -1,59 +1,9 @@
 version: '3'
 services:
   web:
-    build: .
-    container_name: flask-web
-    working_dir: /var/www
-    restart: unless-stopped
-    env_file:
-      - ./.env
-    expose:
-      - "5000"
     volumes:
-      - $PWD:/var/www/
       - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-    depends_on:
-      - database
-      - redis
-    networks:
-      - backend
-      - frontend
 
   database:
-    image: mongo:4.2.8-bionic
-    container_name: mongo-db
-    restart: unless-stopped
-    command: mongod --auth
-    env_file:
-      - ./.env
-    ports:
-      - "27017:27017"
     volumes:
       - ${DEV_LOCAL_DB_PATH}:/data/db
-      - $PWD/env/mongo/:/docker-entrypoint-initdb.d/
-    networks:
-      - backend
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/test --quiet
-      interval: 1m30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  nginx:
-    container_name: nginx-frontend
-    build:
-      context: ./
-      dockerfile: Dockerfile_NGINX
-    restart: unless-stopped
-    depends_on:
-      - web
-    volumes:
-      - $PWD/env/nginx:/etc/nginx/conf.d
-      - $PWD/env/certbot/conf:/etc/letsencrypt
-      - $PWD/env/certbot/www:/var/www/certbot
-    ports:
-      - "80:80"
-      - "443:443"
-    networks:
-      - frontend

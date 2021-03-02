@@ -226,15 +226,18 @@ def setup_application_settings():
     Initializes the application settings.
     """
     connection_attempts = 0
-    while connection_attempts < 50:
+    has_connected = False
+    while not has_connected:
+        if connection_attempts > 50:
+            raise ConnectionError("Cannot connect to mongo-db! "
+                                  "Maybe the DB was not initialized correctly or is temporarily unavailable.")
         try:
             get_application_setting()
+            has_connected = True
         except OperationFailure:
             logging.warning(f"Attempt Mongo-DB connect failed. Reattempt {connection_attempts}")
-        time.sleep(45)
-        connection_attempts += 1
-    raise ConnectionError("Cannot connect to mongo-db! "
-                          "Maybe the DB was not initialized correctly or is temporarily unavailable.")
+            time.sleep(45)
+            connection_attempts += 1
 
 
 def clear_cache(app_instance):
