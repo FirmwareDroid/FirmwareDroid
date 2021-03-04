@@ -23,7 +23,7 @@ running_mode=0
 while getopts ':h:e:r:' option; do
   case "$option" in
     h)  echo "$usage"
-        exit
+        exit 0
         ;;
     e)  if [[ $OPTARG =~ ^[0-9]+$ ]]; then
           environment=$OPTARG
