@@ -65,7 +65,7 @@ jobs:
           mkdir env
           cp -r ./documentation/example_config/example_env/ ./env/
       - name: Install dependencies
-        run: sh ./01_run.sh -e 1 -r 2
+        run: bash ./01_run.sh -e 1 -r 2
         
         
         
