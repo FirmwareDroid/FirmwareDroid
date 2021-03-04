@@ -22,6 +22,56 @@ services:
       - ${REDIS_DB_PATH}:/var/lib/redis
       - ${REDIS_CONFIG_PATH}:/usr/local/etc/redis/redis.conf
 
+  firmware-worker:
+    volumes:
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
+  firmware-worker-high-1:
+    volumes:
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
+
+  fuzzyhash-worker-1:
+    volumes:
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
+  firmware-worker-default-1:
+    volumes:
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
+  androguard-worker-1:
+    volumes:
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
+  androwarn-worker-1:
+    volumes:
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
+  apkid-worker-1:
+    volumes:
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
+  exodus-worker-1:
+    volumes:
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
+  frida-worker-1:
+    volumes:
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
+  qark-worker-1:
+    volumes:
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
+  quark_engine-worker-1:
+    volumes:
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
+  virustotal-worker-1:
+    volumes:
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
+
   firmware-worker-default-2:
     build:
       context: .

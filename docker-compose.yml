@@ -66,7 +66,6 @@ services:
       - redis
     volumes:
       - $PWD:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
       - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - ./.env
@@ -85,7 +84,6 @@ services:
       - redis
     volumes:
       - $PWD:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
       - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - ./.env
@@ -105,7 +103,6 @@ services:
       - firmware-worker
     volumes:
       - $PWD:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
       - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - ./.env
@@ -124,7 +121,6 @@ services:
       - redis
     volumes:
       - $PWD:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
     command: rqworker --name firmware-worker-default-1 --url redis://redis:6379/ default
@@ -141,7 +137,6 @@ services:
       - redis
     volumes:
       - $PWD:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
     command: rqworker --name androguard-worker-1 --url redis://redis:6379/ androguard
@@ -158,7 +153,6 @@ services:
       - redis
     volumes:
       - $PWD:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
     command: rqworker --name androwarn-worker-1 --url redis://redis:6379/ androwarn
@@ -175,7 +169,6 @@ services:
       - redis
     volumes:
       - $PWD:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
     command: rqworker --name apkid-worker-1 --url redis://redis:6379/ apkid
@@ -192,7 +185,6 @@ services:
       - redis
     volumes:
       - $PWD:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
     command: rqworker --name exodus-worker-1 --url redis://redis:6379/ exodus
@@ -209,7 +201,6 @@ services:
       - redis
     volumes:
       - $PWD:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
     command: rqworker --name frida-worker-1 --url redis://redis:6379/ frida
@@ -226,7 +217,6 @@ services:
       - redis
     volumes:
       - $PWD:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
     command: rqworker --name qark-worker-1 --url redis://redis:6379/ qark
@@ -243,7 +233,6 @@ services:
       - redis
     volumes:
       - $PWD:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
     command: rqworker --name quark_engine-worker-1 --url redis://redis:6379/ quark_engine
@@ -260,7 +249,6 @@ services:
       - redis
     volumes:
       - $PWD:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
     command: rqworker --name virustotal-worker-1 --url redis://redis:6379/ virustotal
