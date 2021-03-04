@@ -25,14 +25,14 @@ while getopts 'he:r:' option; do
     h)  echo "$usage"
         exit 0
         ;;
-    e)  if [[ $OPTARG =~ ^[0-9]+$ ]]; then
+    e)  if [[ $OPTARG =~ ^-?[0-9]+$ ]]; then
           environment=$OPTARG
         else
           printf "argument is not a number for -%s\n" "$OPTARG" >&2
           exit 1
         fi
        ;;
-    r) if [[ $OPTARG =~ ^[0-9]+$ ]]; then
+    r) if [[ $OPTARG =~ ^-?[0-9]+$ ]]; then
         running_mode=$OPTARG
        else
           printf "argument is not a number for -%s\n" "$OPTARG" >&2
