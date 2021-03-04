@@ -17,6 +17,7 @@ where:
     -r  set the running mode (default: 0) (options: 0 = run, 1 = build intermediate images and run, 2 = build complete images and run)
 "
 
+function is_int() { test "$@" -eq "$@" 2> /dev/null; }
 
 environment=0
 running_mode=0
@@ -25,14 +26,14 @@ while getopts 'he:r:' option; do
     h)  echo "$usage"
         exit 0
         ;;
-    e)  if [[ $OPTARG =~ ^-?[0-9]+$ ]]; then
+    e)  if is_int $OPTARG; then
           environment=$OPTARG
         else
           printf "argument is not a number for -%s\n" "$OPTARG" >&2
           exit 1
         fi
        ;;
-    r) if [[ $OPTARG =~ ^-?[0-9]+$ ]]; then
+    r) if is_int $OPTARG; then
         running_mode=$OPTARG
        else
           printf "argument is not a number for -%s\n" "$OPTARG" >&2
