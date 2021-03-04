@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        python-version: ['3.5', '3.6', '3.7.4', '3.8', '3.9']
+        python-version: ['3.8', '3.9']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -65,7 +65,7 @@ jobs:
           mkdir env
           cp -r ./documentation/example_config/example_env/ ./env/
       - name: Install dependencies
-        run: 01_run.sh -e 1 -r 2
+        run: sh ./01_run.sh -e 1 -r 2
         
         
         
