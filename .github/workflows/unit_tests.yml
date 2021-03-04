@@ -1,0 +1,70 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Python Unit Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  unit-tests:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Python 3
+        uses: actions/checkout@v2
+        with:
+          python-version: 3.9
+      - name: Create env file
+        run: |
+          touch .env
+          echo FLASK_ENV=testing >> .env
+          echo FLASK_DEBUG=False >> .env
+          echo APP_ENV=testing >> .env
+          echo APP_DEBUG=False >> .env
+          echo APP_PORT=5000 >> .env
+          echo TST_LOCAL_STORAGE_PATH=./00_file_storage >> .env
+          echo TST_LOCAL_DB_PATH=./test_mongodb_data/ >> .env
+          echo TST_REDIS_DB_PATH=./redis-data >> .env
+          echo TST_REDIS_CONFIG_PATH=./env/redis/redis.conf >> .env
+          echo TST_RQ_DASHBOARD_REDIS_URL=redis://redis:6379 >> .env
+          echo TST_RQ_DASHBOARD_PASSWORD=sOmE_sEcUrE_pAsS_sOmE_sEcUrE_pAsS >> .env
+          echo TST_RQ_DASHBOARD_USERNAME=redis-admin >> .env
+          echo TST_REDIS_HOST_PORT=redis:6379 >> .env
+          echo TST_MONGO_INITDB_DATABASE=TestFirmwareDroid >> .env
+          echo TST_MONGODB_APPLICATION_DATABASE=TestFirmwareDroid >> .env
+          echo TST_MONGO_INITDB_ROOT_USERNAME=Testmongodbroot >> .env
+          echo TST_MONGO_INITDB_ROOT_PASSWORD=your_mongodb_root_password >> .env
+          echo TST_MONGODB_USERNAME=Testmongodbuser >> .env
+          echo TST_MONGODB_PASSWORD=your_mongodb_user_password >> .env
+          echo TST_MONGODB_HOSTNAME=127.0.0.1 >> .env
+          echo TST_MONGODB_DATABASE=TestFirmwareDroid >> .env
+          echo TST_MONGODB_PORT=27017 >> .env
+          echo TST_APP_DATA_FOLDER=./file_store/ >> .env
+          echo TST_BASIC_AUTH_USERNAME=admin >> .env
+          echo TST_BASIC_AUTH_PASSWORD=CHANGE_THIS_SECRET >> .env
+          echo TST_BASIC_AUTH_FORCE=True >> .env
+          echo TST_JWT_SECRET_KEY=JWT_TEST_TOKEN_CHANGE_THIS >> .env
+          echo TST_FLASK_ADMIN_PW=CHANGE_THIS_SECRET >> .env
+          echo TST_FLASK_ADMIN_MAIL=TEST@FIRMWAREDROID.COM >> .env
+          echo TST_MASS_IMPORT_NUMBER_OF_THREADS=3 >> .env
+          echo TST_API_TITLE="FirmwareDroid API - Testing" >> .env
+          echo TST_API_VERSION=1.0 >> .env
+          echo TST_API_DESCRIPTION="TEST REST API documentation for the FirmwareDroid tool" >> .env
+          echo TST_API_PREFIX=/api >> .env
+          echo TST_API_DOC_FOLDER=/docs >> .env
+          cat .env
+      - name: Create env folder
+        run: |
+          mkdir env
+          cp -r ./documentation/example_config/example_env/ ./env/
+      - name: Install dependencies
+        run: 01_run.sh -e 1 -r 2
+        
+        
+        
+        
