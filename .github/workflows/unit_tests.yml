@@ -13,12 +13,14 @@ on:
 jobs:
   unit-tests:
     runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9']
     steps:
       - uses: actions/checkout@v2
-      - name: Install Python 3
-        uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: ${{ matrix.python-version }}    
       - name: Create env file
         run: |
           touch .env
@@ -63,7 +65,7 @@ jobs:
           mkdir env
           cp -r ./documentation/example_config/example_env/ ./env/
       - name: Install dependencies
-        run: 01_run.sh -e 1 -r 2
+        run: sh ./01_run.sh -e 1 -r 2
         
         
         
