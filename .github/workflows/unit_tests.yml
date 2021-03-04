@@ -52,7 +52,7 @@ jobs:
           echo TST_MONGO_INITDB_ROOT_PASSWORD=your_mongodb_root_password >> .env
           echo TST_MONGODB_USERNAME=Testmongodbuser >> .env
           echo TST_MONGODB_PASSWORD=your_mongodb_user_password >> .env
-          echo TST_MONGODB_HOSTNAME=127.0.0.1 >> .env
+          echo TST_MONGODB_HOSTNAME=mongo-db >> .env
           echo TST_MONGODB_DATABASE=TestFirmwareDroid >> .env
           echo TST_MONGODB_PORT=27017 >> .env
           echo TST_APP_DATA_FOLDER=./file_store/ >> .env
