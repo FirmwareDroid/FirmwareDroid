@@ -25,15 +25,15 @@ while getopts ':h:e:r:' option; do
     h)  echo "$usage"
         exit
         ;;
-    e)  if [[ $OPTARG =~ $re ]]; then
-          environment=$OPTARG
+    e)  if [[ $(($OPTARG)) =~ $re ]]; then
+          environment=$(($OPTARG))
         else
           printf "argument is not a number for -%s\n" "$OPTARG" >&2
           exit 1
         fi
        ;;
-    r) if [[ $OPTARG =~ $re ]]; then
-        running_mode=$OPTARG
+    r) if [[ $(($OPTARG)) =~ $re ]]; then
+        running_mode=$(($OPTARG))
        else
           printf "argument is not a number for -%s\n" "$OPTARG" >&2
           exit 1
