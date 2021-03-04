@@ -20,7 +20,7 @@ where:
 
 environment=0
 running_mode=0
-while getopts ':h:e:r:' option; do
+while getopts 'he:r:' option; do
   case "$option" in
     h)  echo "$usage"
         exit 0
