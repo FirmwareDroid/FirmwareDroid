@@ -3,7 +3,11 @@ services:
   web:
     volumes:
       - ${TST_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    environment:
+      - APP_ENV=testing
 
   database:
     volumes:
       - ${TST_LOCAL_DB_PATH}:/data/db
+    environment:
+      - APP_ENV=testing

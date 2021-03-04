@@ -60,6 +60,7 @@ def create_app():
               },
               security="basicAuth",
               doc=app_instance.config["API_DOC_FOLDER"])
+    logging.error(app_instance.config["MONGODB_SETTINGS"])
     api.namespaces.clear()
     setup_jwt_auth(app_instance)
     setup_api_converter(app_instance)
@@ -218,7 +219,6 @@ def setup_folders(app_instance):
         except OSError:
             message = "Could not create folder: " + path
             logging.error(message)
-            print(message)
 
 
 def setup_application_settings():

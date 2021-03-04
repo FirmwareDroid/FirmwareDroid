@@ -57,22 +57,13 @@ echo "Running mode set: $running_mode"
 # Set docker-compose file and environment
 if [ $environment == 1 ]; then
   compose_file="docker-compose.tst.yml"
-  export FLASK_ENV="testing"
-  export FLASK_DEBUG="True"
-  export APP_ENV="testing"
-  export APP_DEBUG="True"
+  echo "Docker-compose environment: testing"
 elif [ $environment == 2 ]; then
   compose_file="docker-compose.pro.yml"
-  export FLASK_ENV="production"
-  export FLASK_DEBUG="False"
-  export APP_ENV="production"
-  export APP_DEBUG="False"
+  echo "Docker-compose environment: production"
 else
   compose_file="docker-compose.dev.yml"
-  export FLASK_ENV="development"
-  export FLASK_DEBUG="True"
-  export APP_ENV="development"
-  export APP_DEBUG="True"
+  echo "Docker-compose environment: development"
 fi
 
 

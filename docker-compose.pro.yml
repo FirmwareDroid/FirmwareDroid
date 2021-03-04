@@ -3,10 +3,14 @@ services:
   web:
     volumes:
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    environment:
+      - APP_ENV=production
 
   database:
     volumes:
       - ${LOCAL_DB_PATH}:/data/db
+    environment:
+      - APP_ENV=production
 
   nginx:
     volumes:

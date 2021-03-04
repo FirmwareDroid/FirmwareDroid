@@ -21,7 +21,7 @@ class ApplicationConfig(Config):
     ####################
     # Folder Config
     ####################
-    MAIN_FOLDER = os.environ['APP_DATA_FOLDER']
+    MAIN_FOLDER = os.environ[Config.ENV+'APP_DATA_FOLDER']
     FILE_FOLDER = MAIN_FOLDER + "00_file_storage/"
     FIRMWARE_FOLDER_IMPORT = FILE_FOLDER + "import/"
     FIRMWARE_FOLDER_IMPORT_FAILED = FILE_FOLDER + "import_failed/"
@@ -44,9 +44,9 @@ class ApplicationConfig(Config):
     ####################
     # RQ Config
     ####################
-    RQ_DASHBOARD_PASSWORD = os.environ['RQ_DASHBOARD_PASSWORD']
-    RQ_DASHBOARD_USERNAME = os.environ['RQ_DASHBOARD_USERNAME']
-    RQ_DASHBOARD_REDIS_URL = os.environ['RQ_DASHBOARD_REDIS_URL']
+    RQ_DASHBOARD_PASSWORD = os.environ[Config.ENV+'RQ_DASHBOARD_PASSWORD']
+    RQ_DASHBOARD_USERNAME = os.environ[Config.ENV+'RQ_DASHBOARD_USERNAME']
+    RQ_DASHBOARD_REDIS_URL = os.environ[Config.ENV+'RQ_DASHBOARD_REDIS_URL']
     RQ_DASHBOARD_REDIS_AUTH_URL = f"redis://{RQ_DASHBOARD_USERNAME}:{RQ_DASHBOARD_PASSWORD}@{REDIS_HOST_PORT}"
     ####################
     # Basic Auth Config
