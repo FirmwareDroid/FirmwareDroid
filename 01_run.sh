@@ -17,7 +17,7 @@ where:
     -r  set the running mode (default: 0) (options: 0 = run, 1 = build intermediate images and run, 2 = build complete images and run)
 "
 
-re='^[0-9]+$'
+
 environment=0
 running_mode=0
 while getopts ':h:e:r:' option; do
@@ -25,15 +25,15 @@ while getopts ':h:e:r:' option; do
     h)  echo "$usage"
         exit
         ;;
-    e)  if [[ $(($OPTARG)) =~ $re ]]; then
-          environment=$(($OPTARG))
+    e)  if [[ $OPTARG =~ ^[0-9]+$ ]]; then
+          environment=$OPTARG
         else
           printf "argument is not a number for -%s\n" "$OPTARG" >&2
           exit 1
         fi
        ;;
-    r) if [[ $(($OPTARG)) =~ $re ]]; then
-        running_mode=$(($OPTARG))
+    r) if [[ $OPTARG =~ ^[0-9]+$ ]]; then
+        running_mode=$OPTARG
        else
           printf "argument is not a number for -%s\n" "$OPTARG" >&2
           exit 1
