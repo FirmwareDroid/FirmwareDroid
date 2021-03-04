@@ -31,7 +31,7 @@ while getopts 'he:r:' option; do
           exit 1
         fi
        ;;
-    r) if if [ "$OPTARG" -eq "$OPTARG" ] 2>/dev/null; then
+    r) if [ "$OPTARG" -eq "$OPTARG" ] 2>/dev/null; then
         running_mode=$OPTARG
        else
           printf "argument is not a number for -%s\n" "$OPTARG" >&2
