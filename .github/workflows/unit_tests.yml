@@ -39,7 +39,7 @@ jobs:
           echo APP_DEBUG=False >> .env
           echo APP_PORT=5000 >> .env
           echo TST_LOCAL_STORAGE_PATH=./00_file_storage >> .env
-          echo TST_LOCAL_DB_PATH=./test_mongodb_data/ >> .env
+          echo TST_LOCAL_DB_PATH=./db/test_mongodb_data/ >> .env
           echo TST_REDIS_DB_PATH=./redis-data >> .env
           echo TST_REDIS_CONFIG_PATH=./env/redis/redis.conf >> .env
           echo TST_RQ_DASHBOARD_REDIS_URL=redis://redis:6379 >> .env
