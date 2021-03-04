@@ -20,6 +20,7 @@ jobs:
       - name: Checkout repositories
         uses: actions/checkout@v2
         with:
+          token: ${{ secrets.FIRMWAREDROID_CI_TOKEN }}
           submodules: recursive
       - uses: actions/setup-python@v2
         with:
