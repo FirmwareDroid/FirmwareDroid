@@ -17,8 +17,17 @@ jobs:
       matrix:
         python-version: ['3.9']
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - name: Checkout repositories
+        uses: actions/checkout@v2
+      - name: Checkout submodules using a PAT
+        run: |
+          git config --file .gitmodules --get-regexp url | while read url; do
+          git config --file=.gitmodules $(echo "$url" | sed -E "s/git@github.com:|https:\/\/github.com\//https:\/\/${{ secrets.FIRMWAREDROID_CI_TOKEN }}:${{ secrets.FIRMWAREDROID_CI_TOKEN }}@github.com\//")
+          done
+          git submodule sync
+          git submodule update --init --recursive
+      - name: Install Python
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}    
       - name: Create env file
