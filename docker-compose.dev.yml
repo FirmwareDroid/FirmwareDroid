@@ -11,3 +11,8 @@ services:
       - ${DEV_LOCAL_DB_PATH}:/data/db
     environment:
       - APP_ENV=development
+
+  redis:
+    volumes:
+      - ${DEV_REDIS_DB_PATH}:/var/lib/redis
+      - ${DEV_REDIS_CONFIG_PATH}:/usr/local/etc/redis/redis.conf

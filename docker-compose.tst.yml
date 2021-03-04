@@ -11,3 +11,8 @@ services:
       - ${TST_LOCAL_DB_PATH}:/data/db
     environment:
       - APP_ENV=testing
+
+  redis:
+    volumes:
+      - ${TST_REDIS_DB_PATH}:/var/lib/redis
+      - ${TST_REDIS_CONFIG_PATH}:/usr/local/etc/redis/redis.conf

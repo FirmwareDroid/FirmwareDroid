@@ -17,6 +17,11 @@ services:
       - $PWD/env/certbot/conf:/etc/letsencrypt
       - $PWD/env/certbot/www:/var/www/certbot
 
+  redis:
+    volumes:
+      - ${REDIS_DB_PATH}:/var/lib/redis
+      - ${REDIS_CONFIG_PATH}:/usr/local/etc/redis/redis.conf
+
   firmware-worker-default-2:
     build:
       context: .
