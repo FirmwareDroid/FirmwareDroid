@@ -76,8 +76,7 @@ jobs:
       - name: Create env folder
         run: |
           mkdir env
-          ls ./documentation/example_config/example_env/
-          cp -r ./documentation/example_config/example_env/ ./env/
+          cp -r ./documentation/example_config/example_env/* ./env/
           ls ./env/
       - name: Install dependencies
         run: bash ./01_run.sh -e 1 -r 2 -d
