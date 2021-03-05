@@ -29,7 +29,11 @@ jobs:
       - name: Install Python
         uses: actions/setup-python@v2
         with:
-          python-version: ${{ matrix.python-version }}    
+          python-version: ${{ matrix.python-version }}
+      - name: Remove docker containers
+        run: |
+          docker system prune -f -a
+          docker image prune -f -a
       - name: Create env file
         run: |
           touch .env
@@ -72,7 +76,8 @@ jobs:
       - name: Create env folder
         run: |
           mkdir env
-          cp -r ./documentation/example_config/example_env/ ./env/
+          cp -r ./documentation/example_config/example_env/* ./env/
+          ls ./env/
       - name: Install dependencies
         run: bash ./01_run.sh -e 1 -r 2 -d
         
