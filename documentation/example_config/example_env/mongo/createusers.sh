@@ -1,5 +1,11 @@
 #!/bin/bash
 
+echo "##################################################
+=> Create MongoDB user for environment: ${APP_ENV}
+##################################################"
+
+
+
 if [ "$APP_ENV" == "testing" ]; then
   # Admin User
   MONGODB_ADMIN_USER=${TST_MONGO_INITDB_ROOT_USERNAME}
