@@ -11,8 +11,9 @@ class APPTests(unittest.TestCase):
     def setUp(self):
         testing_env_file = os.path.abspath("../../../.env")
         load_dotenv(dotenv_path=testing_env_file)
+        os.environ['TST_MONGODB_HOSTNAME'] = "127.0.0.1"
 
-    # executed after each test
+        # executed after each test
     def tearDown(self):
         logging.info("TEARDOWN")
 

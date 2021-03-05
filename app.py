@@ -228,7 +228,7 @@ def setup_application_settings():
     connection_attempts = 0
     has_connected = False
     while not has_connected:
-        if connection_attempts > 50:
+        if connection_attempts > 6:
             raise ConnectionError("Cannot connect to mongo-db! "
                                   "Maybe the DB was not initialized correctly or is temporarily unavailable.")
         try:
