@@ -38,6 +38,7 @@ from api.v1.routes.cleanup import ns as cleanup_namespace
 from api.v1.routes.adb import ns as adb_namespace
 from api.v1.routes.frida import ns as frida_namespace
 from api.v1.routes.exodus import ns as exodus_namespace
+from api.v1.routes.settings import ns as settings_namespace
 from flask_restx import Api
 from gevent.pywsgi import WSGIServer
 from scripts.utils.file_utils.file_util import delete_files_in_folder
@@ -60,7 +61,6 @@ def create_app():
               },
               security="basicAuth",
               doc=app_instance.config["API_DOC_FOLDER"])
-    logging.error(app_instance.config["MONGODB_SETTINGS"])
     api.namespaces.clear()
     setup_jwt_auth(app_instance)
     setup_api_converter(app_instance)
@@ -201,6 +201,7 @@ def register_api_namespaces(api):
     api.add_namespace(adb_namespace, path='/v1/adb')
     api.add_namespace(frida_namespace, path='/v1/frida')
     api.add_namespace(exodus_namespace, path='/v1/exodus')
+    api.add_namespace(settings_namespace, path='/v1/settings')
 
 
 def setup_api_converter(app_instance):

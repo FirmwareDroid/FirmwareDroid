@@ -21,7 +21,7 @@ where:
 environment=0
 running_mode=0
 detached_mode=0
-while getopts 'dhe:r:' option; do
+while getopts 'he:r:d' option; do
   case "$option" in
     h)  echo "$usage"
         exit 0
@@ -40,8 +40,7 @@ while getopts 'dhe:r:' option; do
           exit 1
        fi
        ;;
-    d) detached_mode = 1
-        echo "Run detached"
+    d) detached_mode=1
        ;;
     :) printf "missing argument for -%s\n" "$OPTARG" >&2
        echo "$usage" >&2
@@ -87,5 +86,6 @@ Starting FirmwareDroid now
 if [ $detached_mode == 0 ]; then
   docker-compose -f $PWD"/docker-compose.yml" -f $compose_path up
 else
+  echo "Run detached"
   docker-compose -f $PWD"/docker-compose.yml" -f $compose_path up -d
 fi
