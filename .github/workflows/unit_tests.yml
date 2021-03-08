@@ -3,10 +3,10 @@
 name: Python Unit Tests
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  # push:
+  #  branches: [ main ]
+  # pull_request:
+  #  branches: [ main ]
 
   workflow_dispatch:
 
@@ -30,10 +30,8 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Remove docker containers
-        run: |
-          docker system prune -f -a
-          docker image prune -f -a
+      - name: Install Python base requirements
+        run: pip install -r requirements.txt
       - name: Create env file
         run: |
           touch .env
@@ -80,6 +78,8 @@ jobs:
           ls ./env/
       - name: Install dependencies
         run: bash ./01_run.sh -e 1 -r 2 -d
+      - name: Run Unit Tests
+        run: python -m unittest scripts/tests/unit/test_app.py
         
         
         

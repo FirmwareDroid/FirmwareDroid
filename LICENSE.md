@@ -1,54 +1,3 @@
-Skip to content
-Search or jump to…
-
-Pull requests
-Issues
-Marketplace
-Explore
- 
-@7homasSutter 
-FirmwareDroid
-/
-FirmwareDroid-Client
-Private
-0
-00
-Code
-Issues
-Pull requests
-Actions
-Projects
-Security
-Insights
-Settings
-FirmwareDroid-Client/LICENSE
-FirmwareDroid/FirmwareDroid-Client is licensed under the
-
-GNU General Public License v3.0
-Permissions of this strong copyleft license are conditioned on making available complete source code of licensed works and modifications, which include larger works using a licensed work, under the same license. Copyright and license notices must be preserved. Contributors provide an express grant of patent rights.
-
-Permissions
- Commercial use
- Modification
- Distribution
- Patent use
- Private use
-Limitations
- Liability
- Warranty
-Conditions
- License and copyright notice
- State changes
- Disclose source
- Same license
-This is not legal advice. Learn more about repository licenses.
-@7homasSutter
-7homasSutter Initial commit
-Latest commit 2191cd2 1 hour ago
- History
- 1 contributor
-674 lines (553 sloc)  34.3 KB
-  
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
@@ -682,8 +631,8 @@ to attach them to the start of each source file to most effectively
 state the exclusion of warranty; and each file should have at least
 the "copyright" line and a pointer to where the full notice is found.
 
-    <one line to give the program's name and a brief idea of what it does.>
-    Copyright (C) <year>  <name of author>
+    FirmwareDroid is a application for analyzing Android firmware.
+    Copyright (C) 2021 Thomas Sutter
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -703,7 +652,7 @@ Also add information on how to contact you by electronic and paper mail.
   If the program does terminal interaction, make it output a short
 notice like this when it starts in an interactive mode:
 
-    <program>  Copyright (C) <year>  <name of author>
+    FirmwareDroid Copyright (C) 2021 Thomas Sutter
     This program comes with ABSOLUTELY NO WARRANTY; for details type `show w'.
     This is free software, and you are welcome to redistribute it
     under certain conditions; type `show c' for details.
@@ -723,15 +672,3 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
-© 2021 GitHub, Inc.
-Terms
-Privacy
-Security
-Status
-Docs
-Contact GitHub
-Pricing
-API
-Training
-Blog
-About
