@@ -1,55 +1,4 @@
-Skip to content
-Search or jump to…
-
-Pull requests
-Issues
-Marketplace
-Explore
- 
-@7homasSutter 
-FirmwareDroid
-/
-FirmwareDroid-Client
-Private
-0
-00
-Code
-Issues
-Pull requests
-Actions
-Projects
-Security
-Insights
-Settings
-FirmwareDroid-Client/LICENSE
-FirmwareDroid/FirmwareDroid-Client is licensed under the
-
-GNU General Public License v3.0
-Permissions of this strong copyleft license are conditioned on making available complete source code of licensed works and modifications, which include larger works using a licensed work, under the same license. Copyright and license notices must be preserved. Contributors provide an express grant of patent rights.
-
-Permissions
- Commercial use
- Modification
- Distribution
- Patent use
- Private use
-Limitations
- Liability
- Warranty
-Conditions
- License and copyright notice
- State changes
- Disclose source
- Same license
-This is not legal advice. Learn more about repository licenses.
-@7homasSutter
-7homasSutter Initial commit
-Latest commit 2191cd2 1 hour ago
- History
- 1 contributor
-674 lines (553 sloc)  34.3 KB
-  
-                    GNU GENERAL PUBLIC LICENSE
+                  GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 
  Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
@@ -723,15 +672,3 @@ may consider it more useful to permit linking proprietary applications with
 the library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.  But first, please read
 <https://www.gnu.org/licenses/why-not-lgpl.html>.
-© 2021 GitHub, Inc.
-Terms
-Privacy
-Security
-Status
-Docs
-Contact GitHub
-Pricing
-API
-Training
-Blog
-About
