@@ -1,12 +1,7 @@
 import logging
-import os
-import shutil
-import flask
 import mongoengine
 from flask_mongoengine import MongoEngine
 from mongoengine import connection
-from model import AndroidFirmware
-from scripts.rq_tasks.flask_context_creator import create_app_context
 
 
 def init_db(app):
@@ -85,24 +80,3 @@ def get_connection_options(app):
     return db_name, host, port, username, password
 
 
-def clear_firmware_database():
-    """
-    Deletes all firmware and related objects from the database.
-    Moves the store firmware-files to the import folder and deletes all extracted app on the disk.
-    """
-    create_app_context()
-    app = flask.current_app
-    import_dir_path = app.config["FIRMWARE_FOLDER_IMPORT"]
-    app_store_path = app.config["FIRMWARE_FOLDER_APP_EXTRACT"]
-    if not os.path.exists(import_dir_path):
-        raise OSError("Import folder does not exist!")
-    firmware_list = AndroidFirmware.objects()
-    for firmware in firmware_list:
-        destination_path = os.path.join(import_dir_path, firmware.original_filename)
-        app_store_firmware_path = os.path.join(app_store_path, firmware.md5)
-        try:
-            shutil.move(firmware.absolute_store_path, destination_path)
-            shutil.rmtree(app_store_firmware_path)
-            firmware.delete()
-        except OSError as err:
-            logging.error(str(err))
