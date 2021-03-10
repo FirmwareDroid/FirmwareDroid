@@ -1,4 +1,4 @@
-[![Build status](https://ci.cloudlab.zhaw.ch/api/projects/status/vxmbkbn63pqgjdy6/branch/master?svg=true)](https://ci.cloudlab.zhaw.ch/project/suth/firmwaredroid/branch/master)
+[![Build](https://github.com/FirmwareDroid/FirmwareDroid/actions/workflows/unit_tests.yml/badge.svg)](https://github.com/FirmwareDroid/FirmwareDroid/actions/workflows/unit_tests.yml)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 [![Open Source Love](https://badges.frapsoft.com/os/v2/open-source.svg?v=102)](https://github.com/ellerbrock/open-source-badge/)
 [![Open Source Love](https://badges.frapsoft.com/os/gpl/gpl.svg?v=102)](https://github.com/ellerbrock/open-source-badge/)
