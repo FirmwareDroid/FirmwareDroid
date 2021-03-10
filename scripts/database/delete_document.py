@@ -3,7 +3,7 @@ import os
 import shutil
 import flask
 from model import AndroidFirmware
-from rq_tasks.flask_context_creator import create_app_context
+from scripts.rq_tasks.flask_context_creator import create_app_context
 
 
 def delete_referenced_document_instance(document, attribute_name):
@@ -19,6 +19,8 @@ def delete_referenced_document_instance(document, attribute_name):
             logging.info(f"Delete document {referenced_document_instance.id} {attribute_name}")
             referenced_document_instance.delete()
             referenced_document_instance.save()
+            delattr(document, attribute_name)
+            document.save()
     except Exception as err:
         logging.warning(err)
 

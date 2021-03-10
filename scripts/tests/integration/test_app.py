@@ -1,7 +1,7 @@
 import logging
 import unittest
 
-from scripts.tests.unit.test_utils.test_context_creator import setup_flask_testing_client
+from scripts.tests.integration.test_utils.test_context_creator import setup_flask_testing_client
 
 
 class APPTests(unittest.TestCase):

@@ -19,7 +19,7 @@ class AndroGuardReport(Document):
     }
 
     android_app_id_reference = LazyReferenceField(AndroidApp, reverse_delete_rule=CASCADE, required=True)
-    androguard_version = StringField(required=True, default="3.3.5")
+    androguard_version = StringField(required=True)
     report_date = DateTimeField(required=True, default=datetime.datetime.now)
     packagename = StringField(required=True)
     app_name = StringField(required=False)

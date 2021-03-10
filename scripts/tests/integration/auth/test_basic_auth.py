@@ -1,8 +1,8 @@
 import unittest
 from base64 import b64encode
-from scripts.tests.unit.test_utils.test_context_creator import setup_flask_testing_client, setup_app_testing_client
+from scripts.tests.integration.test_utils.test_context_creator import setup_flask_testing_client, setup_app_testing_client
 
-from tests.unit.test_utils.random_string_creator import get_random_string
+from tests.integration.test_utils.random_string_creator import get_random_string
 
 
 class BasicAuthTests(unittest.TestCase):

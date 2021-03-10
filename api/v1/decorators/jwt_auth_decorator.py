@@ -1,5 +1,6 @@
 from functools import wraps
-from flask_jwt_extended import (verify_jwt_in_request, get_jwt_claims)
+from flask_jwt_extended import get_jwt
+from flask_jwt_extended import verify_jwt_in_request
 
 
 def admin_required(fn):
@@ -10,7 +11,7 @@ def admin_required(fn):
          as well as ensuring that this user has a role of `admin` in the access token
         """
         verify_jwt_in_request()
-        claims = get_jwt_claims()
+        claims = get_jwt()
         if claims['roles'] != 'admin':
             return "Unauthorized", 401
         else:

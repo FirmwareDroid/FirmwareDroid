@@ -157,7 +157,7 @@ def setup_jwt_auth(app_instance):
     """
     app_instance.bcrypt = Bcrypt(app_instance)
     app_instance.jwt = JWTManager(app_instance)
-    app_instance.jwt.user_claims_loader(add_claims_to_access_token)
+    app_instance.jwt.additional_claims_loader(add_claims_to_access_token)
 
 
 def setup_default_users(app_instance):
