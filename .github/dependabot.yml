@@ -1,0 +1,10 @@
+version: 2
+updates:
+  - package-ecosystem: "python"
+    directory: "/"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "python"
+    directory: "/requirements/"
+    schedule:
+      interval: "daily"
