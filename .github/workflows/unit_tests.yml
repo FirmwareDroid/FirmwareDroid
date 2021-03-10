@@ -77,7 +77,9 @@ jobs:
           cp -r ./documentation/example_config/example_env/* ./env/
           ls ./env/
       - name: Install dependencies
-        run: bash ./01_run.sh -e 1 -r 2 -d
+        run: bash ./make/build_images_all.sh
+      - name: Start main docker containers
+        run: docker-compose up -d database web nginx redis
       - name: Run Unit Tests
         run: python -m unittest scripts/tests/unit/test_app.py
         
