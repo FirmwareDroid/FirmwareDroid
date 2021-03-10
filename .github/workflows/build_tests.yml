@@ -83,7 +83,7 @@ jobs:
       - name: Start main docker containers
         run: docker-compose up -d database web nginx redis
       - name: Run Unit Tests
-        run: python -m unittest scripts/tests/unit/test_app.py
+        run: python -m unittest scripts/tests/integration/test_app.py
         
         
         
