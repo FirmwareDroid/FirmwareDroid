@@ -1,7 +1,5 @@
 import datetime
-
 from mongoengine import Document, LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, CASCADE
-
 from model import AndroidFirmware
 from marshmallow import Schema, fields
 
@@ -25,6 +23,7 @@ class AndroidApp(Document):
     qark_report_reference = LazyReferenceField('QarkReport', reverse_delete_rule=DO_NOTHING)
     apkid_report_reference = LazyReferenceField('ApkidReport', reverse_delete_rule=DO_NOTHING)
     exodus_report_reference = LazyReferenceField('ExodusReport', reverse_delete_rule=DO_NOTHING)
+    quark_engine_report_reference = LazyReferenceField('QuarkEngineReport', reverse_delete_rule=DO_NOTHING)
 
 
 class AndroidAppSchema(Schema):
@@ -44,3 +43,5 @@ class AndroidAppSchema(Schema):
     androwarn_report_reference = fields.Str()
     qark_report_reference = fields.Str()
     apkid_report_reference = fields.Str()
+    exodus_report_reference = fields.Str()
+    quark_engine_report_reference = fields.Str()

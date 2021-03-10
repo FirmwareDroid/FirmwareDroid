@@ -39,6 +39,7 @@ from api.v1.routes.adb import ns as adb_namespace
 from api.v1.routes.frida import ns as frida_namespace
 from api.v1.routes.exodus import ns as exodus_namespace
 from api.v1.routes.settings import ns as settings_namespace
+from api.v1.routes.quark_engine import ns as quark_engine_namespace
 from flask_restx import Api
 from gevent.pywsgi import WSGIServer
 from scripts.utils.file_utils.file_util import delete_files_in_folder
@@ -202,6 +203,8 @@ def register_api_namespaces(api):
     api.add_namespace(frida_namespace, path='/v1/frida')
     api.add_namespace(exodus_namespace, path='/v1/exodus')
     api.add_namespace(settings_namespace, path='/v1/settings')
+    api.add_namespace(quark_engine_namespace, path='/v1/quark_engine')
+
 
 
 def setup_api_converter(app_instance):

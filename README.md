@@ -116,6 +116,23 @@ FirmwareDroid for your research. The project is non-profit and you are allowed t
 
 
 ## Copyright
-ADD HERE OPENSOURCE LICENCE LATER
+FirmwareDroid is licenced under the GNUv3 
+(see [licence](https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md)). 
 
-REFERENCE ALL USED SOFTWARE LICENCES
+
+### Third Party Software Distributed with FirmwareDroid:
+The FirmwareDroid software contains code written by third parties. Such software will
+have its own individual licences. You as a user of this project must review, 
+accept and comply with the license terms of each downloaded/installed 
+package listed below or in our requirements files. By proceeding with the installation, 
+you are accepting the license terms of each package, and acknowledging that your 
+use of each package will be subject to its respective license terms.
+
+List of third party software:
+
+[AndroGuard](https://github.com/androguard/androguard/blob/master/LICENCE-2.0),
+[Androwarn](https://github.com/maaaaz/androwarn/blob/master/COPYING),
+[APKiD](https://github.com/rednaga/APKiD/blob/master/LICENSE.COMMERCIAL),
+[Exodus-Core](https://github.com/Exodus-Privacy/exodus-core/blob/v1/LICENSE), 
+[Qark](https://github.com/linkedin/qark/blob/master/LICENSE),
+[Quark-Engine](https://github.com/quark-engine/quark-engine),

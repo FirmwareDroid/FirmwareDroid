@@ -77,6 +77,7 @@ def analyse_single_apk(android_app):
     :param android_app: class:'AndroidApp'
     :return: class:'AndroGuardReport'
     """
+    from androguard import __version__
     from androguard.misc import AnalyzeAPK
     a, d, dx = AnalyzeAPK(android_app.absolute_store_path)
     certificate_list, certificate_id_list = create_certificate_object_list(a.get_certificates(), android_app)
@@ -85,6 +86,7 @@ def analyse_single_apk(android_app):
     string_analysis_id_list = get_string_analysis(dx)
     #class_analysis_id_list = get_class_analysis(dx)    #  TODO IMPLEMENT CLASS ANALYSIS ROUTE
     report = AndroGuardReport(android_app_id_reference=android_app.id,
+                              androguard_version=__version__,
                               packagename=a.get_package(),
                               is_valid_APK=a.is_valid_APK(),
                               is_androidtv=a.is_androidtv(),

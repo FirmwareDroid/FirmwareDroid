@@ -37,3 +37,4 @@ from .LzjdHash import LzjdHash
 from .TlshSimiliarityLookup import TlshSimiliarityLookup
 from .TlshEvaluation import TlshEvaluation
 from .ApplicationSetting import ApplicationSetting
+from .QuarkEngineReport import QuarkEngineReport

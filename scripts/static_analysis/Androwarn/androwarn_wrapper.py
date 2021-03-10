@@ -14,7 +14,7 @@ lock = Lock()
 
 def start_androwarn_analysis(android_app_id_list):
     """
-    Analysis all apps from the given firmware list with androwarn.
+    Analysis all apps from the given list with androwarn.
     :param android_app_id_list: list of class:'AndroidApp' object-ids
     """
     create_app_context()

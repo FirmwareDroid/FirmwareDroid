@@ -4,6 +4,10 @@ from scripts.rq_tasks.flask_context_creator import create_app_context
 
 
 def start_exodus_scan(android_app_id_list):
+    """
+    Analysis all apps from the given list with exodus-core.
+    :param android_app_id_list: list of class:'AndroidApp' object-ids.
+    """
     create_app_context()
     android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "exodus_report_reference")
     for android_app in android_app_list:
@@ -18,6 +22,7 @@ def exodus_analysis(apk_file_path):
     :return: dict - exodus results as json.
     """
     from exodus_core.analysis.static_analysis import StaticAnalysis
+
     class AnalysisHelper(StaticAnalysis):
         def create_json_report(self):
             return {
@@ -51,8 +56,10 @@ def create_report(android_app, exodus_results):
     :param exodus_results: dict - results of the exodus scan.
     :return:
     """
+    from exodus_core import __version__
     exodus_report = ExodusReport(
         android_app_id_reference=android_app.id,
+        version=__version__,
         results=exodus_results
     ).save()
     android_app.exodus_report_reference = exodus_report.id

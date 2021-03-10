@@ -1,0 +1,66 @@
+import logging
+import os
+from scripts.database.query_document import get_filtered_list
+from model import QuarkEngineReport, AndroidApp
+from scripts.rq_tasks.flask_context_creator import create_app_context
+from scripts.utils.mulitprocessing_util.mp_util import start_process_pool
+
+
+def start_quark_engine_scan(android_app_id_list):
+    """
+    Analysis all apps from the given list with quark-engine.
+    :param android_app_id_list: list of class:'AndroidApp' object-ids.
+    """
+    create_app_context()
+    logging.info(f"Quark-Engine analysis started! With {str(len(android_app_id_list))} apps")
+    android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "quark_engine_report_reference")
+    logging.info(f"Quark-Engine after filter: {str(len(android_app_list))}")
+    if len(android_app_list) > 0:
+        start_process_pool(android_app_list, quark_engine_worker, os.cpu_count())
+
+
+def quark_engine_worker(android_app_id_queue):
+    """
+    Start the analysis with quark-engine on a multiprocessor queue.
+    :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
+    """
+    while not android_app_id_queue.empty():
+        android_app_id = android_app_id_queue.get()
+        android_app = AndroidApp.objects.get(pk=android_app_id)
+        try:
+            scan_results = get_quark_engine_scan(android_app.absolute_store_path)
+            create_quark_engine_report(android_app, scan_results)
+        except Exception as err:
+            logging.error(f"Quark-Engine could not scan app {android_app.filename} id: {android_app.id} - "
+                          f"error: {err}")
+
+
+def get_quark_engine_scan(apk_path, rule_path=None):
+    """
+    Run quark-engine scan on one apk. Uses default rules if no rules path is given.
+    :return: str - json report as string.
+    """
+    from quark.report import Report
+    from quark.config import HOME_DIR
+    if not rule_path:
+        rule_path = f"{HOME_DIR}quark-rules"
+    report = Report()
+    report.analysis(apk_path, rule_path)
+    return report.get_report("json")
+
+
+def create_quark_engine_report(android_app, scan_results):
+    """
+    Create a quark engine report in the database.
+    :param android_app: class:'AndroidApp'
+    :param scan_results: dict - results of the quark-engine scan.
+    :return:
+    """
+    from quark import __version__
+    report = QuarkEngineReport(
+        android_app_id_reference=android_app.id,
+        quark_engine_version=__version__,
+        scan_results=scan_results
+    ).save()
+    android_app.quark_engine_report_reference = report.id
+    android_app.save()
