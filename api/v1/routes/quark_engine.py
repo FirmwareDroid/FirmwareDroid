@@ -24,5 +24,5 @@ class QuarkEngineScan(Resource):
         """
         app = flask.current_app
         android_app_id_list = check_app_mode(mode, request)
-        enqueue_jobs(app.rq_task_queue_default, start_quark_engine_scan, android_app_id_list)
+        enqueue_jobs(app.rq_task_queue_quark_engine, start_quark_engine_scan, android_app_id_list)
         return "", 200
