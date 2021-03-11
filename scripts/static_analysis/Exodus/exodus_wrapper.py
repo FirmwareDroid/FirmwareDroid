@@ -12,7 +12,7 @@ def start_exodus_scan(android_app_id_list):
     android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "exodus_report_reference")
     for android_app in android_app_list:
         exodus_json_report = exodus_analysis(android_app.absolute_store_path)
-        create_report(android_app.id, exodus_json_report)
+        create_report(android_app, exodus_json_report)
 
 
 def exodus_analysis(apk_file_path):
@@ -60,7 +60,7 @@ def create_report(android_app, exodus_results):
     #from exodus_core import __version__
     exodus_report = ExodusReport(
         android_app_id_reference=android_app.id,
-        version="1.3.3",
+        exodus_version="1.3.3",
         results=exodus_results
     ).save()
     android_app.exodus_report_reference = exodus_report.id
