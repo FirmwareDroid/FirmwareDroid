@@ -72,7 +72,7 @@ def get_super_android_analyzer_version():
     Gets the version number of the super android analyzer.
     :return: str - example: 0.5.1
     """
-    result = subprocess.run(["super", "-V"], timeout=60)
+    result = subprocess.run(["super-analyzer", "-V"], timeout=60)
     return str(result.stdout).replace("SUPER Android Analyzer ", "")
 
 
