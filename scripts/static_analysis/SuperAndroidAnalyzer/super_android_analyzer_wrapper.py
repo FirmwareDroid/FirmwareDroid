@@ -67,15 +67,6 @@ def get_super_android_analyzer_analysis(apk_file_path, result_folder_path):
     return json.loads(open(result_file_path).read())
 
 
-def get_super_android_analyzer_version():
-    """
-    Gets the version number of the super android analyzer.
-    :return: str - example: 0.5.1
-    """
-    result = subprocess.run(["super-analyzer", "-V"], timeout=60)
-    return str(result.stdout).replace("SUPER Android Analyzer ", "")
-
-
 def create_report(android_app, super_json_results):
     """
     Create a class:'SuperReport' and save the super android analyzer scan results in the database.
@@ -84,6 +75,5 @@ def create_report(android_app, super_json_results):
     :return: class:'SuperReport'
     """
     super_report = SuperReport(android_app_id_reference=android_app.id,
-                               super_version=get_super_android_analyzer_version(),
                                results=super_json_results).save()
     return super_report
