@@ -1,4 +1,2 @@
 FROM virustotal-worker
 
-#WORKDIR /var/www/
-#COPY ./ /var/www/

@@ -1,0 +1,7 @@
+FROM firmwaredroid-base-java as super-android-analyzer-worker
+
+RUN apt-get install -y default-jre-headless
+
+# Download RUST binary
+RUN wget https://github.com/SUPERAndroidAnalyzer/super/releases/download/0.5.1/super-analyzer_0.5.1_ubuntu_amd64.deb
+RUN dpkg -i ./super-analyzer_0.5.1_ubuntu_amd64.deb

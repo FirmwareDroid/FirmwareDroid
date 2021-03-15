@@ -1,6 +1,5 @@
 FROM exodus-worker
 
-#WORKDIR /var/www/
-#COPY ./ /var/www/
+
 
 

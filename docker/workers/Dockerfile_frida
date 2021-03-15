@@ -2,5 +2,3 @@ FROM frida-worker
 
 RUN adb start-server
 
-#WORKDIR /var/www/
-#COPY ./ /var/www/

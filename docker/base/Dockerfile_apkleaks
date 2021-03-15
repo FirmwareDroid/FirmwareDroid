@@ -1,0 +1,3 @@
+FROM firmwaredroid-base as apkleaks-worker
+
+RUN pip install -r ./requirements/requirements_apkleaks.txt

@@ -1,4 +1,3 @@
 FROM androguard-worker
 
-#WORKDIR /var/www/
-#COPY ./ /var/www/
+

@@ -1,4 +1,3 @@
 FROM androwarn-worker
 
-#WORKDIR /var/www/
-#COPY ./ /var/www/
+

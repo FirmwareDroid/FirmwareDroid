@@ -24,6 +24,7 @@ class AndroidApp(Document):
     apkid_report_reference = LazyReferenceField('ApkidReport', reverse_delete_rule=DO_NOTHING)
     exodus_report_reference = LazyReferenceField('ExodusReport', reverse_delete_rule=DO_NOTHING)
     quark_engine_report_reference = LazyReferenceField('QuarkEngineReport', reverse_delete_rule=DO_NOTHING)
+    super_report_reference = LazyReferenceField('SuperReport', reverse_delete_rule=DO_NOTHING)
 
 
 class AndroidAppSchema(Schema):

@@ -59,7 +59,7 @@ services:
   firmware-worker:
     build:
       context: .
-      dockerfile: ./docker/workers/Dockerfile_firmware
+      dockerfile: ./docker/base/Dockerfile_firmware
     container_name: firmware-worker
     restart: unless-stopped
     depends_on:
@@ -77,7 +77,7 @@ services:
   firmware-worker-high-1:
     build:
       context: .
-      dockerfile: ./docker/workers/Dockerfile_firmware
+      dockerfile: ./docker/base/Dockerfile_firmware
     container_name: firmware-worker-high-1
     restart: unless-stopped
     depends_on:
@@ -95,7 +95,7 @@ services:
   fuzzyhash-worker-1:
     build:
       context: .
-      dockerfile: ./docker/workers/Dockerfile_fuzzyhash
+      dockerfile: ./docker/base/Dockerfile_fuzzyhash
     container_name: fuzzyhash-worker-1
     restart: unless-stopped
     depends_on:
@@ -114,7 +114,7 @@ services:
   firmware-worker-default-1:
     build:
       context: .
-      dockerfile: ./docker/workers/Dockerfile_firmware
+      dockerfile: ./docker/base/Dockerfile_firmware
     container_name: firmware-worker-default-1
     restart: unless-stopped
     depends_on:
@@ -130,7 +130,7 @@ services:
   androguard-worker-1:
     build:
       context: .
-      dockerfile: ./docker/workers/Dockerfile_androguard
+      dockerfile: ./docker/base/Dockerfile_androguard
     container_name: androguard-worker-1
     restart: unless-stopped
     depends_on:
@@ -146,7 +146,7 @@ services:
   androwarn-worker-1:
     build:
       context: .
-      dockerfile: ./docker/workers/Dockerfile_androwarn
+      dockerfile: ./docker/base/Dockerfile_androwarn
     container_name: androwarn-worker-1
     restart: unless-stopped
     depends_on:
@@ -162,7 +162,7 @@ services:
   apkid-worker-1:
     build:
       context: .
-      dockerfile: ./docker/workers/Dockerfile_apkid
+      dockerfile: ./docker/base/Dockerfile_apkid
     container_name: apkid-worker-1
     restart: unless-stopped
     depends_on:
@@ -178,7 +178,7 @@ services:
   exodus-worker-1:
     build:
       context: .
-      dockerfile: ./docker/workers/Dockerfile_exodus
+      dockerfile: ./docker/base/Dockerfile_exodus
     container_name: exodus-worker-1
     restart: unless-stopped
     depends_on:
@@ -194,7 +194,7 @@ services:
   frida-worker-1:
     build:
       context: .
-      dockerfile: ./docker/workers/Dockerfile_frida
+      dockerfile: ./docker/base/Dockerfile_frida
     container_name: frida-worker-1
     restart: unless-stopped
     depends_on:
@@ -210,7 +210,7 @@ services:
   qark-worker-1:
     build:
       context: .
-      dockerfile: ./docker/workers/Dockerfile_qark
+      dockerfile: ./docker/base/Dockerfile_qark
     container_name: qark-worker-1
     restart: unless-stopped
     depends_on:
@@ -226,7 +226,7 @@ services:
   quark_engine-worker-1:
     build:
       context: .
-      dockerfile: ./docker/workers/Dockerfile_quark_engine
+      dockerfile: ./docker/base/Dockerfile_quark_engine
     container_name: quark_engine-worker-1
     restart: unless-stopped
     depends_on:
@@ -239,10 +239,26 @@ services:
     networks:
       - backend
 
+  super-android-analyzer-worker-1:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_super_android_analyzer
+    container_name: super_android_analyzer-worker-1
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+    env_file:
+      - ./.env
+    command: rqworker --name super_android_analyzer-worker-1 --url redis://redis:6379/ super_android_analyzer
+    networks:
+      - backend
+
   virustotal-worker-1:
     build:
       context: .
-      dockerfile: ./docker/workers/Dockerfile_virustotal
+      dockerfile: ./docker/base/Dockerfile_virustotal
     container_name: virustotal-worker-1
     restart: unless-stopped
     depends_on:

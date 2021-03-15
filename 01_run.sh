@@ -1,12 +1,13 @@
 #!/bin/bash
 
-########################################################################
-# FirmwareDroid run script.
-# Allows to start FirmwareDroid with different environment settings.
-# Version: 1.0
-# Created: 01.03.2021
-# Author: Thomas Sutter
-#########################################################################
+echo "###############################################################################
+# FirmwareDroid run script.                                                   #
+# Allows to start FirmwareDroid with different environment settings.          #
+# Keep in mind to remove old docker containers when changing environments!    #
+# Version: 1.0                                                                #
+# Created: 01.03.2021                                                         #
+# Author: Thomas Sutter                                                       #
+###############################################################################"
 
 usage="
 $(basename "$0") [-h] [-e <ENV>] [-r <RUN>] -- script to run FirmwareDroid in different environments.
@@ -69,7 +70,6 @@ else
   echo "Docker-compose environment: development"
 fi
 
-
 # Run build
 if [ $running_mode == 2 ]; then
   echo "Building all docker images"
@@ -79,9 +79,7 @@ elif [ $running_mode == 1 ]; then
   bash "./make/build_images_intermediate.sh"
 fi
 compose_path=$PWD"/"$compose_file
-echo "########################################
-Starting FirmwareDroid now
-#######################################"
+
 # Run containers
 if [ $detached_mode == 0 ]; then
   docker-compose -f $PWD"/docker-compose.yml" -f $compose_path up

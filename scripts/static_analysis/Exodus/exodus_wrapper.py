@@ -1,6 +1,9 @@
+import logging
+import os
 from scripts.database.query_document import get_filtered_list
 from model import ExodusReport, AndroidApp
 from scripts.rq_tasks.flask_context_creator import create_app_context
+from scripts.utils.mulitprocessing_util.mp_util import start_process_pool
 
 
 def start_exodus_scan(android_app_id_list):
@@ -10,12 +13,29 @@ def start_exodus_scan(android_app_id_list):
     """
     create_app_context()
     android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "exodus_report_reference")
-    for android_app in android_app_list:
-        exodus_json_report = exodus_analysis(android_app.absolute_store_path)
-        create_report(android_app, exodus_json_report)
+    logging.info(f"Exodus after filter: {str(len(android_app_list))}")
+    if len(android_app_list) > 0:
+        start_process_pool(android_app_list, exodus_worker, os.cpu_count())
 
 
-def exodus_analysis(apk_file_path):
+def exodus_worker(android_app_id_queue):
+    """
+    Start the analysis with exodus on a multiprocessor queue.
+    :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
+    """
+    while not android_app_id_queue.empty():
+        android_app_id = android_app_id_queue.get()
+        android_app = AndroidApp.objects.get(pk=android_app_id)
+        logging.info(f"Exodus scans: {android_app.id}")
+        try:
+            exodus_json_report = get_exodus_analysis(android_app.absolute_store_path)
+            create_report(android_app, exodus_json_report)
+        except Exception as err:
+            logging.error(f"Exodus could not scan app {android_app.filename} id: {android_app.id} - "
+                          f"error: {err}")
+
+
+def get_exodus_analysis(apk_file_path):
     """
     Analyses one apk with exodus and creates a json report.
     :param apk_file_path: str - path to the apk file.
@@ -56,7 +76,7 @@ def create_report(android_app, exodus_results):
     :param exodus_results: dict - results of the exodus scan.
     :return:
     """
-    # TODO ADD version number from package instead of constant
+    #TODO add dynamic usage for version
     #from exodus_core import __version__
     exodus_report = ExodusReport(
         android_app_id_reference=android_app.id,

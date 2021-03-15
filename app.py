@@ -40,6 +40,7 @@ from api.v1.routes.frida import ns as frida_namespace
 from api.v1.routes.exodus import ns as exodus_namespace
 from api.v1.routes.settings import ns as settings_namespace
 from api.v1.routes.quark_engine import ns as quark_engine_namespace
+from api.v1.routes.super_android_analyzer import ns as super_android_analyzer_namespace
 from flask_restx import Api
 from gevent.pywsgi import WSGIServer
 from scripts.utils.file_utils.file_util import delete_files_in_folder
@@ -113,6 +114,8 @@ def setup_redis_and_rq(app_instance):
     app_instance.rq_task_queue_quark_engine = rq.Queue('quark_engine', connection=app_instance.redis,
                                                        default_timeout=60 * 60)
     app_instance.rq_task_queue_qark = rq.Queue('qark', connection=app_instance.redis, default_timeout=60 * 60)
+    app_instance.rq_task_queue_super_android_analyzer = rq.Queue('super_android_analyzer',
+                                                                 connection=app_instance.redis, default_timeout=60 * 60)
 
 
 def setup_rq_dashboard(app_instance):
@@ -204,7 +207,7 @@ def register_api_namespaces(api):
     api.add_namespace(exodus_namespace, path='/v1/exodus')
     api.add_namespace(settings_namespace, path='/v1/settings')
     api.add_namespace(quark_engine_namespace, path='/v1/quark_engine')
-
+    api.add_namespace(super_android_analyzer_namespace, path='/v1/super_android_analyzer')
 
 
 def setup_api_converter(app_instance):
