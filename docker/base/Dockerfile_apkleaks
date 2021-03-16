@@ -1,3 +1,4 @@
 FROM firmwaredroid-base as apkleaks-worker
 
+# TODO ADD APKLEAKS AS SOON AS JSON REPORT IS AVAILABLE: https://github.com/dwisiswant0/apkleaks
 RUN pip install -r ./requirements/requirements_apkleaks.txt

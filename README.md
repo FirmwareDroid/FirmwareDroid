@@ -128,11 +128,15 @@ package listed below or in our requirements files. By proceeding with the instal
 you are accepting the license terms of each package, and acknowledging that your 
 use of each package will be subject to its respective license terms.
 
-List of third party software:
+List of third party scanner software:
 
 [AndroGuard](https://github.com/androguard/androguard/blob/master/LICENCE-2.0),
 [Androwarn](https://github.com/maaaaz/androwarn/blob/master/COPYING),
 [APKiD](https://github.com/rednaga/APKiD/blob/master/LICENSE.COMMERCIAL),
+[APKLeaks](https://github.com/dwisiswant0/apkleaks/blob/master/LICENSE),
 [Exodus-Core](https://github.com/Exodus-Privacy/exodus-core/blob/v1/LICENSE), 
 [Qark](https://github.com/linkedin/qark/blob/master/LICENSE),
 [Quark-Engine](https://github.com/quark-engine/quark-engine),
+[SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/blob/master/LICENSE),
+[VirusTotal-Python](https://github.com/dbrennand/virustotal-python/blob/master/LICENSE),
+
