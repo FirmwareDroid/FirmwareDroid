@@ -55,7 +55,9 @@ def get_super_android_analyzer_analysis(apk_file_path, result_folder_path):
     response = subprocess.run(["super-analyzer", "--json",
                                "--results", result_folder_path,
                                "--downloads", parent_dir,
-                               str(apk_file_path)], timeout=1200)
+                               str(apk_file_path)],
+                              timeout=1200,
+                              cwd=result_folder_path)
     response.check_returncode()
     result_file_path = ""
     for root, dirs, files in os.walk(result_folder_path):

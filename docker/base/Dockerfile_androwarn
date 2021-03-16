@@ -1,2 +1,3 @@
 FROM firmwaredroid-base as androwarn-worker
-RUN pip install -r ./requirements/requirements_androwarn.txt
+RUN --mount=type=cache,target=/var/www/tmp/androwarn/.cache \
+    pip install -r ./requirements/requirements_androwarn.txt

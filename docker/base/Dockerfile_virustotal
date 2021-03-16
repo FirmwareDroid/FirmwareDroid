@@ -1,2 +1,4 @@
 FROM firmwaredroid-base as virustotal-worker
-RUN pip install -r ./requirements/requirements_virustotal.txt
+
+RUN --mount=type=cache,target=/var/www/tmp/virustotal/.cache \
+    pip install -r ./requirements/requirements_virustotal.txt

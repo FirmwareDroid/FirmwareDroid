@@ -11,28 +11,29 @@ RUN apt-get update -y && \
     apt-get -y install --no-install-recommends apt-utils && \
     apt-get -y install liblzo2-dev
 
-
 ########################################################
-# Code and User generation                             #
+# User generation                                      #
 ########################################################
+WORKDIR /var/www/
 ENV GROUP_ID=1000 \
     USER_ID=1000
-
-# Copy code source and install requirements
-WORKDIR /var/www/
-COPY . /var/www/
+# Add local user
+RUN groupadd -r www -g $GROUP_ID
+RUN useradd -r -g $GROUP_ID -u $USER_ID www -s /bin/sh -m
+RUN chown $USER_ID:$GROUP_ID /var/www/
 
 ########################################################
 # Python requirements                                  #
 ########################################################
+COPY requirements.txt ./requirements.txt
 RUN /usr/local/bin/python -m pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN --mount=type=cache,target=/tmp/.cache \
+    pip install -r requirements.txt
 
+########################################################
+# Code generation                                      #
+########################################################
+# Copy main application
+COPY . /var/www/
 
-# Add local user
-RUN groupadd -r www -g $GROUP_ID
-RUN useradd -r -g $GROUP_ID -u $USER_ID www -s /bin/sh
-#TODO CHANGE USER HERE AS SOON AS WE HAVE UNIT-TESTS
-#USER www
-
-
+USER $USER_ID:$GROUP_ID

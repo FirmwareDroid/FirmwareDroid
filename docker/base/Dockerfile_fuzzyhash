@@ -3,4 +3,5 @@ FROM firmware-worker as fuzzyhash-worker
 # TODO add lzjd to requirement as soon as it works out of the box
 # RUN python -m pip install git+git://github.com/EdwardRaff/pyLZJD#egg=pyLZJD
 
-RUN pip install -r ./requirements/requirements_fuzzyhash.txt
+RUN --mount=type=cache,target=/var/www/tmp/fuzzy/.cache \
+    pip install -r ./requirements/requirements_fuzzyhash.txt

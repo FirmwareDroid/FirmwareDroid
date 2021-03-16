@@ -1,7 +1,11 @@
+########################################################
+# Firmwaredroid docker core with java                  #
+# Base dependency                                      #
+########################################################
 FROM openjdk:8-jdk-slim-buster as firmwaredroid-base-java
 
+# TODO find better image with python and java in one container
 COPY --from=firmwaredroid-base / /
 
 WORKDIR /var/www/
 COPY . /var/www/
-

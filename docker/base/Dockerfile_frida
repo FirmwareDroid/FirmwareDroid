@@ -1,7 +1,10 @@
 FROM firmwaredroid-base as frida-worker
 
+USER root
 RUN apt-get -y install android-tools-adb && \
     apt-get -y install build-essential gcc musl-dev && \
     adb start-server # Start adb to generate ADB keys
+USER $USER_ID:$GROUP_ID
 
-RUN pip install -r ./requirements/requirements_frida.txt
+RUN --mount=type=cache,target=/var/www/tmp/frida/.cache \
+    pip install -r ./requirements/requirements_frida.txt

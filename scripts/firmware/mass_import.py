@@ -182,6 +182,7 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
                           file_size, build_prop, version_detected, firmware_file_list):
     """
     Creates class:'AndroidFirmware' object and saves it to the database. Creates references to other documents.
+    :param version_detected: str - detected version of the firmware.
     :param store_filename: str - Name of the file within the file store.
     :param original_filename: str - original filename before renaming.
     :param firmware_store_path: str - relative path within the filesystem

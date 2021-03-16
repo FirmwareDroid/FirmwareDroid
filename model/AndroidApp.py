@@ -7,16 +7,16 @@ from marshmallow import Schema, fields
 class AndroidApp(Document):
     firmware_id_reference = LazyReferenceField(AndroidFirmware, reverse_delete_rule=CASCADE, required=False)
     indexed_date = DateTimeField(default=datetime.datetime.now)
-    md5 = StringField(required=True, max_length=128)
-    sha256 = StringField(required=True, max_length=256)
-    sha1 = StringField(required=True, max_length=160)
+    md5 = StringField(required=True, max_length=128, min_length=1)
+    sha256 = StringField(required=True, max_length=256, min_length=1)
+    sha1 = StringField(required=True, max_length=160, min_length=1)
     ssdeep_digest = StringField(required=False, unique=False)
-    filename = StringField(required=True, max_length=1024)
-    packagename = StringField(required=False, max_length=1024)
-    relative_firmware_path = StringField(required=True, max_length=1024)
+    filename = StringField(required=True, max_length=1024, min_length=1)
+    packagename = StringField(required=False, max_length=1024, min_length=1)
+    relative_firmware_path = StringField(required=True, max_length=1024, min_length=1)
     file_size_bytes = LongField(required=True)
-    absolute_store_path = StringField(required=False, max_length=2048)
-    relative_store_path = StringField(required=False, max_length=1024)
+    absolute_store_path = StringField(required=False, max_length=2048, min_length=1)
+    relative_store_path = StringField(required=False, max_length=1024, min_length=1)
     androguard_report_reference = LazyReferenceField('AndroGuardReport', reverse_delete_rule=DO_NOTHING)
     virus_total_report_reference = LazyReferenceField('VirusTotalReport', reverse_delete_rule=DO_NOTHING)
     androwarn_report_reference = LazyReferenceField('AndrowarnReport', reverse_delete_rule=DO_NOTHING)
@@ -26,6 +26,7 @@ class AndroidApp(Document):
     quark_engine_report_reference = LazyReferenceField('QuarkEngineReport', reverse_delete_rule=DO_NOTHING)
     super_report_reference = LazyReferenceField('SuperReport', reverse_delete_rule=DO_NOTHING)
     apkleaks_report_reference = LazyReferenceField('ApkLeaksReport', reverse_delete_rule=DO_NOTHING)
+    odex_file_reference = LazyReferenceField('OdexApp')
 
 
 class AndroidAppSchema(Schema):

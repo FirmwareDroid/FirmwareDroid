@@ -1,3 +1,4 @@
 FROM firmwaredroid-base as quark_engine-worker
 
-RUN pip install -r ./requirements/requirements_quark_engine.txt
+RUN --mount=type=cache,target=/var/www/tmp/quark_engine/.cache \
+    pip install -r ./requirements/requirements_quark_engine.txt

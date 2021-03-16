@@ -78,6 +78,12 @@ elif [ $running_mode == 1 ]; then
   echo "Building intermediate docker images"
   bash "./make/build_images_intermediate.sh"
 fi
+retVal=$?
+if [ $retVal -ne 0 ]; then
+    echo "Error - Could not build docker images!"
+    exit $retVal
+fi
+
 compose_path=$PWD"/"$compose_file
 
 # Run containers
