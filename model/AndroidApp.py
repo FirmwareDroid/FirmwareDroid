@@ -17,6 +17,7 @@ class AndroidApp(Document):
     file_size_bytes = LongField(required=True)
     absolute_store_path = StringField(required=False, max_length=2048, min_length=1)
     relative_store_path = StringField(required=False, max_length=1024, min_length=1)
+    firmware_file_reference = LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING)
     androguard_report_reference = LazyReferenceField('AndroGuardReport', reverse_delete_rule=DO_NOTHING)
     virus_total_report_reference = LazyReferenceField('VirusTotalReport', reverse_delete_rule=DO_NOTHING)
     androwarn_report_reference = LazyReferenceField('AndrowarnReport', reverse_delete_rule=DO_NOTHING)

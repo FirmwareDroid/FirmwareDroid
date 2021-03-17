@@ -20,6 +20,7 @@ def start_firmware_comparer(firmware_id_a, firmware_id_b):
     compare_firmware(firmware_a, firmware_b)
 
 
+@DeprecationWarning
 def compare_firmware(firmware_a, firmware_b):
     """
     Compares two firmware files.

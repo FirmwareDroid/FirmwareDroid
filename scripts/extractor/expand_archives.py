@@ -3,7 +3,7 @@ import os
 import re
 from scripts.firmware.const_regex import SYSTEM_IMG_PATTERN_LIST
 from model import FirmwareFile
-from scripts.firmware.ext4_mount_util import mount_android_ext4_image, is_path_mounted, exec_umount
+from scripts.firmware.ext4_mount_util import mount_android_image, is_path_mounted, exec_umount
 from scripts.extractor.nb0_extractor import extract_nb0
 from scripts.extractor.pac_extractor import unpack_pac
 from scripts.extractor.unzipper import extract_tar_file, unzip_file
@@ -48,12 +48,14 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
                 extract_all_nested(nested_file_path, root, True)
 
 
+@DeprecationWarning
 def extract_and_mount_all(firmware, cache_path, mount_path):
     """
     Extracts the given firmware to a temporary directory and attempts to mount system.img file.
     :param cache_path: str - path of the temporary directory to work in.
     :param firmware: class:'AndroidFirmware' firmware file to mount files from.
     """
+    # TODO REMOVE THIS METHOD
     extract_all_nested(compressed_file_path=firmware.absolute_store_path,
                        destination_dir=cache_path,
                        delete_compressed_file=False)
@@ -66,8 +68,8 @@ def extract_and_mount_all(firmware, cache_path, mount_path):
         for firmware_file in firmware_file_list:
             try:
                 img_file_absolute_path = cache_path + firmware_file.relative_path
-                mount_android_ext4_image(android_ext4_path=img_file_absolute_path,
-                                         mount_folder_path=mount_path)
+                mount_android_image(android_ext4_path=img_file_absolute_path,
+                                    mount_folder_path=mount_path)
                 logging.info(f"Mounted success: {img_file_absolute_path}")
                 has_mounted = True
                 break

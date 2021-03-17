@@ -1,5 +1,5 @@
 #############################################################
-# ubi_reader
+# Modified version of the ubi_reader
 # (c) 2013 Jason Pruitt (jrspruitt@gmail.com)
 #
 # This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,6 @@
 import logging
 import os
 import timeout_decorator
-
 from scripts.utils.file_utils.file_util import create_directories
 
 

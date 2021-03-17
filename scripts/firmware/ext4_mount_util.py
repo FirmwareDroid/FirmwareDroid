@@ -9,12 +9,14 @@ import flask
 from scripts.firmware.image_repair import attempt_repair, attempt_repair_and_resize
 
 
-def mount_android_ext4_image(android_ext4_path, mount_folder_path):
+def mount_android_image(android_ext4_path, mount_folder_path):
     """
-    Mounts the given ext4 image (only *.img) to the file system.
+    Attempts to mount the given android image (only *.img) to the file system. Uses different mounting strategies to
+    find a working configuration.
     :param android_ext4_path: str path to the image file to convert or mount.
     :param mount_folder_path: str path to the folder in which the partition will be mounted.
     """
+    logging.info("Attempt to extract ext with mounting.")
     if is_path_mounted(android_ext4_path):
         exec_umount(android_ext4_path)
 
@@ -32,19 +34,18 @@ def mount_android_ext4_image(android_ext4_path, mount_folder_path):
                 or attempt_fuse_ext4_mount(android_ext4_path, mount_folder_path, mount_option) \
                 or attempt_repair_and_mount(android_ext4_path, mount_folder_path, mount_option) \
                 or attempt_resize_and_mount(android_ext4_path, mount_folder_path, mount_option):
-            time.sleep(10)  # Wait for filesystem to be ready
             if not has_files_in_folder(mount_folder_path):
                 logging.warning("Overwrite chown of mount folders.")
                 execute_chown(mount_folder_path)
                 if has_files_in_folder(mount_folder_path):
                     is_mounted = True
+                else:
+                    logging.error(f"Mount error: Cannot access mounted files in {mount_folder_path}")
             else:
                 is_mounted = True
-            logging.info(f"Mount success: {android_ext4_path} to {mount_folder_path}")
-            #logging.error(f"Attempt again. Mount access problem: Cannot read files in {mount_folder_path}.")
+                logging.info(f"Mount success: {android_ext4_path} to {mount_folder_path}")
         else:
             logging.warning(f"All mount attempts failed. Could not mount {android_ext4_path}")
-    time.sleep(5)
     logging.info(f"Was file mounted? {is_mounted}")
     return is_mounted
 

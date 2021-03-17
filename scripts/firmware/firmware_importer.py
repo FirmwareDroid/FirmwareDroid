@@ -1,24 +1,24 @@
 import re
+import tempfile
 import threading
 import flask
 import logging
 import os
 import shutil
 
-from scripts.firmware.system_partition_util import create_system_img_path
-from scripts.hashing.fuzzy_hash_creator import hash_firmware_files
+from scripts.firmware.image_importer import create_abs_image_file_path, find_image_firmware_file, extract_image_files
+from scripts.hashing.fuzzy_hash_creator import fuzzy_hash_firmware, fuzzy_hash_firmware_files
 from model import AndroidFirmware
 from threading import Thread
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.firmware.firmware_file_indexer import create_firmware_file_list, add_firmware_file_references
-from scripts.firmware.const_regex import SYSTEM_IMG_PATTERN_LIST, BUILD_PROP_PATTERN_LIST
+from scripts.firmware.const_regex import SYSTEM_IMG_PATTERN_LIST, BUILD_PROP_PATTERN_LIST, EXT_IMAGE_PATTERNS_DICT
 from scripts.firmware.android_app_import import find_android_apps, extract_android_apps
 from scripts.firmware.build_prop_parser import BuildPropParser
-from scripts.firmware.ext4_mount_util import exec_umount, is_path_mounted, mount_android_ext4_image
+from scripts.firmware.ext4_mount_util import exec_umount, is_path_mounted
 from scripts.hashing.file_hashs import md5_from_file, sha1_from_file, sha256_from_file
 from scripts.extractor.expand_archives import extract_all_nested
 from scripts.utils.file_utils.file_util import get_filenames, create_temp_directories, cleanup_directories
-from scripts.extractor.ubi_extractor import extract_ubi_image
 from scripts.firmware.firmware_version_detect import detect_by_build_prop
 from scripts.utils.mulitprocessing_util.mp_util import create_multi_threading_queue
 
@@ -81,88 +81,109 @@ def prepare_firmware_import(firmware_file_queue):
         firmware_file_queue.task_done()
 
 
-def import_firmware(original_filename, md5, firmware_file_path):
+def import_firmware(original_filename, md5, firmware_archive_file_path):
     """
     Attempts to store a firmware archive into the database.
     :param original_filename: str - name of the file to import.
     :param md5: md5 - checksum of the file to check.
-    :param firmware_file_path: str - path of the firmware archive.
+    :param firmware_archive_file_path: str - path of the firmware archive.
     """
-    temp_extract_dir, temp_mount_dir, firmware_app_store, store_filename, firmware_store_path \
-        = create_import_paths(md5, firmware_file_path)
+    temp_extract_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
+                                                   suffix="_extract")
+    firmware_app_store = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_APP_EXTRACT"], md5)
+
     try:
-        sha1 = sha1_from_file(firmware_file_path)
-        sha256 = sha256_from_file(firmware_file_path)
-        file_size = os.path.getsize(firmware_file_path)
-        extract_all_nested(firmware_file_path, temp_extract_dir.name, False)
-        firmware_files = get_firmware_content(temp_extract_dir.name, temp_mount_dir.name)
-        firmware_app_list = store_android_apps(temp_mount_dir.name, firmware_app_store)
-        build_prop = extract_build_prop(temp_mount_dir.name)
-        version_detected = detect_by_build_prop(build_prop)
-        firmware = store_firmware_object(store_filename=store_filename,
-                                         original_filename=original_filename,
-                                         firmware_store_path=firmware_store_path,
-                                         md5=md5,
-                                         sha256=sha256,
-                                         sha1=sha1,
-                                         firmware_app_list=firmware_app_list,
-                                         file_size=file_size,
-                                         build_prop=build_prop,
-                                         version_detected=version_detected,
-                                         firmware_file_list=firmware_files)
-        hash_firmware_files(firmware, temp_mount_dir.name)
-        shutil.move(firmware_file_path, firmware_store_path)
+        sha1 = sha1_from_file(firmware_archive_file_path)
+        sha256 = sha256_from_file(firmware_archive_file_path)
+        file_size = os.path.getsize(firmware_archive_file_path)
+        extract_all_nested(firmware_archive_file_path, temp_extract_dir.name, False)
+
+        version_detected = 0
+        build_prop = None
+        firmware_app_list = []
+        firmware_file_list = []
+        archive_firmware_file_list = get_firmware_archive_content(temp_extract_dir.name)
+        firmware_file_list.extend(archive_firmware_file_list)
+        for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
+            temp_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
+                                                   suffix=f"_mount_{partition_name}")
+            partition_firmware_file_list = get_partition_firmware_files(archive_firmware_file_list,
+                                                                        temp_extract_dir.name,
+                                                                        file_pattern_list,
+                                                                        partition_name,
+                                                                        temp_dir.name)
+            firmware_app_list.extend(store_android_apps(temp_dir.name, firmware_app_store))
+            if partition_name == "system":  # Todo remove this if statement as soon as build_prop_parser is refactored
+                build_prop = extract_build_prop(temp_dir.name)
+                version_detected = detect_by_build_prop(build_prop)
+            firmware_file_list.extend(partition_firmware_file_list)
+            fuzzy_hash_firmware_files(partition_firmware_file_list, temp_dir.name)
+
+        filename, file_extension = os.path.splitext(firmware_archive_file_path)
+        store_filename = md5 + file_extension
+        firmware_archive_store_path = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_STORE"],
+                                                   version_detected,
+                                                   store_filename)
+        store_firmware_object(store_filename=store_filename,
+                              original_filename=original_filename,
+                              firmware_store_path=firmware_archive_store_path,
+                              md5=md5,
+                              sha256=sha256,
+                              sha1=sha1,
+                              android_app_list=firmware_app_list,
+                              file_size=file_size,
+                              build_prop=build_prop,
+                              version_detected=version_detected,
+                              firmware_file_list=firmware_file_list)
+        shutil.move(firmware_archive_file_path, firmware_archive_store_path)
         logging.info(f"Firmware Import success: {original_filename}")
     except Exception as e:
         logging.exception(f"Firmware Import failed: {original_filename} error: {str(e)}")
-        cleanup_directories(firmware_file_path, firmware_app_store)
-    finally:
-        if is_path_mounted(temp_mount_dir.name):
-            exec_umount(temp_mount_dir.name)
+        cleanup_directories(firmware_archive_file_path, firmware_app_store)
 
 
-def create_import_paths(md5, firmware_file_path):
-    """
-    Creates the paths and directories needed for importing a firmware.
-    :param md5: str - md5 has used as filename for storing the file.
-    :param firmware_file_path: str - path of the file to store.
-    :return: dir - tempdir, dir -tempdir, str -path_apps, str - future_filename_firmware, str -firmware_store_path
-    """
-    app = flask.current_app
-    temp_extract_dir, temp_mount_dir = create_temp_directories()
-    firmware_app_store = os.path.join(app.config["FIRMWARE_FOLDER_APP_EXTRACT"], md5)
-    filename, file_extension = os.path.splitext(firmware_file_path)
-    store_filename = md5 + file_extension
-    firmware_store_path = os.path.join(app.config["FIRMWARE_FOLDER_STORE"], store_filename)
-    logging.info(f"firmware_store_path: {firmware_store_path}")
-    if not temp_extract_dir \
-            or not temp_mount_dir \
-            or not firmware_app_store \
-            or not store_filename \
-            or not firmware_store_path:
-        raise ValueError(f"Could not create import paths! "
-                         f"firmware_app_store: {firmware_app_store}, "
-                         f"store_filename: {store_filename},"
-                         f"firmware_store_path: {firmware_store_path}")
-    return temp_extract_dir, temp_mount_dir, firmware_app_store, store_filename, firmware_store_path
-
-
-def get_firmware_content(cache_temp_file_dir_path, cache_temp_mount_dir_path):
+def get_firmware_archive_content(cache_temp_file_dir_path):
     """
     Creates an index of the files within the firmware and attempts to find the system.img
     :param cache_temp_file_dir_path: str - dir path in which the extracted files are.
-    :param cache_temp_mount_dir_path: str - dir path in which the system.img will be mounted.
+
     :return: list class:'FirmwareFile'
     """
-    top_level_firmware_files = create_firmware_file_list(cache_temp_file_dir_path, "/")
-    system_image = find_system_image(top_level_firmware_files)
-    system_image_absolute_path = create_system_img_path(system_image, cache_temp_file_dir_path)
-    if not mount_android_ext4_image(system_image_absolute_path, cache_temp_mount_dir_path):
-        extract_ubi_image(system_image_absolute_path, cache_temp_mount_dir_path)
-    second_level_firmware_files = create_firmware_file_list(cache_temp_mount_dir_path, "system")
     firmware_files = []
+    top_level_firmware_files = create_firmware_file_list(cache_temp_file_dir_path, "/")
     firmware_files.extend(top_level_firmware_files)
-    firmware_files.extend(second_level_firmware_files)
+    return firmware_files
+
+
+def get_partition_firmware_files(archive_firmware_file_list,
+                                 extracted_archive_dir_path,
+                                 file_pattern_list,
+                                 partition_name,
+                                 temp_dir_path):
+    """
+    Index all ext files of the given firmware. Creates a list of class:'FirmwareFile' from an Android all
+    accessible partitions.
+    :param file_pattern_list: list(str) - list of regex patterns to detect an image file by name.
+    :param temp_dir_path: str - path to the directoy in which the image files will be loaded temporarily.
+    :param partition_name: str - unique identifier of the partition.
+    :param extracted_archive_dir_path: str - path of the root folder where the firmware archive was extracted to.
+    :param archive_firmware_file_list: list(class:'FirmwareFile') - list of top level firmware files from the archive.
+    :raises: RuntimeError - in case the system partition cannot be accessed.
+    :return: list(class:'FirmwareFile') - list of files found in the image. In case the image could not be processed the
+    method returns an empty list.
+    """
+    firmware_files = []
+    try:
+        image_firmware_file = find_image_firmware_file(archive_firmware_file_list, file_pattern_list)
+        image_absolute_path = create_abs_image_file_path(image_firmware_file, extracted_archive_dir_path)
+        extract_image_files(image_absolute_path, temp_dir_path)
+        partition_firmware_files = create_firmware_file_list(temp_dir_path, partition_name)
+        firmware_files.extend(partition_firmware_files)
+    except (RuntimeError, ValueError) as err:
+        if partition_name == "system":  # Abort if we cannot import system partition.
+            raise
+        else:
+            logging.warning(err)
     return firmware_files
 
 
@@ -178,7 +199,7 @@ def store_android_apps(search_path, firmware_app_store):
     return firmware_app_list
 
 
-def store_firmware_object(store_filename, original_filename, firmware_store_path, md5, sha256, sha1, firmware_app_list,
+def store_firmware_object(store_filename, original_filename, firmware_store_path, md5, sha256, sha1, android_app_list,
                           file_size, build_prop, version_detected, firmware_file_list):
     """
     Creates class:'AndroidFirmware' object and saves it to the database. Creates references to other documents.
@@ -189,7 +210,7 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
     :param md5: str - checksum
     :param sha256: str - checksum
     :param sha1: str - checksum
-    :param firmware_app_list: list of class:'AndroidApp'
+    :param android_app_list: list of class:'AndroidApp'
     :param file_size: int - size of firmware file.
     :param build_prop: class:'BuildPropFile'
     :param firmware_file_list: list of class:'FirmwareFile'
@@ -204,27 +225,44 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
                                md5=md5,
                                sha256=sha256,
                                sha1=sha1,
-                               android_app_id_list=map(lambda x: x.id, firmware_app_list),
+                               android_app_id_list=map(lambda x: x.id, android_app_list),
                                file_size_bytes=file_size,
                                version_detected=version_detected,
                                hasFileIndex=True,
+                               hasFuzzyHashIndex=True,
                                build_prop=build_prop)
     firmware.save()
     logging.info(f"Stored firmware with id {str(firmware.id)} in database.")
     add_firmware_file_references(firmware, firmware_file_list)
-    add_app_firmware_references(firmware, firmware_app_list)
+    add_app_firmware_references(firmware, android_app_list)
+    add_app_firmware_file_references(android_app_list, firmware_file_list)
     return firmware
 
 
-def add_app_firmware_references(firmware, app_list):
+def add_app_firmware_references(firmware, android_app_list):
     """
     Adds the firmware reference to the app.
     :param firmware: class:'AndroidFirmware'
-    :param app_list: list - class:'AndroidApp'
+    :param android_app_list: list - class:'AndroidApp'
     """
-    for app in app_list:
+    for app in android_app_list:
         app.firmware_id_reference = firmware.id
         app.save()
+
+
+def add_app_firmware_file_references(android_app_list, firmware_file_list):
+    """
+    Adds references between Android app and firmware files.
+    :param firmware_file_list: list - class:'FirmwareFile'
+    :param android_app_list: list - class:'AndroidApp'
+    :return:
+    """
+    for android_app in android_app_list:
+        firmware_file = list(filter(lambda x: x.md5 == android_app.md5, firmware_file_list))[0]
+        android_app.firmware_file_reference = firmware_file.id
+        android_app.save()
+        firmware_file.android_app_reference = android_app.id
+        firmware_file.save()
 
 
 def extract_build_prop(source_path):
@@ -253,18 +291,3 @@ def find_build_prop_path(search_path):
                     logging.info("Build.prop file path: " + str(path))
                     return path
     raise ValueError("Could not find build.prop file in image.")
-
-
-def find_system_image(firmware_files):
-    """
-    Checks within the given file list if there is a mountable system partition.
-    :param firmware_files: The files which will be checked for their names.
-    :return: class:'FirmwareFile' object of the system.img or system.ext4.img file.
-    """
-    for file in firmware_files:
-        file_name = file.name.lower()
-        for pattern in SYSTEM_IMG_PATTERN_LIST:
-            if not file.isDirectory and re.search(pattern, file_name.lower()):
-                logging.info("Found system image file: " + str(file.name))
-                return file
-    raise ValueError("Could not find system.img or system.ext4.img file!")

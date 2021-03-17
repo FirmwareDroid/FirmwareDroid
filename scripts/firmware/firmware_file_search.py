@@ -2,7 +2,6 @@ import logging
 import os
 from mongoengine import DoesNotExist, MultipleObjectsReturned
 import re
-
 from model import FirmwareFile
 
 
@@ -21,6 +20,7 @@ def get_firmware_file_by_regex_list(firmware, regex_list):
         except DoesNotExist:
             pass
         except MultipleObjectsReturned:
+            # TODO FIND MAYBE A BETTER STRATEGY TO FIND THE CORRECT IMAGE FILE
             firmware_file = FirmwareFile.objects(firmware_id_reference=firmware.id, name=regex).first()
             return firmware_file
     return None

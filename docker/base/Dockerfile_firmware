@@ -13,3 +13,6 @@ COPY ./ /var/www/
 
 RUN --mount=type=cache,target=/var/www/tmp/firmware/.cache \
     pip install -r ./requirements/requirements_firmware.txt
+
+# TODO refactor this with pypi: https://github.com/hexedit/ext4extract/issues/3
+RUN pip install https://github.com/hexedit/ext4extract.git

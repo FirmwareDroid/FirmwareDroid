@@ -3,7 +3,7 @@ import os
 import shutil
 import time
 import flask
-from scripts.firmware.system_partition_util import expand_and_mount
+from scripts.firmware.image_importer import extract_image_files
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.firmware.ext4_mount_util import is_path_mounted, exec_umount
 from model import FirmwareFile
@@ -62,7 +62,7 @@ def export_firmware_files_by_id(firmware_file_id_queue):
         firmware_file = FirmwareFile.objects.get(pk=firmware_file_id)
         firmware = firmware_file.firmware_id_reference.fetch()
         cache_temp_file_dir, cache_temp_mount_dir = create_temp_directories()
-        expand_and_mount(firmware, cache_temp_file_dir.name, cache_temp_mount_dir.name)
+        extract_image_files(firmware, cache_temp_file_dir.name, cache_temp_mount_dir.name)
         logging.info(f"Export file: {firmware.name}")
         try:
             firmware_file = FirmwareFile.objects.get(pk=firmware_file_id)

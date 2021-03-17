@@ -1,11 +1,11 @@
 import logging
 import os
 from multiprocessing import Lock
-from scripts.firmware.system_partition_util import expand_and_mount
+from scripts.firmware.image_importer import extract_image_files
 from scripts.firmware.ext4_mount_util import is_path_mounted, exec_umount
-from scripts.hashing.fuzzy_hash_creator import hash_firmware_files
+from scripts.hashing.fuzzy_hash_creator import fuzzy_hash_firmware
 from model import FirmwareFile, AndroidFirmware
-from scripts.utils.mulitprocessing_util.mp_util import start_process_pool, start_threads
+from scripts.utils.mulitprocessing_util.mp_util import start_threads
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.hashing import md5_from_file
 from scripts.utils.file_utils.file_util import  create_temp_directories
@@ -13,6 +13,7 @@ from scripts.utils.file_utils.file_util import  create_temp_directories
 lock = Lock()
 
 
+@DeprecationWarning
 def start_firmware_indexer(firmware_id_list):
     """
     Starts the firmware file indexer, which generates a list of all files in the firmware. Function for rq-worker.
@@ -50,6 +51,7 @@ def start_parallel_file_index(firmware_id_list):
     #start_process_pool(firmware_id_list, index_image_files, number_of_processes=os.cpu_count(), use_id_list=False)
 
 
+@DeprecationWarning
 def index_image_files(firmware_id_queue):
     """
     Creates a file list of the given firmware and save it to the database. Create an index only if it not exists yet.
@@ -70,11 +72,11 @@ def index_image_files(firmware_id_queue):
             logging.info(f"Firmware indexer: {firmware.id} estimated queue-size: {firmware_id_queue.qsize()}")
             if not firmware.hasFileIndex:
                 logging.info(f"START firmware file indexing for: {firmware.id}")
-                expand_and_mount(firmware, cache_temp_file_dir, cache_temp_mount_dir)
+                extract_image_files(firmware, cache_temp_file_dir, cache_temp_mount_dir)
                 firmware_file_list = create_firmware_file_list(scan_directory=cache_temp_mount_dir,
                                                                partition_name="system")
                 add_firmware_file_references(firmware, firmware_file_list)
-                hash_firmware_files(firmware, cache_temp_mount_dir)    # Todo remove this line after indexing all files.
+                fuzzy_hash_firmware(firmware, cache_temp_mount_dir)    # Todo remove this line after indexing all files.
         except Exception as err:
             logging.error(err)
         finally:

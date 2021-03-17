@@ -16,7 +16,7 @@ from api.v1.parser.request_util import check_firmware_mode
 from scripts.auth.basic_auth import requires_basic_authorization
 from model.AndroidFirmware import AndroidFirmwareSchema
 from scripts.database.delete_document import clear_firmware_database
-from scripts.firmware.mass_import import start_mass_import
+from scripts.firmware.firmware_importer import start_mass_import
 from scripts.firmware.firmware_version_detect import detect_firmware_version
 from model import AndroidFirmware
 

@@ -5,6 +5,7 @@ from shutil import copyfile
 from scripts.hashing.file_hashs import sha256_from_file, md5_from_file, sha1_from_file
 from model import AndroidApp
 
+
 def extract_android_apps(firmware_app_list, destination_folder, firmware_mount_path):
     """
     Copies apps to the filesystem and saves meta-information in the database.
