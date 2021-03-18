@@ -61,19 +61,21 @@ def hash_elf_file(file_path, fuzzy_hash_document, identifier, hash_from_buffer):
     import lief
     try:
         binary = lief.parse(file_path)
-        fuzzy_hash_document.sub_file_digest_dict[identifier] = {}
-        try:
-            fuzzy_hash_document.sub_file_digest_dict[identifier]["header"] = hash_from_buffer(str(binary.header))
-        except Exception as err:
-            logging.warning(f"{file_path} - {err}")
-        for section in binary.sections:
+        if binary:
+            fuzzy_hash_document.sub_file_digest_dict[identifier] = {}
             try:
-                fuzzy_hash_document.sub_file_digest_dict[identifier][str(section.name)] \
-                    = hash_from_buffer(str(section.content))
+                fuzzy_hash_document.sub_file_digest_dict[identifier]["header"] = hash_from_buffer(str(binary.header))
             except Exception as err:
-                logging.warning(f"{file_path} {section}- {err}")
-        fuzzy_hash_document.sub_file_digest_dict = filter_mongodb_dict_chars(fuzzy_hash_document.sub_file_digest_dict)
-        fuzzy_hash_document.save()
+                logging.warning(f"{file_path} - {err}")
+            for section in binary.sections:
+                try:
+                    fuzzy_hash_document.sub_file_digest_dict[identifier][str(section.name)] \
+                        = hash_from_buffer(str(section.content))
+                except Exception as err:
+                    logging.warning(f"{file_path} {section}- {err}")
+            fuzzy_hash_document.sub_file_digest_dict = filter_mongodb_dict_chars(
+                fuzzy_hash_document.sub_file_digest_dict)
+            fuzzy_hash_document.save()
     except Exception as err:
         logging.error(f"Error parsing elf file {file_path} {err}")
 

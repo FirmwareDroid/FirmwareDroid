@@ -1,5 +1,6 @@
 import datetime
-from mongoengine import Document, LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, CASCADE
+from mongoengine import Document, LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, CASCADE, \
+    ListField
 from model import AndroidFirmware
 from marshmallow import Schema, fields
 
@@ -27,7 +28,7 @@ class AndroidApp(Document):
     quark_engine_report_reference = LazyReferenceField('QuarkEngineReport', reverse_delete_rule=DO_NOTHING)
     super_report_reference = LazyReferenceField('SuperReport', reverse_delete_rule=DO_NOTHING)
     apkleaks_report_reference = LazyReferenceField('ApkLeaksReport', reverse_delete_rule=DO_NOTHING)
-    odex_file_reference = LazyReferenceField('OdexApp')
+    odex_file_reference_list = ListField(LazyReferenceField('OdexFile', reverse_delete_rule=DO_NOTHING))
 
 
 class AndroidAppSchema(Schema):

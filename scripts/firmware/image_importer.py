@@ -30,11 +30,12 @@ def extract_image_files(image_path, extract_dir_path):
     :param image_path: str - absolute path to the image file.
     :param extract_dir_path: str - path where the files will be extracted or mounted to.
     """
-    if extract_ext4(image_path, extract_dir_path):
-        logging.info("Image extraction successful with ext4")
-    elif extract_simg_ext4(image_path, extract_dir_path):
-        logging.info("Image extraction successful with simg_ext4")
-    elif mount_android_image(image_path, extract_dir_path):
+    # TODO add extextractor here
+    #if extract_ext4(image_path, extract_dir_path):
+    #    logging.info("Image extraction successful with ext4")
+    #elif extract_simg_ext4(image_path, extract_dir_path):
+    #    logging.info("Image extraction successful with simg_ext4")
+    if mount_android_image(image_path, extract_dir_path):
         logging.info("Image mount successful")
     elif extract_ubi_image(image_path, extract_dir_path):
         logging.info("UBI Image extraction successful")

@@ -16,7 +16,7 @@ from api.v1.parser.request_util import check_firmware_mode
 from scripts.auth.basic_auth import requires_basic_authorization
 from model.AndroidFirmware import AndroidFirmwareSchema
 from scripts.database.delete_document import clear_firmware_database
-from scripts.firmware.firmware_importer import start_mass_import
+from scripts.firmware.firmware_importer import start_firmware_mass_import
 from scripts.firmware.firmware_version_detect import detect_firmware_version
 from model import AndroidFirmware
 
@@ -74,7 +74,7 @@ class FirmwareByVersion(Resource):
         return json.dumps(firmware_list, cls=DefaultJsonEncoder)
 
 
-@ns.route('/mass_import/')
+@ns.route('/firmware_importer/')
 class FirmwareMassImport(Resource):
     @ns.doc('get')
     @requires_basic_authorization
@@ -84,7 +84,7 @@ class FirmwareMassImport(Resource):
         :return: rq-job-id
         """
         app = flask.current_app
-        job = app.rq_task_queue_high.enqueue(start_mass_import, job_timeout=60 * 60 * 24 * 7)
+        job = app.rq_task_queue_high.enqueue(start_firmware_mass_import, job_timeout=60 * 60 * 24 * 7)
         return {"id": job.get_id()}
 
 

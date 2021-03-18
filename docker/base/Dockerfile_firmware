@@ -6,7 +6,7 @@ RUN apt-get -y install simg2img && \
     apt-get -y install liblzo2-dev && \
     apt-get -y install fuse && \
     apt-get -y install fuseext2
-USER $USER_ID:$GROUP_ID
+
 
 WORKDIR /var/www/
 COPY ./ /var/www/
@@ -15,4 +15,8 @@ RUN --mount=type=cache,target=/var/www/tmp/firmware/.cache \
     pip install -r ./requirements/requirements_firmware.txt
 
 # TODO refactor this with pypi: https://github.com/hexedit/ext4extract/issues/3
-RUN pip install https://github.com/hexedit/ext4extract.git
+# RUN pip install git+https://github.com/hexedit/ext4extract.git
+
+
+# TODO find a way to mount without root
+#USER $USER_ID:$GROUP_ID
