@@ -52,7 +52,7 @@ def find_android_apps(search_path):
                 android_app = AndroidApp(filename=filename,
                                          relative_firmware_path=app_path)
                 firmware_apps.append(android_app)
-    logging.info(f"Found .apk files in firmware: {len(firmware_apps)}")
+    logging.info(f"Found .apk files in partition: {len(firmware_apps)}")
     if len(firmware_apps) < 1:
         raise ValueError(f"Could not find any .apk files in {search_path}!")
     return firmware_apps

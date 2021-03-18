@@ -17,7 +17,7 @@ from scripts.firmware.android_app_import import find_android_apps, extract_andro
 from scripts.firmware.build_prop_parser import BuildPropParser
 from scripts.hashing.file_hashs import md5_from_file, sha1_from_file, sha256_from_file
 from scripts.extractor.expand_archives import extract_all_nested
-from scripts.utils.file_utils.file_util import get_filenames, cleanup_directories
+from scripts.utils.file_utils.file_util import get_filenames, cleanup_directories, create_directories
 from scripts.firmware.firmware_version_detect import detect_by_build_prop
 from scripts.utils.mulitprocessing_util.mp_util import create_multi_threading_queue
 
@@ -130,6 +130,8 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
         firmware_archive_store_path = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_STORE"],
                                                    version_detected,
                                                    store_filename)
+        create_directories(firmware_archive_store_path)
+        shutil.move(firmware_archive_file_path, firmware_archive_store_path)
         store_firmware_object(store_filename=store_filename,
                               original_filename=original_filename,
                               firmware_store_path=firmware_archive_store_path,
@@ -141,7 +143,6 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
                               build_prop=build_prop,
                               version_detected=version_detected,
                               firmware_file_list=firmware_file_list)
-        shutil.move(firmware_archive_file_path, firmware_archive_store_path)
         logging.info(f"Firmware Import success: {original_filename}")
     except Exception as e:
         logging.exception(f"Firmware Import failed: {original_filename} error: {str(e)}")
