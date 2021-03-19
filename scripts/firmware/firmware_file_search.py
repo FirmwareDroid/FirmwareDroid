@@ -37,7 +37,7 @@ def find_file_path(search_path, search_name):
                 return os.path.join(root, filename)
 
 
-def get_firmware_file_by_md5(firmware_file_list, md5):
+def get_firmware_file_list_by_md5(firmware_file_list, md5):
     """
     Filters a list of firmware files and gives only the ones back matching the given md5 hash.
     :param firmware_file_list: list(class:'FirmwareFile')

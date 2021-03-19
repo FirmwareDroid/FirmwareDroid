@@ -7,9 +7,8 @@ RUN apt-get -y install simg2img && \
     apt-get -y install fuse && \
     apt-get -y install fuseext2
 
-
-WORKDIR /var/www/
-COPY ./ /var/www/
+#WORKDIR /var/www/
+#COPY ./ /var/www/
 
 RUN --mount=type=cache,target=/var/www/tmp/firmware/.cache \
     pip install -r ./requirements/requirements_firmware.txt

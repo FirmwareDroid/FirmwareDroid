@@ -2,7 +2,7 @@ import logging
 import os
 from pathlib import Path
 from shutil import copyfile
-from scripts.firmware.firmware_file_search import get_firmware_file_by_md5
+from scripts.firmware.firmware_file_search import get_firmware_file_list_by_md5
 from scripts.hashing.file_hashs import sha256_from_file, md5_from_file, sha1_from_file
 from model import AndroidApp
 
@@ -73,10 +73,15 @@ def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_l
                 relative_firmware_path = root.replace(firmware_mount_path, "")
                 android_app = create_android_app(filename, relative_firmware_path, firmware_mount_path)
                 copy_apk_file(android_app, firmware_app_store, firmware_mount_path)
-                optimized_firmware_files = find_optimized_android_apps(android_app.absolute_store_path,
+                app_base_path = Path(app_abs_path).parent.absolute()
+                optimized_firmware_file_list = find_optimized_android_apps(app_base_path,
                                                                        filename,
                                                                        firmware_file_list)
-                android_app.app_optimization_file_reference_list = list(map(lambda x: x.id, optimized_firmware_files))
+                firmware_file_id_list = []
+                for optimized_firmware_file in optimized_firmware_file_list:
+                    # TODO fix this Import bug HERE
+                    firmware_file_id_list.append(optimized_firmware_file.id)
+                android_app.app_optimization_file_reference_list = firmware_file_id_list
                 android_app.save()
                 firmware_apps.append(android_app)
     logging.info(f"Found .apk files in partition: {len(firmware_apps)}")
@@ -112,25 +117,26 @@ def create_android_app(filename, relative_firmware_path, firmware_mount_path):
                       file_size_bytes=file_size_bytes)
 
 
-def find_optimized_android_apps(search_path, filename, firmware_file_list):
+def find_optimized_android_apps(search_path, search_filename, firmware_file_list):
     """
     Searches for optimized android files (.odex, .art, .vdex,...) in the directory including sub-directories.
     Uses the filename for search matching and matches only exact filename matches.
     :param search_path: str - root dir to search through.
-    :param filename: str - file to search for.
+    :param search_filename: str - file to search for.
     :param firmware_file_list: list(class:'FirmwareFile') - list of firmware file that contains the android app.
     :return: list(class:'FirmwareFile') - list of firmware files that contain optimized code for an android app.
     """
     file_format_list = [".odex", ".art", ".vdex", ".apk.prof"]
-    optimized_firmware_files = []
+    optimized_firmware_file_list = []
     for file_format in file_format_list:
-        filename = filename.replace(".apk", file_format)
+        filename = search_filename.replace(".apk", file_format)
         file_path_list = find_file_in_directory(search_path, filename)
+        logging.info(f"file_path_list len: {len(file_path_list)}")
         for file_path in file_path_list:
             md5_hash = md5_from_file(file_path)
-            firmware_file = get_firmware_file_by_md5(firmware_file_list, md5_hash)
-            optimized_firmware_files.append(firmware_file)
-    return optimized_firmware_files
+            firmware_file_list = get_firmware_file_list_by_md5(firmware_file_list, md5_hash)
+            optimized_firmware_file_list.extend(firmware_file_list)
+    return optimized_firmware_file_list
 
 
 def find_file_in_directory(search_path, filename):
@@ -140,10 +146,12 @@ def find_file_in_directory(search_path, filename):
     :param filename: str - file to search for.
     :return: list(str) - absolute file path of the found files.
     """
+    logging.info(f"find_file_in_directory: filename:{filename} search_path:{search_path}")
     result_file_path_list = []
     for root, dirs, file_list in os.walk(search_path):
-        for currrent_filename in file_list:
-            file_abs_path = os.path.join(root, currrent_filename)
-            if currrent_filename == filename and os.path.isfile(file_abs_path):
+        for current_filename in file_list:
+            file_abs_path = os.path.join(root, current_filename)
+            if current_filename == filename and os.path.isfile(file_abs_path):
                 result_file_path_list.append(file_abs_path)
+
     return result_file_path_list
