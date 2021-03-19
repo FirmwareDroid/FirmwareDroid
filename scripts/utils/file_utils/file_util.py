@@ -255,10 +255,3 @@ def cleanup_directories(firmware_file_path, firmware_app_store):
         shutil.rmtree(firmware_app_store)
     except FileNotFoundError:
         pass
-
-
-def create_permanent_cache_directory(directory_name):
-    mode = 0o666
-    path = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_CACHE"], directory_name)
-    os.mkdir(path, mode)
-    return path

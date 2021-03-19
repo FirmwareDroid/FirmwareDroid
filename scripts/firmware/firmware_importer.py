@@ -13,7 +13,7 @@ from threading import Thread
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.firmware.firmware_file_indexer import create_firmware_file_list, add_firmware_file_references
 from scripts.firmware.const_regex import BUILD_PROP_PATTERN_LIST, EXT_IMAGE_PATTERNS_DICT
-from scripts.firmware.android_app_import import find_android_apps, extract_android_apps
+from scripts.firmware.android_app_import import store_android_apps
 from scripts.firmware.build_prop_parser import BuildPropParser
 from scripts.hashing.file_hashs import md5_from_file, sha1_from_file, sha256_from_file
 from scripts.extractor.expand_archives import extract_all_nested
@@ -89,8 +89,6 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
     """
     temp_extract_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
                                                    suffix="_extract")
-    firmware_app_store = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_APP_EXTRACT"], md5)
-
     try:
         sha1 = sha1_from_file(firmware_archive_file_path)
         sha256 = sha256_from_file(firmware_archive_file_path)
@@ -111,18 +109,22 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
                                                                         file_pattern_list,
                                                                         partition_name,
                                                                         temp_dir.name)
+            firmware_file_list.extend(partition_firmware_file_list)
 
+            firmware_app_store = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_APP_EXTRACT"],
+                                              md5,
+                                              partition_name)
+            create_directories(firmware_app_store)
             if partition_name == "system":  # Todo remove this if statement as soon as build_prop_parser is refactored
-                firmware_app_list.extend(store_android_apps(temp_dir.name, firmware_app_store))
+                firmware_app_list.extend(store_android_apps(temp_dir.name, firmware_app_store, firmware_file_list))
                 build_prop = extract_build_prop(temp_dir.name)
                 version_detected = detect_by_build_prop(build_prop)
             else:
                 try:
-                    firmware_app_list.extend(store_android_apps(temp_dir.name, firmware_app_store))
+                    firmware_app_list.extend(
+                        store_android_apps(temp_dir.name, firmware_app_store, firmware_file_list))
                 except ValueError as err:
                     logging.warning(err)
-
-            firmware_file_list.extend(partition_firmware_file_list)
             fuzzy_hash_firmware_files(partition_firmware_file_list, temp_dir.name)
 
         filename, file_extension = os.path.splitext(firmware_archive_file_path)
@@ -146,7 +148,6 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
         logging.info(f"Firmware Import success: {original_filename}")
     except Exception as e:
         logging.exception(f"Firmware Import failed: {original_filename} error: {str(e)}")
-        cleanup_directories(firmware_archive_file_path, firmware_app_store)
 
 
 def get_firmware_archive_content(cache_temp_file_dir_path):
@@ -194,18 +195,6 @@ def get_partition_firmware_files(archive_firmware_file_list,
     return firmware_files
 
 
-def store_android_apps(search_path, firmware_app_store):
-    """
-    Finds and stores all android .apk files.
-    :param search_path: str - path to search for .apk files.
-    :param firmware_app_store: str - path in which the .apk files will be stored.
-    :return: list of class:'AndroidApp'
-    """
-    firmware_app_list = find_android_apps(search_path)
-    extract_android_apps(firmware_app_list, firmware_app_store, search_path)
-    return firmware_app_list
-
-
 def store_firmware_object(store_filename, original_filename, firmware_store_path, md5, sha256, sha1, android_app_list,
                           file_size, build_prop, version_detected, firmware_file_list):
     """
@@ -242,7 +231,6 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
     logging.info(f"Stored firmware with id {str(firmware.id)} in database.")
     add_firmware_file_references(firmware, firmware_file_list)
     add_app_firmware_references(firmware, android_app_list)
-    add_app_firmware_file_references(android_app_list, firmware_file_list)
     return firmware
 
 
@@ -255,21 +243,6 @@ def add_app_firmware_references(firmware, android_app_list):
     for app in android_app_list:
         app.firmware_id_reference = firmware.id
         app.save()
-
-
-def add_app_firmware_file_references(android_app_list, firmware_file_list):
-    """
-    Adds references between Android app and firmware files.
-    :param firmware_file_list: list - class:'FirmwareFile'
-    :param android_app_list: list - class:'AndroidApp'
-    :return:
-    """
-    for android_app in android_app_list:
-        firmware_file = list(filter(lambda x: x.md5 == android_app.md5, firmware_file_list))[0]
-        android_app.firmware_file_reference = firmware_file.id
-        android_app.save()
-        firmware_file.android_app_reference = android_app.id
-        firmware_file.save()
 
 
 def extract_build_prop(source_path):

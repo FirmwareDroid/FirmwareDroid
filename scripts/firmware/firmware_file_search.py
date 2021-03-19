@@ -1,7 +1,6 @@
-import logging
 import os
-from mongoengine import DoesNotExist, MultipleObjectsReturned
 import re
+from mongoengine import DoesNotExist, MultipleObjectsReturned
 from model import FirmwareFile
 
 
@@ -20,7 +19,6 @@ def get_firmware_file_by_regex_list(firmware, regex_list):
         except DoesNotExist:
             pass
         except MultipleObjectsReturned:
-            # TODO FIND MAYBE A BETTER STRATEGY TO FIND THE CORRECT IMAGE FILE
             firmware_file = FirmwareFile.objects(firmware_id_reference=firmware.id, name=regex).first()
             return firmware_file
     return None
@@ -35,6 +33,15 @@ def find_file_path(search_path, search_name):
     """
     for root, dirs, files in os.walk(search_path):
         for filename in files:
-            logging.info(f"filename {filename}")
             if filename == search_name:
                 return os.path.join(root, filename)
+
+
+def get_firmware_file_by_md5(firmware_file_list, md5):
+    """
+    Filters a list of firmware files and gives only the ones back matching the given md5 hash.
+    :param firmware_file_list: list(class:'FirmwareFile')
+    :param md5: str - md5 hash.
+    :return: list(class:'FirmwareFile') - list of firmware file with the given md5
+    """
+    return list(filter(lambda x: x.md5 == md5, firmware_file_list))
