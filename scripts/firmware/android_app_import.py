@@ -54,6 +54,7 @@ def copy_apk_file(android_app, destination_folder, firmware_mount_path):
     android_app.relative_store_path = android_app_destination_filepath
     android_app.absolute_store_path = os.path.abspath(android_app_destination_filepath)
     android_app.save()
+    logging.info(f"Exported Android app: {android_app.filename}")
 
 
 def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_list):
@@ -114,9 +115,8 @@ def add_optimized_firmware_files(android_app, optimized_firmware_file_list, firm
                                             "." + android_app.relative_firmware_path,
                                             "." + opt_relative_root_path,
                                             optimized_firmware_file.name)
-        logging.info(f"opt_source_file_path: {opt_source_file_path}")
-        logging.info(f"opt_store_path: {opt_store_path}")
         copyfile(opt_source_file_path, opt_store_path)
+        logging.info(f"Exported file: {optimized_firmware_file.name}")
         firmware_file_id_list.append(optimized_firmware_file.id)
     android_app.opt_firmware_file_reference_list = firmware_file_id_list
     android_app.save()

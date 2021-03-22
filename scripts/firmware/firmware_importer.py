@@ -113,7 +113,6 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
             firmware_app_store = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_APP_EXTRACT"],
                                               md5,
                                               partition_name)
-            create_directories(firmware_app_store)
             if partition_name == "system":  # Todo remove this if statement as soon as build_prop_parser is refactored
                 firmware_app_list.extend(store_android_apps(temp_dir.name, firmware_app_store, firmware_file_list))
                 build_prop = extract_build_prop(temp_dir.name)
@@ -153,6 +152,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
             for android_app in firmware_app_list:
                 android_app.delete()
         shutil.move(firmware_archive_file_path, flask.current_app.config["FIRMWARE_FOLDER_IMPORT_FAILED"])
+
 
 def get_firmware_archive_content(cache_temp_file_dir_path):
     """
