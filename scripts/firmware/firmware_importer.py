@@ -89,16 +89,15 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
     """
     temp_extract_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
                                                    suffix="_extract")
+    version_detected = 0
+    build_prop = None
+    firmware_app_list = []
+    firmware_file_list = []
     try:
         sha1 = sha1_from_file(firmware_archive_file_path)
         sha256 = sha256_from_file(firmware_archive_file_path)
         file_size = os.path.getsize(firmware_archive_file_path)
         extract_all_nested(firmware_archive_file_path, temp_extract_dir.name, False)
-
-        version_detected = 0
-        build_prop = None
-        firmware_app_list = []
-        firmware_file_list = []
         archive_firmware_file_list = get_firmware_archive_content(temp_extract_dir.name)
         firmware_file_list.extend(archive_firmware_file_list)
         for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
@@ -121,8 +120,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
                 version_detected = detect_by_build_prop(build_prop)
             else:
                 try:
-                    firmware_app_list.extend(
-                        store_android_apps(temp_dir.name, firmware_app_store, firmware_file_list))
+                    firmware_app_list.extend(store_android_apps(temp_dir.name, firmware_app_store, firmware_file_list))
                 except ValueError as err:
                     logging.warning(err)
             fuzzy_hash_firmware_files(partition_firmware_file_list, temp_dir.name)
@@ -148,7 +146,13 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
         logging.info(f"Firmware Import success: {original_filename}")
     except Exception as e:
         logging.exception(f"Firmware Import failed: {original_filename} error: {str(e)}")
-
+        if firmware_file_list and len(firmware_file_list) > 0:
+            for firmware_file in firmware_file_list:
+                firmware_file.delete()
+        if firmware_app_list and len(firmware_app_list) > 0:
+            for android_app in firmware_app_list:
+                android_app.delete()
+        shutil.move(firmware_archive_file_path, flask.current_app.config["FIRMWARE_FOLDER_IMPORT_FAILED"])
 
 def get_firmware_archive_content(cache_temp_file_dir_path):
     """
@@ -180,19 +184,19 @@ def get_partition_firmware_files(archive_firmware_file_list,
     :return: list(class:'FirmwareFile') - list of files found in the image. In case the image could not be processed the
     method returns an empty list.
     """
-    firmware_files = []
+    firmware_file_list = []
     try:
         image_firmware_file = find_image_firmware_file(archive_firmware_file_list, file_pattern_list)
         image_absolute_path = create_abs_image_file_path(image_firmware_file, extracted_archive_dir_path)
         extract_image_files(image_absolute_path, temp_dir_path)
         partition_firmware_files = create_firmware_file_list(temp_dir_path, partition_name)
-        firmware_files.extend(partition_firmware_files)
+        firmware_file_list.extend(partition_firmware_files)
     except (RuntimeError, ValueError) as err:
         if partition_name == "system":  # Abort if we cannot import system partition.
             raise
         else:
             logging.warning(err)
-    return firmware_files
+    return firmware_file_list
 
 
 def store_firmware_object(store_filename, original_filename, firmware_store_path, md5, sha256, sha1, android_app_list,

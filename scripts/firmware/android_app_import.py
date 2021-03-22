@@ -66,28 +66,60 @@ def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_l
     :return: List of object class:'AndroidApp'.
     """
     firmware_apps = []
+    #
     for root, dirs, files in os.walk(firmware_mount_path):
         for filename in files:
             app_abs_path = os.path.join(root, filename)
             if filename.lower().endswith(".apk") and os.path.isfile(app_abs_path):
                 relative_firmware_path = root.replace(firmware_mount_path, "")
-                android_app = create_android_app(filename, relative_firmware_path, firmware_mount_path)
-                copy_apk_file(android_app, firmware_app_store, firmware_mount_path)
+                try:
+                    android_app = create_android_app(filename, relative_firmware_path, firmware_mount_path)
+                    copy_apk_file(android_app, firmware_app_store, firmware_mount_path)
+                except Exception:
+                    for android_app in firmware_apps:
+                        android_app.delete()
+                    raise
+                firmware_apps.append(android_app)
                 app_base_path = Path(app_abs_path).parent.absolute()
                 optimized_firmware_file_list = find_optimized_android_apps(app_base_path,
-                                                                       filename,
-                                                                       firmware_file_list)
-                firmware_file_id_list = []
-                for optimized_firmware_file in optimized_firmware_file_list:
-                    # TODO fix this Import bug HERE
-                    firmware_file_id_list.append(optimized_firmware_file.id)
-                android_app.app_optimization_file_reference_list = firmware_file_id_list
-                android_app.save()
-                firmware_apps.append(android_app)
+                                                                           filename,
+                                                                           firmware_file_list)
+                add_optimized_firmware_files(android_app,
+                                             optimized_firmware_file_list,
+                                             firmware_app_store,
+                                             firmware_mount_path)
     logging.info(f"Found .apk files in partition: {len(firmware_apps)}")
+
     if len(firmware_apps) < 1:
         raise ValueError(f"Could not find any .apk files in {firmware_mount_path}!")
     return firmware_apps
+
+
+def add_optimized_firmware_files(android_app, optimized_firmware_file_list, firmware_app_store, firmware_mount_path):
+    """
+    Extracts android code optimized files (.odex, .vdex, ...) to the file system and saves the firmeare file references.
+    :param android_app: class:'AndroidApp' -  app to save the reference in.
+    :param optimized_firmware_file_list: list(class:'FirmwareFile') - list of opt firmware files to reference and copy.
+    :param firmware_app_store: str - path to the app store root folder.
+    """
+    firmware_file_id_list = []
+    for optimized_firmware_file in optimized_firmware_file_list:
+        opt_relative_root_path = os.path.dirname(optimized_firmware_file.relative_path) \
+            .replace(android_app.relative_firmware_path, "")
+        opt_folder_path = firmware_app_store + android_app.relative_firmware_path + opt_relative_root_path + "/"
+        Path(opt_folder_path).mkdir(parents=True, exist_ok=True)
+        opt_store_path = os.path.join(opt_folder_path, optimized_firmware_file.name)
+
+        opt_source_file_path = os.path.join(firmware_mount_path,
+                                            "." + android_app.relative_firmware_path,
+                                            "." + opt_relative_root_path,
+                                            optimized_firmware_file.name)
+        logging.info(f"opt_source_file_path: {opt_source_file_path}")
+        logging.info(f"opt_store_path: {opt_store_path}")
+        copyfile(opt_source_file_path, opt_store_path)
+        firmware_file_id_list.append(optimized_firmware_file.id)
+    android_app.opt_firmware_file_reference_list = firmware_file_id_list
+    android_app.save()
 
 
 def create_android_app(filename, relative_firmware_path, firmware_mount_path):
@@ -131,11 +163,9 @@ def find_optimized_android_apps(search_path, search_filename, firmware_file_list
     for file_format in file_format_list:
         filename = search_filename.replace(".apk", file_format)
         file_path_list = find_file_in_directory(search_path, filename)
-        logging.info(f"file_path_list len: {len(file_path_list)}")
         for file_path in file_path_list:
             md5_hash = md5_from_file(file_path)
-            firmware_file_list = get_firmware_file_list_by_md5(firmware_file_list, md5_hash)
-            optimized_firmware_file_list.extend(firmware_file_list)
+            optimized_firmware_file_list.extend(get_firmware_file_list_by_md5(firmware_file_list, md5_hash))
     return optimized_firmware_file_list
 
 
@@ -146,7 +176,6 @@ def find_file_in_directory(search_path, filename):
     :param filename: str - file to search for.
     :return: list(str) - absolute file path of the found files.
     """
-    logging.info(f"find_file_in_directory: filename:{filename} search_path:{search_path}")
     result_file_path_list = []
     for root, dirs, file_list in os.walk(search_path):
         for current_filename in file_list:

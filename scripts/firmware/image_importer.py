@@ -5,7 +5,6 @@ import re
 from scripts.firmware.firmware_file_search import get_firmware_file_by_regex_list
 from scripts.extractor.ubi_extractor import extract_ubi_image
 from scripts.firmware.ext4_mount_util import mount_android_image
-from scripts.extractor.ext4_extractor import extract_ext4, extract_simg_ext4
 
 
 def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):

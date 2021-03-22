@@ -89,12 +89,12 @@ def index_image_files(firmware_id_queue):
 
 def create_firmware_file_list(scan_directory, partition_name):
     """
-    Creates a File list from the given directory.
+    Creates a list of firmware files from the given directory.
     :param partition_name: str - name of the partition.
     :param scan_directory: str - path to the directory to scan
-    :return: Array class:'FirmwareFile'
+    :return: list(class:'FirmwareFile')
     """
-    result_files = []
+    result_firmware_file_list = []
     logging.info(f"Start scanning through directory for files: {scan_directory}")
     for root, dirs, files in os.walk(scan_directory):
         parent_name = os.path.basename(root) if os.path.basename(root) else "/"
@@ -109,7 +109,7 @@ def create_firmware_file_list(scan_directory, partition_name):
                                                  relative_file_path=relative_dir_path,
                                                  partition_name=partition_name,
                                                  md5=None)
-            result_files.append(firmware_file)
+            result_firmware_file_list.append(firmware_file)
         for filename in files:
             relative_file_path = root.replace(scan_directory, "")
             relative_file_path = os.path.join(relative_file_path, filename)
@@ -124,8 +124,8 @@ def create_firmware_file_list(scan_directory, partition_name):
                                                      relative_file_path=relative_file_path,
                                                      partition_name=partition_name,
                                                      md5=md5_file)
-                result_files.append(firmware_file)
-    return result_files
+                result_firmware_file_list.append(firmware_file)
+    return result_firmware_file_list
 
 
 def create_firmware_file(name, parent_name, isDirectory, relative_file_path, partition_name, md5, file_size_bytes=None):
@@ -147,7 +147,7 @@ def create_firmware_file(name, parent_name, isDirectory, relative_file_path, par
                         absolute_store_path=os.path.abspath(relative_file_path),
                         relative_path=relative_file_path,
                         partition_name=partition_name,
-                        md5=md5)
+                        md5=md5).save()
 
 
 def add_firmware_file_references(firmware, firmware_file_list):

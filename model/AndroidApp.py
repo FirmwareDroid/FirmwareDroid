@@ -28,7 +28,7 @@ class AndroidApp(Document):
     quark_engine_report_reference = LazyReferenceField('QuarkEngineReport', reverse_delete_rule=DO_NOTHING)
     super_report_reference = LazyReferenceField('SuperReport', reverse_delete_rule=DO_NOTHING)
     apkleaks_report_reference = LazyReferenceField('ApkLeaksReport', reverse_delete_rule=DO_NOTHING)
-    app_optimization_file_reference_list = ListField(LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING))
+    opt_firmware_file_reference_list = ListField(LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING))
 
 
 class AndroidAppSchema(Schema):

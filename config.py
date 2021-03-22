@@ -23,11 +23,11 @@ class ApplicationConfig(Config):
     ####################
     MAIN_FOLDER = os.environ[Config.ENV+'APP_DATA_FOLDER']
     FILE_FOLDER = MAIN_FOLDER + "00_file_storage/"
-    FIRMWARE_FOLDER_IMPORT = FILE_FOLDER + "import/"
-    FIRMWARE_FOLDER_IMPORT_FAILED = FILE_FOLDER + "import_failed/"
-    FIRMWARE_FOLDER_STORE = FILE_FOLDER + "store/"
-    FIRMWARE_FOLDER_APP_EXTRACT = FILE_FOLDER + "app_extract/"
-    FIRMWARE_FOLDER_FILE_EXTRACT = FILE_FOLDER + "file_extract/"
+    FIRMWARE_FOLDER_IMPORT = FILE_FOLDER + "firmware_import/"
+    FIRMWARE_FOLDER_IMPORT_FAILED = FILE_FOLDER + "firmware_import_failed/"
+    FIRMWARE_FOLDER_STORE = FILE_FOLDER + "firmware_store/"
+    FIRMWARE_FOLDER_APP_EXTRACT = FILE_FOLDER + "android_app_store/"
+    FIRMWARE_FOLDER_FILE_EXTRACT = FILE_FOLDER + "firmware_file_store/"
     FIRMWARE_FOLDER_CACHE = FILE_FOLDER + "cache/"
     LIBS_FOLDER = FILE_FOLDER + "libs/"
     ALL_FOLDERS = [FILE_FOLDER,
