@@ -75,6 +75,10 @@ services:
     volumes:
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
 
+  apkleaks-worker-1:
+    volumes:
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
   firmware-worker-default-2:
     build:
       context: .

@@ -65,6 +65,10 @@ services:
     volumes:
       - ${TST_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
 
+  apkleaks-worker-1:
+    volumes:
+      - ${TST_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
   super-android-analyzer-worker-1:
     volumes:
       - ${TST_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage

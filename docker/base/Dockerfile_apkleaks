@@ -1,5 +1,21 @@
-FROM firmwaredroid-base as apkleaks-worker
+FROM firmwaredroid-base-java as apkleaks-worker
 
-# TODO ADD APKLEAKS AS SOON AS JSON REPORT IS AVAILABLE: https://github.com/dwisiswant0/apkleaks
+
+
+#####################################
+# Installing jadx                   #
+#####################################
+RUN mkdir -p /var/www/jadx/
+WORKDIR /var/www/jadx/
+RUN wget https://github.com/skylot/jadx/releases/download/v1.2.0/jadx-1.2.0.zip
+RUN unzip ./jadx-1.2.0.zip
+ENV JADX "/var/www/jadx/bin"
+ENV PATH "${JADX}:${PATH}"
+RUN export PATH=$PATH
+
+#####################################
+# Installing python requirements    #
+#####################################
+WORKDIR /var/www/
 RUN --mount=type=cache,target=/var/www/tmp/apkleaks/.cache \
     pip install -r ./requirements/requirements_apkleaks.txt

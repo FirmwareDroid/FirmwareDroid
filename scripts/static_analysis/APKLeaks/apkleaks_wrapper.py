@@ -1,6 +1,7 @@
 import logging
 import os
 import tempfile
+import traceback
 
 from model import AndroidApp, ApkLeaksReport
 from scripts.database.query_document import get_filtered_list
@@ -22,7 +23,7 @@ def start_apkleaks_scan(android_app_id_list):
 
 def apkleaks_worker(android_app_id_queue):
     """
-    Start the analysis with super on a multiprocessor queue.
+    Start the analysis on a multiprocessor queue.
     :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
     """
     while not android_app_id_queue.empty():
@@ -34,7 +35,8 @@ def apkleaks_worker(android_app_id_queue):
             json_results = get_apkleaks_analysis(android_app.absolute_store_path, tempdir.name)
             create_report(android_app, json_results)
         except Exception as err:
-            logging.error(f"Super could not scan app {android_app.filename} id: {android_app.id} - "
+            traceback.print_exc()
+            logging.error(f"APKleaks could not scan app {android_app.filename} id: {android_app.id} - "
                           f"error: {err}")
 
 
@@ -45,9 +47,34 @@ def get_apkleaks_analysis(apk_file_path, result_folder_path):
     :param result_folder_path: str - path to the folder where the result report is saved.
     :return: str - scan result as json.
     """
-    # TODO IMPLEMENT METHOD - SCAN WITH APKLEAKS
-    raise NotImplemented
-    return
+    from apkleaks.apkleaks import APKLeaks
+    result_file = tempfile.TemporaryFile(dir=result_folder_path)
+
+    class ApkleakArguments(object):
+        def __init__(self, json, apk_path, output_file_path, jadx_args):
+            self.json = json
+            self.file = apk_path
+            self.output = output_file_path
+            self.args = jadx_args
+            self.pattern = None
+
+    # FIX THIS PROBLEM
+    if "/var/www/jadx/bin/jadx" not in os.environ["PATH"]:
+        os.environ["PATH"] += os.pathsep + "/var/www/jadx/bin/jadx"
+    os.chdir("/var/www/jadx/bin/jadx")
+
+    apkleaks_args = ApkleakArguments(True, apk_file_path, result_file.name, "--deobf")
+    apkleaks_scanner = APKLeaks(apkleaks_args)
+    try:
+        apkleaks_scanner.integrity()
+        apkleaks_scanner.decompile()
+        apkleaks_scanner.scanning()
+        json_result = apkleaks_scanner.out_json
+    finally:
+        apkleaks_scanner.cleanup()
+    if not json_result:
+        raise RuntimeError(f"Apkleaks could not scan {apk_file_path}")
+    return json_result
 
 
 def create_report(android_app, json_results):
@@ -57,7 +84,9 @@ def create_report(android_app, json_results):
     :param json_results: str - super scanning result in json format.
     :return: class:'SuperReport'
     """
+    # from apkleaks import __version__
+    # TODO change version as soon as https://github.com/dwisiswant0/apkleaks/pull/42 is merged
     apkleaks_report = ApkLeaksReport(android_app_id_reference=android_app.id,
-                                     apkleaks_version="",
+                                     apkleaks_version="2.3.2",
                                      results=json_results).save()
     return apkleaks_report

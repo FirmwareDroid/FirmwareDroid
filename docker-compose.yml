@@ -271,6 +271,22 @@ services:
     networks:
       - backend
 
+  apkleaks-worker-1:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkleaks
+    container_name: apkleaks-worker-1
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+    env_file:
+      - ./.env
+    command: rqworker --name apkleaks-worker-1 --url redis://redis:6379/ apkleaks
+    networks:
+      - backend
+
   redis:
     image: redis:6-buster
     container_name: redis

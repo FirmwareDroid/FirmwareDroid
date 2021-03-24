@@ -5,7 +5,7 @@ from flask_restx import Api, Resource
 from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.model.serializers import object_id_list
 from api.v1.parser.request_util import check_app_mode
-from static_analysis.APKLeaks.apkleaks_wrapper import start_apkleaks_scan
+from scripts.static_analysis.APKLeaks.apkleaks_wrapper import start_apkleaks_scan
 
 api = Api()
 ns = api.namespace('apkleaks',
@@ -25,5 +25,5 @@ class SuperScan(Resource):
         """
         app = flask.current_app
         android_app_id_list = check_app_mode(mode, request)
-        enqueue_jobs(app.rq_task_queue_super_android_analyzer, start_apkleaks_scan, android_app_id_list)
+        enqueue_jobs(app.rq_task_queue_apkleaks, start_apkleaks_scan, android_app_id_list)
         return "", 200
