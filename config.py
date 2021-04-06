@@ -63,6 +63,7 @@ class ApplicationConfig(Config):
     ####################
     FLASK_ADMIN_MAIL = os.environ[Config.ENV + 'FLASK_ADMIN_MAIL']
     FLASK_ADMIN_PW = os.environ[Config.ENV + 'FLASK_ADMIN_PW']
+    FLASK_ADMIN_USERNAME = os.environ[Config.ENV + 'FLASK_ADMIN_USERNAME']
     ####################
     # DB Config
     ####################
@@ -93,3 +94,17 @@ class ApplicationConfig(Config):
     # Firmware Mass Import Config
     ####################
     MASS_IMPORT_NUMBER_OF_THREADS = os.environ[Config.ENV+'MASS_IMPORT_NUMBER_OF_THREADS']
+    ####################
+    # Mail Config
+    ####################
+    MAIL_SERVER = os.environ[Config.ENV + 'MAIL_SERVER']
+    MAIL_PORT = os.environ[Config.ENV + 'MAIL_PORT']
+    MAIL_USE_TLS = os.environ[Config.ENV + 'MAIL_USE_TLS']
+    MAIL_USE_SSL = os.environ[Config.ENV + 'MAIL_USE_SSL']
+    MAIL_DEBUG = os.environ[Config.ENV + 'MAIL_DEBUG']
+    MAIL_USERNAME = os.environ[Config.ENV + 'MAIL_USERNAME']
+    MAIL_PASSWORD = os.environ[Config.ENV + 'MAIL_PASSWORD']
+    MAIL_DEFAULT_SENDER = os.environ[Config.ENV + 'MAIL_DEFAULT_SENDER']
+    MAIL_MAX_EMAILS = os.environ[Config.ENV + 'MAIL_MAX_EMAILS']
+    MAIL_SUPPRESS_SEND = os.environ[Config.ENV + 'MAIL_SUPPRESS_SEND']
+    MAIL_ASCII_ATTACHMENTS = os.environ[Config.ENV + 'MAIL_ASCII_ATTACHMENTS']

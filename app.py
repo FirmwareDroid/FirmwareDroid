@@ -10,6 +10,7 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_marshmallow import Marshmallow
+from flask_mail import Mail, Message
 from marshmallow import fields
 from mongoengine import DoesNotExist, NotUniqueError
 from pymongo.errors import OperationFailure
@@ -20,7 +21,7 @@ from scripts.auth.basic_auth import basic_auth
 from config import ApplicationConfig
 from model import UserAccount
 from scripts.database.database import init_db
-from api.v1.decorators.jwt_claims import add_claims_to_access_token
+from api.v1.decorators.jwt_claims import add_role_list_claims
 from api.v1.routes.firmware import ns as firmware_namespace
 from api.v1.routes.androguard import ns as androguard_namespace
 from api.v1.routes.virustotal import ns as virustotal_namespace
@@ -77,6 +78,7 @@ def create_app():
     setup_folders(app_instance)
     setup_redis_and_rq(app_instance)
     api.init_app(app=app_instance)
+    setup_mail(app_instance)
     clear_cache(app_instance)
 
     return app_instance
@@ -91,6 +93,15 @@ def set_logging_config(app_instance):
         format='%(asctime)s %(levelname)-8s %(message)s',
         level=logging.INFO,
         datefmt='%Y-%m-%d %H:%M:%S')
+
+
+def setup_mail(app_instance):
+    """
+    Setup the flask mail config.
+    """
+    mail = Mail()
+    mail.init_app(app_instance)
+    app_instance.mail = mail
 
 
 def setup_redis_and_rq(app_instance):
@@ -163,7 +174,7 @@ def setup_jwt_auth(app_instance):
     """
     app_instance.bcrypt = Bcrypt(app_instance)
     app_instance.jwt = JWTManager(app_instance)
-    app_instance.jwt.additional_claims_loader(add_claims_to_access_token)
+    app_instance.jwt.additional_claims_loader(add_role_list_claims)
 
 
 def setup_default_users(app_instance):
@@ -171,13 +182,18 @@ def setup_default_users(app_instance):
     Creates the default admin user in the database if not already existing.
     :return:
     """
+    username = app_instance.config["FLASK_ADMIN_USERNAME"]
     mail = app_instance.config["FLASK_ADMIN_MAIL"]
     password = app_instance.config["FLASK_ADMIN_PW"]
     try:
         UserAccount.objects.get(email=mail)
     except DoesNotExist:
         try:
-            user = UserAccount(email=mail, password=password, active=True, role='admin')
+            user = UserAccount(email=mail,
+                               password=password,
+                               active=True,
+                               role_list=['admin', 'user'],
+                               username=username)
             user.hash_password()
             user.save()
             logging.warning("Created default admin user in db! CHANGE YOUR PASSWORD ASAP!")

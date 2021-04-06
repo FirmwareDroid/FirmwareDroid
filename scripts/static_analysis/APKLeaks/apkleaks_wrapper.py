@@ -85,7 +85,7 @@ def create_report(android_app, json_results):
     :return: class:'SuperReport'
     """
     # from apkleaks import __version__
-    # TODO change version as soon as https://github.com/dwisiswant0/apkleaks/pull/42 is merged
+    # TODO change version
     apkleaks_report = ApkLeaksReport(android_app_id_reference=android_app.id,
                                      apkleaks_version="2.3.2",
                                      results=json_results).save()
