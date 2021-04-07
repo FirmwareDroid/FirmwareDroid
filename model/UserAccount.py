@@ -14,7 +14,7 @@ class RegistrationStatus(Enum):
 
 class UserAccount(Document):
     register_date = DateTimeField(default=datetime.datetime.now)
-    username = StringField(required=True, min_length=4, max_length=40)
+    username = StringField(required=True, unique=True, min_length=4, max_length=40)
     email = EmailField(required=True, unique=True, min_length=6, max_length=128)
     password = StringField(required=True, min_length=8, max_length=128)
     active = BooleanField(required=True, default=True)

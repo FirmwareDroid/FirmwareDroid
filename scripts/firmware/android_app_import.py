@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from shutil import copyfile
 from scripts.firmware.firmware_file_search import get_firmware_file_list_by_md5
-from scripts.hashing.file_hashs import sha256_from_file, md5_from_file, sha1_from_file
+from scripts.hashing.standard_hash_generator import sha256_from_file, md5_from_file, sha1_from_file
 from model import AndroidApp
 
 

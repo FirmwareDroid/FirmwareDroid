@@ -15,7 +15,7 @@ from scripts.firmware.firmware_file_indexer import create_firmware_file_list, ad
 from scripts.firmware.const_regex import BUILD_PROP_PATTERN_LIST, EXT_IMAGE_PATTERNS_DICT
 from scripts.firmware.android_app_import import store_android_apps
 from scripts.firmware.build_prop_parser import BuildPropParser
-from scripts.hashing.file_hashs import md5_from_file, sha1_from_file, sha256_from_file
+from scripts.hashing.standard_hash_generator import md5_from_file, sha1_from_file, sha256_from_file
 from scripts.extractor.expand_archives import extract_all_nested
 from scripts.utils.file_utils.file_util import get_filenames, create_directories
 from scripts.firmware.firmware_version_detect import detect_by_build_prop

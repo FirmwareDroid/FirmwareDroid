@@ -10,12 +10,13 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 from flask_marshmallow import Marshmallow
-from flask_mail import Mail, Message
+from flask_mail import Mail
 from marshmallow import fields
 from mongoengine import DoesNotExist, NotUniqueError
 from pymongo.errors import OperationFailure
 from redis import Redis
 from api.v1.converter.BoolConverter import BoolConverter
+from model.UserAccount import RegistrationStatus
 from scripts.config.app_settings import get_application_setting
 from scripts.auth.basic_auth import basic_auth
 from config import ApplicationConfig
@@ -192,6 +193,7 @@ def setup_default_users(app_instance):
             user = UserAccount(email=mail,
                                password=password,
                                active=True,
+                               registration_status=RegistrationStatus.VERIFIED,
                                role_list=['admin', 'user'],
                                username=username)
             user.hash_password()

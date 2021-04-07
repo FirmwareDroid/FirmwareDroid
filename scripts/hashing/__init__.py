@@ -1,1 +1,1 @@
-from .file_hashs import *
+from .standard_hash_generator import *

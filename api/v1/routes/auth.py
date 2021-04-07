@@ -4,7 +4,9 @@ import traceback
 
 import flask
 from mongoengine import DoesNotExist
-from flask_mail import Message
+from scripts.auth.secure_token_generator import generate_confirmation_token, validate_token
+from scripts.language.en_us import REGISTRATION_MAIL_BODY, REGISTRATION_MAIL_SUBJECT
+from scripts.mail.smpt_mailer import send_mail
 from model import UserAccount, UserAccountSchema
 from flask import request
 from flask_jwt_extended import create_access_token
@@ -22,7 +24,7 @@ ns.add_model("user_login", user_login_model)
 @ns.expect(user_signup_model)
 class Signup(Resource):
     def post(self):
-        response = 400, {"status": RegistrationStatus.ERROR.value}
+        response = {"status": RegistrationStatus.ERROR.value}, 400
         user = None
         try:
             body = request.get_json()
@@ -33,14 +35,11 @@ class Signup(Resource):
             user.hash_password()
             user.save()
             response = {"status": user.registration_status.value}, 200
-
-            msg = Message(subject="FirmwareDroid: Please confirm your Account",
-                          sender=("FirmwareDroid", flask.current_app.config["MAIL_DEFAULT_SENDER"]),
-                          recipients=[user.email],
-                          html="<a href='https://firmwaredroid.com'>Click Here</a>",
-                          body="Test-Link")
-            flask.current_app.mail.send(msg)
-
+            data = f"{user.email}"
+            app = flask.current_app
+            token = generate_confirmation_token(data, app.config["MAIL_SECRET_KEY"], app.config["MAIL_SALT"])
+            link = f"{app.config['DOMAIN_NAME']}/api/v1/signup/confirmation/{token}"
+            send_mail(REGISTRATION_MAIL_BODY+link, REGISTRATION_MAIL_SUBJECT, [user.email])
         except Exception as err:
             logging.error(err)
             traceback.print_exc()
@@ -51,6 +50,27 @@ class Signup(Resource):
                 except DoesNotExist:
                     pass
         return response
+
+
+@ns.route('/signup/confirmation/<string:token>')
+@ns.expect(user_signup_model)
+class Signup(Resource):
+    def get(self, token):
+        response = {"status": RegistrationStatus.ERROR.value}, 400
+        try:
+            app = flask.current_app
+            email = validate_token(token, app.config["MAIL_SECRET_KEY"], app.config["MAIL_SALT"])
+            user_account = UserAccount.objects.get(email=email)
+            user_account.registration_status = RegistrationStatus.VERIFIED
+            user_account.save()
+            response = "Success", 200
+        except RuntimeError as err:
+            logging.warning(err)
+            response = "Invalid token", 404
+        except DoesNotExist as err:
+            logging.error(err)
+        return response
+
 
 
 @ns.route('/login/')

@@ -60,4 +60,8 @@ def sha1_from_file(filepath):
     return hasher.hexdigest()
 
 
+def sha256_from_string(text):
+    hash_object = hashlib.sha512(bytes(text, 'utf-8'))
+    return hash_object.hexdigest()
+
 
