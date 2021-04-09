@@ -1,23 +1,27 @@
 import smtplib
 import flask
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 
-def send_mail(message_body, subject, recipient_list):
+def send_mail(message_body_html, subject, recipient_list):
     """
-    Sends an e-mail to the given recipients.
+    Sends an e-mail (html/plain) to the given recipients as BCC.
     :param recipient_list: list(str) - e-mail address list.
     :param subject: str - Title of the e-mail.
-    :param message_body: str - text of the e-mail.
+    :param message_body_html: str - html text of the e-mail.
     """
-
     app = flask.current_app
-    message = f"""From: FirmwareDroid <{app.config['MAIL_USERNAME']}>
-    Subject: {subject}
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = f"FirmwareDroid <{app.config['MAIL_USERNAME']}"
+    part1 = MIMEText(message_body_html, 'plain')
+    part2 = MIMEText(message_body_html, 'html')
+    msg.attach(part1)
+    msg.attach(part2)
 
-    {message_body}
-    """
     with smtplib.SMTP(host=app.config['MAIL_SERVER'],
                       port=app.config['MAIL_PORT']) as server:
         server.starttls()
         server.login(app.config['MAIL_USERNAME'], app.config['MAIL_PASSWORD'])
-        server.sendmail(app.config['MAIL_DEFAULT_SENDER'], recipient_list, message)
+        server.sendmail(app.config['MAIL_DEFAULT_SENDER'], recipient_list, msg.as_string())

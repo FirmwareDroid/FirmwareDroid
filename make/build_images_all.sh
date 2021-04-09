@@ -5,13 +5,6 @@
 #####################################
 #Frontend                           #
 #####################################
-# React base
-docker build ./firmware-droid-client/ -f ./firmware-droid-client/Dockerfile_BASE -t firmwaredroid-frontend-base
-retVal=$?
-if [ $retVal -ne 0 ]; then
-    echo "Error"
-    exit $retVal
-fi
 #NGINX Base
 docker build ./firmware-droid-client/ -f ./firmware-droid-client/Dockerfile -t firmwaredroid-frontend
 retVal=$?

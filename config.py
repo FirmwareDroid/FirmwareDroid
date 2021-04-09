@@ -65,6 +65,7 @@ class ApplicationConfig(Config):
     FLASK_ADMIN_PW = os.environ[Config.ENV + 'FLASK_ADMIN_PW']
     FLASK_ADMIN_USERNAME = os.environ[Config.ENV + 'FLASK_ADMIN_USERNAME']
     DOMAIN_NAME = os.environ[Config.ENV + 'DOMAIN_NAME']
+    SERVER_NAME = DOMAIN_NAME
     ####################
     # DB Config
     ####################

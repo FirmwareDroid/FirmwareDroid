@@ -3,7 +3,7 @@ from flask_jwt_extended import get_jwt
 from flask_jwt_extended import verify_jwt_in_request
 
 
-def admin_required(fn):
+def admin_jwt_required(fn):
     """Define a custom decorator for the role of an admin."""
     @wraps(fn)
     def wrapper(*args, **kwargs):
@@ -16,38 +16,36 @@ def admin_required(fn):
             return fn(*args, **kwargs)
         else:
             return "Unauthorized", 401
+
     return wrapper
 
 
-def user_required(fn):
+def user_jwt_required(fn):
     """Define a custom decorator for the role of a user."""
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        """ Verifies the JWT is present in the request,
-         as well as ensuring that this user has a role of `user` in the access token
+        """
+        Verifies the JWT is present in the request,
+        as well as ensuring that this user has a role of `user` in the access token
         """
         verify_jwt_in_request()
         claims = get_jwt()
-        if 'user' in claims['role_list']:
+        if 'user' or 'admin' in claims['role_list']:
             return fn(*args, **kwargs)
         else:
             return "Unauthorized", 401
+
     return wrapper
 
 
+def jwt_required(fn):
+    """Decorator for jwt of any role."""
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        """
+        Verifies the JWT is present in the request.
+        """
+        verify_jwt_in_request()
+        return fn(*args, **kwargs)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    return wrapper

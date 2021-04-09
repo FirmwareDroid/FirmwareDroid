@@ -40,3 +40,4 @@ from .ApplicationSetting import ApplicationSetting
 from .QuarkEngineReport import QuarkEngineReport
 from .SuperReport import SuperReport
 from .ApkLeaksReport import ApkLeaksReport
+from .RevokedJwtToken import RevokedJwtToken

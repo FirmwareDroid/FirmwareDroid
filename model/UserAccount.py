@@ -21,6 +21,7 @@ class UserAccount(Document):
     role_list = ListField(StringField(min_length=1, max_length=128), default=['user'], required=True)
     registration_status = EnumField(RegistrationStatus, default=RegistrationStatus.WAIT)
     virustotal_api_key = StringField(required=False, min_length=64, max_length=128)
+    jwt_token_reference_list = ListField(StringField(), required=False, default=[])
 
     def hash_password(self):
         self.password = generate_password_hash(self.password, 10).decode('utf8')

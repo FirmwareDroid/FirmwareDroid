@@ -8,7 +8,7 @@ from zipfile import ZipInfo, ZIP_DEFLATED
 from flask import request, send_file
 from flask_restx import Resource, Namespace
 from mongoengine import DoesNotExist
-from api.v1.decorators.jwt_auth_decorator import admin_required
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from scripts.utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
 from api.v1.model.serializers import object_id_list
 from api.v1.parser.json_parser import parse_json_object_id_list
@@ -91,7 +91,7 @@ class FirmwareMassImport(Resource):
 @ns.route('/delete_all/')
 class FirmwareDeleteAll(Resource):
     @ns.doc('delete')
-    @admin_required
+    @admin_jwt_required
     def delete(self):
         """
         Deletes all entries from the database and moves all files from the store to the import directory.
