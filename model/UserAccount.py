@@ -76,9 +76,12 @@ class UserAccountSchema(Schema):
     """
     # TODO add more validation params
     id = fields.Str()
-    password = fields.Str(required=True)
+    password = fields.Str(required=True, exclude=True)
     email = fields.Email(required=True)
     username = fields.Str(required=True)
     active = fields.Boolean()
     role_list = fields.List(fields.Str)
     registration_status = fields.Str()
+
+    class Meta:
+        load_only = ('password', 'id')

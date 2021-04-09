@@ -1,9 +1,9 @@
 import datetime
+import json
 import logging
 import traceback
 import flask
 from mongoengine import DoesNotExist, NotUniqueError
-
 from api.v1.decorators.jwt_auth_decorator import user_jwt_required
 from scripts.auth.secure_token_generator import generate_confirmation_token, validate_token
 from scripts.language.en_us import REGISTRATION_MAIL_BODY, REGISTRATION_MAIL_SUBJECT
@@ -93,19 +93,26 @@ class Login(Resource):
         Checks the users passwords and creates a JWT token if the password is valid.
         :return: str - JWT access token.
         """
-        response = 401, ""
-        body = request.get_json()
+        response = "", 401
         try:
+            body = request.get_json()
             user = UserAccount.objects.get(email=body.get('email'))
             authorized = user.check_password(body.get('password'))
             if authorized:
                 expires = datetime.timedelta(days=7)
                 user_account_schema = UserAccountSchema()
                 identity = user_account_schema.dump(user)
-                access_token = create_access_token(identity=identity, expires_delta=expires)
+                identity = json.dumps({
+                    "role_list": identity["role_list"],
+                    "email": identity["email"]
+                })
+                logging.info(identity)
+                access_token = create_access_token(identity=identity,
+                                                   expires_delta=expires)
                 response = {'token': access_token}, 200
         except Exception as err:
             logging.error(err)
+            traceback.print_exc()
         return response
 
 
@@ -117,7 +124,7 @@ class Login(Resource):
         Logout user by invalidating their JWT access token.
         :return: str - JWT access token.
         """
-        response = 400, ""
+        response = "", 400
         try:
             jti = get_jwt()["jti"]
             RevokedJwtToken(jti=jti).save()

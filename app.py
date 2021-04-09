@@ -24,7 +24,6 @@ from scripts.auth.basic_auth import basic_auth
 from config import ApplicationConfig
 from model import UserAccount
 from scripts.database.database import init_db
-from api.v1.decorators.jwt_claims import add_role_list_claims
 from api.v1.routes.firmware import ns as firmware_namespace
 from api.v1.routes.androguard import ns as androguard_namespace
 from api.v1.routes.virustotal import ns as virustotal_namespace
@@ -62,13 +61,20 @@ def create_app():
               version=app_instance.config["API_VERSION"],
               description=app_instance.config["API_DESCRIPTION"],
               prefix=app_instance.config["API_PREFIX"],
+              license="GNU General Public License v3.0",
+              license_url="https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md",
+              contact_url="https://github.com/FirmwareDroid/FirmwareDroid",
               authorizations={
                   "basicAuth": {
-                      "type": "basic"
-                  }
+                      "type": "basic",
+                      "scheme": "basic"
+                  },
               },
-              security="basicAuth",
-              doc=False,  # doc=app_instance.config["API_DOC_FOLDER"])
+              security={
+                  "basicAuth": [],
+                  'bearerAuth': []
+              },
+              doc=False,
               add_specs=True)
     api.namespaces.clear()
     setup_jwt_auth(app_instance)
@@ -170,7 +176,7 @@ def setup_jwt_auth(app_instance):
     """
     app_instance.bcrypt = Bcrypt(app_instance)
     app_instance.jwt = JWTManager(app_instance)
-    app_instance.jwt.additional_claims_loader(add_role_list_claims)
+    #app_instance.jwt.additional_claims_loader(add_role_list_claims)
     app_instance.jwt.token_in_blocklist_loader(check_if_token_is_revoked)
 
 
