@@ -1,16 +1,15 @@
-import datetime
-import json
 import logging
 import traceback
 import flask
 from mongoengine import DoesNotExist, NotUniqueError
 from api.v1.decorators.jwt_auth_decorator import user_jwt_required
+from scripts.auth.jwt_auth import create_jwt_access_token
 from scripts.auth.secure_token_generator import generate_confirmation_token, validate_token
 from scripts.language.en_us import REGISTRATION_MAIL_BODY, REGISTRATION_MAIL_SUBJECT
 from scripts.mail.smpt_mailer import send_mail
 from model import UserAccount, UserAccountSchema, RevokedJwtToken
-from flask import request, redirect
-from flask_jwt_extended import create_access_token, get_jwt
+from flask import request, redirect, jsonify
+from flask_jwt_extended import create_access_token, get_jwt, set_access_cookies, unset_jwt_cookies
 from flask_restx import Resource, Namespace
 from model.UserAccount import RegistrationStatus
 
@@ -75,7 +74,9 @@ class Signup(Resource):
                     logging.info("Valid Token")
                     user_account.registration_status = RegistrationStatus.VERIFIED
                     user_account.save()
-                    response = redirect("https://"+app.config['DOMAIN_NAME'], code=302)
+                    response = redirect("https://" + app.config['DOMAIN_NAME'], code=302)
+                    access_token = create_jwt_access_token(user_account)
+                    set_access_cookies(response, access_token)
         except RuntimeError as err:
             logging.error(err)
             traceback.print_exc()
@@ -96,20 +97,13 @@ class Login(Resource):
         response = "", 401
         try:
             body = request.get_json()
-            user = UserAccount.objects.get(email=body.get('email'))
-            authorized = user.check_password(body.get('password'))
+            user_account = UserAccount.objects.get(email=body.get('email'))
+            authorized = user_account.check_password(body.get('password'))
             if authorized:
-                expires = datetime.timedelta(days=7)
-                user_account_schema = UserAccountSchema()
-                identity = user_account_schema.dump(user)
-                identity = json.dumps({
-                    "role_list": identity["role_list"],
-                    "email": identity["email"]
-                })
-                logging.info(identity)
-                access_token = create_access_token(identity=identity,
-                                                   expires_delta=expires)
-                response = {'token': access_token}, 200
+                access_token = create_jwt_access_token(user_account)
+                #response = {'token': access_token}, 200
+                response = jsonify({"msg": "login successful"})
+                set_access_cookies(response, access_token)
         except Exception as err:
             logging.error(err)
             traceback.print_exc()
@@ -128,7 +122,8 @@ class Login(Resource):
         try:
             jti = get_jwt()["jti"]
             RevokedJwtToken(jti=jti).save()
-            response = "", 200
+            response = jsonify({"msg": "logout successful"})
+            unset_jwt_cookies(response)
         except Exception as err:
             logging.error(err)
         return response

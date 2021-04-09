@@ -8,7 +8,7 @@ from zipfile import ZipInfo, ZIP_DEFLATED
 from flask import request, send_file
 from flask_restx import Resource, Namespace
 from mongoengine import DoesNotExist
-from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required, user_jwt_required
 from scripts.utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
 from api.v1.model.serializers import object_id_list
 from api.v1.parser.json_parser import parse_json_object_id_list
@@ -104,7 +104,7 @@ class FirmwareDeleteAll(Resource):
 @ns.route('/get_import_queue_size/')
 class FirmwareMassImportQueue(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @user_jwt_required
     def get(self):
         """
         Counts the number of files in the firmware import folder.

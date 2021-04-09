@@ -1,3 +1,8 @@
+import datetime
+import json
+from flask_jwt_extended import create_access_token
+from mongoengine import DoesNotExist
+
 from model import RevokedJwtToken
 
 
@@ -8,6 +13,25 @@ def check_if_token_is_revoked(jwt_header, jwt_payload):
     :param jwt_payload: str - jwt token.
     :return: bool - true if it is in the list.
     """
-    jti = jwt_payload["jti"]
-    token_in_redis = RevokedJwtToken.objects.get(jti=jti)
-    return token_in_redis is not None
+    revoked_token = None
+    try:
+        jti = jwt_payload["jti"]
+        revoked_token = RevokedJwtToken.objects.get(jti=jti)
+    except DoesNotExist:
+        pass
+    return revoked_token is not None
+
+
+def create_jwt_access_token(user_account):
+    """
+    Create a jwt toke used for api access.
+    :param user_account: class:'UserAccount' - user to create the token for.
+    :return: str - jwt access token.
+    """
+    identity = json.dumps({
+        "role_list": user_account.role_list,
+        "email": user_account.email
+    })
+    access_token = create_access_token(identity=identity,
+                                       expires_delta=datetime.timedelta(days=7))
+    return access_token
