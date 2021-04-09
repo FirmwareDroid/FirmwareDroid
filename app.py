@@ -1,8 +1,6 @@
 import json
 import tempfile
 import time
-from sys import path
-
 import rq
 import os
 import logging
@@ -292,7 +290,7 @@ def setup_swagger_ui(app_instance, api):
         "specs": [
             {
                 "endpoint": 'apispec_1',
-                "route": '/api/apispec_1.json',
+                "route": '/api/swagger.json',
                 "rule_filter": lambda rule: True,  # all in
                 "model_filter": lambda tag: True,  # all in
             }
