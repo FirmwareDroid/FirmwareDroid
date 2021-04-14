@@ -2,14 +2,14 @@ import logging
 import traceback
 import flask
 from mongoengine import DoesNotExist, NotUniqueError
-from api.v1.decorators.jwt_auth_decorator import user_jwt_required
+from api.v1.decorators.jwt_auth_decorator import jwt_required
 from scripts.auth.jwt_auth import create_jwt_access_token
 from scripts.auth.secure_token_generator import generate_confirmation_token, validate_token
 from scripts.language.en_us import REGISTRATION_MAIL_BODY, REGISTRATION_MAIL_SUBJECT
 from scripts.mail.smpt_mailer import send_mail
 from model import UserAccount, UserAccountSchema, RevokedJwtToken
 from flask import request, redirect, jsonify
-from flask_jwt_extended import create_access_token, get_jwt, set_access_cookies, unset_jwt_cookies
+from flask_jwt_extended import get_jwt, set_access_cookies, unset_jwt_cookies
 from flask_restx import Resource, Namespace
 from model.UserAccount import RegistrationStatus
 
@@ -32,7 +32,8 @@ class Signup(Resource):
         try:
             body = request.get_json()
             logging.info(body)
-            UserAccountSchema().validate(body)
+            UserAccountSchema().validate(data=body)
+
             user = UserAccount(**body)
             user.role_list = ['user']
             user.hash_password()
@@ -74,7 +75,7 @@ class Signup(Resource):
                     logging.info("Valid Token")
                     user_account.registration_status = RegistrationStatus.VERIFIED
                     user_account.save()
-                    response = redirect("https://" + app.config['DOMAIN_NAME'], code=302)
+                    response = redirect(f"https://{app.config['DOMAIN_NAME']}/login", code=302)
                     access_token = create_jwt_access_token(user_account)
                     set_access_cookies(response, access_token)
         except RuntimeError as err:
@@ -101,8 +102,7 @@ class Login(Resource):
             authorized = user_account.check_password(body.get('password'))
             if authorized:
                 access_token = create_jwt_access_token(user_account)
-                #response = {'token': access_token}, 200
-                response = jsonify({"msg": "login successful"})
+                response = jsonify({"username": user_account.username})
                 set_access_cookies(response, access_token)
         except Exception as err:
             logging.error(err)
@@ -112,7 +112,7 @@ class Login(Resource):
 
 @ns.route('/logout/')
 class Login(Resource):
-    @user_jwt_required
+    @jwt_required
     def delete(self):
         """
         Logout user by invalidating their JWT access token.

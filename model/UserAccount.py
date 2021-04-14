@@ -3,7 +3,11 @@ from enum import Enum
 from flask_bcrypt import generate_password_hash, check_password_hash
 from flask_restx import Model, fields as flask_model_fields
 from marshmallow import Schema, fields
+from marshmallow.validate import Length, Email
+from marshmallow_validators.wtforms import from_wtforms
 from mongoengine import StringField, Document, EmailField, BooleanField, DateTimeField, ListField, EnumField
+
+from api.v1.parser.input_validator import validate_password
 
 
 class RegistrationStatus(Enum):
@@ -16,7 +20,7 @@ class UserAccount(Document):
     register_date = DateTimeField(default=datetime.datetime.now)
     username = StringField(required=True, unique=True, min_length=4, max_length=40)
     email = EmailField(required=True, unique=True, min_length=6, max_length=128)
-    password = StringField(required=True, min_length=8, max_length=128)
+    password = StringField(required=True, min_length=12, max_length=128)
     active = BooleanField(required=True, default=True)
     role_list = ListField(StringField(min_length=1, max_length=128), default=['user'], required=True)
     registration_status = EnumField(RegistrationStatus, default=RegistrationStatus.WAIT)
@@ -66,7 +70,7 @@ class UserAccount(Document):
                                                   min_length=8,
                                                   max_length=128,
                                                   description='Password of the user',
-                                                  example='ReallyStrongPassword'),
+                                                  example='ReallyStrongPassword12_'),
         })
 
 
@@ -74,9 +78,10 @@ class UserAccountSchema(Schema):
     """
     Json deserialization.
     """
+    locales = ['de_DE', 'de']
     # TODO add more validation params
     id = fields.Str()
-    password = fields.Str(required=True, exclude=True)
+    password = fields.Str(required=True, exclude=True, validate=validate_password)
     email = fields.Email(required=True)
     username = fields.Str(required=True)
     active = fields.Boolean()

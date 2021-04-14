@@ -50,6 +50,7 @@ services:
       - $PWD/env/nginx:/etc/nginx/conf.d
       - $PWD/env/certbot/conf:/etc/letsencrypt
       - $PWD/env/certbot/www:/var/www/certbot
+      - $PWD/firmware-droid-client/build:/usr/share/nginx/build
     ports:
       - "80:80"
       - "443:443"
