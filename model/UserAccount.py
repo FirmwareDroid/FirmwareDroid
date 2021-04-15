@@ -3,8 +3,6 @@ from enum import Enum
 from flask_bcrypt import generate_password_hash, check_password_hash
 from flask_restx import Model, fields as flask_model_fields
 from marshmallow import Schema, fields
-from marshmallow.validate import Length, Email
-from marshmallow_validators.wtforms import from_wtforms
 from mongoengine import StringField, Document, EmailField, BooleanField, DateTimeField, ListField, EnumField
 
 from api.v1.parser.input_validator import validate_password
@@ -52,7 +50,7 @@ class UserAccount(Document):
                                                   min_length=8,
                                                   max_length=128,
                                                   description='Password of the user',
-                                                  example='ReallyStrongPassword'),
+                                                  example='ReallyStrongPassword12_'),
         })
 
     @staticmethod

@@ -1,7 +1,7 @@
 import flask
 from flask_restx import Resource, Namespace
 from flask import request
-from api.v1.model.serializers import object_id_list
+from api.v1.api_models.serializers import object_id_list
 from api.v1.parser.json_parser import parse_json_object_id_list
 from scripts.auth.basic_auth import requires_basic_authorization
 from model import AndroidFirmware

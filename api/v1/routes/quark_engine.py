@@ -2,7 +2,7 @@ import flask
 from flask import request
 from flask_restx import Api, Resource
 from api.v1.common.rq_job_creator import enqueue_jobs
-from api.v1.model.serializers import object_id_list
+from api.v1.api_models.serializers import object_id_list
 from api.v1.parser.request_util import check_app_mode
 from scripts.static_analysis.QuarkEngine.quark_engine_wrapper import start_quark_engine_scan
 

@@ -5,7 +5,7 @@ from flask import request, send_file
 from api.v1.common.response_creator import create_zip_file
 from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.parser.request_util import check_firmware_mode
-from api.v1.model.serializers import fuzzy_hash_compare_model, object_id_list
+from api.v1.api_models.serializers import fuzzy_hash_compare_model, object_id_list
 from scripts.auth.basic_auth import requires_basic_authorization
 from scripts.hashing.tlsh.tlsh_find_similar import start_find_similar_hashes_by_graph
 from scripts.hashing.tlsh.tlsh_lookup_table_creator import start_similarity_lookup_table, start_table_size_evaluator, \

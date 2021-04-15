@@ -10,7 +10,7 @@ from flask_restx import Resource, Namespace
 from mongoengine import DoesNotExist
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required, user_jwt_required
 from scripts.utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
-from api.v1.model.serializers import object_id_list
+from api.v1.api_models.serializers import object_id_list
 from api.v1.parser.json_parser import parse_json_object_id_list
 from api.v1.parser.request_util import check_firmware_mode
 from scripts.auth.basic_auth import requires_basic_authorization

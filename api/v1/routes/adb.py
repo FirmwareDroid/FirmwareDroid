@@ -1,6 +1,6 @@
 from flask import request
 from flask_restx import Resource, Namespace
-from api.v1.model.serializers import object_id_list
+from api.v1.api_models.serializers import object_id_list
 from api.v1.parser.json_parser import parse_json_object_id_list
 from model import AndroidApp
 from scripts.dynamic_analysis.emulator_control.emulator_runner import start_dynamic_analysis

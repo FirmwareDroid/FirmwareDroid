@@ -3,7 +3,7 @@ import flask
 from flask import request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restx import Api, Resource
-from api.v1.model.serializers import virustotal_api_key_model, object_id_list
+from api.v1.api_models.serializers import virustotal_api_key_model, object_id_list
 from api.v1.parser.json_parser import parse_virustotal_api_key
 from api.v1.parser.request_util import check_app_mode
 from scripts.hashing.tlsh.tlsh_malware_labeling import add_malware_labels_to_graph

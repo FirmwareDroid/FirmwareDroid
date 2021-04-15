@@ -2,6 +2,7 @@ import logging
 import traceback
 import flask
 from mongoengine import DoesNotExist, NotUniqueError
+from api.v1.decorators.feature_decorator import requires_signup_is_active
 from api.v1.decorators.jwt_auth_decorator import jwt_required
 from scripts.auth.jwt_auth import create_jwt_access_token
 from scripts.auth.secure_token_generator import generate_confirmation_token, validate_token
@@ -23,6 +24,7 @@ ns.add_model("user_login", user_login_model)
 @ns.route('/signup/')
 @ns.expect(user_signup_model)
 class Signup(Resource):
+    @requires_signup_is_active
     def post(self):
         """
         Register a new user account and send a confirmation e-mail.
@@ -32,8 +34,7 @@ class Signup(Resource):
         try:
             body = request.get_json()
             logging.info(body)
-            UserAccountSchema().validate(data=body)
-
+            UserAccountSchema().load(data=body)
             user = UserAccount(**body)
             user.role_list = ['user']
             user.hash_password()
@@ -60,6 +61,7 @@ class Signup(Resource):
 
 @ns.route('/signup/confirmation/<string:token>')
 class Signup(Resource):
+    @requires_signup_is_active
     def get(self, token):
         """
         Confirms user e-mail address by validating a confirmation token.

@@ -17,4 +17,5 @@ def create_application_setting():
     Creates a class:'ApplicationSetting' instance and saves it to the database.
     :return: class:'ApplicationSetting'
     """
-    return ApplicationSetting().save()
+    return ApplicationSetting(is_signup_active=True,
+                              is_firmware_upload_active=True).save()

@@ -2,7 +2,7 @@ import json
 import logging
 import flask
 from flask import request, send_file
-from api.v1.model.serializers import object_id_list
+from api.v1.api_models.serializers import object_id_list
 from api.v1.parser.request_util import check_app_mode, check_firmware_mode
 from scripts.auth.basic_auth import requires_basic_authorization
 from scripts.statistics.reports.firmware_statistics import create_firmware_statistics_report
