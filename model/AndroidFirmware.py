@@ -48,3 +48,7 @@ class AndroidFirmwareSchema(Schema):
     hasFileIndex = fields.Str()
     android_app_id_list = fields.List(fields.Str())
     firmware_file_id_list = fields.List(fields.Str())
+
+    class Meta:
+        load_only = ('relative_store_path', 'id', 'absolute_store_path',
+                     'filename', 'android_app_id_list', 'firmware_file_id_list')

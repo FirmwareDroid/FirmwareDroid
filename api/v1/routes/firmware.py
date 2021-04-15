@@ -185,3 +185,21 @@ class DownloadFirmware(Resource):
         return response
 
 
+@ns.route('/get_latest/')
+class GetLatestFirmware(Resource):
+    @ns.doc('get')
+    def get(self):
+        """
+        Gets a list of the latest firmware uploads.
+        :return: json - list of Android firmware
+        """
+        response = "", 400
+        try:
+            firmware_list = AndroidFirmware.objects().limit(20).order_by('indexed_date')
+            firmware_json_list = []
+            for firmware in firmware_list:
+                firmware_json_list.append(AndroidFirmwareSchema().dump(firmware))
+            response = json.dumps(firmware_json_list), 200
+        except Exception as err:
+            logging.error(err)
+        return response
