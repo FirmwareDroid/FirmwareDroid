@@ -1,6 +1,7 @@
-from mongoengine import Document, LazyReferenceField, DateTimeField, StringField, CASCADE, DictField
+from mongoengine import LazyReferenceField, DateTimeField, StringField, CASCADE, DictField
 from model import AndroidApp
 import datetime
+from flask_mongoengine import Document
 
 
 class ApkLeaksReport(Document):

@@ -23,7 +23,7 @@ ns = api.namespace('qark',
 @ns.expect(object_id_list)
 class CreateQarkReport(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, mode):
         """
         Analysis apps with Quick Android Review Kit (QARK) and create a report.

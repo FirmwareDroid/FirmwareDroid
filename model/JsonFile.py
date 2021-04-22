@@ -1,7 +1,7 @@
 import datetime
-from mongoengine import Document, FileField, DateTimeField, signals
+from mongoengine import FileField, DateTimeField, signals
 import json
-
+from flask_mongoengine import Document
 
 class JsonFile(Document):
     report_date = DateTimeField(default=datetime.datetime.now, required=True)

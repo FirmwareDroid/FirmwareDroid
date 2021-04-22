@@ -3,8 +3,8 @@ from enum import Enum
 from flask_bcrypt import generate_password_hash, check_password_hash
 from flask_restx import Model, fields as flask_model_fields
 from marshmallow import Schema, fields
-from mongoengine import StringField, Document, EmailField, BooleanField, DateTimeField, ListField, EnumField
-
+from mongoengine import StringField, EmailField, BooleanField, DateTimeField, ListField, EnumField
+from flask_mongoengine import Document
 from api.v1.parser.input_validator import validate_password
 
 

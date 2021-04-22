@@ -4,6 +4,7 @@ from flask_restx import Api, Resource
 
 from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.api_models.serializers import object_id_list
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.request_util import check_app_mode
 from scripts.static_analysis.APKLeaks.apkleaks_wrapper import start_apkleaks_scan
 
@@ -17,6 +18,7 @@ ns = api.namespace('apkleaks',
 @ns.expect(object_id_list)
 class SuperScan(Resource):
     @ns.doc('post')
+    @admin_jwt_required
     def post(self, mode):
         """
         Scan the given apps with APKLeaks.

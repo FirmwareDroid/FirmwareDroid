@@ -1,6 +1,6 @@
 import datetime
-
-from mongoengine import LazyReferenceField, Document, CASCADE, StringField, DateTimeField, BooleanField, ListField, \
+from flask_mongoengine import Document
+from mongoengine import LazyReferenceField, CASCADE, StringField, DateTimeField, BooleanField, ListField, \
     DictField, DO_NOTHING
 
 from model import AndroidApp

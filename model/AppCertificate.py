@@ -1,8 +1,8 @@
 import mongoengine
-from mongoengine import Document, LazyReferenceField, DateTimeField, StringField, ListField, FileField, CASCADE, \
+from mongoengine import LazyReferenceField, DateTimeField, StringField, ListField, FileField, CASCADE, \
     DictField, LongField, BooleanField
 from model import AndroidApp
-
+from flask_mongoengine import Document
 
 class AppCertificate(Document):
     androguard_report_reference = LazyReferenceField('AndroGuardReport', reverse_delete_rule=CASCADE, required=False)

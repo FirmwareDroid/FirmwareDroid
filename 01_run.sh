@@ -4,6 +4,7 @@ echo "##########################################################################
 # FirmwareDroid run script.                                                   #
 # Allows to start FirmwareDroid with different environment settings.          #
 # Keep in mind to remove old docker containers when changing environments!    #
+# Keep in mind to use the same environment as the one set in the .env file!	#
 # Version: 1.0                                                                #
 # Created: 01.03.2021                                                         #
 # Author: Thomas Sutter                                                       #

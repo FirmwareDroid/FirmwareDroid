@@ -1,5 +1,5 @@
-from mongoengine import Document, LazyReferenceField, LongField, DO_NOTHING, IntField, DictField
-
+from mongoengine import LazyReferenceField, LongField, DO_NOTHING, IntField, DictField
+from flask_mongoengine import Document
 from model import JsonFile
 
 

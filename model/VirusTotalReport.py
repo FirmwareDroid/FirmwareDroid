@@ -1,7 +1,8 @@
 import datetime
-from mongoengine import DictField, StringField, Document, DateTimeField, LazyReferenceField, CASCADE
+from mongoengine import DictField, StringField, DateTimeField, LazyReferenceField, CASCADE
 from marshmallow import Schema, fields
 from model import AndroidApp
+from flask_mongoengine import Document
 
 
 class VirusTotalReport(Document):

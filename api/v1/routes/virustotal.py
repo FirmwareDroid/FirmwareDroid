@@ -4,6 +4,7 @@ from flask import request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_restx import Api, Resource
 from api.v1.api_models.serializers import virustotal_api_key_model, object_id_list
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.json_parser import parse_virustotal_api_key
 from api.v1.parser.request_util import check_app_mode
 from scripts.hashing.tlsh.tlsh_malware_labeling import add_malware_labels_to_graph
@@ -22,7 +23,7 @@ ns.add_model("virustotal_api_key_model", virustotal_api_key_model)
 @ns.route('/<int:mode>')
 @ns.expect(object_id_list)
 class VirusTotalAllApks(Resource):
-    @jwt_required
+    @admin_jwt_required
     def post(self, mode):
         """
         Scan a list all apps of the given firmware with VirusTotal.

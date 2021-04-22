@@ -1,5 +1,5 @@
 import logging
-from mongoengine import Document, DictField, DateTimeField, LongField, LazyReferenceField, CASCADE, signals
+from mongoengine import DictField, LongField, LazyReferenceField, CASCADE, signals
 from model import StatisticsReport, JsonFile
 
 ATTRIBUTE_MAP_ATOMIC = {

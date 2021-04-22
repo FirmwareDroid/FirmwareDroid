@@ -1,6 +1,10 @@
 import datetime
-from mongoengine import Document, LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, CASCADE, \
+
+from flask_mongoengine import Document
+from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, CASCADE, \
     ListField
+
+from api.v1.marshmallow_fields.LazyReference import LazyReferenceConverter
 from model import AndroidFirmware
 from marshmallow import Schema, fields
 
@@ -11,7 +15,6 @@ class AndroidApp(Document):
     md5 = StringField(required=True, max_length=128, min_length=1)
     sha256 = StringField(required=True, max_length=256, min_length=1)
     sha1 = StringField(required=True, max_length=160, min_length=1)
-    ssdeep_digest = StringField(required=False, unique=False)
     filename = StringField(required=True, max_length=1024, min_length=1)
     packagename = StringField(required=False, max_length=1024, min_length=1)
     relative_firmware_path = StringField(required=True, max_length=1024, min_length=1)
@@ -43,10 +46,13 @@ class AndroidAppSchema(Schema):
     relative_firmware_path = fields.Str()
     file_size_bytes = fields.Float()
     relative_store_path = fields.Str()
-    androguard_report_reference = fields.Str()
-    virus_total_report_reference = fields.Str()
-    androwarn_report_reference = fields.Str()
-    qark_report_reference = fields.Str()
-    apkid_report_reference = fields.Str()
-    exodus_report_reference = fields.Str()
-    quark_engine_report_reference = fields.Str()
+    androguard_report_reference = LazyReferenceConverter()
+    virus_total_report_reference = LazyReferenceConverter()
+    androwarn_report_reference = LazyReferenceConverter()
+    qark_report_reference = LazyReferenceConverter()
+    apkid_report_reference = LazyReferenceConverter()
+    exodus_report_reference = LazyReferenceConverter()
+    quark_engine_report_reference = LazyReferenceConverter()
+
+    class Meta:
+        load_only = ('firmware_id_reference', 'relative_store_path')

@@ -1,6 +1,6 @@
 import datetime
-from mongoengine import Document, FileField, StringField, DateTimeField
-
+from mongoengine import FileField, StringField, DateTimeField
+from flask_mongoengine import Document
 
 class ImageFile(Document):
     save_date = DateTimeField(default=datetime.datetime.now, required=True)

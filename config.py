@@ -72,6 +72,7 @@ class ApplicationConfig(Config):
     FLASK_ADMIN_USERNAME = os.environ[Config.ENV + 'FLASK_ADMIN_USERNAME']
     DOMAIN_NAME = os.environ[Config.ENV + 'DOMAIN_NAME']
     SERVER_NAME = DOMAIN_NAME
+    MAX_CONTENT_LENGTH = 7 * 1024 * 1024 * 1024     # MAX File upload size
     ####################
     # DB Config
     ####################

@@ -1,4 +1,5 @@
-from mongoengine import Document, StringField, LazyReferenceField, CASCADE, DictField, BooleanField
+from mongoengine import StringField, LazyReferenceField, CASCADE, DictField, BooleanField
+from flask_mongoengine import Document
 
 TLSH_CLUSTERING_WINDOW_SIZES = [2, 3, 4]
 

@@ -1,5 +1,6 @@
 import datetime
-from mongoengine import Document, StringField, DateTimeField, FileField
+from mongoengine import StringField, DateTimeField, FileField
+from flask_mongoengine import Document
 
 
 class FridaScript(Document):

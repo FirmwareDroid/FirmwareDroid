@@ -1,6 +1,7 @@
 import datetime
 import mongoengine
-from mongoengine import Document, LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, \
+from flask_mongoengine import Document
+from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, \
     EmbeddedDocumentField, ListField, BooleanField, IntField
 from model import BuildPropFile
 from marshmallow import Schema, fields

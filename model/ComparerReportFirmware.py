@@ -1,7 +1,7 @@
 import mongoengine
-from mongoengine import Document, DateTimeField, StringField, ListField, FileField, ObjectIdField
+from mongoengine import DateTimeField, StringField, ListField, FileField, ObjectIdField
 import datetime
-
+from flask_mongoengine import Document
 
 class ComparerReportFirmware(Document):
     report_date = DateTimeField(required=True, default=datetime.datetime.now)

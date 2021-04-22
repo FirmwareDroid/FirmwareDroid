@@ -1,5 +1,7 @@
+import json
+import logging
 from functools import wraps
-from flask_jwt_extended import get_jwt
+from flask_jwt_extended import get_jwt, get_jwt_identity
 from flask_jwt_extended import verify_jwt_in_request
 
 
@@ -11,8 +13,11 @@ def admin_jwt_required(fn):
          as well as ensuring that this user has a role of `admin` in the access token
         """
         verify_jwt_in_request()
-        claims = get_jwt()
-        if 'admin' in claims['role_list']:
+        claims = get_jwt_identity()
+        claims = json.loads(claims)
+        role_list = claims["role_list"]
+        logging.info(role_list)
+        if role_list and 'admin' in role_list:
             return fn(*args, **kwargs)
         else:
             return "Unauthorized", 401
@@ -29,8 +34,10 @@ def user_jwt_required(fn):
         as well as ensuring that this user has a role of `user` in the access token
         """
         verify_jwt_in_request()
-        claims = get_jwt()
-        if 'user' or 'admin' in claims['role_list']:
+        claims = get_jwt_identity()
+        claims = json.loads(claims)
+        role_list = claims["role_list"]
+        if role_list and ('user' or 'admin' in role_list):
             return fn(*args, **kwargs)
         else:
             return "Unauthorized", 401

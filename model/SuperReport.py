@@ -1,7 +1,7 @@
-from mongoengine import Document, LazyReferenceField, DateTimeField, StringField, CASCADE, DictField
+from mongoengine import LazyReferenceField, DateTimeField, CASCADE, DictField
 from model import AndroidApp
 import datetime
-
+from flask_mongoengine import Document
 
 class SuperReport(Document):
     report_date = DateTimeField(required=True, default=datetime.datetime.now)

@@ -9,6 +9,7 @@ from flask import request, send_file
 from flask_restx import Resource, Namespace
 from mongoengine import DoesNotExist
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required, user_jwt_required
+from scripts.hashing import md5_from_file
 from scripts.utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
 from api.v1.api_models.serializers import object_id_list
 from api.v1.parser.json_parser import parse_json_object_id_list
@@ -19,15 +20,19 @@ from scripts.database.delete_document import clear_firmware_database
 from scripts.firmware.firmware_importer import start_firmware_mass_import
 from scripts.firmware.firmware_version_detect import detect_firmware_version
 from model import AndroidFirmware
+from werkzeug.datastructures import FileStorage
+from werkzeug.utils import secure_filename
 
 ns = Namespace('firmware', description='Operations related to Android firmware.')
 ns.add_model("object_id_list", object_id_list)
+parser = ns.parser()
+parser.add_argument('file', type=FileStorage, location='files')
 
 
 @ns.route('/by_md5/<string:md5>')
 class GetByMd5(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self, md5):
         """
         Gets a json report for the firmware.
@@ -46,7 +51,7 @@ class GetByMd5(Resource):
 @ns.expect(object_id_list)
 class FirmwareGetAppIds(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self):
         """
         Creates a list of class:'AndroidApp' object-ids for the given firmware.
@@ -60,10 +65,10 @@ class FirmwareGetAppIds(Resource):
         return json.dumps(android_app_id_list, cls=DefaultJsonEncoder)
 
 
-@ns.route('/<string:android_version>')
+@ns.route('/<string:android_version>', doc={"deprecated": True})
 class FirmwareByVersion(Resource):
     @ns.doc('get', params={'android_version': 'A version string Example, 9 or 8.1 or 7.1.1'})
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self, android_version):
         """
         Get a list of firmware-id's with the given version (including subversions).
@@ -74,11 +79,11 @@ class FirmwareByVersion(Resource):
         return json.dumps(firmware_list, cls=DefaultJsonEncoder)
 
 
-@ns.route('/firmware_importer/')
+@ns.route('/start_importer/')
 class FirmwareMassImport(Resource):
-    @ns.doc('get')
-    @requires_basic_authorization
-    def get(self):
+    @ns.doc('post')
+    @admin_jwt_required
+    def post(self):
         """
         Starts the mass import of firmware files from the filesystem.
         :return: rq-job-id
@@ -103,9 +108,9 @@ class FirmwareDeleteAll(Resource):
 
 @ns.route('/get_import_queue_size/')
 class FirmwareMassImportQueue(Resource):
-    @ns.doc('get')
-    @user_jwt_required
-    def get(self):
+    @ns.doc('post')
+    @admin_jwt_required
+    def post(self):
         """
         Counts the number of files in the firmware import folder.
         :return: the number of files waiting to be imported.
@@ -120,7 +125,7 @@ class FirmwareMassImportQueue(Resource):
 @ns.expect(object_id_list)
 class FirmwareIndexFiles(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, mode):
         """
         Attempts to detect the Android version of the firmware.
@@ -203,3 +208,32 @@ class GetLatestFirmware(Resource):
         except Exception as err:
             logging.error(err)
         return response
+
+
+@ns.route('/upload/')
+class UploadFirmware(Resource):
+    @ns.doc('post')
+    @user_jwt_required
+    @ns.expect(parser)
+    def post(self):
+        """
+        Upload Android firmware archives for import.
+        """
+        response = "", 400
+        try:
+            args = parser.parse_args()
+            file = args.get('file')
+            file.filename = secure_filename(file.filename)
+            logging.info(file.filename)
+            md5 = md5_from_file(file.filename)
+            logging.info(f"md5: {md5}")
+            try:
+                AndroidFirmware.objects.get(md5=md5)
+                response = "Firmware already in database.", 202
+            except DoesNotExist as notExist:
+                file.save()
+                response = "", 200
+        except Exception as err:
+            logging.error(err)
+        return response
+

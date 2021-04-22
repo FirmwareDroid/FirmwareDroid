@@ -6,6 +6,7 @@ from flask_restx import Resource, Namespace
 from mongoengine import DoesNotExist
 from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.api_models.serializers import object_id_list
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.request_util import check_app_mode
 from scripts.auth.basic_auth import requires_basic_authorization
 from model import AppCertificate, AndroGuardStringAnalysis
@@ -24,7 +25,7 @@ ns = Namespace('androguard',
 @ns.expect(object_id_list)
 class AndroGuardAnalysis(Resource):
     @ns.doc("post")
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, mode):
         """
         Analyse all the apps of the given list with AndroGuard parallel mode.
