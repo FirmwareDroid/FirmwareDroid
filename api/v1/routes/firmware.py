@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+import tempfile
+
 import flask
 import time
 from io import BytesIO
@@ -8,7 +10,7 @@ from zipfile import ZipInfo, ZIP_DEFLATED
 from flask import request, send_file
 from flask_restx import Resource, Namespace
 from mongoengine import DoesNotExist
-from api.v1.decorators.jwt_auth_decorator import admin_jwt_required, user_jwt_required
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from scripts.hashing import md5_from_file
 from scripts.utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
 from api.v1.api_models.serializers import object_id_list
@@ -213,27 +215,41 @@ class GetLatestFirmware(Resource):
 @ns.route('/upload/')
 class UploadFirmware(Resource):
     @ns.doc('post')
-    @user_jwt_required
+    # @user_jwt_required
     @ns.expect(parser)
     def post(self):
         """
         Upload Android firmware archives for import.
         """
         response = "", 400
+        allowed_extensions = [".zip"]
         try:
             args = parser.parse_args()
             file = args.get('file')
-            file.filename = secure_filename(file.filename)
-            logging.info(file.filename)
-            md5 = md5_from_file(file.filename)
-            logging.info(f"md5: {md5}")
-            try:
-                AndroidFirmware.objects.get(md5=md5)
-                response = "Firmware already in database.", 202
-            except DoesNotExist as notExist:
-                file.save()
-                response = "", 200
+            logging.info(f"request: {request}")
+            logging.info(f"args: {args}")
+            logging.info(f"request.form: {request.form}")
+            logging.info(f"request.files: {request.files}")
+            if file and file.filename != '' \
+                    and '.' in file.filename \
+                    and file.filename.rsplit('.', 1)[1].lower() in allowed_extensions:
+
+                filename_sanitized = secure_filename(file.filename)
+                tempdir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"])
+                filepath = os.path.join(tempdir.name, filename_sanitized)
+                file.save(filepath)
+                md5 = md5_from_file(filepath)
+                try:
+                    AndroidFirmware.objects.get(md5=md5)
+                    response = "Firmware already in database.", 202
+                except DoesNotExist:
+                    storage_filepath = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_IMPORT"],
+                                                    filename_sanitized)
+                    file.seek(0)
+                    file.save(storage_filepath)
+                    response = "", 200
+            else:
+                logging.info("Uploaded file was not accepted")
         except Exception as err:
             logging.error(err)
         return response
-

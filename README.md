@@ -23,8 +23,9 @@ Tested on Debian and OS X (Big Sur)
     - DB: 50GB
 
 ## Installation (Linux)
-- git clone https://github.zhaw.ch/suth/FirmwareDroid.git
+- git clone https://github.com/FirmwareDroid/FirmwareDroid
 - cd ./FirmwareDroid
+- 
 - touch .env
   - Copy the example configuration to the .env file: https://github.zhaw.ch/suth/FirmwareDroid/blob/master/documentation/example_config/env.txt)
   - Configure the .env

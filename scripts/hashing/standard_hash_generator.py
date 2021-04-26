@@ -65,3 +65,6 @@ def sha256_from_string(text):
     return hash_object.hexdigest()
 
 
+def sha256_from_bytes(bytes):
+    hash_object = hashlib.sha512(bytes)
+    return hash_object.hexdigest()
