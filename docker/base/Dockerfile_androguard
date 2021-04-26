@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:experimental
 FROM firmwaredroid-base as androguard-worker
 
 RUN --mount=type=cache,target=/var/www/tmp/androguard/.cache \

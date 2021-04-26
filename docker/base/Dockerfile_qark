@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:experimental
 FROM firmwaredroid-base-java as qark-worker
 
 RUN --mount=type=cache,target=/var/www/tmp/qark/.cache \

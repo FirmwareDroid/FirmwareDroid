@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:experimental
 FROM firmwaredroid-base-java as apkleaks-worker
 
 

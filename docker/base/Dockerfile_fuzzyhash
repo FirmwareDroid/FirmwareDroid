@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:experimental
 FROM firmware-worker as fuzzyhash-worker
 
 # TODO add lzjd to requirement as soon as it works out of the box
