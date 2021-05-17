@@ -2,6 +2,7 @@ import logging
 import os
 import re
 
+from scripts.extractor.ext4_extractor import extract_ext4, extract_simg_ext4
 from scripts.firmware.firmware_file_search import get_firmware_file_by_regex_list
 from scripts.extractor.ubi_extractor import extract_ubi_image
 from scripts.firmware.ext4_mount_util import mount_android_image
@@ -29,11 +30,10 @@ def extract_image_files(image_path, extract_dir_path):
     :param image_path: str - absolute path to the image file.
     :param extract_dir_path: str - path where the files will be extracted or mounted to.
     """
-    # TODO add extextractor here
-    #if extract_ext4(image_path, extract_dir_path):
-    #    logging.info("Image extraction successful with ext4")
-    #elif extract_simg_ext4(image_path, extract_dir_path):
-    #    logging.info("Image extraction successful with simg_ext4")
+    # if extract_ext4(image_path, extract_dir_path):
+    #     logging.info("Image extraction successful with ext4extractor")
+    if extract_simg_ext4(image_path, extract_dir_path):
+        logging.info("Image extraction successful with simg_ext4extractor")
     if mount_android_image(image_path, extract_dir_path):
         logging.info("Image mount successful")
     elif extract_ubi_image(image_path, extract_dir_path):

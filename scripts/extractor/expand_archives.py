@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from scripts.firmware.const_regex import SYSTEM_IMG_PATTERN_LIST
+from scripts.firmware.const_regex_patterns import SYSTEM_IMG_PATTERN_LIST
 from model import FirmwareFile
 from scripts.firmware.ext4_mount_util import mount_android_image, is_path_mounted, exec_umount
 from scripts.extractor.nb0_extractor import extract_nb0

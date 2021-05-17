@@ -4,7 +4,7 @@ import re
 import tempfile
 import flask
 from scripts.extractor.unzipper import unzip_file
-from scripts.firmware.const_regex import ELF_BINARY_FORMATS_PATTERN_LIST
+from scripts.firmware.const_regex_patterns import ELF_BINARY_FORMATS_PATTERN_LIST
 from scripts.utils.file_utils.file_util import check_file_format
 from scripts.utils.string_utils.string_util import filter_mongodb_dict_chars
 

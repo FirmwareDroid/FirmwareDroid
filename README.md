@@ -117,7 +117,7 @@ FirmwareDroid for your research. The project is non-profit and you are allowed t
 
 
 ## Copyright
-FirmwareDroid is licenced under the GNUv3 
+FirmwareDroid is licenced under the GNU General Public License v3.0
 (see [licence](https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md)). 
 
 
@@ -125,12 +125,11 @@ FirmwareDroid is licenced under the GNUv3
 The FirmwareDroid software contains code written by third parties. Such software will
 have its own individual licences. You as a user of this project must review, 
 accept and comply with the license terms of each downloaded/installed 
-package listed below or in our requirements files. By proceeding with the installation, 
+package listed below or in our "requirements.txt" files. By proceeding with the installation, 
 you are accepting the license terms of each package, and acknowledging that your 
 use of each package will be subject to its respective license terms.
 
-List of third party scanner software:
-
+List of third party software:
 [AndroGuard](https://github.com/androguard/androguard/blob/master/LICENCE-2.0),
 [Androwarn](https://github.com/maaaaz/androwarn/blob/master/COPYING),
 [APKiD](https://github.com/rednaga/APKiD/blob/master/LICENSE.COMMERCIAL),
@@ -140,4 +139,4 @@ List of third party scanner software:
 [Quark-Engine](https://github.com/quark-engine/quark-engine),
 [SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/blob/master/LICENSE),
 [VirusTotal-Python](https://github.com/dbrennand/virustotal-python/blob/master/LICENSE),
-
+[ext4extract (GPLv3)](https://github.com/hexedit/ext4extract)

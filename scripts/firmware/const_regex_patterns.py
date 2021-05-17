@@ -16,10 +16,10 @@ SYSTEM_IMG_PATTERN_LIST = ["system[.]img",
                            "system"]
 SYSTEM_OTHER_IMG_PATTERN_LIST = ["system_other[.]img"]
 SYSTEM_EXT_IMG_PATTERN_LIST = ["system_ext[.]img"]
-VENDOR_IMG_PATTERN_LIST = ["vendor[.]img"]
-OEM_IMG_PATTERN_LIST = ["oem[.]img"]
-USERDATA_IMG_PATTERN_LIST = ["userdata[.]img"]
-PRODUCT_IMG_PATTERN_LIST = ["product[.]img"]
+VENDOR_IMG_PATTERN_LIST = ["vendor[.]img", "vendor[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
+OEM_IMG_PATTERN_LIST = ["oem[.]img", "oem[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
+USERDATA_IMG_PATTERN_LIST = ["userdata[.]img", "userdata[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
+PRODUCT_IMG_PATTERN_LIST = ["product[.]img", "product[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 
 EXT_IMAGE_PATTERNS_DICT = {"system": SYSTEM_IMG_PATTERN_LIST,
                            "system_other:": SYSTEM_OTHER_IMG_PATTERN_LIST,

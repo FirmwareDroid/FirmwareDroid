@@ -1,0 +1,52 @@
+FROM firmwaredroid-base as bigmac-worker
+
+# Change to root user for installation
+USER root
+
+# Clone BigMac
+RUN git clone https://github.com/7homasSutter/BigMAC.git
+WORKDIR ./BigMAC/
+
+# Install sefcontext-parser (it's not on pip):
+RUN git clone https://github.com/jakev/sefcontext-parser
+WORKDIR ./sefcontext-parser/
+RUN python3 setup.py install
+
+# Install swi-prolog (8.0.X and above is needed):
+RUN apt-get install -y software-properties-common
+RUN apt-add-repository -r ppa:swi-prolog/stable
+RUN apt-get update
+RUN apt-get install -y swi-prolog
+
+# Install libsepol (a different version than distros have is needed):
+RUN git clone --branch libsepol-2.7 https://github.com/SELinuxProject/selinux.git
+
+# Install the required build dependencies:
+RUN apt install -y build-essential flex bison swig python-dev graphviz libgraphviz-dev pkg-config libaudit-dev
+
+# Apply the selinux.patch below to selinux to make sure that it will be buildable. Apply the patch like this:
+WORKDIR ./selinux/
+RUN patch -p1 < ../../selinux.patch
+
+# Build a specific libsepol to be able to parse Android sepolicy files:
+RUN make -j; exit 0
+RUN make install; exit 0
+
+# Get setools for use in Python:
+RUN git clone https://github.com/TresysTechnology/setools.git
+WORKDIR ./setools/
+# Checkout required commit of setools to match with libsepol version
+RUN git checkout 856b56accba14
+RUN patch -p1 < ../../../setools.patch
+
+# Build and install setools. Make sure the SEPOL_SRC points to the correct path:
+ENV SEPOL_SRC=$(pwd)/libsepol/
+RUN python3 setup.py build_ext build_py install
+
+# Install main requirements
+WORKDIR ../../../
+#RUN --mount=type=cache,target=/var/www/tmp/bigmac/.cache \
+RUN pip install -r ./requirements.txt
+
+# Change back to none root user
+USER $USER_ID:$GROUP_ID

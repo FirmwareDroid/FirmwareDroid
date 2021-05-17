@@ -5,14 +5,13 @@ import flask
 import logging
 import os
 import shutil
-
 from scripts.firmware.image_importer import create_abs_image_file_path, find_image_firmware_file, extract_image_files
 from scripts.hashing.fuzzy_hash_creator import fuzzy_hash_firmware_files
 from model import AndroidFirmware
 from threading import Thread
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.firmware.firmware_file_indexer import create_firmware_file_list, add_firmware_file_references
-from scripts.firmware.const_regex import BUILD_PROP_PATTERN_LIST, EXT_IMAGE_PATTERNS_DICT
+from scripts.firmware.const_regex_patterns import BUILD_PROP_PATTERN_LIST, EXT_IMAGE_PATTERNS_DICT
 from scripts.firmware.android_app_import import store_android_apps
 from scripts.firmware.build_prop_parser import BuildPropParser
 from scripts.hashing.standard_hash_generator import md5_from_file, sha1_from_file, sha256_from_file
