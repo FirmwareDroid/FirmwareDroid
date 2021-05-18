@@ -73,6 +73,3 @@ services:
     volumes:
       - ${TST_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
 
-  bigmac-worker-1:
-    volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage

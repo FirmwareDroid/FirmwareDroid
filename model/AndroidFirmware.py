@@ -21,7 +21,6 @@ class AndroidFirmware(Document):
     android_app_id_list = ListField(LazyReferenceField('AndroidApp', reverse_delete_rule=DO_NOTHING), required=False)
     hasFileIndex = BooleanField(required=False, default=False)
     hasFuzzyHashIndex = BooleanField(required=False, default=False)
-    bigmac_report_reference = LazyReferenceField('BigMacReport', reverse_delete_rule=DO_NOTHING)
     firmware_file_id_list = ListField(LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING),
                                       required=False)
     version_detected = IntField(required=False, default=0)

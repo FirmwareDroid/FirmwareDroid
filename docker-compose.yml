@@ -288,22 +288,6 @@ services:
     networks:
       - backend
 
-  bigmac-worker-1:
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_bigmac
-    container_name: bigmac-worker-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - $PWD:/var/www/
-    env_file:
-      - ./.env
-    command: rqworker --name bigmac-worker-1 --url redis://redis:6379/ bigmac
-    networks:
-      - backend
-
   redis:
     image: redis:6-buster
     container_name: redis
