@@ -1,7 +1,6 @@
 import logging
 import tempfile
 import flask
-import sys
 from scripts.firmware.ext4_mount_util import simg2img_convert_ext4
 
 

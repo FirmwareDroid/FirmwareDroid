@@ -5,7 +5,7 @@ USER root
 
 # Clone BigMac
 RUN git clone https://github.com/7homasSutter/BigMAC.git
-WORKDIR ./BigMAC/
+WORKDIR ./scripts/static_analysis/BigMac/
 
 # Install sefcontext-parser (it's not on pip):
 RUN git clone https://github.com/jakev/sefcontext-parser

@@ -189,7 +189,9 @@ def simg2img_convert_ext4(android_ext4_path, destination_folder):
     """
     try:
         output_file_name = "raw" + str(os.path.basename(android_ext4_path))
+        output_file_name = shlex.quote(output_file_name)
         output_file_path = os.path.join(destination_folder, output_file_name)
+        output_file_path = shlex.quote(output_file_path)
         response = subprocess.run(["simg2img", android_ext4_path, output_file_path], timeout=600)
         response.check_returncode()
         return output_file_path

@@ -62,6 +62,7 @@ def export_firmware_files_by_id(firmware_file_id_queue):
         firmware_file = FirmwareFile.objects.get(pk=firmware_file_id)
         firmware = firmware_file.firmware_id_reference.fetch()
         cache_temp_file_dir, cache_temp_mount_dir = create_temp_directories()
+        #   TODO fix this method
         extract_image_files(firmware, cache_temp_file_dir.name, cache_temp_mount_dir.name)
         logging.info(f"Export file: {firmware.name}")
         try:

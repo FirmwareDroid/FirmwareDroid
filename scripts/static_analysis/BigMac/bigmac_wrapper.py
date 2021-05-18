@@ -1,7 +1,8 @@
 import logging
 import tempfile
 import traceback
-from model import AndroidApp, BigMacReport, AndroidFirmware
+import flask
+from model import BigMacReport, AndroidFirmware
 from scripts.database.query_document import get_filtered_list
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.mulitprocessing_util.mp_util import start_process_pool
@@ -29,26 +30,38 @@ def bigmac_worker(android_firmware_id_queue):
         android_firmware = AndroidFirmware.objects.get(pk=android_firmware_id)
         logging.info(f"BigMac scans firmware-id: {android_firmware.id}")
         try:
-            tempdir = tempfile.TemporaryDirectory()
+            tempdir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"])
             json_results = get_bigmac_analysis_results(android_firmware.absolute_store_path, tempdir.name)
-            save_bigmac_report(android_firmware, json_results)
+            #save_bigmac_report(android_firmware, json_results)
         except Exception as err:
             traceback.print_exc()
-            logging.error(f"APKleaks could not scan app {android_app.filename} id: {android_app.id} - "
+            logging.error(f"BigMac could not scan firmware {android_firmware.id} - "
                           f"error: {err}")
 
 
 def get_bigmac_analysis_results(firmware_absolute_store_path, result_folder_path):
     """
-    Scans a complete firmware with BigMac.
+    Scans a firmware with BigMac.
     :param firmware_absolute_store_path: str - path to the firmware zip file path.
     :param result_folder_path: str - path to the folder where the result report is saved.
     :return: str - scan result as json.
     """
+    from BigMac.process import main as BigMacAppMain
+    extract_temp_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"])
 
-
-
-
+    args = {
+        "debug": False,
+        "debug-init": False,
+        "policy_name": "",
+        "vendor": "aosp",
+        "load": False,
+        "save": False,
+        "list_objects": True,
+        "prolog": False,
+        "draw_graph": True,
+        "save-policy": True,
+    }
+    BigMacAppMain(args)
 
     # TODO implement
     return None

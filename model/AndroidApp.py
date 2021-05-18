@@ -3,7 +3,6 @@ import datetime
 from flask_mongoengine import Document
 from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, CASCADE, \
     ListField
-
 from api.v1.marshmallow_fields.LazyReference import LazyReferenceConverter
 from model import AndroidFirmware
 from marshmallow import Schema, fields
