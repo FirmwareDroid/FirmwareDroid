@@ -6,12 +6,31 @@ services:
     environment:
       - APP_ENV=production
 
-  database:
-    container_name: mongo-db
+  mongo-db-1:
+    container_name: mongo-db-1
     volumes:
-      - ${LOCAL_DB_PATH}:/data/db
+      - ${LOCAL_MONGO_DB_PATH_NODE1}:/data/db
     environment:
       - APP_ENV=production
+
+  mongo-db-2:
+    container_name: mongo-db-2
+    volumes:
+      - ${LOCAL_MONGO_DB_PATH_NODE2}:/data/db
+    environment:
+      - APP_ENV=production
+
+  mongo-db-3:
+    container_name: mongo-db-3
+    volumes:
+      - ${LOCAL_MONGO_DB_PATH_NODE3}:/data/db
+    environment:
+      - APP_ENV=production
+
+  elasticsearch-worker-1:
+    volumes:
+      - ${ELASTIC_SEARCH_DB_PATH}:/usr/share/elasticsearch/data/
+      - ${ELASTIC_SEARCH_CONFIG_PATH}:/usr/share/elasticsearch/config/
 
   nginx:
     volumes:

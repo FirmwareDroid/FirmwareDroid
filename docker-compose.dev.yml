@@ -6,11 +6,31 @@ services:
     environment:
       - APP_ENV=development
 
-  database:
+  mongo-db-1:
+    #command: mongod --replSet $DEV_MONGODB_REPLICA_SET --auth #--keyFile "/usr/auth/cluster.key"
     volumes:
-      - ${DEV_LOCAL_DB_PATH}:/data/db
+      - ${DEV_LOCAL_MONGO_DB_PATH_NODE1}:/data/db
     environment:
       - APP_ENV=development
+
+#  mongo-db-2:
+#    command: mongod --replSet $DEV_MONGODB_REPLICA_SET --auth --keyFile "/usr/auth/cluster.key"
+#    volumes:
+#      - ${DEV_LOCAL_MONGO_DB_PATH_NODE2}:/data/db
+#    environment:
+#      - APP_ENV=development
+#
+#  mongo-db-3:
+#    command: mongod --replSet $DEV_MONGODB_REPLICA_SET --auth --keyFile "/usr/auth/cluster.key"
+#    volumes:
+#      - ${DEV_LOCAL_MONGO_DB_PATH_NODE3}:/data/db
+#    environment:
+#      - APP_ENV=development
+
+  elasticsearch-worker-1:
+    volumes:
+      - ${DEV_ELASTIC_SEARCH_DB_PATH}:/usr/share/elasticsearch/data/
+      - ${DEV_ELASTIC_SEARCH_CONFIG_PATH}:/usr/share/elasticsearch/config/
 
   redis:
     volumes:

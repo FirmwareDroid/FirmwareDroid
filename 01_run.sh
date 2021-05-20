@@ -87,10 +87,21 @@ fi
 
 compose_path=$PWD"/"$compose_file
 
+# Prepare mongo-db for replica set
+if [ $running_mode == 2 ]; then
+  echo "  =============================================================================================================
+  INIT NEW DATABASE CONTAINERS - WILL INIT AND STOP CONTAINERS - PLEASE WAIT
+  ============================================================================================================="
+  docker compose -f $PWD"/docker-compose.yml" up -d mongo-db-1 mongo-db-2 mongo-db-3
+  sleep 45
+  docker compose stop mongo-db-1 mongo-db-2 mongo-db-3
+fi
+
 # Run containers
 if [ $detached_mode == 0 ]; then
-  docker-compose -f $PWD"/docker-compose.yml" -f $compose_path up
+  echo "Run docker compose"
+  docker compose -f $PWD"/docker-compose.yml" -f $compose_path up
 else
-  echo "Run detached"
-  docker-compose -f $PWD"/docker-compose.yml" -f $compose_path up -d
+  echo "Run docker compose detached"
+  docker compose -f $PWD"/docker-compose.yml" -f $compose_path up -d
 fi

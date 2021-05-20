@@ -10,7 +10,32 @@ services:
     volumes:
       - ${TST_LOCAL_DB_PATH}:/data/db
     environment:
+
+  mongo-db-1:
+    container_name: mongo-db-1
+    volumes:
+      - ${TST_LOCAL_MONGO_DB_PATH_NODE1}:/data/db
+    environment:
       - APP_ENV=testing
+
+  mongo-db-2:
+    container_name: mongo-db-2
+    volumes:
+      - ${TST_LOCAL_MONGO_DB_PATH_NODE2}:/data/db
+    environment:
+      - APP_ENV=testing
+
+  mongo-db-3:
+    container_name: mongo-db-3
+    volumes:
+      - ${TST_LOCAL_MONGO_DB_PATH_NODE3}:/data/db
+    environment:
+      - APP_ENV=testing
+
+  elasticsearch-worker-1:
+    volumes:
+      - ${TST_ELASTIC_SEARCH_DB_PATH}:/usr/share/elasticsearch/data/
+      - ${TST_ELASTIC_SEARCH_CONFIG_PATH}:/usr/share/elasticsearch/config/
 
   redis:
     volumes:
@@ -72,4 +97,3 @@ services:
   super-android-analyzer-worker-1:
     volumes:
       - ${TST_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-

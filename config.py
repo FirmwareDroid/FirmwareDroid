@@ -76,6 +76,7 @@ class ApplicationConfig(Config):
     ####################
     # DB Config
     ####################
+    DB_REPLICA_SET = os.environ[Config.ENV + 'MONGODB_REPLICA_SET']
     DB_HOST = os.environ[Config.ENV + 'MONGODB_HOSTNAME']
     DB_HOST_PORT = int(os.environ[Config.ENV + 'MONGODB_PORT'])
     DB_NAME = os.environ[Config.ENV + 'MONGODB_DATABASE']
@@ -89,7 +90,7 @@ class ApplicationConfig(Config):
         'username': os.environ[Config.ENV + 'MONGODB_USERNAME'],
         'password': os.environ[Config.ENV + 'MONGODB_PASSWORD'],
         "host": DB_HOST,
-        "port": DB_HOST_PORT,
+        "port": DB_HOST_PORT
     }
     ####################
     # REST API Config
