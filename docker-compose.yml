@@ -28,7 +28,6 @@ services:
       - "127.0.0.1:27017:27017"
     volumes:
       - $PWD/env/mongo/init/:/docker-entrypoint-initdb.d/
-      - $PWD/env/mongo/auth/cluster.key:/usr/auth/cluster.key
     networks:
       - backend
       - elastic
