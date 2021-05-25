@@ -18,20 +18,6 @@ services:
     environment:
       - APP_ENV=testing
 
-  mongo-db-2:
-    container_name: mongo-db-2
-    volumes:
-      - ${TST_LOCAL_MONGO_DB_PATH_NODE2}:/data/db
-    environment:
-      - APP_ENV=testing
-
-  mongo-db-3:
-    container_name: mongo-db-3
-    volumes:
-      - ${TST_LOCAL_MONGO_DB_PATH_NODE3}:/data/db
-    environment:
-      - APP_ENV=testing
-
   elasticsearch-worker-1:
     volumes:
       - ${TST_ELASTIC_SEARCH_DB_PATH}:/usr/share/elasticsearch/data/
