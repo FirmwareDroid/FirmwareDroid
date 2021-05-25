@@ -246,8 +246,8 @@ def setup_folders(app_instance):
         try:
             if not os.path.exists(path):
                 os.makedirs(path)
-        except OSError:
-            message = "Could not create folder: " + path
+        except OSError as exception:
+            message = f"Could not create folder: {path} - Exception: {exception}"
             logging.error(message)
 
 
