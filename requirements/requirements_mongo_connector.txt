@@ -1,2 +1,2 @@
 elastic2-doc-manager[elastic2]~=1.0.0
-mongo-connector[elastic2]~=3.1.1
+mongo-connector[elastic5]~=3.1.1

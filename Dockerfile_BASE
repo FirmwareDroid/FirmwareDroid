@@ -1,11 +1,11 @@
 ########################################################
 # Firmwaredroid docker core                            #
-# Base dependency for all docker workers               #
+# Base dependency for docker workers                   #
 ########################################################
 FROM python:3.8-buster as firmwaredroid-base
 
 ########################################################
-# Apt installation                                     #
+# Apt installation                                     #docker
 ########################################################
 RUN apt-get update -y && \
     apt-get -y install --no-install-recommends apt-utils && \

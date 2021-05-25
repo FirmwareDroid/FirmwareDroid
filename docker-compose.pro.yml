@@ -30,7 +30,6 @@ services:
   elasticsearch-worker-1:
     volumes:
       - ${ELASTIC_SEARCH_DB_PATH}:/usr/share/elasticsearch/data/
-      - ${ELASTIC_SEARCH_CONFIG_PATH}:/usr/share/elasticsearch/config/
 
   nginx:
     volumes:

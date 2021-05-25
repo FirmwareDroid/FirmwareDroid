@@ -4,5 +4,8 @@ USER root
 RUN echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.0.list
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
 RUN apt-get update && apt-get install -y mongodb-org-shell
-RUN pip install -r ./requirements/requirements_mongo_connector.txt
+# TODO remove "--use-deprecated=legacy-resolver" as soon as pip dependency bugs are resolved
+RUN --mount=type=cache,target=/var/www/tmp/mongo_connector/.cache \
+    pip install -r ./requirements/requirements_mongo_connector.txt --use-deprecated=legacy-resolver
+
 USER $USER_ID:$GROUP_ID

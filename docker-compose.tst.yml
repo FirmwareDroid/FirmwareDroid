@@ -35,7 +35,6 @@ services:
   elasticsearch-worker-1:
     volumes:
       - ${TST_ELASTIC_SEARCH_DB_PATH}:/usr/share/elasticsearch/data/
-      - ${TST_ELASTIC_SEARCH_CONFIG_PATH}:/usr/share/elasticsearch/config/
 
   redis:
     volumes:

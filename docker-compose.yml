@@ -13,8 +13,6 @@ services:
       - $PWD:/var/www/
     depends_on:
       - mongo-db-1
-      #- mongo-db-2
-      #- mongo-db-3
       - redis
     networks:
       - backend
@@ -35,74 +33,12 @@ services:
       - backend
       - elastic
     healthcheck:
-        test: test $$(echo "rs.initiate().ok || rs.status().ok" | mongo -u $${MONGO_INITDB_ROOT_USERNAME} -p $${MONGO_INITDB_ROOT_PASSWORD} --quiet) -eq 1
-        interval: 10s
-        start_period: 30s
-    command: mongod --replSet $DEV_MONGODB_REPLICA_SET --auth #--keyFile "/usr/auth/cluster.key"
-
-#  mongo-db-1:
-#    image: mongo:4.2.8-bionic
-#    container_name: mongo-db-1
-#    restart: unless-stopped
-#    env_file:
-#      - ./.env
-#    ports:
-#      - "127.0.0.1:27017:27017"
-#    volumes:
-#      - $PWD/env/mongo/init/:/docker-entrypoint-initdb.d/
-#      - $PWD/env/mongo/auth/cluster.key:/usr/auth/cluster.key
-#    networks:
-#      - backend
-#      - elastic
-#    healthcheck:
-#      test: echo 'db.runCommand("ping").ok' | mongo mongo-db-1:27017/test --quiet
-#      interval: 1m30s
-#      timeout: 10s
-#      retries: 3
-#      start_period: 40s
-
-#  mongo-db-2:
-#    image: mongo:4.2.8-bionic
-#    container_name: mongo-db-2
-#    restart: unless-stopped
-#    env_file:
-#      - ./.env
-#    ports:
-#      - "127.0.0.1:27018:27017"
-#    volumes:
-#      - $PWD/env/mongo/init/:/docker-entrypoint-initdb.d/
-#      - $PWD/env/mongo/auth/cluster.key:/usr/auth/cluster.key
-#    networks:
-#      - backend
-#      - elastic
-#    healthcheck:
-#      test: echo 'db.runCommand("ping").ok' | mongo mongo-db-2:27018/test --quiet
-#      interval: 1m30s
-#      timeout: 10s
-#      retries: 3
-#      start_period: 40s
-#
-#  mongo-db-3:
-#    image: mongo:4.2.8-bionic
-#    container_name: mongo-db-3
-#    restart: unless-stopped
-#    #command: mongod --replSet "mongo_cluster_1" --auth --keyFile "/usr/auth/cluster.key"
-#    env_file:
-#      - ./.env
-#    ports:
-#      - "127.0.0.1:27019:27017"
-#    volumes:
-#      - $PWD/env/mongo/init/:/docker-entrypoint-initdb.d/
-#      - $PWD/env/mongo/auth/cluster.key:/usr/auth/cluster.key
-#    networks:
-#      - backend
-#      - elastic
-#    healthcheck:
-#      test: echo 'db.runCommand("ping").ok' | mongo mongo-db-3:27019/test --quiet
-#      interval: 1m30s
-#      timeout: 10s
-#      retries: 3
-#      start_period: 40s
+      test: echo 'db.runCommand("ping").ok' | mongo mongo-db-1:27017/test --quiet
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: mongod --replSet $DEV_MONGODB_REPLICA_SET --auth
 
   mongo-db-replica-setup:
     image: mongo:4.2.8-bionic
@@ -110,12 +46,8 @@ services:
       - ./.env
     links:
       - mongo-db-1:mongo-db-1
-      #- mongo-db-2:mongo-db-2
-      #- mongo-db-3:mongo-db-3
     depends_on:
       - mongo-db-1
-      #- mongo-db-2
-      #- mongo-db-3
     networks:
       - backend
     volumes:
@@ -127,13 +59,11 @@ services:
     build:
       context: .
       dockerfile: ./docker/base/Dockerfile_mongo_connector
-    container_name: mongo-connector
-    restart: unless-stopped
-    command: mongo-connector -a $MONGO_INITDB_ROOT_USERNAME -p $MONGO_INITDB_ROOT_PASSWORD -m mongo-db-1:27017 -t elasticsearch-worker-1:9200 -d elastic2_doc_manager
+    container_name: elasticsearch-mongo-connector
+    #restart: unless-stopped
+    command: mongo-connector --admin-username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD -m mongo-db-1:27017 -t http://elasticsearch-worker-1:9200 -d elastic2_doc_manager
     depends_on:
       - mongo-db-1
-      #- mongo-db-2
-      #- mongo-db-3
       - elasticsearch-worker-1
     volumes:
       - $PWD/requirements/requirements_mongo_connector.txt:/var/www/requirements_mongo_connector.txt
@@ -144,21 +74,57 @@ services:
       - elastic
 
   elasticsearch-worker-1:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
     container_name: elasticsearch-worker-1
+    restart: unless-stopped
+    volumes:
+      - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     environment:
-      - node.name=es01
-      - discovery.type=single-node
+      - node.name=elasticsearch-worker-1
       - cluster.name=es-docker-cluster
-      - discovery.seed_hosts=es01
-      - bootstrap.memory_lock=true
-      #- "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - discovery.seed_hosts=elasticsearch-worker-2
+      - cluster.initial_master_nodes=elasticsearch-worker-1,elasticsearch-worker-2
     ulimits:
       memlock:
         soft: -1
         hard: -1
+    depends_on:
+      - mongo-db-1
     ports:
       - "127.0.0.1:9200:9200"
+    networks:
+      - elastic
+
+  elasticsearch-worker-2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    container_name: elasticsearch-worker-2
+    restart: unless-stopped
+    environment:
+      - node.name=elasticsearch-worker-2
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=elasticsearch-worker-1
+      - cluster.initial_master_nodes=elasticsearch-worker-1,elasticsearch-worker-2
+    volumes:
+      - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    depends_on:
+      - mongo-db-1
+    networks:
+      - elastic
+
+  kibana:
+    container_name: kibana
+    restart: unless-stopped
+    image: docker.elastic.co/kibana/kibana:7.12.1
+    ports:
+      - "127.0.0.1:5601:5601"
+    depends_on:
+      - elasticsearch-worker-1
+    environment:
+      - ELASTICSEARCH_HOSTS="http://elasticsearch-worker-1:9200"
     networks:
       - elastic
 
@@ -180,6 +146,15 @@ services:
       - "443:443"
     networks:
       - frontend
+
+  redis:
+    image: redis:6-buster
+    container_name: redis
+    command: redis-server
+    ports:
+      - "127.0.0.1:6379:6379"
+    networks:
+      - backend
 
   firmware-worker:
     build:
@@ -415,14 +390,7 @@ services:
     networks:
       - backend
 
-  redis:
-    image: redis:6-buster
-    container_name: redis
-    command: redis-server
-    ports:
-      - "127.0.0.1:6379:6379"
-    networks:
-      - backend
+
 
 networks:
   frontend:
