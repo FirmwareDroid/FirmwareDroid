@@ -12,6 +12,7 @@ services:
       - ${LOCAL_MONGO_DB_PATH_NODE1}:/data/db
     environment:
       - APP_ENV=production
+    command: mongod --replSet $MONGODB_REPLICA_SET --auth
 
   elasticsearch-worker-1:
     volumes:

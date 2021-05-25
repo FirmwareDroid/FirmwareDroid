@@ -38,7 +38,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    command: mongod --replSet $DEV_MONGODB_REPLICA_SET --auth
 
   mongo-db-replica-setup:
     image: mongo:4.2.8-bionic
