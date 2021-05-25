@@ -80,7 +80,7 @@ services:
     environment:
       - node.name=elasticsearch-worker-1
       - cluster.name=es-docker-cluster
-      - discovery.seed_hosts=elasticsearch-worker-2
+      - discovery.seed_hosts=elasticsearch-worker-2:9300,elasticsearch-worker-3:9300
       - cluster.initial_master_nodes=elasticsearch-worker-1,elasticsearch-worker-2
     ulimits:
       memlock:
@@ -100,7 +100,7 @@ services:
     environment:
       - node.name=elasticsearch-worker-2
       - cluster.name=es-docker-cluster
-      - discovery.seed_hosts=elasticsearch-worker-1:9300
+      - discovery.seed_hosts=elasticsearch-worker-1:9300,elasticsearch-worker-3:9300
       - cluster.initial_master_nodes=elasticsearch-worker-1,elasticsearch-worker-2
     volumes:
       - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
