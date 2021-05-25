@@ -100,7 +100,27 @@ services:
     environment:
       - node.name=elasticsearch-worker-2
       - cluster.name=es-docker-cluster
-      - discovery.seed_hosts=["elasticsearch-worker-1","elasticsearch-worker-2"]
+      - discovery.seed_hosts=elasticsearch-worker-1
+      - cluster.initial_master_nodes=elasticsearch-worker-2,elasticsearch-worker-1
+    volumes:
+      - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    depends_on:
+      - mongo-db-1
+    networks:
+      - elastic
+
+  elasticsearch-worker-3:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    container_name: elasticsearch-worker-3
+    restart: unless-stopped
+    environment:
+      - node.name=elasticsearch-worker-3
+      - cluster.name=es-docker-cluster
+      - discovery.seed_hosts=elasticsearch-worker-1,elasticsearch-worker-2
       - cluster.initial_master_nodes=elasticsearch-worker-2,elasticsearch-worker-1
     volumes:
       - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
