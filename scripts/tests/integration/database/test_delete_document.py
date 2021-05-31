@@ -53,6 +53,7 @@ class DeleteDocumentsTests(unittest.TestCase):
         build_prop_list = []
         firmware_list = []
         for i in range(0, 10):
+            # TODO Refactor or remove build_prop
             build_prop = BuildPropFile(build_prop_file=bytes("test-data", 'utf-8'), properties={"test": "test"})
             firmware = AndroidFirmware(file_size_bytes=i,
                                        relative_store_path="./store/",
@@ -62,7 +63,7 @@ class DeleteDocumentsTests(unittest.TestCase):
                                        md5=get_random_string(32),
                                        sha256=get_random_string(256),
                                        sha1=get_random_string(40),
-                                       build_prop=build_prop).save()
+                                       build_prop=build_prop).save() # TODO Refactor or remove build_prop
             build_prop_list.append(build_prop)
             firmware_list.append(firmware)
         mock_path_exists.return_value = True

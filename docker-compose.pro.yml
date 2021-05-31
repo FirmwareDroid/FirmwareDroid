@@ -14,9 +14,63 @@ services:
       - APP_ENV=production
     command: mongod --replSet $MONGODB_REPLICA_SET --auth
 
+  elasticsearch-mongo-connector:
+    restart: unless-stopped
+    command: mongo-connector --admin-username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD -m mongo-db-1:27017 -t http://elasticsearch-worker-1:9200 -d elastic2_doc_manager
+
   elasticsearch-worker-1:
     volumes:
       - ${ELASTIC_SEARCH_DB_PATH}:/usr/share/elasticsearch/data/
+    environment:
+      - node.name=elasticsearch-worker-1
+      - cluster.name=es-docker-cluster
+      - network.publish_host=elasticsearch-worker-1
+      - discovery.seed_hosts=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
+      - cluster.initial_master_nodes=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
+    ports:
+      - "127.0.0.1:9200:9200"
+
+  elasticsearch-worker-2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    container_name: elasticsearch-worker-2
+    restart: unless-stopped
+    environment:
+      - node.name=elasticsearch-worker-2
+      - cluster.name=es-docker-cluster
+      - network.publish_host=elasticsearch-worker-2
+      - discovery.seed_hosts=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
+      - cluster.initial_master_nodes=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
+    volumes:
+      - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    depends_on:
+      - mongo-db-1
+    networks:
+      - elastic
+
+  elasticsearch-worker-3:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
+    container_name: elasticsearch-worker-3
+    restart: unless-stopped
+    environment:
+      - node.name=elasticsearch-worker-3
+      - cluster.name=es-docker-cluster
+      - network.publish_host=elasticsearch-worker-3
+      - discovery.seed_hosts=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
+      - cluster.initial_master_nodes=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
+    volumes:
+      - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    depends_on:
+      - mongo-db-1
+    networks:
+      - elastic
 
   nginx:
     volumes:

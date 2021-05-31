@@ -20,7 +20,6 @@ from scripts.auth.basic_auth import requires_basic_authorization
 from model.AndroidFirmware import AndroidFirmwareSchema
 from scripts.database.delete_document import clear_firmware_database
 from scripts.firmware.firmware_importer import start_firmware_mass_import
-from scripts.firmware.firmware_version_detect import detect_firmware_version
 from model import AndroidFirmware
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
@@ -123,24 +122,6 @@ class FirmwareMassImportQueue(Resource):
         return len(file_list)
 
 
-@ns.route('/detect_version/<int:mode>')
-@ns.expect(object_id_list)
-class FirmwareIndexFiles(Resource):
-    @ns.doc('post')
-    @admin_jwt_required
-    def post(self, mode):
-        """
-        Attempts to detect the Android version of the firmware.
-        :param mode: If mode = 1 start to all firmware files in the database.
-        :return: rq job-id
-        """
-        firmware_id_list = check_firmware_mode(mode, request)
-        app = flask.current_app
-        job = app.rq_task_queue_high.enqueue(detect_firmware_version, firmware_id_list,
-                                             job_timeout=60 * 60 * 24 * 2)
-        return {"id": job.get_id()}
-
-
 @ns.route('/download/build_prop_zip')
 class DownloadBuildProps(Resource):
     @ns.doc('get')
@@ -156,6 +137,7 @@ class DownloadBuildProps(Resource):
             memory_file = BytesIO()
             with ZipFile(memory_file, 'w') as zf:
                 for firmware in firmware_list:
+                    # TODO Refactor build_prop
                     data = firmware.build_prop.build_prop_file.read()
                     file_meta = ZipInfo(firmware.md5)
                     file_meta.date_time = time.localtime(time.time())[:6]

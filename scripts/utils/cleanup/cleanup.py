@@ -4,8 +4,6 @@ import os
 import flask
 from mongoengine import DoesNotExist
 from api.v1.common.rq_job_creator import enqueue_jobs
-from scripts.database.query_document import get_all_document_ids
-from scripts.firmware.firmware_version_detect import detect_firmware_version
 from model import AndroidApp, AndroidFirmware, FirmwareFile
 from scripts.rq_tasks.flask_context_creator import create_app_context
 
@@ -172,15 +170,6 @@ def cleanup_der_certificates(android_app_id_list):
                         logging.info(f"Saved certificate for: {android_app.filename} cert: {app_cert.id}")
         except Exception as err:
             logging.error(err)
-
-
-def cleanup_firmware_version_string():
-    """
-    Bug fix for version_detect. # Todo remove this after fix
-    """
-    create_app_context()
-    firmware_id_list = get_all_document_ids(AndroidFirmware)
-    detect_firmware_version(firmware_id_list)
 
 
 def cleanup_androguard_certificate_references(android_app_id_list):

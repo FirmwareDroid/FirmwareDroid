@@ -3,8 +3,7 @@ from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.parser.request_util import check_app_mode
 from scripts.auth.basic_auth import requires_basic_authorization
 from scripts.utils.cleanup.cleanup import cleanup_android_app_references, cleanup_firmware_app_references, \
-    cleanup_der_certificates, cleanup_firmware_version_string, enqueue_firmware_file_cleanup, \
-    cleanup_androguard_certificate_references
+    cleanup_der_certificates, enqueue_firmware_file_cleanup, cleanup_androguard_certificate_references
 import flask
 from flask_restx import Resource, Namespace
 
@@ -70,20 +69,6 @@ class CleanupReferencesCerts(Resource):
                      android_app_id_list,
                      job_timeout=60 * 60 * 24 * 10,
                      max_job_size=200)
-        return "", 200
-
-
-@ns.route('/firmware_version/')
-class CleanupReferencesCerts(Resource):
-    @ns.doc('get')
-    @requires_basic_authorization
-    def get(self):
-        """
-        Renew all firmware versions
-        :return: rq-job-id
-        """
-        app = flask.current_app
-        app.rq_task_queue_default.enqueue(cleanup_firmware_version_string, job_timeout=60 * 60 * 24 * 7)
         return "", 200
 
 

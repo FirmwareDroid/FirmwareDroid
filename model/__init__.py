@@ -1,4 +1,3 @@
-from .BuildPropFile import BuildPropFile
 from .AndroidFirmware import AndroidFirmware
 from .AndroidApp import AndroidApp
 from .UserAccount import UserAccount, UserAccountSchema
@@ -28,6 +27,7 @@ from .AppCertificate import AppCertificate
 from .AppCertificateStatisticsReport import AppCertificateStatisticsReport
 from .VirusTotalReport import VirusTotalReport
 from .FirmwareFile import FirmwareFile
+from .BuildPropFile import BuildPropFile
 from .SsDeepHash import SsDeepHash
 from .SsDeepClusterAnalysis import SsDeepClusterAnalysis
 from .SdhashHash import SdhashHash

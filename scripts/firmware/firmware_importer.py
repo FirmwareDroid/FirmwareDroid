@@ -88,10 +88,11 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
     """
     temp_extract_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
                                                    suffix="_extract")
-    version_detected = 0
-    build_prop = None
+
+
     firmware_app_list = []
     firmware_file_list = []
+    build_prop_file_list = []
     try:
         sha1 = sha1_from_file(firmware_archive_file_path)
         sha256 = sha256_from_file(firmware_archive_file_path)
@@ -100,6 +101,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
         archive_firmware_file_list = get_firmware_archive_content(temp_extract_dir.name)
         firmware_file_list.extend(archive_firmware_file_list)
         for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
+            logging.info(f"Scan partition {partition_name} for apps and other files.")
             temp_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
                                                    suffix=f"_mount_{partition_name}")
             partition_firmware_file_list = get_partition_firmware_files(archive_firmware_file_list,
@@ -108,21 +110,17 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
                                                                         partition_name,
                                                                         temp_dir.name)
             firmware_file_list.extend(partition_firmware_file_list)
-
             firmware_app_store = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_APP_EXTRACT"],
                                               md5,
                                               partition_name)
-            if partition_name == "system":  # Todo remove this statement as soon as build_prop_parser is refactored
+            try:
                 firmware_app_list.extend(store_android_apps(temp_dir.name, firmware_app_store, firmware_file_list))
-                build_prop = extract_build_prop(temp_dir.name)
-                version_detected = detect_by_build_prop(build_prop)
-            else:
-                try:
-                    firmware_app_list.extend(store_android_apps(temp_dir.name, firmware_app_store, firmware_file_list))
-                except ValueError as err:
-                    logging.warning(err)
+            except ValueError:
+                pass
+            build_prop_file_list.extend(extract_build_prop(partition_firmware_file_list, temp_dir.name))
             fuzzy_hash_firmware_files(partition_firmware_file_list, temp_dir.name)
 
+        version_detected = detect_by_build_prop(build_prop_file_list)
         filename, file_extension = os.path.splitext(firmware_archive_file_path)
         store_filename = md5 + file_extension
         firmware_archive_store_path = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_STORE"],
@@ -138,7 +136,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
                               sha1=sha1,
                               android_app_list=firmware_app_list,
                               file_size=file_size,
-                              build_prop=build_prop,
+                              build_prop_file_id_list=build_prop_file_list,
                               version_detected=version_detected,
                               firmware_file_list=firmware_file_list)
         logging.info(f"Firmware Import success: {original_filename}")
@@ -175,7 +173,7 @@ def get_partition_firmware_files(archive_firmware_file_list,
     Index all ext files of the given firmware. Creates a list of class:'FirmwareFile' from an Android all
     accessible partitions.
     :param file_pattern_list: list(str) - list of regex patterns to detect an image file by name.
-    :param temp_dir_path: str - path to the directoy in which the image files will be loaded temporarily.
+    :param temp_dir_path: str - path to the directory in which the image files will be loaded temporarily.
     :param partition_name: str - unique identifier of the partition.
     :param extracted_archive_dir_path: str - path of the root folder where the firmware archive was extracted to.
     :param archive_firmware_file_list: list(class:'FirmwareFile') - list of top level firmware files from the archive.
@@ -199,7 +197,7 @@ def get_partition_firmware_files(archive_firmware_file_list,
 
 
 def store_firmware_object(store_filename, original_filename, firmware_store_path, md5, sha256, sha1, android_app_list,
-                          file_size, build_prop, version_detected, firmware_file_list):
+                          file_size, build_prop_file_id_list, version_detected, firmware_file_list):
     """
     Creates class:'AndroidFirmware' object and saves it to the database. Creates references to other documents.
     :param version_detected: str - detected version of the firmware.
@@ -211,8 +209,8 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
     :param sha1: str - checksum
     :param android_app_list: list of class:'AndroidApp'
     :param file_size: int - size of firmware file.
-    :param build_prop: class:'BuildPropFile'
-    :param firmware_file_list: list of class:'FirmwareFile'
+    :param build_prop_file_id_list: list(class:'BuildPropFile')
+    :param firmware_file_list: list(class:'FirmwareFile')
     """
     absolute_store_path = os.path.abspath(firmware_store_path)
     logging.info(f"firmware_store_path: {firmware_store_path} absolute_store_path: {absolute_store_path}")
@@ -229,7 +227,7 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
                                version_detected=version_detected,
                                hasFileIndex=True,
                                hasFuzzyHashIndex=True,
-                               build_prop=build_prop)
+                               build_prop_file_id_list=build_prop_file_id_list)
     firmware.save()
     logging.info(f"Stored firmware with id {str(firmware.id)} in database.")
     add_firmware_file_references(firmware, firmware_file_list)
@@ -248,29 +246,35 @@ def add_app_firmware_references(firmware, android_app_list):
         app.save()
 
 
-def extract_build_prop(source_path):
+def extract_build_prop(firmware_file_list, mount_path):
     """
     Extracts the build.prop file from the given directory and creates an parsed it's content.
-    :param source_path: str - path of the directory to search through.
-    :return: class:'BuildPropFile'
+    :param firmware_file_list: list(class:'FirmwareFile') - list of firmware-files that contains a
+    minimum of one build.prop file
+    :return: list(class:'BuildPropFile') - list of BuildPropFile documents.
     """
-    build_prop_file_path = find_build_prop_path(source_path)
-    build_prop_parser = BuildPropParser(build_prop_file_path)
-    build_prop = build_prop_parser.create_build_prop_document()
-    return build_prop
+    build_prop_firmware_file_list = find_build_prop_file_paths(firmware_file_list)
+    build_prop_file_list = []
+    for firmware_file in build_prop_firmware_file_list:
+        try:
+            firmware_file.absolute_store_path = os.path.join(mount_path, "." + firmware_file.absolute_store_path)
+            build_prop_parser = BuildPropParser(firmware_file)
+            build_prop_file = build_prop_parser.create_build_prop_document()
+            build_prop_file_list.append(build_prop_file)
+        except FileNotFoundError:
+            pass
+    return build_prop_file_list
 
 
-def find_build_prop_path(search_path):
+def find_build_prop_file_paths(firmware_file_list):
     """
     Returns a build.prop file if found within the given path.
-    :param search_path: The path in which the file will be searched.
-    :return: class:Path to the build.prop file.
+    :param firmware_file_list: list(class:FirmwareFile)
+    :return: list(class:FirmwareFile) - list of build.prop firmware files.
     """
-    for root, dirs, files in os.walk(search_path):
-        for filename in files:
-            for pattern in BUILD_PROP_PATTERN_LIST:
-                if re.search(pattern, filename.lower()):
-                    path = os.path.join(root, filename)
-                    logging.info("Build.prop file path: " + str(path))
-                    return path
-    raise ValueError("Could not find build.prop file in image.")
+    build_prop_firmware_file_list = []
+    for firmware_file in firmware_file_list:
+        for pattern in BUILD_PROP_PATTERN_LIST:
+            if re.search(pattern, firmware_file.name.lower()):
+                build_prop_firmware_file_list.append(firmware_file)
+    return build_prop_firmware_file_list

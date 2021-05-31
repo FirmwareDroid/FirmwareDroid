@@ -2,8 +2,9 @@ from model import BuildPropFile
 
 
 class BuildPropParser:
-    def __init__(self, build_prop_file_path):
-        self.build_prop_file_path = build_prop_file_path
+    def __init__(self, firmware_file):
+        self.firmware_file = firmware_file
+        self.build_prop_file_path = firmware_file.absolute_store_path
         self.properties = {}
         self.parse_props()
 
@@ -24,6 +25,7 @@ class BuildPropParser:
         """ Creates a db document of the build prop file. """
         build_prop_file = open(self.build_prop_file_path, "rb")
         build_prop = BuildPropFile(build_prop_file=build_prop_file.read(),
-                                   properties=self.properties)
+                                   firmware_file_id_reference=self.firmware_file.id,
+                                   properties=self.properties).save()
         build_prop_file.close()
         return build_prop

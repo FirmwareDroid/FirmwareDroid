@@ -1,2 +1,4 @@
-elastic2-doc-manager[elastic2]~=1.0.0
-mongo-connector[elastic5]~=3.1.1
+#elastic2-doc-manager[elastic5]~=1.0.0
+#mongo-connector[elastic5]~=3.1.1
+mongo-connector~=3.1.1
+git+https://github.com/tmpaul06/elastic7-doc-manager.git

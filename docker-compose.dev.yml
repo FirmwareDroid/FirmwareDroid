@@ -9,17 +9,23 @@ services:
   mongo-db-1:
     volumes:
       - ${DEV_LOCAL_MONGO_DB_PATH_NODE1}:/data/db
-    environment:
       - APP_ENV=development
     command: mongod --replSet $DEV_MONGODB_REPLICA_SET --auth
 
   elasticsearch-worker-1:
+    environment:
+      - node.name=elasticsearch-worker-1
+      - cluster.name=es-docker-cluster
+      - network.publish_host=elasticsearch-worker-1
+      - discovery.seed_hosts=elasticsearch-worker-1
+      - discovery.type=single-node
     volumes:
       - ${DEV_ELASTIC_SEARCH_DB_PATH}node1/:/usr/share/elasticsearch/data/
+    ports:
+      - "9200:9200"
 
-  elasticsearch-worker-2:
-    volumes:
-      - ${DEV_ELASTIC_SEARCH_DB_PATH}node2/:/usr/share/elasticsearch/data/
+  elasticsearch-mongo-connector:
+    command: mongo-connector --auto-commit-interval=0 --stdout --admin-username $DEV_MONGO_INITDB_ROOT_USERNAME --password $DEV_MONGO_INITDB_ROOT_PASSWORD -m mongo-db-1:27017 -t http://elasticsearch-worker-1:9200 -d "elastic7_doc_manager"
 
   redis:
     volumes:

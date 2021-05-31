@@ -57,6 +57,7 @@ def count_by_build_prop_key(firmware_list, build_property_key):
     """
     result_dict_count = {}
     for firmware in firmware_list:
+        #TODO Refactor or remove
         firmware_properties = firmware.build_prop.properties
         android_build_property = firmware_properties.get(build_property_key)
         if android_build_property in result_dict_count:
@@ -77,6 +78,7 @@ def count_build_prop(firmware_list, build_property, startswith_filter=""):
     """
     count = 0
     for firmware in firmware_list:
+        # TODO Refactor or remove build_prop
         firmware_properties = firmware.build_prop.properties
         android_build_property = firmware_properties.get(build_property)
         if android_build_property.startswith(startswith_filter):

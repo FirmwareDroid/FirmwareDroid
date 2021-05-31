@@ -2,8 +2,7 @@ import datetime
 import mongoengine
 from flask_mongoengine import Document
 from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, \
-    EmbeddedDocumentField, ListField, BooleanField, IntField
-from model import BuildPropFile
+    ListField, BooleanField, IntField
 from marshmallow import Schema, fields
 
 
@@ -17,7 +16,8 @@ class AndroidFirmware(Document):
     md5 = StringField(required=True, unique=True, max_length=128)
     sha256 = StringField(required=True, unique=True, max_length=256)
     sha1 = StringField(required=True, unique=True, max_length=160)
-    build_prop = EmbeddedDocumentField(BuildPropFile, required=True)
+    build_prop_file_id_list = ListField(LazyReferenceField('BuildPropFile', reverse_delete_rule=DO_NOTHING),
+                                        required=False)
     android_app_id_list = ListField(LazyReferenceField('AndroidApp', reverse_delete_rule=DO_NOTHING), required=False)
     hasFileIndex = BooleanField(required=False, default=False)
     hasFuzzyHashIndex = BooleanField(required=False, default=False)
