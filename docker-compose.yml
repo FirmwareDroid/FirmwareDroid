@@ -61,8 +61,10 @@ services:
     depends_on:
       - mongo-db-1
       - elasticsearch-worker-1
+      - kibana
     volumes:
       - $PWD/requirements/requirements_mongo_connector.txt:/var/www/requirements_mongo_connector.txt
+      - $PWD/env/mongo-connector/mongo-connector-config.json:/var/www/mongo-connector-config.json
     env_file:
       - ./.env
     networks:
@@ -79,6 +81,11 @@ services:
       memlock:
         soft: -1
         hard: -1
+    healthcheck:
+      test: [ "CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1" ]
+      interval: 30s
+      timeout: 30s
+      retries: 3
     depends_on:
       - mongo-db-1
     networks:

@@ -25,7 +25,7 @@ services:
       - "9200:9200"
 
   elasticsearch-mongo-connector:
-    command: mongo-connector --auto-commit-interval=0 --stdout --admin-username $DEV_MONGO_INITDB_ROOT_USERNAME --password $DEV_MONGO_INITDB_ROOT_PASSWORD -m mongo-db-1:27017 -t http://elasticsearch-worker-1:9200 -d "elastic7_doc_manager"
+    command: mongo-connector --auto-commit-interval=0 --stdout --admin-username $DEV_MONGO_INITDB_ROOT_USERNAME --password $DEV_MONGO_INITDB_ROOT_PASSWORD -m mongo-db-1:27017 -t http://elasticsearch-worker-1:9200 -d "elastic2_doc_manager" -c ./mongo-connector-config.json
 
   redis:
     volumes:

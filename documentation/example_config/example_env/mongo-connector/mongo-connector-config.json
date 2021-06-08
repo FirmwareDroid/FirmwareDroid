@@ -1,0 +1,38 @@
+{
+  "namespaces": {
+    "*.ss_deep_hash": {
+      "rename": "*_ss_deep_hash.ss_deep_hash",
+      "includeFields": ["filename", "ssdeep_digest", "firmware_file_reference"]
+    },
+    "*.tlsh_hash": {
+      "rename": "*_tlsh_hash.tlsh_hash",
+      "includeFields": ["filename", "tlsh_digest", "isIndexed", "firmware_file_reference"]
+    },
+    "*.android_app": {
+      "rename": "*_android_app.android_app",
+      "includeFields": ["md5", "sha256", "sha1", "filename",
+        "relative_firmware_path", "file_size_bytes"]
+    },
+    "*.android_firmware": {
+      "rename": "*_android_firmware.android_firmware",
+      "includeFields": ["indexed_date", "file_size_bytes", "original_filename", "md5",
+        "sha256", "sha1", "version_detected", "build_prop_file_id_list", "android_app_id_list",
+        "firmware_file_id_list"]
+    },
+    "*.build_prop_file": {
+      "rename": "*_build_prop_file.build_prop_file",
+      "includeFields": ["properties", "firmware_file_id_reference"]
+    },
+    "*.firmware_file": {
+      "rename": "*_firmware_file.firmware_file",
+      "includeFields": ["name",
+        "isDirectory",
+        "partition_name",
+        "firmware_id_reference",
+        "relative_path",
+        "tlsh_reference",
+        "ssdeep_reference",
+        "file_size_bytes"]
+    }
+  }
+}
