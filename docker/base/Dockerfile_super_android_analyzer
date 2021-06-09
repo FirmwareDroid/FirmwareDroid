@@ -5,5 +5,6 @@ RUN apt-get install -y default-jre-headless
 USER $USER_ID:$GROUP_ID
 
 # Download RUST binary
+# Note: Update static version as well in "super_android_analyzer_wrapper.py"
 RUN wget https://github.com/SUPERAndroidAnalyzer/super/releases/download/0.5.1/super-analyzer_0.5.1_ubuntu_amd64.deb
 RUN dpkg -i ./super-analyzer_0.5.1_ubuntu_amd64.deb

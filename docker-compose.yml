@@ -116,12 +116,15 @@ services:
       - $PWD/env/nginx:/etc/nginx/conf.d
       - $PWD/env/certbot/conf:/etc/letsencrypt
       - $PWD/env/certbot/www:/var/www/certbot
+      - $PWD/env/elasticsearch/kibana.htpasswd:/var/www/kibana.htpasswd
       - $PWD/firmware-droid-client/build:/usr/share/nginx/build
     ports:
       - "80:80"
       - "443:443"
+      - "5602:5602"
     networks:
       - frontend
+      - elastic
 
   redis:
     image: redis:6-buster

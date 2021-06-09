@@ -90,6 +90,7 @@ class FirmwareMassImport(Resource):
         :return: rq-job-id
         """
         app = flask.current_app
+        # TODO prevent queuing of Job more than once
         job = app.rq_task_queue_high.enqueue(start_firmware_mass_import, job_timeout=60 * 60 * 24 * 7)
         return {"id": job.get_id()}
 

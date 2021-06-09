@@ -88,8 +88,6 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
     """
     temp_extract_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
                                                    suffix="_extract")
-
-
     firmware_app_list = []
     firmware_file_list = []
     build_prop_file_list = []
@@ -119,7 +117,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
                 pass
             build_prop_file_list.extend(extract_build_prop(partition_firmware_file_list, temp_dir.name))
             fuzzy_hash_firmware_files(partition_firmware_file_list, temp_dir.name)
-
+            
         version_detected = detect_by_build_prop(build_prop_file_list)
         filename, file_extension = os.path.splitext(firmware_archive_file_path)
         store_filename = md5 + file_extension

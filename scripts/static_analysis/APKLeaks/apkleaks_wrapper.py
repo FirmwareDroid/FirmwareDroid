@@ -58,10 +58,10 @@ def get_apkleaks_analysis(apk_file_path, result_folder_path):
             self.args = jadx_args
             self.pattern = None
 
-    # FIX THIS PROBLEM
+    # TODO FIX THIS ENVIRONMNET PROBLEM
     if "/var/www/jadx/bin/jadx" not in os.environ["PATH"]:
         os.environ["PATH"] += os.pathsep + "/var/www/jadx/bin/jadx"
-    os.chdir("/var/www/jadx/bin/jadx")
+        os.chdir("/var/www/jadx/bin/jadx")
 
     apkleaks_args = ApkleakArguments(True, apk_file_path, result_file.name, "--deobf")
     apkleaks_scanner = APKLeaks(apkleaks_args)
@@ -85,7 +85,7 @@ def create_report(android_app, json_results):
     :return: class:'SuperReport'
     """
     # from apkleaks import __version__
-    # TODO change version
+    # TODO change static tool version
     apkleaks_report = ApkLeaksReport(android_app_id_reference=android_app.id,
                                      apkleaks_version="2.3.2",
                                      results=json_results).save()

@@ -5,7 +5,6 @@ import shlex
 import subprocess
 import tempfile
 from pathlib import Path
-
 from model import AndroidApp, SuperReport
 from scripts.database.query_document import get_filtered_list
 from scripts.rq_tasks.flask_context_creator import create_app_context
@@ -76,6 +75,8 @@ def create_report(android_app, super_json_results):
     :param super_json_results: str - super scanning result in json format.
     :return: class:'SuperReport'
     """
+    # TODO remove static version and replace with dynamic one
     super_report = SuperReport(android_app_id_reference=android_app.id,
+                               super_version="0.5.1",
                                results=super_json_results).save()
     return super_report
