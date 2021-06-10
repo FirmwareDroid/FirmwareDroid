@@ -41,7 +41,8 @@ services:
       - discovery.seed_hosts=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
       - cluster.initial_master_nodes=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
     volumes:
-      - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch_node_2.yml
+      - $PWD/env/elasticsearch/config/elasticsearch_node_2.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ${ELASTIC_SEARCH_DB_PATH}node2/:/usr/share/elasticsearch/data/
     ulimits:
       memlock:
         soft: -1
@@ -62,7 +63,8 @@ services:
       - discovery.seed_hosts=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
       - cluster.initial_master_nodes=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
     volumes:
-      - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch_node_2.yml
+      - $PWD/env/elasticsearch/config/elasticsearch_node_3.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ${ELASTIC_SEARCH_DB_PATH}node3/:/usr/share/elasticsearch/data/
     ulimits:
       memlock:
         soft: -1
