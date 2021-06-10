@@ -27,7 +27,6 @@ services:
       - network.publish_host=elasticsearch-worker-1
       - discovery.seed_hosts=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
       - cluster.initial_master_nodes=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
       - "127.0.0.1:9200:9200"
 
@@ -43,7 +42,6 @@ services:
       - cluster.initial_master_nodes=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
     volumes:
       - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch_node_2.yml
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:
         soft: -1
@@ -52,8 +50,6 @@ services:
       - mongo-db-1
     networks:
       - elastic
-    ports:
-      - "127.0.0.1:9202:9202"
 
   elasticsearch-worker-3:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
@@ -65,7 +61,6 @@ services:
       - network.publish_host=elasticsearch-worker-3
       - discovery.seed_hosts=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
       - cluster.initial_master_nodes=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     volumes:
       - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch_node_2.yml
     ulimits:
@@ -76,8 +71,6 @@ services:
       - mongo-db-1
     networks:
       - elastic
-    ports:
-      - "127.0.0.1:9203:9203"
 
   nginx:
     volumes:
