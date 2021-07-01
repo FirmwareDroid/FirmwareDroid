@@ -40,6 +40,7 @@ def get_quark_engine_scan(apk_path, rule_path=None):
     Run quark-engine scan on one apk. Uses default rules if no rules path is given.
     :return: str - json report as string.
     """
+    # TODO Integrate updated version of quark-engine
     from quark.report import Report
     from quark.config import HOME_DIR
     if not rule_path:

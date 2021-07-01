@@ -75,8 +75,6 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
     container_name: elasticsearch-worker-1
     restart: unless-stopped
-    volumes:
-    - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
     ulimits:
       memlock:
         soft: -1
@@ -369,7 +367,21 @@ services:
     networks:
       - backend
 
-
+  libradar-worker-1:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_libradar
+    container_name: libradar-worker-1
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+    env_file:
+      - ./.env
+    command: rqworker --name libradar-worker-1 --url redis://redis:6379/ libradar
+    networks:
+      - backend
 
 networks:
   frontend:

@@ -41,3 +41,4 @@ from .QuarkEngineReport import QuarkEngineReport
 from .SuperReport import SuperReport
 from .ApkLeaksReport import ApkLeaksReport
 from .RevokedJwtToken import RevokedJwtToken
+from .LibRadarReport import LibRadarReport

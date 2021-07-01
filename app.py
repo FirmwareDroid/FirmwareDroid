@@ -45,6 +45,7 @@ from api.v1.routes.client_settings import ns as client_settings_namespace
 from api.v1.routes.quark_engine import ns as quark_engine_namespace
 from api.v1.routes.super_android_analyzer import ns as super_android_analyzer_namespace
 from api.v1.routes.apkleaks import ns as apkleaks_namespace
+from api.v1.routes.libradar import ns as libradar_namespace
 from flask_restx import Api
 from gevent.pywsgi import WSGIServer
 from scripts.utils.file_utils.file_util import delete_files_in_folder
@@ -131,6 +132,7 @@ def setup_redis_and_rq(app_instance):
     app_instance.rq_task_queue_super_android_analyzer = rq.Queue('super_android_analyzer',
                                                                  connection=app_instance.redis, default_timeout=60 * 60)
     app_instance.rq_task_queue_apkleaks = rq.Queue('apkleaks', connection=app_instance.redis, default_timeout=60 * 60)
+    app_instance.rq_task_queue_libradar = rq.Queue('libradar', connection=app_instance.redis, default_timeout=60 * 60)
 
 
 def setup_rq_dashboard(app_instance):
@@ -231,6 +233,7 @@ def register_api_namespaces(api):
     api.add_namespace(quark_engine_namespace, path='/v1/quark_engine')
     api.add_namespace(super_android_analyzer_namespace, path='/v1/super_android_analyzer')
     api.add_namespace(apkleaks_namespace, path="/v1/apkleaks")
+    api.add_namespace(libradar_namespace, path="/v1/libradar")
 
 
 def setup_api_converter(app_instance):

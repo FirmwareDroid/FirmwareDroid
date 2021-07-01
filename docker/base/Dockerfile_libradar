@@ -1,0 +1,4 @@
+FROM firmwaredroid-base as libradar-worker
+
+RUN --mount=type=cache,target=/var/www/tmp/libradar/.cache \
+    pip install -r ./requirements/requirements_libradar.txt

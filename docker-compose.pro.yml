@@ -16,7 +16,7 @@ services:
 
   elasticsearch-mongo-connector:
     restart: unless-stopped
-    command: mongo-connector --admin-username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD -m mongo-db-1:27017 -t http://elasticsearch-worker-1:9200 -d elastic2_doc_manager
+    command: mongo-connector --auto-commit-interval=0 --stdout --admin-username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD -m mongo-db-1:27017 -t http://elasticsearch-worker-1:9200 -d "elastic2_doc_manager" -c ./mongo-connector-config.json
 
   elasticsearch-worker-1:
     environment:
@@ -26,12 +26,14 @@ services:
       - discovery.seed_hosts=elasticsearch-worker-1
       - discovery.type=single-node
     volumes:
+      - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ${ELASTIC_SEARCH_DB_PATH}node1/:/usr/share/elasticsearch/data/
     ports:
-      - "9200:9200"
+      - "127.0.0.1:9200:9200"
 
 #  elasticsearch-worker-1:
 #    volumes:
+#      - $PWD/env/elasticsearch/config/elasticsearch_node_1.yml:/usr/share/elasticsearch/config/elasticsearch.yml
 #      - ${ELASTIC_SEARCH_DB_PATH}node1/:/usr/share/elasticsearch/data/
 #    environment:
 #      - node.name=elasticsearch-worker-1
@@ -171,45 +173,9 @@ services:
     networks:
       - backend
 
-  fuzzyhash-worker-2:
-    build:
-      context: .
-      dockerfile: ./docker/workers/Dockerfile_fuzzyhash
-    container_name: fuzzyhash-worker-2
-    restart: unless-stopped
-    depends_on:
-      - redis
-      - firmware-worker
+  libradar-worker-1:
     volumes:
-      - $PWD:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - /var/run/docker.sock:/var/run/docker.sock
-    env_file:
-      - ./.env
-    command: rqworker --name fuzzyhash-worker-2 --url redis://redis:6379/ fuzzyhash
-    networks:
-      - backend
-    privileged: true
-
-  fuzzyhash-worker-3:
-    build:
-      context: .
-      dockerfile: ./docker/workers/Dockerfile_fuzzyhash
-    container_name: fuzzyhash-worker-3
-    restart: unless-stopped
-    depends_on:
-      - redis
-      - firmware-worker
-    volumes:
-      - $PWD:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - /var/run/docker.sock:/var/run/docker.sock
-    env_file:
-      - ./.env
-    command: rqworker --name fuzzyhash-worker-3 --url redis://redis:6379/ fuzzyhash
-    networks:
-      - backend
-    privileged: true
 
   certbot:
     image: certbot/certbot:latest

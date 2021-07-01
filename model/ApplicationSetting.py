@@ -17,7 +17,8 @@ class ApplicationSetting(Document):
         "QuarkEngine": True,
         "Exodus": True,
         "SUPER": True,
-        "APKLeaks": True
+        "APKLeaks": True,
+        "LibRadar": True,
     })
 
 

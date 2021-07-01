@@ -35,7 +35,7 @@ if [ $retVal -ne 0 ]; then
 fi
 
 # Build worker images
-workers=("androguard" "androwarn" "apkid" "exodus" "firmware" "frida" "fuzzyhash" "qark" "quark_engine" "virustotal" "super_android_analyzer" "apkleaks")
+workers=("androguard" "androwarn" "apkid" "exodus" "firmware" "frida" "fuzzyhash" "qark" "quark_engine" "virustotal" "super_android_analyzer" "apkleaks" "libradar")
 echo "Building worker base images"
 for i in "${workers[@]}"
 do
