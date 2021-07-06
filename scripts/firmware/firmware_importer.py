@@ -23,7 +23,7 @@ from scripts.utils.mulitprocessing_util.mp_util import create_multi_threading_qu
 lock = threading.Lock()
 
 
-def start_firmware_mass_import():
+def start_firmware_mass_import(create_fuzzy_hashes):
     """
     Imports all .zip files from the import folder.
     :return: list of string with the status (errors/success) of every file.
@@ -35,7 +35,7 @@ def start_firmware_mass_import():
     firmware_file_queue = create_queue()
     worker_list = []
     for i in range(num_threads):
-        worker = Thread(target=prepare_firmware_import, args=(firmware_file_queue,))
+        worker = Thread(target=prepare_firmware_import, args=(firmware_file_queue,create_fuzzy_hashes))
         worker.setDaemon(True)
         worker.start()
         worker_list.append(worker)
@@ -55,7 +55,7 @@ def create_queue():
     return create_multi_threading_queue(filename_list)
 
 
-def prepare_firmware_import(firmware_file_queue):
+def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes):
     """
     An multi-threaded import script that extracts meta information of a firmware file from the system.img.
     Stores a firmware into the database if it is not already stored.
@@ -71,7 +71,7 @@ def prepare_firmware_import(firmware_file_queue):
             firmware_file_path = os.path.join(app.config["FIRMWARE_FOLDER_IMPORT"], filename)
             md5 = md5_from_file(firmware_file_path)
             if not AndroidFirmware.objects(md5=md5) or (AndroidFirmware.objects(md5=md5) is not None):
-                import_firmware(filename, md5, firmware_file_path)
+                import_firmware(filename, md5, firmware_file_path, create_fuzzy_hashes)
             else:
                 raise ValueError(f"Skipped file - Already in database. {str(filename)}")
         except Exception as err:
@@ -79,7 +79,7 @@ def prepare_firmware_import(firmware_file_queue):
         firmware_file_queue.task_done()
 
 
-def import_firmware(original_filename, md5, firmware_archive_file_path):
+def import_firmware(original_filename, md5, firmware_archive_file_path, create_fuzzy_hashes):
     """
     Attempts to store a firmware archive into the database.
     :param original_filename: str - name of the file to import.
@@ -116,7 +116,8 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
             except ValueError:
                 pass
             build_prop_file_list.extend(extract_build_prop(partition_firmware_file_list, temp_dir.name))
-            fuzzy_hash_firmware_files(partition_firmware_file_list, temp_dir.name)
+            if create_fuzzy_hashes:
+                fuzzy_hash_firmware_files(partition_firmware_file_list, temp_dir.name)
             
         version_detected = detect_by_build_prop(build_prop_file_list)
         filename, file_extension = os.path.splitext(firmware_archive_file_path)
@@ -136,7 +137,8 @@ def import_firmware(original_filename, md5, firmware_archive_file_path):
                               file_size=file_size,
                               build_prop_file_id_list=build_prop_file_list,
                               version_detected=version_detected,
-                              firmware_file_list=firmware_file_list)
+                              firmware_file_list=firmware_file_list,
+                              hasFuzzyHashIndex=create_fuzzy_hashes)
         logging.info(f"Firmware Import success: {original_filename}")
     except Exception as e:
         logging.exception(f"Firmware Import failed: {original_filename} error: {str(e)}")
@@ -153,7 +155,6 @@ def get_firmware_archive_content(cache_temp_file_dir_path):
     """
     Creates an index of the files within the firmware and attempts to find the system.img
     :param cache_temp_file_dir_path: str - dir path in which the extracted files are.
-
     :return: list class:'FirmwareFile'
     """
     firmware_files = []
@@ -195,9 +196,10 @@ def get_partition_firmware_files(archive_firmware_file_list,
 
 
 def store_firmware_object(store_filename, original_filename, firmware_store_path, md5, sha256, sha1, android_app_list,
-                          file_size, build_prop_file_id_list, version_detected, firmware_file_list):
+                          file_size, build_prop_file_id_list, version_detected, firmware_file_list, hasFuzzyHashIndex):
     """
     Creates class:'AndroidFirmware' object and saves it to the database. Creates references to other documents.
+    :param hasFuzzyHashIndex: bool - true if fuzzy hash index was created. False if fuzzy hash index was not created.
     :param version_detected: str - detected version of the firmware.
     :param store_filename: str - Name of the file within the file store.
     :param original_filename: str - original filename before renaming.
@@ -224,7 +226,7 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
                                file_size_bytes=file_size,
                                version_detected=version_detected,
                                hasFileIndex=True,
-                               hasFuzzyHashIndex=True,
+                               hasFuzzyHashIndex=create_fuzzy_hashes,
                                build_prop_file_id_list=build_prop_file_id_list)
     firmware.save()
     logging.info(f"Stored firmware with id {str(firmware.id)} in database.")
@@ -247,6 +249,7 @@ def add_app_firmware_references(firmware, android_app_list):
 def extract_build_prop(firmware_file_list, mount_path):
     """
     Extracts the build.prop file from the given directory and creates an parsed it's content.
+    :param mount_path: str - path where the firmware image is mounted to.
     :param firmware_file_list: list(class:'FirmwareFile') - list of firmware-files that contains a
     minimum of one build.prop file
     :return: list(class:'BuildPropFile') - list of BuildPropFile documents.

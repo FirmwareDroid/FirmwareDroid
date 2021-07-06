@@ -32,6 +32,7 @@ def extract_image_files(image_path, extract_dir_path):
     """
     # if extract_ext4(image_path, extract_dir_path):
     #     logging.info("Image extraction successful with ext4extractor")
+    # TODO ADD HERE SUPPORT FOR .dat FILES with sdat2img - https://github.com/xpirt/sdat2img
     if extract_simg_ext4(image_path, extract_dir_path):
         logging.info("Image extraction successful with simg_ext4extractor")
     if mount_android_image(image_path, extract_dir_path):

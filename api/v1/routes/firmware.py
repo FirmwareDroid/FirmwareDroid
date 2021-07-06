@@ -10,13 +10,11 @@ from zipfile import ZipInfo, ZIP_DEFLATED
 from flask import request, send_file
 from flask_restx import Resource, Namespace
 from mongoengine import DoesNotExist
-from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required, user_jwt_required
 from scripts.hashing import md5_from_file
 from scripts.utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
 from api.v1.api_models.serializers import object_id_list
 from api.v1.parser.json_parser import parse_json_object_id_list
-from api.v1.parser.request_util import check_firmware_mode
-from scripts.auth.basic_auth import requires_basic_authorization
 from model.AndroidFirmware import AndroidFirmwareSchema
 from scripts.database.delete_document import clear_firmware_database
 from scripts.firmware.firmware_importer import start_firmware_mass_import
@@ -80,18 +78,22 @@ class FirmwareByVersion(Resource):
         return json.dumps(firmware_list, cls=DefaultJsonEncoder)
 
 
-@ns.route('/start_importer/')
+@ns.route('/start_importer/<bool:create_fuzzy_hashes>')
 class FirmwareMassImport(Resource):
     @ns.doc('post')
     @admin_jwt_required
-    def post(self):
+    def post(self, create_fuzzy_hashes):
         """
         Starts the mass import of firmware files from the filesystem.
         :return: rq-job-id
         """
+        if create_fuzzy_hashes is None:
+            create_fuzzy_hashes = False
         app = flask.current_app
         # TODO prevent queuing of Job more than once
-        job = app.rq_task_queue_high.enqueue(start_firmware_mass_import, job_timeout=60 * 60 * 24 * 7)
+        job = app.rq_task_queue_high.enqueue(start_firmware_mass_import,
+                                             create_fuzzy_hashes,
+                                             job_timeout=60 * 60 * 24 * 7)
         return {"id": job.get_id()}
 
 
@@ -126,7 +128,7 @@ class FirmwareMassImportQueue(Resource):
 @ns.route('/download/build_prop_zip')
 class DownloadBuildProps(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self):
         """
         Download all build-props as zip file.
@@ -157,7 +159,7 @@ class DownloadBuildProps(Resource):
 @ns.route('/download/<string:firmware_id>')
 class DownloadFirmware(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self, firmware_id):
         """
         Download a firmware as archive.
@@ -184,6 +186,7 @@ class GetLatestFirmware(Resource):
         :return: json - list of Android firmware
         """
         response = "", 400
+        # TODO add caching to increase performance
         try:
             firmware_list = AndroidFirmware.objects().limit(20).order_by('indexed_date')
             firmware_json_list = []
@@ -198,7 +201,7 @@ class GetLatestFirmware(Resource):
 @ns.route('/upload/')
 class UploadFirmware(Resource):
     @ns.doc('post')
-    # @user_jwt_required
+    @user_jwt_required
     @ns.expect(parser)
     def post(self):
         """

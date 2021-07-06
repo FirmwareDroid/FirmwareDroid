@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+from scripts.extractor.bin_extractor.bin_extractor import extract_bin
 from scripts.firmware.const_regex_patterns import SYSTEM_IMG_PATTERN_LIST
 from model import FirmwareFile
 from scripts.firmware.ext4_mount_util import mount_android_image, is_path_mounted, exec_umount
@@ -8,6 +9,7 @@ from scripts.extractor.nb0_extractor import extract_nb0
 from scripts.extractor.pac_extractor import unpack_pac
 from scripts.extractor.unzipper import extract_tar_file, unzip_file
 from scripts.extractor.lz4_extractor import extract_lz4
+from scripts.extractor.brotli_extractor import extract_brotli
 
 
 def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_file):
@@ -18,6 +20,7 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
     :param delete_compressed_file: boolean - if true, deletes the archive after it is extracted.
     :return:
     """
+    supported_file_types_regex = r'\.zip$|\.tar$|\.tar$\.md5$|\.lz4$|\.pac$|\.nb0$|\.bin$|\.br$'
     # TODO make this function more secure - set maximal recursion depth
     if compressed_file_path.lower().endswith(".zip"):
         logging.info(f"Attempt to extract .zip file: {compressed_file_path}")
@@ -34,6 +37,14 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
     elif compressed_file_path.lower().endswith(".nb0"):
         logging.info(f"Attempt to extract nb0 file: {compressed_file_path}")
         extract_nb0(compressed_file_path)
+    elif compressed_file_path.lower().endswith(".bin"):
+        logging.info(f"Attempt to extract bin file: {compressed_file_path}")
+        extract_bin(compressed_file_path, destination_dir)
+    elif compressed_file_path.lower().endswith(".br"):
+        # TODO ADD SUPPORT for .br IMAGES HERE - https://pypi.org/project/Brotli/ or https://pypi.org/project/brotlipy/
+        logging.info(f"Attempt to extract brotli file: {compressed_file_path}")
+        extract_brotli(compressed_file_path, destination_dir)
+
     try:
         if delete_compressed_file:
             os.remove(compressed_file_path)
@@ -41,7 +52,7 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
         pass
     for root, dirs, files in os.walk(destination_dir):
         for filename in files:
-            if re.search(r'\.zip$|\.tar$|\.tar\.md5$|\.lz4|\.pac|\.nb0', filename.lower()):
+            if re.search(supported_file_types_regex, filename.lower()):
                 nested_file_path = os.path.join(root, filename)
                 if not os.path.exists(nested_file_path) and not nested_file_path.startswith("/"):
                     nested_file_path = "./" + nested_file_path
