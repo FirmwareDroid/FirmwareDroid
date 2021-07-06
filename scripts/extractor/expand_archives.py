@@ -1,6 +1,8 @@
 import logging
 import os
 import re
+
+from scripts.extractor.ext4_extractor import extract_dat_ext4
 from scripts.extractor.bin_extractor.bin_extractor import extract_bin
 from scripts.firmware.const_regex_patterns import SYSTEM_IMG_PATTERN_LIST
 from model import FirmwareFile
@@ -41,9 +43,11 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
         logging.info(f"Attempt to extract bin file: {compressed_file_path}")
         extract_bin(compressed_file_path, destination_dir)
     elif compressed_file_path.lower().endswith(".br"):
-        # TODO ADD SUPPORT for .br IMAGES HERE - https://pypi.org/project/Brotli/ or https://pypi.org/project/brotlipy/
         logging.info(f"Attempt to extract brotli file: {compressed_file_path}")
         extract_brotli(compressed_file_path, destination_dir)
+    elif compressed_file_path.lower().endswith("dat"):
+        logging.info(f"Attempt to extract dat file: {compressed_file_path}")
+        extract_dat_ext4(compressed_file_path, destination_dir)
 
     try:
         if delete_compressed_file:
@@ -54,9 +58,12 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
         for filename in files:
             if re.search(supported_file_types_regex, filename.lower()):
                 nested_file_path = os.path.join(root, filename)
-                if not os.path.exists(nested_file_path) and not nested_file_path.startswith("/"):
+                if not os.path.exists(nested_file_path) \
+                        and not nested_file_path.startswith("/")\
+                        and not nested_file_path.startswith("./"):
                     nested_file_path = "./" + nested_file_path
-                extract_all_nested(nested_file_path, root, True)
+                if os.path.exists(nested_file_path):
+                    extract_all_nested(nested_file_path, root, True)
 
 
 @DeprecationWarning

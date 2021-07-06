@@ -28,7 +28,3 @@ networkx~=2.5.1
 itsdangerous~=2.0.1
 flasgger~=0.9.5
 protobuf>=3.17.3
-Brotli>=1.0.9
-
-
-#git+https://github.com/FirmwareDroid/LibRadar.git

@@ -26,6 +26,7 @@ lock = threading.Lock()
 def start_firmware_mass_import(create_fuzzy_hashes):
     """
     Imports all .zip files from the import folder.
+    :param create_fuzzy_hashes: bool - true if fuzzy hash index should be created.
     :return: list of string with the status (errors/success) of every file.
     """
     create_app_context()
@@ -59,6 +60,7 @@ def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes):
     """
     An multi-threaded import script that extracts meta information of a firmware file from the system.img.
     Stores a firmware into the database if it is not already stored.
+    :param create_fuzzy_hashes: bool - true if fuzzy hash index should be created.
     :param firmware_file_queue: The queue of files to import.
     :return: A dict of the errors and success messages for every file.
     """
@@ -124,7 +126,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
         store_filename = md5 + file_extension
         firmware_archive_store_path = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_STORE"],
                                                    version_detected,
-                                                   store_filename)
+                                                   md5)
         create_directories(firmware_archive_store_path)
         shutil.move(firmware_archive_file_path, firmware_archive_store_path)
         store_firmware_object(store_filename=store_filename,
@@ -226,7 +228,7 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
                                file_size_bytes=file_size,
                                version_detected=version_detected,
                                hasFileIndex=True,
-                               hasFuzzyHashIndex=create_fuzzy_hashes,
+                               hasFuzzyHashIndex=hasFuzzyHashIndex,
                                build_prop_file_id_list=build_prop_file_id_list)
     firmware.save()
     logging.info(f"Stored firmware with id {str(firmware.id)} in database.")

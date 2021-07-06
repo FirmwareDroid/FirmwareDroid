@@ -1,7 +1,27 @@
 import logging
 import tempfile
+import traceback
+
 import flask
+from scripts.extractor.dat2img_converter import convert_dat2img
 from scripts.firmware.ext4_mount_util import simg2img_convert_ext4
+
+
+def extract_dat_ext4(dat_file_path, extract_destination_folder):
+    """
+    Converts a .dat file to .img file and attempts to extract the data.
+    :param dat_file_path: str - path to the .dat image
+    :param extract_destination_folder: str - path to the folder where the data is extracted to.
+    :return: True - if extraction was successful, false if not.
+    """
+    logging.info("Attempt to extract ext with dat2img")
+    ext4_image_path = None
+    try:
+        ext4_image_path = convert_dat2img(dat_file_path, extract_destination_folder)
+    except Exception as err:
+        logging.error(f"Extract_dat_ext4 failed to extract: {dat_file_path}")
+        logging.error(err)
+    return ext4_image_path
 
 
 def extract_simg_ext4(simg_ext4_file_path, extract_destination_folder):
@@ -37,11 +57,13 @@ def extract_ext4(ext4_file_path, extract_destination_folder):
         argument_dict = {
             "filename": ext4_file_path,
             "directory": extract_destination_folder,
-            "symlinks": None,
             "metadata": None,
+            "skip_symlinks": True
         }
+        argument_dict.symlinks = None
         ext4extractApp(args=argument_dict).run()
         could_extract_data = True
     except Exception as err:
         logging.error(err)
+        traceback.print_exc()
     return could_extract_data
