@@ -1,10 +1,13 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 import logging
 import flask
 from model.FridaScript import FridaScript
 from scripts.dynamic_analysis.emulator_control.adb.adb_wrapper import push_file, file_exists, \
     send_shell_command_streamed, adb_root
 
-
+# TODO IMPLEMENT FRIDA INTEGRATION - UNFINISHED BUSINESS
 
 def install_frida_server(adb_device, frida_port):
     app = flask.current_app

@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 import logging
 import os
 from scripts.database.query_document import get_filtered_list
@@ -40,11 +43,12 @@ def get_quark_engine_scan(apk_path, rule_path=None):
     Run quark-engine scan on one apk. Uses default rules if no rules path is given.
     :return: str - json report as string.
     """
-    # TODO Integrate updated version of quark-engine
     from quark.report import Report
     from quark.config import HOME_DIR
     if not rule_path:
         rule_path = f"{HOME_DIR}quark-rules"
+        logging.info(f"Quark-Engine loaded default rules: {rule_path}")
+    logging.info(f"Quark-Engine scanning apk: {apk_path}")
     report = Report()
     report.analysis(apk_path, rule_path)
     return report.get_report("json")

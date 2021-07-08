@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 import logging
 import os
 import shlex
@@ -94,7 +97,7 @@ def patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file
                                    dat_file_path,
                                    patch_file_path], timeout=600)
         response.check_returncode()
-        logging.info(f"Patch successfully: {img_file_path}")
+        logging.info(f"BlockImageUpdate Patch successful: {img_file_path}")
     except subprocess.CalledProcessError as err:
         raise OSError(err)
 

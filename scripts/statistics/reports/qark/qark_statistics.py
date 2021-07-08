@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 from model import QarkStatisticsReport, QarkReport, AndroidApp
 from model.QarkStatisticsReport import ATTRIBUTE_MAP_STRING_DICT
 from scripts.rq_tasks.flask_context_creator import create_app_context

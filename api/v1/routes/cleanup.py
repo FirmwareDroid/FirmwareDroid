@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 from flask import request
 from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.parser.request_util import check_app_mode

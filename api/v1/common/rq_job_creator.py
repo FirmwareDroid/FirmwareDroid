@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
+
 from api.v1.common.rq_chunk_creator import split_list_into_sublists
 
 

@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
+
 FROM firmwaredroid-base as virustotal-worker
 
 RUN --mount=type=cache,target=/var/www/tmp/virustotal/.cache \

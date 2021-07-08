@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
+
 import unittest
 from base64 import b64encode
 from scripts.tests.integration.test_utils.test_context_creator import setup_flask_testing_client, setup_app_testing_client

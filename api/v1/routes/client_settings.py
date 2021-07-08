@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 from flask_restx import Resource, Namespace
 from model import ApplicationSetting
 from model.ApplicationSetting import ApplicationSettingSchema

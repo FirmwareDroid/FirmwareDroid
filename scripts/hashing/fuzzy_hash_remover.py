@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 from mongoengine import DoesNotExist
 from scripts.database.delete_document import delete_referenced_document_instance, delete_document_attribute
 from model import AndroidFirmware
