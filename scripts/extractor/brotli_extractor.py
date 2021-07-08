@@ -21,7 +21,10 @@ def extract_brotli(source_file_path, destination_dir):
         output_file = os.path.join(destination_dir, filename)
         response = subprocess.run(["brotli", "--decompress", source_file_path, "-o", output_file], timeout=600)
         response.check_returncode()
-        logging.info(f"Brotli successfully decompressed: {output_file}")
+        if os.path.exists(output_file):
+            logging.info(f"Brotli successfully decompressed: {output_file}")
+        else:
+            raise FileNotFoundError(f"Could not decompress brotli: {source_file_path} - missing file: {output_file}")
     except subprocess.CalledProcessError as err:
         logging.error(err)
         raise OSError(err)

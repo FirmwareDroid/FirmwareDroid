@@ -54,13 +54,13 @@ def extract_ext4(ext4_file_path, extract_destination_folder):
                  f"{extract_destination_folder}")
     could_extract_data = False
     try:
-        argument_dict = {
-            "filename": ext4_file_path,
-            "directory": extract_destination_folder,
-            "metadata": None,
-            "skip_symlinks": True
-        }
-        argument_dict.symlinks = None
+        argument_dict = {"filename": ext4_file_path,
+                         "directory": extract_destination_folder,
+                         "metadata": None,
+                         "skip_symlinks": True,
+                         "text_symlinks": None,
+                         "empty_symlinks": None,
+                         "symlinks": None}
         ext4extractApp(args=argument_dict).run()
         could_extract_data = True
     except Exception as err:

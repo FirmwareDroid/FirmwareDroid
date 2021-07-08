@@ -1,12 +1,18 @@
 FROM firmwaredroid-base as firmware-worker
 
 USER root
+
+# Dependency for libssl1.0.0 -> necessary for .dat patching
+RUN echo "deb http://security.debian.org/debian-security jessie/updates main" >> /etc/apt/sources.list
+RUN apt-get update
+
 RUN apt-get -y install simg2img && \
     apt-get -y install libfuzzy-dev && \
     apt-get -y install liblzo2-dev && \
     apt-get -y install fuse && \
     apt-get -y install fuseext2 && \
-    apt-get -y install brotli
+    apt-get -y install brotli && \
+    apt-get -y install libssl1.0.0
 
 #WORKDIR /var/www/
 #COPY ./ /var/www/

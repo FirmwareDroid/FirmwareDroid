@@ -1,9 +1,13 @@
 import logging
 import os
+import shlex
+import subprocess
 from pathlib import Path
 from scripts.firmware.const_regex_patterns import SYSTEM_TRANSFER_PATTERN_LIST, VENDOR_TRANSFER_PATTERN_LIST, \
     OEM_TRANSFER_PATTERN_LIST, USERDATA_TRANSFER_PATTERN_LIST, PRODUCT_TRANSFER_PATTERN_LIST, \
-    SYSTEM_EXT_TRANSFER_PATTERN_LIST, SYSTEM_OTHER_TRANSFER_PATTERN_LIST
+    SYSTEM_EXT_TRANSFER_PATTERN_LIST, SYSTEM_OTHER_TRANSFER_PATTERN_LIST, VENDOR_DAT_PATCH_PATTERN_LIST, \
+    OEM_DAT_PATCH_PATTERN_LIST, USERDATA_DAT_PATCH_PATTERN_LIST, PRODUCT_DAT_PATCH_PATTERN_LIST, \
+    SYSTEM_EXT_DAT_PATCH_PATTERN_LIST, SYSTEM_OTHER_DAT_PATCH_PATTERN_LIST, SYSTEM_DAT_PATCH_PATTERN_LIST
 from scripts.firmware.firmware_file_search import find_file_path_by_regex
 
 
@@ -20,13 +24,13 @@ def convert_dat2img(dat_file_path, destination_path):
     path = Path(dat_file_path)
     filename = os.path.basename(dat_file_path)
     search_folder_path = path.parent.absolute()
-    system_transfer_list_file_path = search_transfer_list(search_folder_path, filename)
-    if system_transfer_list_file_path is not None:
-        out_filename = filename.replace(".new.dat", "")
-        out_filename = out_filename.replace(".dat", "")
-        out_filename += ".img"
+    transfer_file_path, patch_file_path = search_transfer_list(search_folder_path, filename)
+    if transfer_file_path is not None:
+        out_filename = filename.replace(".new.dat", ".img")
         img_file_path = os.path.join(destination_path, out_filename)
-        start_dat_conversion(dat_file_path, system_transfer_list_file_path, img_file_path)
+        start_dat_conversion(dat_file_path, transfer_file_path, img_file_path)
+        logging.info(f"Converted dat: {dat_file_path} to img: {img_file_path}")
+        patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file_path)
     else:
         raise AssertionError("Could not find system.file.list")
 
@@ -35,29 +39,64 @@ def convert_dat2img(dat_file_path, destination_path):
 
 def search_transfer_list(search_path, filename):
     """
-    Searches in the directory for a system transfer file.
+    Searches in the directory for a system transfer file and patch file.
     :return: str - path of the system.transfer.list if found
     """
-    pattern_list = None
+    transfer_pattern_list = None
+    patch_pattern_list = None
 
     if "vendor" in filename:
-        pattern_list = VENDOR_TRANSFER_PATTERN_LIST
+        transfer_pattern_list = VENDOR_TRANSFER_PATTERN_LIST
+        patch_pattern_list = VENDOR_DAT_PATCH_PATTERN_LIST
     elif "oem" in filename:
-        pattern_list = OEM_TRANSFER_PATTERN_LIST
+        transfer_pattern_list = OEM_TRANSFER_PATTERN_LIST
+        patch_pattern_list = OEM_DAT_PATCH_PATTERN_LIST
     elif "userdata" in filename:
-        pattern_list = USERDATA_TRANSFER_PATTERN_LIST
+        transfer_pattern_list = USERDATA_TRANSFER_PATTERN_LIST
+        patch_pattern_list = USERDATA_DAT_PATCH_PATTERN_LIST
     elif "product" in filename:
-        pattern_list = PRODUCT_TRANSFER_PATTERN_LIST
+        transfer_pattern_list = PRODUCT_TRANSFER_PATTERN_LIST
+        patch_pattern_list = PRODUCT_DAT_PATCH_PATTERN_LIST
     elif "system_ext" in filename:
-        pattern_list = SYSTEM_EXT_TRANSFER_PATTERN_LIST
+        transfer_pattern_list = SYSTEM_EXT_TRANSFER_PATTERN_LIST
+        patch_pattern_list = SYSTEM_EXT_DAT_PATCH_PATTERN_LIST
     elif "system_other" in filename:
-        pattern_list = SYSTEM_OTHER_TRANSFER_PATTERN_LIST
+        transfer_pattern_list = SYSTEM_OTHER_TRANSFER_PATTERN_LIST
+        patch_pattern_list = SYSTEM_OTHER_DAT_PATCH_PATTERN_LIST
     elif "system" in filename:
-        pattern_list = SYSTEM_TRANSFER_PATTERN_LIST
+        transfer_pattern_list = SYSTEM_TRANSFER_PATTERN_LIST
+        patch_pattern_list = SYSTEM_DAT_PATCH_PATTERN_LIST
 
-    if pattern_list is None:
+    if transfer_pattern_list is None:
         raise RuntimeError(f"Unknown transfer list for partition: {filename}")
-    return find_file_path_by_regex(search_path, pattern_list)
+    return find_file_path_by_regex(search_path, transfer_pattern_list), find_file_path_by_regex(search_path,
+                                                                                                patch_pattern_list)
+
+
+def patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file_path):
+    """
+    Patch an .img file from .dat image in place.
+    :param patch_file_path: str - file path of the *.patch.dat file.
+    :param transfer_file_path: str - file path of the *.transfer.list file.
+    :param img_file_path: str - file path of the .img file to modify inplace.
+    :param dat_file_path: str - file path of the .dat file.
+    """
+    logging.info(f"Patch file {img_file_path} \nwith {dat_file_path} \nand {transfer_file_path} \nand "
+                 f"{patch_file_path}")
+    try:
+        transfer_file_path = shlex.quote(str(transfer_file_path))
+        patch_file_path = shlex.quote(str(patch_file_path))
+        dat_file_path = shlex.quote(str(dat_file_path))
+        img_file_path = shlex.quote(str(img_file_path))
+        response = subprocess.run(["./tools/IMG_Patch_Tools_0.3/BlockImageUpdate",
+                                   img_file_path,
+                                   transfer_file_path,
+                                   dat_file_path,
+                                   patch_file_path], timeout=600)
+        response.check_returncode()
+        logging.info(f"Patch successfully: {img_file_path}")
+    except subprocess.CalledProcessError as err:
+        raise OSError(err)
 
 
 def rangeset(src):

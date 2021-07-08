@@ -33,13 +33,10 @@ def extract_image_files(image_path, extract_dir_path):
         logging.info("Image extraction successful with simg_ext4extractor")
     elif extract_ext4(image_path, extract_dir_path):
         logging.info("Image extraction successful with ext4extractor")
-    else:
-        logging.warning("Image extraction not successful. Maybe unknown or unsupported format?")
-
-    if mount_android_image(image_path, extract_dir_path):
+    elif mount_android_image(image_path, extract_dir_path):
         logging.info("Image mount successful")
     elif extract_ubi_image(image_path, extract_dir_path):
-        logging.info("UBI Image extraction successful")
+        logging.info(" Image extraction successful with UBI")
     else:
         raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
 

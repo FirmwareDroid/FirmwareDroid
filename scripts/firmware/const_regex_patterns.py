@@ -10,9 +10,10 @@ that incorrect files match the patterns.
 ##########################################################################################
 SYSTEM_IMG_PATTERN_LIST = ["system[.]img",
                            ".*system[.]img$",
+                           "^system[.].*[.]img$",
                            "^system[.]img[.].*",
                            ".*system.*img_sparsechunk$",
-                           ".*system.*(img|rfs|img.ext4|ext4.img|dat)$",
+                           ".*system.*(img|rfs|img.ext4|ext4.img)$",
                            "system"]
 
 SYSTEM_OTHER_IMG_PATTERN_LIST = ["system_other[.]img"]
@@ -45,10 +46,18 @@ BUILD_PROP_PATTERN_LIST = ["build[.]prop", "default[.]prop"]
 ANDROID_APP_FORMATS_PATTERN_LIST = [".*[.]apk$", ".*[.]odex$", ".*[.]dex$", ".*[.]vdex$", ".*[.]art$"]
 ELF_BINARY_FORMATS_PATTERN_LIST = [".*[.]so$", ".*[.]elf$"]
 
-SYSTEM_TRANSFER_PATTERN_LIST = ["system[.]transfer[.]list", "system[.]transfer"]
 VENDOR_TRANSFER_PATTERN_LIST = ["vendor[.]transfer[.]list", "vendor[.]transfer"]
 OEM_TRANSFER_PATTERN_LIST = ["oem[.]transfer[.]list", "oem[.]transfer"]
 USERDATA_TRANSFER_PATTERN_LIST = ["userdata[.]transfer[.]list", "userdata[.]transfer"]
 PRODUCT_TRANSFER_PATTERN_LIST = ["product[.]transfer[.]list", "product[.]transfer"]
 SYSTEM_EXT_TRANSFER_PATTERN_LIST = ["system_ext[.]transfer[.]list", "system_ext[.]transfer"]
 SYSTEM_OTHER_TRANSFER_PATTERN_LIST = ["system_other[.]transfer[.]list", "system_other[.]transfer"]
+SYSTEM_TRANSFER_PATTERN_LIST = ["system[.]transfer[.]list", "system[.]transfer"]
+
+VENDOR_DAT_PATCH_PATTERN_LIST = ["vendor[.]patch[.]dat"]
+OEM_DAT_PATCH_PATTERN_LIST = ["oem[.]patch[.]dat"]
+USERDATA_DAT_PATCH_PATTERN_LIST = ["userdata[.]patch[.]dat"]
+PRODUCT_DAT_PATCH_PATTERN_LIST = ["product[.]patch[.]dat"]
+SYSTEM_EXT_DAT_PATCH_PATTERN_LIST = ["system_ext[.]patch[.]dat"]
+SYSTEM_OTHER_DAT_PATCH_PATTERN_LIST = ["system_other[.]patch[.]dat"]
+SYSTEM_DAT_PATCH_PATTERN_LIST = ["system[.]patch[.]dat"]

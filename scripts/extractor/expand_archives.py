@@ -22,8 +22,8 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
     :param delete_compressed_file: boolean - if true, deletes the archive after it is extracted.
     :return:
     """
-    supported_file_types_regex = r'\.zip$|\.tar$|\.tar$\.md5$|\.lz4$|\.pac$|\.nb0$|\.bin$|\.br$'
-    # TODO make this function more secure - set maximal recursion depth
+    supported_file_types_regex = r'\.zip$|\.tar$|\.tar$\.md5$|\.lz4$|\.pac$|\.nb0$|\.bin$|\.br$|\.dat$'
+    # TODO important security! Make this function more secure - set maximal recursion depth
     if compressed_file_path.lower().endswith(".zip"):
         logging.info(f"Attempt to extract .zip file: {compressed_file_path}")
         unzip_file(compressed_file_path, destination_dir)
@@ -45,7 +45,7 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
     elif compressed_file_path.lower().endswith(".br"):
         logging.info(f"Attempt to extract brotli file: {compressed_file_path}")
         extract_brotli(compressed_file_path, destination_dir)
-    elif compressed_file_path.lower().endswith("dat"):
+    elif compressed_file_path.lower().endswith(".dat"):
         logging.info(f"Attempt to extract dat file: {compressed_file_path}")
         extract_dat_ext4(compressed_file_path, destination_dir)
 
@@ -61,15 +61,22 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
                 if not os.path.exists(nested_file_path) \
                         and not nested_file_path.startswith("/")\
                         and not nested_file_path.startswith("./"):
+                    logging.info(f"Attempt to fix path: {nested_file_path}")
                     nested_file_path = "./" + nested_file_path
                 if os.path.exists(nested_file_path):
                     extract_all_nested(nested_file_path, root, True)
+                else:
+                    logging.info(f"Expand: Skip file {nested_file_path}")
+
+
+
 
 
 @DeprecationWarning
 def extract_and_mount_all(firmware, cache_path, mount_path):
     """
     Extracts the given firmware to a temporary directory and attempts to mount system.img file.
+    :param mount_path: str - path where the firmware is mounted
     :param cache_path: str - path of the temporary directory to work in.
     :param firmware: class:'AndroidFirmware' firmware file to mount files from.
     """

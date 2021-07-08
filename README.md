@@ -140,3 +140,5 @@ List of third party software:
 [SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/blob/master/LICENSE),
 [VirusTotal-Python](https://github.com/dbrennand/virustotal-python/blob/master/LICENSE),
 [ext4extract (GPLv3)](https://github.com/hexedit/ext4extract)
+[imgpatchtools (GPLv3)](https://github.com/erfanoabdi/imgpatchtools)
+... and many more.

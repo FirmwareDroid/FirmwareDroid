@@ -27,4 +27,4 @@ matplotlib~=3.4.2
 networkx~=2.5.1
 itsdangerous~=2.0.1
 flasgger~=0.9.5
-protobuf>=3.17.3
+protobuf~=3.17.3
