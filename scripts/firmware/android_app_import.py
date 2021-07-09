@@ -118,9 +118,12 @@ def add_optimized_firmware_files(android_app, optimized_firmware_file_list, firm
                                             "." + android_app.relative_firmware_path,
                                             "." + opt_relative_root_path,
                                             optimized_firmware_file.name)
-        copyfile(opt_source_file_path, opt_store_path)
-        logging.info(f"Exported file: {optimized_firmware_file.name}")
-        firmware_file_id_list.append(optimized_firmware_file.id)
+        if os.path.exists(opt_source_file_path):
+            copyfile(opt_source_file_path, opt_store_path)
+            logging.info(f"Exported file: {optimized_firmware_file.name}")
+            firmware_file_id_list.append(optimized_firmware_file.id)
+        else:
+            logging.error(f"FileNotFound: Could not export file: {opt_source_file_path}")
     android_app.opt_firmware_file_reference_list = firmware_file_id_list
     android_app.save()
 
