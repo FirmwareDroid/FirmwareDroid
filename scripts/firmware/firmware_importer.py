@@ -39,7 +39,7 @@ def start_firmware_mass_import(create_fuzzy_hashes):
     firmware_file_queue = create_queue()
     worker_list = []
     for i in range(num_threads):
-        worker = Thread(target=prepare_firmware_import, args=(firmware_file_queue,create_fuzzy_hashes))
+        worker = Thread(target=prepare_firmware_import, args=(firmware_file_queue, create_fuzzy_hashes))
         worker.setDaemon(True)
         worker.start()
         worker_list.append(worker)

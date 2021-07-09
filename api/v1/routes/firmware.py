@@ -13,8 +13,6 @@ from zipfile import ZipInfo, ZIP_DEFLATED
 from flask import request, send_file
 from flask_restx import Resource, Namespace
 from mongoengine import DoesNotExist
-
-from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required, user_jwt_required
 from scripts.hashing import md5_from_file
 from scripts.utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
@@ -90,13 +88,16 @@ class FirmwareMassImport(Resource):
     def post(self, create_fuzzy_hashes):
         """
         Starts the mass import of firmware files from the filesystem.
+        :return: rq-job-id
         """
         if create_fuzzy_hashes is None:
             create_fuzzy_hashes = False
         app = flask.current_app
-        enqueue_jobs(app.rq_task_queue_high, start_firmware_mass_import, create_fuzzy_hashes,
-                     job_timeout=60 * 60 * 24 * 14,
-                     max_job_size=10)
+        # TODO prevent queuing of Job more than once
+        job = app.rq_task_queue_high.enqueue(start_firmware_mass_import,
+                                             create_fuzzy_hashes,
+                                             job_timeout=60 * 60 * 24 * 7)
+        return {"id": job.get_id()}
 
 
 @ns.route('/delete_all/')
