@@ -123,6 +123,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
             build_prop_file_list.extend(extract_build_prop(partition_firmware_file_list, temp_dir.name))
             if create_fuzzy_hashes:
                 fuzzy_hash_firmware_files(partition_firmware_file_list, temp_dir.name)
+            temp_dir.cleanup()
             
         version_detected = detect_by_build_prop(build_prop_file_list)
         filename, file_extension = os.path.splitext(firmware_archive_file_path)
@@ -150,10 +151,17 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
         if firmware_file_list and len(firmware_file_list) > 0:
             for firmware_file in firmware_file_list:
                 firmware_file.delete()
+                firmware_file.save()
+                logging.exception(f"Removed firmware-file from DB: {firmware_file.id}")
         if firmware_app_list and len(firmware_app_list) > 0:
             for android_app in firmware_app_list:
                 android_app.delete()
+                android_app.save()
+                logging.exception(f"Removed android app from DB: {android_app.id}")
         shutil.move(firmware_archive_file_path, flask.current_app.config["FIRMWARE_FOLDER_IMPORT_FAILED"])
+        logging.exception(f"Firmware file moved to failed folder: {original_filename}")
+    finally:
+        temp_extract_dir.cleanup()
 
 
 def get_firmware_archive_content(cache_temp_file_dir_path):
