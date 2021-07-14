@@ -191,7 +191,7 @@ class GetLatestFirmware(Resource):
         response = "", 400
         # TODO add caching to increase performance
         try:
-            firmware_list = AndroidFirmware.objects().limit(20).order_by('indexed_date')
+            firmware_list = AndroidFirmware.objects().limit(20).order_by('-indexed_date')
             firmware_json_list = []
             for firmware in firmware_list:
                 firmware_json_list.append(AndroidFirmwareSchema().dump(firmware))

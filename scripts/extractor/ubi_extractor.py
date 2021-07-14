@@ -42,7 +42,7 @@ def extract_ubi_image(img_file_path, output_path):
     try:
         ubireader_extract_images(args, img_file_path)
     except SystemExit as err:
-        raise ValueError(f"UBI-Reader error: {err}")
+        logging.error(f"UBI-Reader called SystemExit Code: {err}")
     except Exception as err:
         logging.error(err)
     logging.info(f"Ubi reader finished")
