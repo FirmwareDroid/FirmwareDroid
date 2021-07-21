@@ -22,8 +22,7 @@ def extract_dat_ext4(dat_file_path, extract_destination_folder):
     try:
         ext4_image_path = convert_dat2img(dat_file_path, extract_destination_folder)
     except Exception as err:
-        logging.error(f"Extract_dat_ext4 failed to extract: {dat_file_path}")
-        logging.error(err)
+        logging.warning(f"Abort: Extract_dat_ext4 failed to extract: {dat_file_path} - warning: {err}")
     return ext4_image_path
 
 

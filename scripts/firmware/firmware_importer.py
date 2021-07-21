@@ -200,9 +200,13 @@ def get_partition_firmware_files(archive_firmware_file_list,
     """
     firmware_file_list = []
     try:
-        image_firmware_file = find_image_firmware_file(archive_firmware_file_list, file_pattern_list)
-        image_absolute_path = create_abs_image_file_path(image_firmware_file, extracted_archive_dir_path)
-        extract_image_files(image_absolute_path, temp_dir_path)
+        partition_folder = os.path.join(extracted_archive_dir_path, partition_name)
+        if os.path.exists(partition_folder) and os.path.isdir(partition_folder) and any(os.scandir(partition_folder)):
+            shutil.move(partition_folder, temp_dir_path)
+        else:
+            image_firmware_file = find_image_firmware_file(archive_firmware_file_list, file_pattern_list)
+            image_absolute_path = create_abs_image_file_path(image_firmware_file, extracted_archive_dir_path)
+            extract_image_files(image_absolute_path, temp_dir_path)
         partition_firmware_files = create_firmware_file_list(temp_dir_path, partition_name)
         firmware_file_list.extend(partition_firmware_files)
     except (RuntimeError, ValueError) as err:
