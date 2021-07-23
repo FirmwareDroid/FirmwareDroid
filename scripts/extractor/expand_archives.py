@@ -26,7 +26,7 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
     :return:
     """
     supported_file_types_regex = r'\.zip$|\.tar$|\.tar$\.md5$|\.lz4$|\.pac$|\.nb0$|\.bin$|\.br$|\.dat$'
-    # TODO important security! Make this function more secure - set maximal recursion depth
+    # TODO important security! Make this function more secure - set maximal recursion depth!
     try:
         if compressed_file_path.lower().endswith(".zip"):
             logging.info(f"Attempt to extract .zip file: {compressed_file_path}")

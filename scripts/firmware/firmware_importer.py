@@ -10,7 +10,7 @@ import os
 import shutil
 from scripts.firmware.image_importer import create_abs_image_file_path, find_image_firmware_file, extract_image_files
 from scripts.hashing.fuzzy_hash_creator import fuzzy_hash_firmware_files
-from model import AndroidFirmware
+from model import AndroidFirmware, FirmwareFile, AndroidApp
 from threading import Thread
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.firmware.firmware_file_indexer import create_firmware_file_list, add_firmware_file_references
@@ -22,6 +22,7 @@ from scripts.extractor.expand_archives import extract_all_nested
 from scripts.utils.file_utils.file_util import get_filenames, create_directories
 from scripts.firmware.firmware_version_detect import detect_by_build_prop
 from scripts.utils.mulitprocessing_util.mp_util import create_multi_threading_queue
+from bson import ObjectId
 
 lock = threading.Lock()
 
@@ -151,14 +152,21 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
         logging.info(f"Firmware Import success: {original_filename}")
     except Exception as e:
         logging.exception(f"Firmware Import failed: {original_filename} error: {str(e)}")
+
         if firmware_file_list and len(firmware_file_list) > 0:
+            firmware_file_id_object_list = []
             for firmware_file in firmware_file_list:
-                firmware_file.delete()
-                logging.info(f"Cleanup: Removed firmware-file from DB: {firmware_file.id}")
+                firmware_file_id_object_list.append(ObjectId(firmware_file.id))
+            FirmwareFile.objects(pk__in=firmware_file_id_object_list).delete()
+            logging.info(f"Cleanup: Removed firmware-files from DB")
+
         if firmware_app_list and len(firmware_app_list) > 0:
+            android_app_id_object_list = []
             for android_app in firmware_app_list:
-                android_app.delete()
-                logging.info(f"Cleanup: Removed android app from DB: {android_app.id}")
+                android_app_id_object_list.append(ObjectId(android_app.id))
+            AndroidApp.objects(pk__in=android_app_id_object_list).delete()
+            logging.info(f"Cleanup: Removed android apps from DB")
+
         shutil.move(firmware_archive_file_path, flask.current_app.config["FIRMWARE_FOLDER_IMPORT_FAILED"])
         logging.info(f"Cleanup: Firmware file moved to failed folder: {original_filename}")
     finally:
@@ -166,7 +174,6 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
             temp_extract_dir.cleanup()
         except OSError as err:
             logging.warning(f"Cleanup: could not remove cache folder")
-
 
 
 def get_firmware_archive_content(cache_temp_file_dir_path):
@@ -236,7 +243,6 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
     """
     absolute_store_path = os.path.abspath(firmware_store_path)
     logging.info(f"firmware_store_path: {firmware_store_path} absolute_store_path: {absolute_store_path}")
-
     firmware = AndroidFirmware(filename=store_filename,
                                original_filename=original_filename,
                                relative_store_path=firmware_store_path,
