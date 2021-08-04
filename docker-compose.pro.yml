@@ -107,7 +107,6 @@ services:
     volumes:
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
 
-
   fuzzyhash-worker-1:
     volumes:
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
@@ -120,6 +119,159 @@ services:
     volumes:
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
 
+  androguard-worker-2:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_androguard
+    container_name: androguard-worker-2
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name androguard-worker-2 --url redis://redis:6379/ androguard
+    networks:
+      - backend
+
+  androguard-worker-3:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_androguard
+    container_name: androguard-worker-3
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name androguard-worker-3 --url redis://redis:6379/ androguard
+    networks:
+      - backend
+
+  androguard-worker-4:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_androguard
+    container_name: androguard-worker-4
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name androguard-worker-4 --url redis://redis:6379/ androguard
+    networks:
+      - backend
+
+  androguard-worker-5:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_androguard
+    container_name: androguard-worker-5
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name androguard-worker-5 --url redis://redis:6379/ androguard
+    networks:
+      - backend
+
+  androguard-worker-6:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_androguard
+    container_name: androguard-worker-6
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name androguard-worker-6 --url redis://redis:6379/ androguard
+    networks:
+      - backend
+
+  androguard-worker-7:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_androguard
+    container_name: androguard-worker-7
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name androguard-worker-7 --url redis://redis:6379/ androguard
+    networks:
+      - backend
+
+  androguard-worker-8:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_androguard
+    container_name: androguard-worker-8
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name androguard-worker-8 --url redis://redis:6379/ androguard
+    networks:
+      - backend
+
+  androguard-worker-9:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_androguard
+    container_name: androguard-worker-9
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name androguard-worker-9 --url redis://redis:6379/ androguard
+    networks:
+      - backend
+
+  androguard-worker-10:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_androguard
+    container_name: androguard-worker-10
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name androguard-worker-10 --url redis://redis:6379/ androguard
+    networks:
+      - backend
+
   androwarn-worker-1:
     volumes:
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
@@ -128,9 +280,334 @@ services:
     volumes:
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
 
+  apkid-worker-2:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkid
+    container_name: apkid-worker-2
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkid-worker-2 --url redis://redis:6379/ apkid
+    networks:
+      - backend
+
+  apkid-worker-3:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkid
+    container_name: apkid-worker-3
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkid-worker-3 --url redis://redis:6379/ apkid
+    networks:
+      - backend
+
+  apkid-worker-4:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkid
+    container_name: apkid-worker-4
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkid-worker-4 --url redis://redis:6379/ apkid
+    networks:
+      - backend
+
+  apkid-worker-5:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkid
+    container_name: apkid-worker-5
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkid-worker-5 --url redis://redis:6379/ apkid
+    networks:
+      - backend
+
+  apkid-worker-6:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkid
+    container_name: apkid-worker-6
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkid-worker-6 --url redis://redis:6379/ apkid
+    networks:
+      - backend
+
+  apkid-worker-7:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkid
+    container_name: apkid-worker-7
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkid-worker-7 --url redis://redis:6379/ apkid
+    networks:
+      - backend
+
+  apkid-worker-8:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkid
+    container_name: apkid-worker-8
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkid-worker-8 --url redis://redis:6379/ apkid
+    networks:
+      - backend
+
+  apkid-worker-9:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkid
+    container_name: apkid-worker-9
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkid-worker-9 --url redis://redis:6379/ apkid
+    networks:
+      - backend
+
+  apkid-worker-10:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkid
+    container_name: apkid-worker-10
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkid-worker-10 --url redis://redis:6379/ apkid
+    networks:
+      - backend
+
   exodus-worker-1:
     volumes:
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+
+  exodus-worker-2:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_exodus
+    container_name: exodus-worker-2
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name exodus-worker-2 --url redis://redis:6379/ exodus
+    networks:
+      - backend
+
+
+  exodus-worker-3:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_exodus
+    container_name: exodus-worker-3
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name exodus-worker-3 --url redis://redis:6379/ exodus
+    networks:
+      - backend
+
+  exodus-worker-4:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_exodus
+    container_name: exodus-worker-4
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name exodus-worker-4 --url redis://redis:6379/ exodus
+    networks:
+      - backend
+
+  exodus-worker-5:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_exodus
+    container_name: exodus-worker-5
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name exodus-worker-5 --url redis://redis:6379/ exodus
+    networks:
+      - backend
+
+  exodus-worker-6:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_exodus
+    container_name: exodus-worker-6
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name exodus-worker-6 --url redis://redis:6379/ exodus
+    networks:
+      - backend
+
+  exodus-worker-7:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_exodus
+    container_name: exodus-worker-7
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name exodus-worker-7 --url redis://redis:6379/ exodus
+    networks:
+      - backend
+
+  exodus-worker-8:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_exodus
+    container_name: exodus-worker-8
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name exodus-worker-8 --url redis://redis:6379/ exodus
+    networks:
+      - backend
+
+  exodus-worker-9:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_exodus
+    container_name: exodus-worker-9
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name exodus-worker-9 --url redis://redis:6379/ exodus
+    networks:
+      - backend
+
+  exodus-worker-10:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_exodus
+    container_name: exodus-worker-10
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name exodus-worker-10 --url redis://redis:6379/ exodus
+    networks:
+      - backend
+
+  exodus-worker-11:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_exodus
+    container_name: exodus-worker-11
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name exodus-worker-11 --url redis://redis:6379/ exodus
+    networks:
+      - backend
+
 
   frida-worker-1:
     volumes:
