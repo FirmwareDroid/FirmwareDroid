@@ -744,7 +744,7 @@ services:
     build:
       context: .
       dockerfile: ./docker/base/Dockerfile_quark_engine
-    container_name: quark_engine-worker-6
+    container_name: quark_engine-worker-5
     restart: unless-stopped
     depends_on:
       - redis
@@ -753,7 +753,7 @@ services:
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
-    command: rqworker --name quark_engine-worker-6 --url redis://redis:6379/ quark_engine
+    command: rqworker --name quark_engine-worker-5 --url redis://redis:6379/ quark_engine
     networks:
       - backend
 
