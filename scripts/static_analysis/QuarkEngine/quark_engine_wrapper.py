@@ -45,12 +45,14 @@ def get_quark_engine_scan(apk_path, rule_path=None):
     """
     from quark.report import Report
     from quark.config import HOME_DIR
-    if not rule_path:
+    from quark.freshquark import entry_point
+    entry_point()
+    if not rule_path or rule_path is None:
         rule_path = f"{HOME_DIR}quark-rules"
-        logging.info(f"Quark-Engine loaded default rules: {rule_path}")
+
+    logging.info(f"Quark-Engine loaded rules from: {rule_path}")
     logging.info(f"Quark-Engine scanning apk: {apk_path}")
     report = Report()
-    # TODO TEST IF THIS WORKS CORRECTLY WITH SOME MALWARE SAMPLES
     report.analysis(apk_path, rule_path)
     return report.get_report("json")
 
