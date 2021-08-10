@@ -26,6 +26,7 @@ services:
     ports:
       - "127.0.0.1:9200:9200"
 
+  #TODO SECURITY: CHANGE MONGODB USER
   elasticsearch-mongo-connector:
     command: mongo-connector --auto-commit-interval=0 --stdout --admin-username $DEV_MONGO_INITDB_ROOT_USERNAME --password $DEV_MONGO_INITDB_ROOT_PASSWORD -m mongo-db-1:27017 -t http://elasticsearch-worker-1:9200 -d "elastic2_doc_manager" -c ./mongo-connector-config.json
 

@@ -50,6 +50,7 @@ def get_quark_engine_scan(apk_path, rule_path=None):
         logging.info(f"Quark-Engine loaded default rules: {rule_path}")
     logging.info(f"Quark-Engine scanning apk: {apk_path}")
     report = Report()
+    # TODO TEST IF THIS WOKRS CORRECTLY WITH SOME MALWARE SAMPLES
     report.analysis(apk_path, rule_path)
     return report.get_report("json")
 

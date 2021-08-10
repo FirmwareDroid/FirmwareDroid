@@ -18,15 +18,20 @@ class BuildPropParser:
                 line = line.decode('utf-8')
                 line = line.rstrip()
                 if line:
+                    # TODO Add code to follow @ import statements in build.prop file
                     line_split_list = line.split("=")
                     if len(line_split_list) == 2:
                         key = line_split_list[0].replace(".", "_")
                         value = line_split_list[1]
+                        if value is None:
+                            value = "null"
                         self.properties[key] = value
 
     def create_build_prop_document(self):
         """ Creates a db document of the build prop file. """
         build_prop_file = open(self.build_prop_file_path, "rb")
+        if self.properties is {}:
+            self.properties["error"] = "could not parse build.prop properties"
         build_prop = BuildPropFile(build_prop_file=build_prop_file.read(),
                                    firmware_file_id_reference=self.firmware_file.id,
                                    properties=self.properties).save()

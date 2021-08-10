@@ -7,4 +7,4 @@ class BuildPropFile(Document):
     firmware_id_reference = LazyReferenceField(AndroidFirmware, reverse_delete_rule=CASCADE, required=False)
     firmware_file_id_reference = LazyReferenceField(FirmwareFile, reverse_delete_rule=CASCADE, required=True)
     build_prop_file = FileField(required=True)
-    properties = DictField(required=False)
+    properties = DictField(required=True)

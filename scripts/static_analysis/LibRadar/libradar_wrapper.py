@@ -5,7 +5,6 @@ import json
 import logging
 import os
 import traceback
-
 from scripts.database.query_document import get_filtered_list
 from model import AndroidApp, LibRadarReport
 from scripts.rq_tasks.flask_context_creator import create_app_context
@@ -17,6 +16,7 @@ def start_libradar_scan(android_app_id_list):
     Analysis all apps from the given list with libRadar.
     :param android_app_id_list: list of class:'AndroidApp' object-ids.
     """
+    # TODO FINISH LIBRADAR IMPLEMENTATION
     create_app_context()
     android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "libradar_report_reference")
     logging.info(f"LibRadar after filter: {str(len(android_app_list))}")
