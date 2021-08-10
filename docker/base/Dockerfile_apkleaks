@@ -7,7 +7,7 @@ FROM firmwaredroid-base-java as apkleaks-worker
 #####################################
 # Installing jadx                   #
 #####################################
-RUN mkdir -p /var/www/jadx/
+RUN mkdir /var/www/jadx/
 WORKDIR /var/www/jadx/
 # TODO Security enhancement: add checksum check of downloaded zip file
 RUN wget https://github.com/skylot/jadx/releases/download/v1.2.0/jadx-1.2.0.zip
