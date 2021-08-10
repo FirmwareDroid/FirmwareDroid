@@ -16,7 +16,7 @@ services:
 
   elasticsearch-mongo-connector:
     restart: unless-stopped
-    command: mongo-connector --auto-commit-interval=0 --stdout --admin-username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD -m mongo-db-1:27017 -t http://elasticsearch-worker-1:9200 -d "elastic2_doc_manager" -c ./mongo-connector-config.json
+    command: mongo-connector --continue-on-error --auto-commit-interval=0 --stdout --admin-username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD -m mongo-db-1:27017 -t http://elasticsearch-worker-1:9200 -d "elastic2_doc_manager" -c ./mongo-connector-config.json
 
   elasticsearch-worker-1:
     environment:
