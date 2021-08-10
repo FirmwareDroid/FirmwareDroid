@@ -6,16 +6,12 @@ import logging
 import os
 import tempfile
 import json
-from concurrent.futures import ProcessPoolExecutor as Pool
-from multiprocessing import Manager, Lock
-from threading import Thread
+from multiprocessing import Lock
 import flask
-import timeout_decorator
 from scripts.database.query_document import get_filtered_list
-from scripts.database.database import multiprocess_disconnect_all
 from model import QarkReport, QarkIssue, AndroidApp
 from scripts.rq_tasks.flask_context_creator import create_app_context
-from scripts.utils.mulitprocessing_util.mp_util import create_managed_queue
+from scripts.utils.mulitprocessing_util.mp_util import start_process_pool
 
 lock = Lock()
 
@@ -26,61 +22,27 @@ def qark_analyse_apps(android_app_id_list):
     :param android_app_id_list: list of class:'AndroidApp' object-id's
     """
     create_app_context()
+    logging.info(f"Qark analysis started! With {str(len(android_app_id_list))} apps")
     android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "qark_report_reference")
-    logging.info(f"Qark Analysis started! With {str(len(android_app_list))} apps")
+    logging.info(f"Qark after filter: {str(len(android_app_list))}")
     if len(android_app_list) > 0:
-        start_qark_pool(android_app_list)
+        start_process_pool(android_app_list, qark_worker, os.cpu_count())
 
 
-def start_qark_pool(android_app_list):
-    """
-    Creats a multiprocessor queue and starts parallel scans.
-    :param android_app_list: list of class:'AndroidApp'
-    """
-    multiprocess_disconnect_all(flask.current_app)
-    with Manager() as manager:
-        queue = create_managed_queue(android_app_list, manager)
-        with Pool((int(os.cpu_count()/1.5))) as pool:
-            pool.map(qark_worker, (queue,))
-
-
-def start_qark_worker_threads(android_app_queue):
-    """
-    Creates qark worker threads.
-    :param android_app_queue: multiprocessor queue with class:'AndroidApp' elements.
-    """
-    create_app_context()
-    worker_thread_list = []
-    for i in range(10):
-        worker = Thread(target=qark_worker, args=(android_app_queue,))
-        worker_thread_list.append(worker)
-        worker.start()
-    for worker in worker_thread_list:
-        worker.join()
-
-
-def qark_worker(android_app_queue):
+def qark_worker(android_app_id_queue):
     """
     Starts the analysis with quark.
-    :param android_app_queue: multiprocessor queue with class:'AndroidApp' elements.
+    :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
     """
-    while not android_app_queue.empty():
-        android_app = android_app_queue.get()
+    while not android_app_id_queue.empty():
+        android_app_id = android_app_id_queue.get()
+        android_app = AndroidApp.objects.get(pk=android_app_id)
         try:
-            logging.info(f"Qark scan: {android_app.filename} {android_app.id} "
-                         f"estimated queue-size: {android_app_queue.qsize()}")
-            qark_timeout_wrapper(android_app)
+            logging.info(f"Qark scan: {android_app.filename} {android_app.id} ")
+            report_path = start_qark_app_analysis(android_app)
+            create_qark_report(report_path, android_app)
         except Exception as err:
             logging.error(f"Could not analyze app {android_app.id} {android_app.filename} with qark: {err}")
-
-
-@timeout_decorator.timeout(600, use_signals=False)
-def qark_timeout_wrapper(android_app):
-    """
-    Qark wrapper to allow timeout-function on multiprocessing. Stops analysis if qark runs too long.
-    :param android_app: class:'AndroidApp' the app to be scanned.
-    """
-    start_qark_app_analysis(android_app)
 
 
 def start_qark_app_analysis(android_app):
@@ -113,12 +75,10 @@ def start_qark_app_analysis(android_app):
 
     report = Report(issues=set(scanner.issues))
     report_path = report.generate(file_type=report_type)
-
-    if os.path.exists(report_path):
-        return create_qark_report_obj(report_path, android_app)
+    return report_path
 
 
-def create_qark_report_obj(report_file_path, android_app):
+def create_qark_report(report_file_path, android_app):
     """
     Creates a qark report db object (class:'QarkReport')
     :param report_file_path: the path to the json file to be stored in the database.

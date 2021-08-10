@@ -17,7 +17,6 @@
 #############################################################
 import logging
 import os
-import timeout_decorator
 from scripts.utils.file_utils.file_util import create_directories
 
 
@@ -52,7 +51,6 @@ def extract_ubi_image(img_file_path, output_path):
     return isExtracted
 
 
-@timeout_decorator.timeout(60*30, use_signals=False)
 def ubireader_extract_images(args, img_file_path):
     """
     UBI Reader is a Python module and collection of scripts capable of extracting the contents of UBI and UBIFS images,

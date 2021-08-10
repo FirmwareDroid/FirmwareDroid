@@ -12,7 +12,6 @@ Flask-Bcrypt~=0.7.1
 Flask-BasicAuth~=0.2.0
 websocket-client~=0.58.0
 typed-ast~=1.4.2
-timeout-decorator~=0.5.0
 temporary~=3.0.0
 rq-dashboard~=0.6.1
 pyOpenSSL~=20.0.1
