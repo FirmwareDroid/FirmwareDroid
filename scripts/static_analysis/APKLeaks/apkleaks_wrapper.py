@@ -32,7 +32,8 @@ def apkleaks_worker(android_app_id_queue):
     while not android_app_id_queue.empty():
         android_app_id = android_app_id_queue.get()
         android_app = AndroidApp.objects.get(pk=android_app_id)
-        logging.info(f"APKLeaks scans: {android_app.id}")
+        logging.info(f"APKLeaks scans: {android_app.filename} {android_app.id} "
+                     f"estimated queue-size: {android_app_id_queue.qsize()}")
         try:
             tempdir = tempfile.TemporaryDirectory()
             json_results = get_apkleaks_analysis(android_app.absolute_store_path, tempdir.name)

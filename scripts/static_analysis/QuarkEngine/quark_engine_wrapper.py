@@ -30,6 +30,8 @@ def quark_engine_worker(android_app_id_queue):
     while not android_app_id_queue.empty():
         android_app_id = android_app_id_queue.get()
         android_app = AndroidApp.objects.get(pk=android_app_id)
+        logging.info(f"Quark-Engine scans: {android_app.filename} {android_app.id} "
+                     f"estimated queue-size: {android_app_id_queue.qsize()}")
         try:
             scan_results = get_quark_engine_scan(android_app.absolute_store_path)
             create_quark_engine_report(android_app, scan_results)
@@ -52,7 +54,6 @@ def get_quark_engine_scan(apk_path, rule_path=None):
         rule_path = f"{HOME_DIR}quark-rules"
 
     logging.info(f"Quark-Engine loaded rules from: {rule_path}")
-    logging.info(f"Quark-Engine scanning apk: {apk_path}")
     report = Report()
     report.analysis(apk_path, rule_path)
     return report.get_report("json")

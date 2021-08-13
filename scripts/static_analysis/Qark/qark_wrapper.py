@@ -37,8 +37,9 @@ def qark_worker(android_app_id_queue):
     while not android_app_id_queue.empty():
         android_app_id = android_app_id_queue.get()
         android_app = AndroidApp.objects.get(pk=android_app_id)
+        logging.info(f"Qark scans: {android_app.filename} {android_app.id} "
+                     f"estimated queue-size: {android_app_id_queue.qsize()}")
         try:
-            logging.info(f"Qark scan: {android_app.filename} {android_app.id} ")
             report_path = start_qark_app_analysis(android_app)
             create_qark_report(report_path, android_app)
         except Exception as err:
