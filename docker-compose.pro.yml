@@ -1088,6 +1088,176 @@ services:
     networks:
       - backend
 
+  super-android-analyzer-worker-11:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_super_android_analyzer
+    container_name: super_android_analyzer-worker-
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name super_android_analyzer-worker- --url redis://redis:6379/ super_android_analyzer
+    networks:
+      - backend
+
+  super-android-analyzer-worker-12:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_super_android_analyzer
+    container_name: super_android_analyzer-worker-
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name super_android_analyzer-worker- --url redis://redis:6379/ super_android_analyzer
+    networks:
+      - backend
+
+  super-android-analyzer-worker-13:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_super_android_analyzer
+    container_name: super_android_analyzer-worker-
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name super_android_analyzer-worker- --url redis://redis:6379/ super_android_analyzer
+    networks:
+      - backend
+
+  super-android-analyzer-worker-14:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_super_android_analyzer
+    container_name: super_android_analyzer-worker-
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name super_android_analyzer-worker- --url redis://redis:6379/ super_android_analyzer
+    networks:
+      - backend
+
+  super-android-analyzer-worker-15:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_super_android_analyzer
+    container_name: super_android_analyzer-worker-
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name super_android_analyzer-worker- --url redis://redis:6379/ super_android_analyzer
+    networks:
+      - backend
+
+  super-android-analyzer-worker-16:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_super_android_analyzer
+    container_name: super_android_analyzer-worker-
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name super_android_analyzer-worker- --url redis://redis:6379/ super_android_analyzer
+    networks:
+      - backend
+
+  super-android-analyzer-worker-17:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_super_android_analyzer
+    container_name: super_android_analyzer-worker-
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name super_android_analyzer-worker- --url redis://redis:6379/ super_android_analyzer
+    networks:
+      - backend
+
+  super-android-analyzer-worker-18:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_super_android_analyzer
+    container_name: super_android_analyzer-worker-
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name super_android_analyzer-worker- --url redis://redis:6379/ super_android_analyzer
+    networks:
+      - backend
+
+  super-android-analyzer-worker-19:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_super_android_analyzer
+    container_name: super_android_analyzer-worker-
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name super_android_analyzer-worker- --url redis://redis:6379/ super_android_analyzer
+    networks:
+      - backend
+
+  super-android-analyzer-worker-20:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_super_android_analyzer
+    container_name: super_android_analyzer-worker-
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name super_android_analyzer-worker- --url redis://redis:6379/ super_android_analyzer
+    networks:
+      - backend
+
   apkleaks-worker-1:
     volumes:
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
@@ -1242,6 +1412,176 @@ services:
     env_file:
       - ./.env
     command: rqworker --name apkleaks-worker-10 --url redis://redis:6379/ apkleaks
+    networks:
+      - backend
+
+  apkleaks-worker-11:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkleaks
+    container_name: apkleaks-worker-11
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkleaks-worker-11 --url redis://redis:6379/ apkleaks
+    networks:
+      - backend
+
+  apkleaks-worker-12:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkleaks
+    container_name: apkleaks-worker-12
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkleaks-worker-12 --url redis://redis:6379/ apkleaks
+    networks:
+      - backend
+
+  apkleaks-worker-13:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkleaks
+    container_name: apkleaks-worker-13
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkleaks-worker-13 --url redis://redis:6379/ apkleaks
+    networks:
+      - backend
+
+  apkleaks-worker-14:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkleaks
+    container_name: apkleaks-worker-14
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkleaks-worker-14 --url redis://redis:6379/ apkleaks
+    networks:
+      - backend
+
+  apkleaks-worker-15:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkleaks
+    container_name: apkleaks-worker-15
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkleaks-worker-15 --url redis://redis:6379/ apkleaks
+    networks:
+      - backend
+
+  apkleaks-worker-16:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkleaks
+    container_name: apkleaks-worker-16
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkleaks-worker-16 --url redis://redis:6379/ apkleaks
+    networks:
+      - backend
+
+  apkleaks-worker-17:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkleaks
+    container_name: apkleaks-worker-17
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkleaks-worker-17 --url redis://redis:6379/ apkleaks
+    networks:
+      - backend
+
+  apkleaks-worker-18:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkleaks
+    container_name: apkleaks-worker-18
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkleaks-worker-18 --url redis://redis:6379/ apkleaks
+    networks:
+      - backend
+
+  apkleaks-worker-19:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkleaks
+    container_name: apkleaks-worker-19
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkleaks-worker-19 --url redis://redis:6379/ apkleaks
+    networks:
+      - backend
+
+  apkleaks-worker-20:
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apkleaks
+    container_name: apkleaks-worker-20
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - $PWD:/var/www/
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --name apkleaks-worker-20 --url redis://redis:6379/ apkleaks
     networks:
       - backend
 
