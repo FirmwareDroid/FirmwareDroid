@@ -118,7 +118,7 @@ def create_partition_headers(path, pac_header):
     """
     Extracts the partition headers from the information found in the pac header.
     :param path: str - path to the *.pac file.
-    :param pac_header: class:'PacHeader' - pac header of the file.
+    :param pac_header: class: 'PacHeader' - pac header of the file.
     :return: list of class:'PartitionHeader'
     """
     with open(path, "rb") as poc_file:

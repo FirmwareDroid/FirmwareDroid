@@ -1,2 +1,3 @@
 #In case of version update --> Please update apkleaks_wrapper.py version as well.
-apkleaks==2.6.0
+apkleaks==2.6.1
+requests~=2.26.0

@@ -46,7 +46,7 @@ def apkleaks_worker(android_app_id_queue):
 
 def get_apkleaks_analysis(apk_file_path, result_folder_path):
     """
-    Scans an apk with the apkleaks.
+    Scans an apk with APKLeaks.
     :param apk_file_path: str - path to the apk file.
     :param result_folder_path: str - path to the folder where the result report is saved.
     :return: str - scan result as json.
@@ -83,7 +83,7 @@ def create_report(android_app, json_results):
     """
     # TODO change static tool version to dynamic one
     apkleaks_report = ApkLeaksReport(android_app_id_reference=android_app.id,
-                                     apkleaks_version="2.6.0",
+                                     apkleaks_version="2.6.1",
                                      results=json_results).save()
     android_app.apkleaks_report_reference = apkleaks_report.id
     android_app.save()

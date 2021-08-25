@@ -7,7 +7,7 @@ from api.v1.common.rq_chunk_creator import split_list_into_sublists
 
 def enqueue_jobs(queue, job_method, document_list, *args,
                  job_timeout=60 * 60 * 24 * 10,
-                 max_job_size=1000):
+                 max_job_size=100):
     """
     Enqueue a job to the given queue with a standard timeout. Creates several jobs if the number of
     elements is large and enqueues them all to the same queue.
@@ -19,4 +19,4 @@ def enqueue_jobs(queue, job_method, document_list, *args,
     """
     sublist_list = split_list_into_sublists(document_list, max_job_size)
     for sublist in sublist_list:
-        queue.enqueue(job_method, sublist, *args, job_timeout=job_timeout)
+        queue.enqueue(job_method, sublist, *args, job_timeout=job_timeout, failure_ttl=604800)

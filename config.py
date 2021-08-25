@@ -60,10 +60,15 @@ class ApplicationConfig(Config):
     JWT_SECRET_KEY = os.environ[Config.ENV + 'JWT_SECRET_KEY']
     JWT_TOKEN_LOCATION = ["cookies"]
     JWT_COOKIE_SECURE = True
-    JWT_COOKIE_CSRF_PROTECT = True
+    if os.environ['APP_ENV'] == "development" or os.environ['APP_ENV'] == "testing":
+        JWT_COOKIE_CSRF_PROTECT = False
+        JWT_CSRF_CHECK_FORM = False
+    else:
+        JWT_CSRF_CHECK_FORM = True
+        JWT_COOKIE_CSRF_PROTECT = True
     JWT_CSRF_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
     JWT_COOKIE_SAMESITE = 'Strict'
-    JWT_CSRF_CHECK_FORM = True
+
     ####################
     # Flask Config
     ####################

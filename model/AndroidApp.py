@@ -53,6 +53,9 @@ class AndroidAppSchema(Schema):
     apkid_report_reference = LazyReferenceConverter()
     exodus_report_reference = LazyReferenceConverter()
     quark_engine_report_reference = LazyReferenceConverter()
+    super_report_reference = LazyReferenceConverter()
+    apkleaks_report_reference = LazyReferenceConverter()
+    libradar_report_reference = LazyReferenceConverter()
 
     class Meta:
         load_only = ('firmware_id_reference', 'relative_store_path')
