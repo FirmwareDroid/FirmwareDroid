@@ -21,7 +21,7 @@ def start_apkleaks_scan(android_app_id_list):
     android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "apkleaks_report_reference")
     logging.info(f"APKLeaks after filter: {str(len(android_app_list))}")
     if len(android_app_list) > 0:
-        start_process_pool(android_app_list, apkleaks_worker, os.cpu_count())
+        start_process_pool(android_app_list, apkleaks_worker, int(os.cpu_count()/3))
 
 
 def apkleaks_worker(android_app_id_queue):
