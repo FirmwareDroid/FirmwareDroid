@@ -14,10 +14,11 @@ from flask import request, send_file
 from flask_restx import Resource, Namespace
 from mongoengine import DoesNotExist
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required, user_jwt_required
+from scripts.firmware.firmware_os_detect import set_firmware_by_filenames
 from scripts.hashing import md5_from_file
 from scripts.utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
-from api.v1.api_models.serializers import object_id_list
-from api.v1.parser.json_parser import parse_json_object_id_list
+from api.v1.api_models.serializers import object_id_list, string_list
+from api.v1.parser.json_parser import parse_json_object_id_list, parse_string_list
 from model.AndroidFirmware import AndroidFirmwareSchema
 from scripts.database.delete_document import clear_firmware_database
 from scripts.firmware.firmware_importer import start_firmware_mass_import
@@ -27,6 +28,7 @@ from werkzeug.utils import secure_filename
 
 ns = Namespace('firmware', description='Operations related to Android firmware.')
 ns.add_model("object_id_list", object_id_list)
+ns.add_model("string_list", string_list)
 parser = ns.parser()
 parser.add_argument('file', type=FileStorage, location='files')
 
@@ -196,6 +198,32 @@ class GetLatestFirmware(Resource):
             for firmware in firmware_list:
                 firmware_json_list.append(AndroidFirmwareSchema().dump(firmware))
             response = json.dumps(firmware_json_list), 200
+        except Exception as err:
+            logging.error(err)
+        return response
+
+
+@ns.route('/add_os_vendor_by_filename/<string:os_vendor>')
+@ns.expect(string_list)
+class SetFirmwareOsVendor(Resource):
+    @ns.doc('post')
+    @admin_jwt_required
+    def post(self, os_vendor):
+        """
+        Set the os vendor for one or more firmware data objects by the original filename.
+        @:param os_vendor: str - OS Vendor name to add ot the firmware.
+        string_list: List(str) - List of Firmware filenames for cross reference.
+        """
+        response = "", 400
+        try:
+            app = flask.current_app
+            filename_list = parse_string_list(request)
+            app.rq_task_queue_high.enqueue(set_firmware_by_filenames,
+                                           os_vendor,
+                                           filename_list,
+                                           job_timeout=60 * 60 * 24)
+
+            response = "", 200
         except Exception as err:
             logging.error(err)
         return response

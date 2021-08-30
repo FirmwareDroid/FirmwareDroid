@@ -6,12 +6,14 @@ import logging
 import flask
 from flask import request, send_file
 from api.v1.api_models.serializers import object_id_list
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.request_util import check_app_mode, check_firmware_mode
 from scripts.auth.basic_auth import requires_basic_authorization
 from scripts.statistics.reports.firmware_statistics import create_firmware_statistics_report
 from model import ImageFile, JsonFile, AndroidFirmware, ReferenceFile
 from flask_restx import Resource, Namespace
-from scripts.statistics.reports.androguard.androguard_statistics import start_androguard_statistics_report, create_androguard_plots
+from scripts.statistics.reports.androguard.androguard_statistics import start_androguard_statistics_report, \
+    create_androguard_plots
 from scripts.statistics.reports.virustotal.virustotal_statistics import create_virustotal_statistic_report
 from scripts.statistics.reports.apkid.apkid_statistcs import start_apki_statistics_report_creator
 from scripts.statistics.reports.androwarn.androwarn_statistics import create_androwarn_statistics_report
@@ -20,10 +22,9 @@ from scripts.statistics.reports.androguard.androguard_string_statistics import c
 from scripts.statistics.reports.androguard.app_certificate_statistics import create_app_certificate_statistics_report
 from scripts.statistics.references.reference_file_util import group_references_by_firmware_version, \
     filter_references_by_unique_packagename
+from scripts.statistics.reports.exodus.exodus_statistics import create_exodus_statistics_report
 
 ns = Namespace('statistics', description='Operations related to Dataset statistics.')
-
-
 
 
 @ns.route('/download/images/<string:image_file_id>')
@@ -140,7 +141,7 @@ class CreateFirmwareStatistics(Resource):
         :return: job-id
         """
         app = flask.current_app
-        #TODO REMOVE THIS TEMPORARY IF STATEMENT
+        # TODO REMOVE THIS TEMPORARY IF STATEMENT
         if report_name == "UNKNOWN":
             firmware_list = []
             firmware_query_list = AndroidFirmware.objects(version_detected__exists=False)
@@ -162,71 +163,10 @@ class CreateFirmwareStatistics(Resource):
         return {"id": job.get_id()}
 
 
-@ns.route('/androguard/create_statistics_report/<int:mode>/<string:report_name>')
-@ns.expect(object_id_list)
-class CreateAndroGuardStatistics(Resource):
-    @ns.doc('post')
-    @requires_basic_authorization
-    def post(self, mode, report_name):
-        """
-        Create a statistical report for AndroGuard data.
-        :param mode: If mode = 1 all apps in the database will be used for the report instead of the given json.
-        :param report_name: str - user defined name for identification.
-        :return: job-id
-        """
-        app = flask.current_app
-        android_app_id_list = check_app_mode(mode, request)
-        job = app.rq_task_queue_default.enqueue(start_androguard_statistics_report,
-                                                android_app_id_list,
-                                                report_name,
-                                                job_timeout=60 * 60 * 24 * 40)
-        return {"id": job.get_id()}
-
-
-@ns.route('/androguard/create_string_analysis_report/<string:report_name>')
-@ns.expect(object_id_list)
-class CreateAndroGuardStringStatistics(Resource):
-    @ns.doc('post')
-    @requires_basic_authorization
-    def post(self, report_name):
-        """
-        Experimental: Create a statistical report for AndroGuard string meta data.
-        :param report_name: str - user defined report name for identification.
-        :return: job-id
-        """
-        app = flask.current_app
-        android_app_id_list = check_app_mode(0, request)
-        job = app.rq_task_queue_default.enqueue(create_string_statistics_report,
-                                                android_app_id_list,
-                                                report_name,
-                                                job_timeout=60 * 60 * 24 * 40)
-        return {"id": job.get_id()}
-
-
-@ns.route('/androguard/create_certificate_report/<int:mode>/<string:report_name>')
-class CreateAndroGuardCertStatistics(Resource):
-    @ns.doc('post')
-    @requires_basic_authorization
-    def post(self, mode, report_name):
-        """
-        Create a statistical report for AndroGuard certificate data.
-        :param mode: If mode = 1 all apps in the database will be used for the report instead of the given json.
-        :param report_name: str - user defined name for identification.
-        :return: job-id
-        """
-        app = flask.current_app
-        android_app_id_list = check_app_mode(mode, request)
-        job = app.rq_task_queue_default.enqueue(create_app_certificate_statistics_report,
-                                                android_app_id_list,
-                                                report_name,
-                                                job_timeout=60 * 60 * 24 * 40)
-        return {"id": job.get_id()}
-
-
 @ns.route('/androguard/create_report_plots/<string:androguard_statistics_report_id>')
 class CreateAndroGuardCertStatistics(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, androguard_statistics_report_id):
         """
         Create plots for a Androguard statistics report.
@@ -239,85 +179,67 @@ class CreateAndroGuardCertStatistics(Resource):
         return "", 200
 
 
-@ns.route('/virustotal/create_statistics_report/<int:mode>/<string:report_name>')
-@ns.expect(object_id_list)
-class CreateVirusTotalStatistics(Resource):
-    @ns.doc('post')
-    @requires_basic_authorization
-    def post(self, mode, report_name):
-        """
-        Create a statistical report for VirusTotal data.
-        :param mode: If mode = 1 all apps in the database will be used for the report instead of the given json.
-        :param report_name: str - user defined name for identification.
-        :return: job-id
-        """
-        app = flask.current_app
-        android_app_id_list = check_app_mode(mode, request)
-        job = app.rq_task_queue_default.enqueue(create_virustotal_statistic_report,
-                                                android_app_id_list,
-                                                report_name,
-                                                job_timeout=60 * 60 * 24 * 40)
-        return {"id": job.get_id()}
-
-
-@ns.route('/apkid/create_statistics_report/<int:mode>/<string:report_name>')
-@ns.expect(object_id_list)
-class CreateApkidStatistics(Resource):
-    @ns.doc('post')
-    @requires_basic_authorization
-    def post(self, mode, report_name):
-        """
-        Create a statistical report for apkid data.
-        :param mode: If mode = 1 all apps in the database will be used for the report instead of the given json.
-        :param report_name: str - user defined name for identification.
-        :return: job-id
-        """
-        app = flask.current_app
-        android_app_id_list = check_app_mode(mode, request)
-        job = app.rq_task_queue_default.enqueue(start_apki_statistics_report_creator,
-                                                android_app_id_list,
-                                                report_name,
-                                                job_timeout=60 * 60 * 24 * 40)
-        return {"id": job.get_id()}
-
-
-@ns.route('/androwarn/create_statistics_report/<int:mode>/<string:report_name>')
-@ns.expect(object_id_list)
-class CreateApkidStatistics(Resource):
-    @ns.doc('post')
-    @requires_basic_authorization
-    def post(self, mode, report_name):
-        """
-        Create a statistical report for androwarn data.
-        :param mode: If mode = 1 all apps in the database will be used for the report instead of the given json.
-        :param report_name: str - user defined name for identification.
-        :return: job-id
-        """
-        app = flask.current_app
-        android_app_id_list = check_app_mode(mode, request)
-        job = app.rq_task_queue_default.enqueue(create_androwarn_statistics_report,
-                                                android_app_id_list,
-                                                report_name,
-                                                job_timeout=60 * 60 * 24 * 40)
-        return {"id": job.get_id()}
-
-
-@ns.route('/qark/create_statistics_report/<int:mode>/<string:report_name>')
+@ns.route('/create_statistics_report/<int:mode>/<string:report_name>/<int:report_type>')
 @ns.expect(object_id_list)
 class CreateQarkStatistics(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
-    def post(self, mode, report_name):
+    @admin_jwt_required
+    def post(self, mode, report_name, report_type):
         """
-        Create a statistical report for qark data.
-        :param mode: If mode = 1 all apps in the database will be used for the report instead of the given json.
-        :param report_name: str - user defined name for identification.
-        :return: job-id
+        Create statistics for a specific report.
+        :param mode: If mode = 1 all firmware in the database will be used for the report instead of the given json.
+        :param report_name: str - A custom tag for the report with a short description.
+        :param report_type: int - valid types:
+            0: Firmware statistics
+            1: AndroGuard statistics
+            2: AndroGuard (Android App) certificate statistics
+            3: AndroGuard String statistics
+            4: Qark statistics
+            5: VirusTotal statistics
+            6: APKiD statistics
+            7: Androwarn statistics
+            8: Exodus statistics
         """
         app = flask.current_app
-        android_app_id_list = check_app_mode(mode, request)
-        job = app.rq_task_queue_default.enqueue(create_qark_statistics_report,
-                                                android_app_id_list,
-                                                report_name,
-                                                job_timeout=60 * 60 * 24 * 40)
-        return {"id": job.get_id()}
+        response = "", 400
+        report_type = int(report_type)
+        if report_type == 0:
+            start_function = create_firmware_statistics_report
+        elif report_type == 1:
+            start_function = start_androguard_statistics_report
+        elif report_type == 2:
+            start_function = create_app_certificate_statistics_report
+        elif report_type == 3:
+            start_function = create_string_statistics_report
+        elif report_type == 4:
+            start_function = create_qark_statistics_report
+        elif report_type == 5:
+            start_function = create_virustotal_statistic_report
+        elif report_type == 6:
+            start_function = start_apki_statistics_report_creator
+        elif report_type == 7:
+            start_function = create_androwarn_statistics_report
+        elif report_type == 8:
+            start_function = create_exodus_statistics_report
+        else:
+            start_function = None
+
+        try:
+            if report_type == 0:
+                firmware_id_list = check_firmware_mode(mode, request)
+                parameter_list = firmware_id_list
+            else:
+                android_app_id_list = check_app_mode(mode, request)
+                parameter_list = android_app_id_list
+
+            if start_function is not None:
+                app.rq_task_queue_default.enqueue(start_function,
+                                                  parameter_list,
+                                                  report_name,
+                                                  job_timeout=60 * 60 * 24 * 40)
+                response = "", 200
+            else:
+                raise AssertionError(f"Invalid report_type selected! Not valid type: {report_type}")
+        except Exception as err:
+            logging.error(err)
+        return response

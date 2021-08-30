@@ -14,9 +14,9 @@ test = Model('test', {
 
 object_id_list = Model('object_id_list', {
     'object_id_list': fields.List(fields.String(required=True),
-                                   required=True,
-                                   description='A list of object identifiers',
-                                   example=["5eeddfe82ea100614bd8327b", "5eeddff52ea100614bd8327c"])
+                                  required=True,
+                                  description='A list of object identifiers',
+                                  example=["5eeddfe82ea100614bd8327b", "5eeddff52ea100614bd8327c"])
 })
 
 fuzzy_hash_compare_model = Model('fuzzy_hash_compare_model', {
@@ -29,4 +29,10 @@ fuzzy_hash_compare_model = Model('fuzzy_hash_compare_model', {
 virustotal_api_key_model = Model('virustotal_api_key_model', {
     'api_key': fields.String(required=True, description='Virustotal API Key',
                              example="bc59dc11a063c7e117ca542c65189e032084ccbe31d3e75ab560a1c89a45a832")
+})
+
+string_list = Model('string_list', {
+    'string_list': fields.List(fields.String(required=True),
+                               required=True,
+                               description='A list of strings')
 })

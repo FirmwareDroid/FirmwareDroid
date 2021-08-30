@@ -18,7 +18,7 @@ class BuildPropParser:
                 line = line.decode('utf-8')
                 line = line.rstrip()
                 if line:
-                    # TODO Add code to follow @ import statements in build.prop file
+                    # TODO Add code to follow @import statements in build.prop file
                     line_split_list = line.split("=")
                     if len(line_split_list) == 2:
                         key = line_split_list[0].replace(".", "_")

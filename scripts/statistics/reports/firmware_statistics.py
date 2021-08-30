@@ -33,7 +33,8 @@ def create_firmware_statistics_report(firmware_id_list, report_name):
             report_count=len(firmware_id_list),
             firmware_id_list=firmware_id_list,
             number_of_firmware_by_android_version=create_main_version_statistics(firmware_list),
-            number_of_firmware_by_android_sub_version=filter_mongodb_dict_chars(create_version_statistics(firmware_list)),
+            number_of_firmware_by_android_sub_version=filter_mongodb_dict_chars(
+                create_version_statistics(firmware_list)),
             number_of_firmware_by_brand=filter_mongodb_dict_chars(create_brand_statistics(firmware_list)),
             number_of_firmware_by_model=filter_mongodb_dict_chars(create_model_statistics(firmware_list)),
             number_of_firmware_by_locale=filter_mongodb_dict_chars(create_locale_statistics(firmware_list)),
@@ -60,7 +61,7 @@ def count_by_build_prop_key(firmware_list, build_property_key):
     """
     result_dict_count = {}
     for firmware in firmware_list:
-        #TODO Refactor or remove
+        # TODO Refactor or remove
         firmware_properties = firmware.build_prop.properties
         android_build_property = firmware_properties.get(build_property_key)
         if android_build_property in result_dict_count:
@@ -142,7 +143,7 @@ def create_main_version_statistics(firmware_list):
     """
     main_version_dict = {}
     for firmware in firmware_list:
-        #main_version = detect_by_build_prop(firmware.build_prop)
+        # main_version = detect_by_build_prop(firmware.build_prop)
         main_version = firmware.version_detected
         if main_version in main_version_dict:
             main_version_dict[str(main_version)] = main_version_dict[str(main_version)] + 1
@@ -234,3 +235,100 @@ def get_unique_packagenames(firmware_list):
             else:
                 logging.warning("Ignore: App has unknown packagename and is not counted.")
     return list(packagename_list)
+
+
+def get_detected_firmware_vendors():
+    os_vendor_cursor = AndroidFirmware.objects.aggregate([
+        {
+            "$project": {
+                "os_vendor": 1
+            }
+        },
+        {
+            "$bucket": {
+                "groupBy": "$os_vendor",
+                "boundaries": [
+                    0,
+                    200,
+                    400
+                ],
+                "default": "default_key",
+                "output": {
+                    "vendor_names": {
+                        "$addToSet": "$os_vendor"
+                    }
+                }
+            }
+        }
+    ])
+    vendor_name_list = []
+    for document in os_vendor_cursor:
+        vendor_name_list.extend(document.get("vendor_names"))
+    logging.info(vendor_name_list)
+    return vendor_name_list
+
+
+def get_os_version_detected_list():
+    os_version_cursor = AndroidFirmware.objects.aggregate([
+        {
+            "$project": {
+                "version_detected": 1
+            }
+        },
+        {
+            "$bucket": {
+                "groupBy": "$version_detected",
+                "boundaries": [
+                    0,
+                    200,
+                    400
+                ],
+                "default": "default_key",
+                "output": {
+                    "os_versions": {
+                        "$addToSet": "$version_detected"
+                    }
+                }
+            }
+        }
+    ])
+    os_version_list = []
+    for document in os_version_cursor:
+        os_version_list.extend(document.get("os_versions"))
+    logging.info(os_version_list)
+    return os_version_list
+
+
+def get_firmware_by_vendor_and_version(android_objectid_list):
+    """
+
+    :param android_objectid_list:
+    :return: dict(str, dict(str, list(ids))) - dict(os-vendor, dict(os-version, list(Android-App ids)))
+    """
+    firmware_by_vendor_and_version_dict = {}
+    os_vendor_list = get_detected_firmware_vendors()
+    os_version_list = get_os_version_detected_list()
+    for os_vendor in os_vendor_list:
+        if str(os_vendor) not in firmware_by_vendor_and_version_dict:
+            firmware_by_vendor_and_version_dict[str(os_vendor)] = {}
+
+        for os_version in os_version_list:
+            firmware_list = AndroidFirmware.objects(os_vendor=os_vendor,
+                                                    android_app_id_list__in=android_objectid_list,
+                                                    version_detected=os_version)
+            firmware_by_vendor_and_version_dict[str(os_vendor)][str(os_version)] = firmware_list
+    return firmware_by_vendor_and_version_dict
+
+
+def get_apps_by_vendor_and_version(firmware_by_vendor_and_version_dict):
+    app_by_vendor_and_version_dict = {}
+    for os_vendor, os_version_dict in firmware_by_vendor_and_version_dict.items():
+        if str(os_vendor) not in app_by_vendor_and_version_dict:
+            app_by_vendor_and_version_dict[str(os_vendor)] = {}
+        for os_version, firmware_list in os_version_dict.items():
+            if str(os_version) not in app_by_vendor_and_version_dict[str(os_vendor)]:
+                app_by_vendor_and_version_dict[str(os_vendor)][str(os_version)] = []
+            for firmware in firmware_list:
+                app_by_vendor_and_version_dict[str(os_vendor)][str(os_version)].extend(
+                    firmware.android_app_id_list)
+    return app_by_vendor_and_version_dict

@@ -24,6 +24,7 @@ class AndroidFirmware(Document):
     firmware_file_id_list = ListField(LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING),
                                       required=False)
     version_detected = IntField(required=False, default=0)
+    os_vendor = StringField(max_length=512, required=True, default="Unknown")
 
     @classmethod
     def pre_delete(cls, sender, document, **kwargs):

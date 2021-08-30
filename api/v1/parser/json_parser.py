@@ -14,6 +14,7 @@ def parse_json_object_id_list(request, document_class):
     :return: list(str) - list of object-id's
     """
     id_list = set()
+    # TODO security improvement - sanitize inputs
     if request.is_json:
         json_data = request.get_json()
         for object_id in json_data["object_id_list"]:
@@ -35,8 +36,24 @@ def parse_virustotal_api_key(request):
     :param request: Flask request
     :return: str - api key
     """
+    # TODO security improvement - sanitize inputs
     if request.is_json:
         json_data = request.get_json()
         return json_data["api_key"]
     else:
         raise ValueError("Expected JSON")
+
+
+def parse_string_list(request):
+    """
+    Parses sting_list model.
+    :param request: Flask request
+    :return: list(str)
+    """
+    # TODO security improvement - sanitize inputs
+    string_list = []
+    if request.is_json:
+        json_data = request.get_json()
+        for filename in json_data["string_list"]:
+            string_list.append(filename)
+    return string_list

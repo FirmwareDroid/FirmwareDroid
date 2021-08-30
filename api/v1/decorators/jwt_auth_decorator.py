@@ -20,7 +20,6 @@ def admin_jwt_required(fn):
         claims = get_jwt_identity()
         claims = json.loads(claims)
         role_list = claims["role_list"]
-        logging.info(role_list)
         if role_list and 'admin' in role_list:
             return fn(*args, **kwargs)
         else:
