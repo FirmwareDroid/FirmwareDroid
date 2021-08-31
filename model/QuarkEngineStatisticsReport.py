@@ -1,9 +1,9 @@
-from mongoengine import DictField, LazyReferenceField
-from model import ImageFile
-from model.StatisticsReport import StatisticsReport
+from mongoengine import DictField, LazyReferenceField, CASCADE
 
-ATTRIBUTE_MAP = {}
+from model import JsonFile
+from model.StatisticsReport import StatisticsReport
 
 
 class QuarkEngineStatisticsReport(StatisticsReport):
-    test_dict = DictField(required=False)
+    threat_level_reference_dict = LazyReferenceField(JsonFile, reverse_delete_rule=CASCADE, required=False)
+    threat_level_count_dict = DictField(required=False)

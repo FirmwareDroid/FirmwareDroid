@@ -24,12 +24,12 @@ def create_apkleaks_statistics_report(android_app_id_list, report_name):
                                                                              reports_count,
                                                                              android_app_id_list,
                                                                              android_app_reference_file)
-        get_apkleaks_statistics_report(android_app_objectid_list, report_objectid_list, apkleaks_statistics_report)
+        get_apkleaks_statistics_report(report_objectid_list, apkleaks_statistics_report)
     else:
         raise ValueError("No apkleaks reports in the database. Can't create statistics.")
 
 
-def get_apkleaks_statistics_report(android_app_objectid_list, report_objectid_list, apkleaks_statistics_report):
+def get_apkleaks_statistics_report(report_objectid_list, apkleaks_statistics_report):
     """
     Creates statistics for the apkleaks tool and save the it to the database.
     """
