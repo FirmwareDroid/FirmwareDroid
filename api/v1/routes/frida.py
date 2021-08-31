@@ -5,8 +5,7 @@ import logging
 from flask_restx import Resource, Namespace
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
-
-from scripts.auth.basic_auth import requires_basic_authorization
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from scripts.dynamic_analysis.emulator_control.emulator_runner import start_frida_server_installation, \
     start_frida_smoke_test
 from model.FridaScript import FridaScript
@@ -21,7 +20,7 @@ parser.add_argument('file', type=FileStorage, location='files')
 class AddFridaScript(Resource):
     @ns.doc('post')
     @ns.expect(parser)
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self):
         response = "", 200
         try:
@@ -39,7 +38,7 @@ class AddFridaScript(Resource):
 @ns.route('/install_server/')
 class InstallFridaServer(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self):
         response = "", 200
         try:
@@ -56,7 +55,7 @@ class InstallFridaServer(Resource):
 @ns.route('/run_frida_smoke_test/<string:device_ip>/<string:frida_port>')
 class RunFridaSmoke(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, device_ip, frida_port):
         response = "", 200
         try:

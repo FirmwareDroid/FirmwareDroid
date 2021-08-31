@@ -195,16 +195,17 @@ def object_to_temporary_json_file(obj_to_write):
     """
     Write a string to a temporary file as json.
     :param obj_to_write: str - an object to write as json to a file.
-    :return: tempfile
+    :return: Python.tempfile
     """
     tmp_file = tempfile.NamedTemporaryFile()
-    f = open(tmp_file.name, "w")
-    json.dump(obj_to_write, f,
+    input_file = open(tmp_file.name, "w")
+    json.dump(obj_to_write,
+              input_file,
               sort_keys=False,
               indent=4,
               separators=(',', ': '),
               cls=DefaultJsonEncoder)
-    f.close()
+    input_file.close()
     return tmp_file
 
 
@@ -214,7 +215,8 @@ def store_json_file(file):
     :param file: file - must be json parsable.
     :return: class:'JsonFile'
     """
-    return JsonFile(file=file.read()).save()
+    json_file = JsonFile(file=file.read()).save()
+    return json_file
 
 
 def stream_to_json_file(file):
@@ -230,7 +232,8 @@ def stream_to_json_file(file):
             json_file.file.write(line)
     json_file.file.close()
     logging.info("Created Json file.")
-    return json_file.save()
+    json_file.save()
+    return json_file
 
 
 def create_temp_directories():

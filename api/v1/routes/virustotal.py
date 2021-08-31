@@ -11,7 +11,6 @@ from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.json_parser import parse_virustotal_api_key
 from api.v1.parser.request_util import check_app_mode
 from scripts.hashing.tlsh.tlsh_malware_labeling import add_malware_labels_to_graph
-from scripts.auth.basic_auth import requires_basic_authorization
 from model import UserAccount, VirusTotalReport, TlshClusterAnalysis
 from model.VirusTotalReport import VirusTotalReportSchema
 from scripts.static_analysis.Virustotal.virus_total_wrapper import start_virustotal_scan
@@ -71,7 +70,7 @@ class VirusTotalSaveAPIKey(Resource):
 @ns.route('/<string:file_uuid_reference>')
 class VirusTotalGetReport(Resource):
     @ns.doc(responses={200: 'OK', 400: 'Bad Argument'})
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self, file_uuid_reference):
         """
         Gets the result of a VirusTotal report as json.
@@ -90,7 +89,7 @@ class VirusTotalGetReport(Resource):
 @ns.route('/count/')
 class VirusTotalReportCount(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self):
         """
         Gets the number of VirusTotal reports in the database.
@@ -102,7 +101,7 @@ class VirusTotalReportCount(Resource):
 @ns.route('/add_labels_to_tlsh_graph/<string:tlsh_cluster_analysis_id>')
 class VirusTotalLabels(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self, tlsh_cluster_analysis_id):
         """
         Makes all nodes red that are reported to be malicious by virustotal.

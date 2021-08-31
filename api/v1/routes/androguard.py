@@ -11,7 +11,6 @@ from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.api_models.serializers import object_id_list
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.request_util import check_app_mode
-from scripts.auth.basic_auth import requires_basic_authorization
 from model import AppCertificate, AndroGuardStringAnalysis
 from model.AndroGuardReport import AndroGuardReport
 from scripts.static_analysis.AndroGuard.andro_guard_wrapper import start_androguard_analysis
@@ -45,7 +44,7 @@ class AndroGuardAnalysis(Resource):
 @ns.route('/count/')
 class AndroGuardReportCount(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self):
         """
         Gets the number of AndroGuard reports in the database.
@@ -57,7 +56,7 @@ class AndroGuardReportCount(Resource):
 @ns.route('/count/string_analysis')
 class AndroGuardStringAnalysisReportCount(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self):
         """
         Gets the number of AndroGuard string analysis reports in the database.
@@ -69,7 +68,7 @@ class AndroGuardStringAnalysisReportCount(Resource):
 @ns.route('/count/app_certificate')
 class AppCertificateCount(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self):
         """
         Gets the number of AndroGuard certificate reports in the database.
@@ -82,7 +81,7 @@ class AppCertificateCount(Resource):
 @ns.expect(object_id_list)
 class StringAnalysis(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, mode):
         """
         Starts the meta analysis of AndroGuard string analysis.
@@ -98,7 +97,7 @@ class StringAnalysis(Resource):
 @ns.route('/app_certificate/download/<string:certificate_id>/<string:cert_format>')
 class AppCertificateDownload(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, certificate_id, cert_format):
         """
         Download an app certificate as DER/PEM encoded file.
@@ -130,7 +129,7 @@ class AppCertificateDownload(Resource):
 @ns.expect(object_id_list)
 class SetPackagenames(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, mode):
         """
         Copies AndroGuard packagename to the Android app model.

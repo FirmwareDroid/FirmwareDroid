@@ -2,14 +2,12 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-
 import flask
-from flask import jsonify, send_file
+from flask import send_file
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
 from flask_restx import Resource, Namespace
-
-from scripts.auth.basic_auth import requires_basic_authorization
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 
 ns = Namespace('jobs', description='Operations related to background processing and jobs.')
 
@@ -17,7 +15,7 @@ ns = Namespace('jobs', description='Operations related to background processing 
 @ns.route('/status/<string:job_id>')
 class JobStatus(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, job_id):
         """
         Gets the status uf a background job.
@@ -36,7 +34,7 @@ class JobStatus(Resource):
 @ns.route('/cancel/<string:job_id>')
 class JobStatus(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, job_id):
         """
         Cancel a background job.
@@ -54,7 +52,7 @@ class JobStatus(Resource):
 @ns.route('/get_result_file/<string:job_id>')
 class GetJobs(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self, job_id):
         """
         Gets all the currently running job-id's

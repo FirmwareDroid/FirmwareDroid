@@ -6,13 +6,11 @@ import logging
 import flask
 from flask import request, send_file
 from flask_restx import Api, Resource
-
 from api.v1.common.response_creator import create_zip_file
 from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.api_models.serializers import object_id_list
 from api.v1.parser.request_util import check_app_mode
-from scripts.auth.basic_auth import requires_basic_authorization
 from model import QarkReport
 from scripts.static_analysis.Qark.qark_wrapper import qark_analyse_apps
 
@@ -43,7 +41,7 @@ class CreateQarkReport(Resource):
 @ns.expect(object_id_list)
 class GetQarkReports(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, mode):
         response = "", 400
         android_app_id_list = check_app_mode(mode, request)
@@ -66,7 +64,7 @@ class GetQarkReports(Resource):
 @ns.route('/count/')
 class QarkReportCount(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self):
         """
         Gets the number of Qark reports in the database.

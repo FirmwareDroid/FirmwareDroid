@@ -8,8 +8,11 @@ import sys
 import time
 import flask
 from multiprocessing import Lock, Manager, get_context
+
+from bson import ObjectId
 from mongoengine import DoesNotExist
 
+from model import AndroidApp
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.database.database import multiprocess_disconnect_all
 from scripts.utils.string_utils.string_util import filter_mongodb_dict_chars
@@ -326,3 +329,35 @@ def update_reference_file(statistics_report, android_app_id_list):
     updated_reference_file = create_reference_file(updated_reference_list)
     statistics_report.android_app_reference_file = updated_reference_file
     statistics_report.save()
+
+
+def get_app_objectid_list(android_app_id_list):
+    """
+    Converts the list of Android app IDs to a list of ObjectId objects.
+    :param android_app_id_list: list(str) - List of class:'AndroidApp' IDs.
+    :return: list(ObjectId()) - List of class:'AndroidApp' ObjectIds.
+    """
+    android_objectid_list = []
+    for android_app_id in android_app_id_list:
+        android_objectid_list.append(ObjectId(android_app_id))
+    return android_objectid_list
+
+
+def get_report_objectid_list(android_objectid_list, reference_attribute):
+    """
+    Creates a list objectIds for the given references reports. Fetches the referenced report from the android apps and
+    adds them to the returned list if the report exists.
+    :param android_objectid_list: list(ObjectId()) - List of class:'AndroidApp' objectIds.
+    :param reference_attribute: str - name of the attribute that references the report.
+    :return: list(ObjectId()) - List of report objectIds.
+    """
+    android_app_list = AndroidApp.objects(id__in=android_objectid_list).only(reference_attribute)
+    report_objectid_list = []
+    for android_app in android_app_list:
+        lazy_reference = getattr(android_app, reference_attribute)
+        if lazy_reference:
+            primary_key = lazy_reference.pk
+            report_objectid_list.append(ObjectId(primary_key))
+        else:
+            logging.warning(f"Android app has no report - ignoring: {android_app.id}")
+    return report_objectid_list

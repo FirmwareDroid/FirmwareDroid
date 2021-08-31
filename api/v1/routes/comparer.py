@@ -5,8 +5,8 @@ import flask
 from flask_restx import Resource, Namespace
 from flask import request
 from api.v1.api_models.serializers import object_id_list
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.json_parser import parse_json_object_id_list
-from scripts.auth.basic_auth import requires_basic_authorization
 from model import AndroidFirmware
 from scripts.static_analysis.Comparer.file_comparer import start_firmware_comparer
 
@@ -17,7 +17,7 @@ ns = Namespace('comparer', description='Operations related to diff analysis.')
 @ns.expect(object_id_list)
 class FirmwareCompare(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self):
         """
         Compares (diff) the files from the first firmware with the second.

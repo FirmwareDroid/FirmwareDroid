@@ -3,8 +3,8 @@
 # See the file 'LICENSE' for copying permission.
 from flask import request
 from api.v1.common.rq_job_creator import enqueue_jobs
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.request_util import check_app_mode
-from scripts.auth.basic_auth import requires_basic_authorization
 from scripts.utils.cleanup.cleanup import cleanup_android_app_references, cleanup_firmware_app_references, \
     cleanup_der_certificates, enqueue_firmware_file_cleanup, cleanup_androguard_certificate_references
 import flask
@@ -17,7 +17,7 @@ ns = Namespace('cleanup', description='Operations related to cleanup the databas
 @ns.route('/firmware_references')
 class CleanupReferencesFirmware(Resource):
     @ns.doc('delete')
-    @requires_basic_authorization
+    @admin_jwt_required
     def delete(self):
         """
         Checks if the android app references are still valid and removes invalid references.
@@ -31,7 +31,7 @@ class CleanupReferencesFirmware(Resource):
 @ns.route('/static_tool_references')
 class CleanupReferencesStaticTool(Resource):
     @ns.doc('delete')
-    @requires_basic_authorization
+    @admin_jwt_required
     def delete(self):
         """
         Checks if the android app references are still valid and removes invalid references.
@@ -45,7 +45,7 @@ class CleanupReferencesStaticTool(Resource):
 @ns.route('/firmware_files')
 class CleanupReferencesFirmware(Resource):
     @ns.doc('delete')
-    @requires_basic_authorization
+    @admin_jwt_required
     def delete(self):
         """
         Deletes all dead firmware files references.
@@ -59,7 +59,7 @@ class CleanupReferencesFirmware(Resource):
 @ns.route('/der_certificates/')
 class CleanupReferencesCerts(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self):
         """
         Add missing certificates.
@@ -78,7 +78,7 @@ class CleanupReferencesCerts(Resource):
 @ns.route('/androguard_certificate_references/')
 class CleanupReferencesCerts(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self):
         """
         Checks if all certificate references are correctly set and correct them if necessary.

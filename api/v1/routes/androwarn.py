@@ -8,7 +8,6 @@ from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.api_models.serializers import object_id_list
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.request_util import check_app_mode
-from scripts.auth.basic_auth import requires_basic_authorization
 from model import AndrowarnReport
 from scripts.static_analysis.Androwarn.androwarn_wrapper import start_androwarn_analysis
 
@@ -38,7 +37,7 @@ class CreateAndrowarnReport(Resource):
 @ns.route('/<string:androwarn_id>')
 class GetAndrowarnReport(Resource):
     @ns.doc("get")
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self, androwarn_id):
         """
         Gets the json report of an androwarn report.
@@ -56,7 +55,7 @@ class GetAndrowarnReport(Resource):
 @ns.route('/count/')
 class AndrowarnReportCount(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self):
         """
         Gets the number of Androwarn reports in the database.

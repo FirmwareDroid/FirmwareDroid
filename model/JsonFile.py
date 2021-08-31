@@ -3,6 +3,7 @@ from mongoengine import FileField, DateTimeField, signals
 import json
 from flask_mongoengine import Document
 
+
 class JsonFile(Document):
     report_date = DateTimeField(default=datetime.datetime.now, required=True)
     file = FileField(required=True, collection_name="fs.json")

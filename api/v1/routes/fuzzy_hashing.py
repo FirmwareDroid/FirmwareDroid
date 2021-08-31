@@ -7,9 +7,9 @@ from flask_restx import Resource, Namespace
 from flask import request, send_file
 from api.v1.common.response_creator import create_zip_file
 from api.v1.common.rq_job_creator import enqueue_jobs
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.request_util import check_firmware_mode
 from api.v1.api_models.serializers import fuzzy_hash_compare_model, object_id_list
-from scripts.auth.basic_auth import requires_basic_authorization
 from scripts.hashing.tlsh.tlsh_find_similar import start_find_similar_hashes_by_graph
 from scripts.hashing.tlsh.tlsh_lookup_table_creator import start_similarity_lookup_table, start_table_size_evaluator, \
     index_apks_only
@@ -18,7 +18,7 @@ from scripts.hashing.tlsh.tlsh_cluster_analysis import start_tlsh_clustering
 from scripts.hashing.fuzzy_hash_creator import start_fuzzy_hasher
 from scripts.hashing.fuzzy_hash_remover import remove_fuzzy_hashes
 from scripts.hashing.ssdeep.ssdeep_cluster_analysis import start_ssdeep_clustering
-from model import SsDeepClusterAnalysis, TlshClusterAnalysis, TlshHash, TlshSimiliarityLookup
+from model import SsDeepClusterAnalysis, TlshClusterAnalysis, TlshSimiliarityLookup
 from scripts.hashing.ssdeep.ssdeep_hasher import ssdeep_compare_hashs
 
 ns = Namespace('fuzzy_hashing', description='Operations related to fuzzy hashing.')
@@ -29,7 +29,7 @@ ns.add_model("fuzzy_hash_compare_model", fuzzy_hash_compare_model)
 @ns.expect(fuzzy_hash_compare_model)
 class SsdeepCompareHash(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self):
         """
         Compare two ssdeep fuzzy hashes with each other.
@@ -49,7 +49,7 @@ class SsdeepCompareHash(Resource):
 @ns.expect(fuzzy_hash_compare_model)
 class SsdeepCompareHash(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self):
         """
         Compare two tlsh fuzzy hashes with each other.
@@ -69,7 +69,7 @@ class SsdeepCompareHash(Resource):
 @ns.expect(object_id_list)
 class FuzzyHashIndexFirmwareFiles(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, mode):
         """
         Creates fuzzy hashes for every file of the given firmware. Supported hashes:
@@ -86,7 +86,7 @@ class FuzzyHashIndexFirmwareFiles(Resource):
 @ns.expect(object_id_list)
 class SsdeepIndexCreateClusters(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, regex_filter, mode):
         """
         Creates a cluster analysis for ssdeep digests.
@@ -104,7 +104,7 @@ class SsdeepIndexCreateClusters(Resource):
 @ns.route('/download_cluster_analysis/<string:cluster_analysis_id>/<int:fuzzy_hash_type>')
 class DownloadClusterAnalysis(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, cluster_analysis_id, fuzzy_hash_type):
         """
         Download a graph file for a cluster analysis.
@@ -136,7 +136,7 @@ class DownloadClusterAnalysis(Resource):
 @ns.route('/tlsh/download/graph/<string:cluster_analysis_id>')
 class DownloadClusterAnalysis(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, cluster_analysis_id):
         """
         Download a graph file for a TLSH cluster analysis.
@@ -158,7 +158,7 @@ class DownloadClusterAnalysis(Resource):
 @ns.expect(object_id_list)
 class DeleteFuzzyHashes(Resource):
     @ns.doc('delete')
-    @requires_basic_authorization
+    @admin_jwt_required
     def delete(self, mode):
         """
         Deletes all ssDeep/tlsh digests from the given firmware.
@@ -176,7 +176,7 @@ class DeleteFuzzyHashes(Resource):
 @ns.expect(object_id_list)
 class TlshCreateCluster(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, regex_filter, mode, distance_threshold, compare_mode, tlsh_similiarity_lookup_id, description):
         """
         Creates a clustering analysis for tlsh digests.
@@ -208,7 +208,7 @@ class TlshCreateCluster(Resource):
 @ns.route('/tlsh/update_lookup_table/<string:tlsh_similiarity_lookup_id>')
 class TlshCreateSimilarityLookupTable(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, tlsh_similiarity_lookup_id):
         """
         Updates a similarity lookup table
@@ -224,7 +224,7 @@ class TlshCreateSimilarityLookupTable(Resource):
 @ns.route('/tlsh/create_lookup_table/<bool:apk_only>')
 class TlshCreateSimilarityLookupTable(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, apk_only):
         """
         Creates a similarity lookup table.
@@ -245,7 +245,7 @@ class TlshCreateSimilarityLookupTable(Resource):
 @ns.route('/tlsh/find_similar/<string:cluster_analysis_id>/<string:tlsh_hash_id>')
 class TlshFindSimilar(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, cluster_analysis_id, tlsh_hash_id):
         try:
             response = start_find_similar_hashes_by_graph(cluster_analysis_id, tlsh_hash_id)
@@ -259,7 +259,7 @@ class TlshFindSimilar(Resource):
 @ns.expect(object_id_list)
 class TlshFindSimilar(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, mode, regex_string, number_of_test_files, distance_threshold):
         """
         Creates tlsh lookup tables and cluster analysis with various sizes for evaluation purposes.

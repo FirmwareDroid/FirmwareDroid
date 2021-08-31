@@ -15,7 +15,7 @@ from scripts.statistics.statistics_common import set_attribute_frequencies, get_
 
 
 # TODO CLEAN SCRIPT
-def start_androguard_statistics_report(android_app_id_list, report_name):
+def create_androguard_statistics_report(android_app_id_list, report_name):
     create_app_context()
     logging.info(f"Starting AndroGuard statistics with {len(android_app_id_list)} apps")
     android_app_reference_file = create_reference_file(android_app_id_list)

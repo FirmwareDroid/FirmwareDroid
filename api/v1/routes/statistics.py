@@ -8,14 +8,13 @@ from flask import request, send_file
 from api.v1.api_models.serializers import object_id_list
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.request_util import check_app_mode, check_firmware_mode
-from scripts.auth.basic_auth import requires_basic_authorization
 from scripts.statistics.reports.firmware_statistics import create_firmware_statistics_report
 from model import ImageFile, JsonFile, AndroidFirmware, ReferenceFile
 from flask_restx import Resource, Namespace
-from scripts.statistics.reports.androguard.androguard_statistics import start_androguard_statistics_report, \
+from scripts.statistics.reports.androguard.androguard_statistics import create_androguard_statistics_report, \
     create_androguard_plots
 from scripts.statistics.reports.virustotal.virustotal_statistics import create_virustotal_statistic_report
-from scripts.statistics.reports.apkid.apkid_statistcs import start_apki_statistics_report_creator
+from scripts.statistics.reports.apkid.apkid_statistcs import create_apkid_statistics_report
 from scripts.statistics.reports.androwarn.androwarn_statistics import create_androwarn_statistics_report
 from scripts.statistics.reports.qark.qark_statistics import create_qark_statistics_report
 from scripts.statistics.reports.androguard.androguard_string_statistics import create_string_statistics_report
@@ -23,6 +22,9 @@ from scripts.statistics.reports.androguard.app_certificate_statistics import cre
 from scripts.statistics.references.reference_file_util import group_references_by_firmware_version, \
     filter_references_by_unique_packagename
 from scripts.statistics.reports.exodus.exodus_statistics import create_exodus_statistics_report
+from scripts.statistics.reports.apkleaks.apkleaks_statistics import create_apkleaks_statistics_report
+from scripts.statistics.reports.quark_engine.quark_engine_statistics import create_quark_engine_statistics_report
+from scripts.statistics.reports.super_android_analyzer.super_statistics import create_super_statistics_report
 
 ns = Namespace('statistics', description='Operations related to Dataset statistics.')
 
@@ -30,7 +32,7 @@ ns = Namespace('statistics', description='Operations related to Dataset statisti
 @ns.route('/download/images/<string:image_file_id>')
 class DownloadImageFiles(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self, image_file_id):
         """
         Download a reference file for a statistics report.
@@ -52,7 +54,7 @@ class DownloadImageFiles(Resource):
           doc={"deprecated": True})
 class DownloadJsonFile(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self, reference_file_id):
         """
         DEPCRECATED
@@ -71,7 +73,7 @@ class DownloadJsonFile(Resource):
 @ns.route('/download/json/<string:reference_file_id>')
 class DownloadJsonFile(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self, reference_file_id):
         """
         Download a reference file for a statistics report.
@@ -89,7 +91,7 @@ class DownloadJsonFile(Resource):
 @ns.route('/download/json/grouped_by_version/<string:json_file_id>/<bool:add_meta_data>')
 class DownloadJsonFile(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self, json_file_id, add_meta_data):
         """
         Download a reference file for a statistics report.
@@ -106,7 +108,7 @@ class DownloadJsonFile(Resource):
 @ns.route('/download/json/grouped_by_version/filter_duplicated_packagename/<string:json_file_id>/<bool:get_count>')
 class DownloadJsonFileFiltered(Resource):
     @ns.doc('get')
-    @requires_basic_authorization
+    @admin_jwt_required
     def get(self, json_file_id, get_count):
         """
         Download a reference file for a statistics report filtered by unqiue packagenames.
@@ -132,7 +134,7 @@ class DownloadJsonFileFiltered(Resource):
 @ns.expect(object_id_list)
 class CreateFirmwareStatistics(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, mode, report_name):
         """
         Create a statistical report for firmware data.
@@ -199,6 +201,9 @@ class CreateQarkStatistics(Resource):
             6: APKiD statistics
             7: Androwarn statistics
             8: Exodus statistics
+            9: APKLeaks statistics
+            10: Quark-Engine statistics
+            11: Super Android Analyzer statistics
         """
         app = flask.current_app
         response = "", 400
@@ -206,7 +211,7 @@ class CreateQarkStatistics(Resource):
         if report_type == 0:
             start_function = create_firmware_statistics_report
         elif report_type == 1:
-            start_function = start_androguard_statistics_report
+            start_function = create_androguard_statistics_report
         elif report_type == 2:
             start_function = create_app_certificate_statistics_report
         elif report_type == 3:
@@ -216,11 +221,17 @@ class CreateQarkStatistics(Resource):
         elif report_type == 5:
             start_function = create_virustotal_statistic_report
         elif report_type == 6:
-            start_function = start_apki_statistics_report_creator
+            start_function = create_apkid_statistics_report
         elif report_type == 7:
             start_function = create_androwarn_statistics_report
         elif report_type == 8:
             start_function = create_exodus_statistics_report
+        elif report_type == 9:
+            start_function = create_apkleaks_statistics_report
+        elif report_type == 10:
+            start_function = create_quark_engine_statistics_report
+        elif report_type == 11:
+            start_function = create_super_statistics_report
         else:
             start_function = None
 

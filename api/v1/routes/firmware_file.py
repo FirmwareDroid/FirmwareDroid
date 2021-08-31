@@ -9,9 +9,9 @@ from flask_restx import Resource, Namespace
 
 from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.api_models.serializers import object_id_list
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.json_parser import parse_json_object_id_list
 from api.v1.parser.request_util import check_firmware_mode
-from scripts.auth.basic_auth import requires_basic_authorization
 from scripts.firmware.firmware_file_indexer import start_firmware_indexer
 from scripts.firmware.firmware_file_exporter import start_file_export_by_id, start_file_export_by_regex
 from model import FirmwareFile
@@ -23,7 +23,7 @@ ns = Namespace('firmware_file', description='Operations related to files within 
 @ns.expect(object_id_list)
 class FirmwareExportFileByID(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self):
         """
         Exports the specific firmware files.
@@ -39,7 +39,7 @@ class FirmwareExportFileByID(Resource):
 @ns.expect(object_id_list)
 class FirmwareExportFileByName(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, firmware_file_name_regex, mode):
         """
         Exports the specific firmware files from the given firmware list.
@@ -65,7 +65,7 @@ class FirmwareExportFileByName(Resource):
 @ns.expect(object_id_list)
 class FirmwareIndexFiles(Resource):
     @ns.doc('post')
-    @requires_basic_authorization
+    @admin_jwt_required
     def post(self, mode):
         """
         Creates an index of the files within the firmware images.

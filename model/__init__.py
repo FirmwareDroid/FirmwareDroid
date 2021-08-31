@@ -42,3 +42,7 @@ from .SuperReport import SuperReport
 from .ApkLeaksReport import ApkLeaksReport
 from .RevokedJwtToken import RevokedJwtToken
 from .LibRadarReport import LibRadarReport
+from .ApkleaksStatisticsReport import ApkLeaksStatisticsReport
+from .ExodusStatisticsReport import ExodusStatisticsReport
+from .QuarkEngineStatisticsReport import QuarkEngineStatisticsReport
+from .SuperStatisticsReport import SuperStatisticsReport

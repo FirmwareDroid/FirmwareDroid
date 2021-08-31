@@ -11,7 +11,7 @@ from scripts.statistics.statistics_common import count_attribute, add_attribute_
 from scripts.utils.file_utils.file_util import create_reference_file_from_dict, create_reference_file
 
 
-def start_apki_statistics_report_creator(android_app_id_list, report_name):
+def create_apkid_statistics_report(android_app_id_list, report_name):
     """
     Creates a apkid statistics report.
     :param report_name: str - user defined name for identification.
@@ -23,16 +23,17 @@ def start_apki_statistics_report_creator(android_app_id_list, report_name):
     report_count = len(apkid_report_list)
     logging.info(f"Started apkid statistics report: {report_count}")
     if report_count > 1:
-        create_apkid_statistics_report(android_app_id_list, apkid_report_list, report_count, report_name)
+        get_apkid_statistics_report(android_app_id_list, apkid_report_list, report_count, report_name)
     else:
         raise ValueError("No apkid reports in the database. Can't create statistics.")
 
 
-def create_apkid_statistics_report(android_app_id_list, apkid_report_list, report_count, report_name):
+def get_apkid_statistics_report(android_app_id_list, apkid_report_list, report_count, report_name):
     """
-    Creates statistics for the apkid tool and save the to the database.
+    Creates statistics for the apkid tool and save the it to the database.
+    :param report_name: str - Not unique Tag for identification.
     :param report_count: int - number of apkid reports
-    :param apkid_report_list: list(class:'ApkidStatisticsReport')
+    :param apkid_report_list: list(class:'ApkidReport')
     :param android_app_id_list: list(class:'AndroidApp' object-id's)
     :return: class:'ApkidStatisticsReport'
     """
@@ -92,7 +93,7 @@ def create_apkid_statistics_report(android_app_id_list, apkid_report_list, repor
 
 def create_file_match_stats(apkid_report_list, match_string):
     """
-    Creates two dicts with basic ocurrence statistics of the match_string in the apkid report of the given
+    Creates two dicts with basic occurrence statistics of the match_string in the apkid report of the given
     apkid report list.
     :param apkid_report_list: list class:'ApkidReport'
     :param match_string: str - apkid string which will be searched for.
