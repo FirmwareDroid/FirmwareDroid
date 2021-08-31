@@ -44,7 +44,6 @@ def add_exodus_statistics(statistics_report, android_app_objectid_list):
 
 
 def get_tracker_frequency_by_fw_version(app_by_vendor_and_version_dict):
-
     tracker_frequency_by_fw_version_dict = {}
     for os_vendor, os_version_dict in app_by_vendor_and_version_dict.items():
         if str(os_vendor) not in tracker_frequency_by_fw_version_dict:

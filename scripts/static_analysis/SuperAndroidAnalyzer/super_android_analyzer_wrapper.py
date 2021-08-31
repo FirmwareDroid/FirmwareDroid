@@ -84,6 +84,6 @@ def create_report(android_app, super_json_results):
     super_report = SuperReport(android_app_id_reference=android_app.id,
                                super_version="0.5.1",
                                results=super_json_results).save()
-    android_app.super_report_reference = android_app.id
+    android_app.super_report_reference = super_report.id
     android_app.save()
     return super_report
