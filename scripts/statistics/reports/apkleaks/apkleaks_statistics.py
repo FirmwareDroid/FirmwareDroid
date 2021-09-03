@@ -17,10 +17,11 @@ def create_apkleaks_statistics_report(android_app_id_list, report_name):
     reference_attribute = "apkleaks_report_reference"
     chunk_list = [android_app_id_list[x:x + 100] for x in range(0, len(android_app_id_list), 100)]
     android_app_objectid_list = []
+    report_objectid_list = []
     for chunk in chunk_list:
-        android_app_objectid_list.extend(get_app_objectid_list(chunk))
-
-    report_objectid_list = get_report_objectid_list(android_app_objectid_list, reference_attribute)
+        tmp_objId_list = get_app_objectid_list(chunk)
+        android_app_objectid_list.extend(tmp_objId_list)
+        report_objectid_list.extend(get_report_objectid_list(tmp_objId_list, reference_attribute))
     reports_count = len(report_objectid_list)
     logging.info(f"Got APKLeaks report ids: {reports_count}")
     if reports_count > 1:
