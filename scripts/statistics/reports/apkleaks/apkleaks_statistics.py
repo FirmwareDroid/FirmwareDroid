@@ -165,7 +165,7 @@ def get_leak_references(report_objectid_list):
             logging.info(document)
             if str(document.get("_id")) not in reference_dict:
                 reference_dict[str(document.get("_id"))] = {}
-            reference_dict[str(document.get("_id"))][str(document.get("name"))] += document.get("numberOfMatches")
+            reference_dict[str(document.get("_id"))][str(document.get("name"))] = document.get("numberOfMatches")
     # logging.info(reference_dict)
     return reference_dict
 
