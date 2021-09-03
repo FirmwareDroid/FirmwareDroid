@@ -110,11 +110,12 @@ def get_leaks_frequency(report_objectid_list):
             }
         ], allowDiskUse=True)
         for document in command_cursor:
-            if str(document.get("_id")):
-                if str(document.get("_id")) in result_dict:
-                    result_dict[str(document.get("_id"))] += document.get("count")
+            document_id = str(document.get("_id"))
+            if document_id:
+                if document_id in result_dict:
+                    result_dict[document_id] += document.get("count")
                 else:
-                    result_dict[str(document.get("_id"))] = document.get("count")
+                    result_dict[document_id] = document.get("count")
     # logging.info(result_dict)
     return result_dict
 
@@ -165,7 +166,7 @@ def get_leak_references(report_objectid_list):
             }
         ], allowDiskUse=True)
         for document in command_cursor:
-            logging.info(document)
+            # logging.info(document)
             if str(document.get("_id")) not in reference_dict:
                 reference_dict[str(document.get("_id"))] = {}
             reference_dict[str(document.get("_id"))][str(document.get("name"))] = document.get("numberOfMatches")
@@ -211,24 +212,27 @@ def create_google_api_key_references(report_objectid_list):
     logging.info(f"Started to create Google API key file wit len: {str(len(report_objectid_list))}")
 
     text_body = []
-    android_app_list = AndroidApp.objects(apkleaks_report_reference__in=report_objectid_list).only("sha256",
-                                                                                                   "filename",
-                                                                                                   "relative_firmware_path",
-                                                                                                   "apkleaks_report_reference",
-                                                                                                   "firmware_id_reference")
-    for android_app in android_app_list:
-        firmware = AndroidFirmware.objects.get(id=android_app.firmware_id_reference.pk)
-        if android_app.apkleaks_report_reference:
-            apkLeaks_report = android_app.apkleaks_report_reference.fetch()
-            for leak in apkLeaks_report.results["results"]:
-                if leak["name"] and leak["name"] == "Google_API_Key":
-                    for api_key in leak["matches"]:
-                        text_body.append(f"{firmware.original_filename}, "
-                                         f"{firmware.sha256}, "
-                                         f"{android_app.filename}, "
-                                         f"{android_app.relative_firmware_path}, "
-                                         f"{android_app.sha256}, "
-                                         f"{api_key}")
+    chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
+    for chunk in chunk_list:
+        android_app_list = AndroidApp.objects(apkleaks_report_reference__in=chunk).only("sha256",
+                                                                                        "filename",
+                                                                                        "relative_firmware_path",
+                                                                                        "apkleaks_report_reference",
+                                                                                        "firmware_id_reference")
+        for android_app in android_app_list:
+            if android_app.firmware_id_reference:
+                firmware = AndroidFirmware.objects.get(id=android_app.firmware_id_reference.pk)
+                if android_app.apkleaks_report_reference:
+                    apkLeaks_report = android_app.apkleaks_report_reference.fetch()
+                    for leak in apkLeaks_report.results["results"]:
+                        if leak["name"] and leak["name"] == "Google_API_Key":
+                            for api_key in leak["matches"]:
+                                text_body.append(f"{firmware.original_filename}, "
+                                                 f"{firmware.sha256}, "
+                                                 f"{android_app.filename}, "
+                                                 f"{android_app.relative_firmware_path}, "
+                                                 f"{android_app.sha256}, "
+                                                 f"{api_key}")
     text_data = {"header": "Firmware Filename, Firmware SHA256, App Filename, App Packagename, App SHA256, "
                            "Google API KEY",
                  "body": text_body}
