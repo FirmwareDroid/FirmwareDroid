@@ -107,7 +107,7 @@ def get_tracker_frequency(android_app_objectid_list):
           }
         }
       }
-    ])
+    ], allowDiskUse=True)
     result_list = []
     for document in command_cursor:
         result_list.append(document)

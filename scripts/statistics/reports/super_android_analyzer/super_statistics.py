@@ -84,7 +84,7 @@ def get_references_high_crit_vulns(report_objectid_list):
                 "highs": "$results.highs"
             }
         }
-    ])
+    ], allowDiskUse=True)
     reference_list = []
     for document in command_cursor:
         reference_list.append(document)
@@ -126,7 +126,7 @@ def get_vulnerability_counts_per_risk_level(report_objectid_list):
                 }
             }
         }
-    ])
+    ], allowDiskUse=True)
     vulnerability_count_dict = {}
     for document in command_cursor:
         vulnerability_count_dict = {"critical_count": document.get("critical_count"),

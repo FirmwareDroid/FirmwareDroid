@@ -15,7 +15,11 @@ def create_apkleaks_statistics_report(android_app_id_list, report_name):
     create_app_context()
     android_app_reference_file = create_reference_file(android_app_id_list)
     reference_attribute = "apkleaks_report_reference"
-    android_app_objectid_list = get_app_objectid_list(android_app_id_list)
+    chunk_list = [android_app_id_list[x:x + 100] for x in range(0, len(android_app_id_list), 100)]
+    android_app_objectid_list = []
+    for chunk in chunk_list:
+        android_app_objectid_list.extend(get_app_objectid_list(chunk))
+
     report_objectid_list = get_report_objectid_list(android_app_objectid_list, reference_attribute)
     reports_count = len(report_objectid_list)
     logging.info(f"Got APKLeaks report ids: {reports_count}")
@@ -95,7 +99,7 @@ def get_leaks_frequency(report_objectid_list):
                 }
             }
         }
-    ])
+    ], allowDiskUse=True)
     result_dict = {}
     for document in command_cursor:
         if str(document.get("_id")):
@@ -140,7 +144,7 @@ def get_leak_references(report_objectid_list):
                 }
             }
         }
-    ])
+    ], allowDiskUse=True)
     reference_dict = {}
     for document in command_cursor:
         logging.info(document)
@@ -168,7 +172,7 @@ def get_google_api_key_reports(report_objectid_list):
                 "_id": "$_id"
             }
         }
-    ])
+    ], allowDiskUse=True)
     report_id_list = []
     for document in command_cursor:
         report_id_list.append(document.get("_id"))

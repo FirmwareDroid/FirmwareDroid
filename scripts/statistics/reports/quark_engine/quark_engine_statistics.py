@@ -71,7 +71,7 @@ def get_threat_level_frequency(report_objectid_list):
                 }
             }
         }
-    ])
+    ], allowDiskUse=True)
     threat_levels_count_dict = {}
     for document in command_cursor:
         threat_levels_count_dict[str(document.get("_id"))] = document.get("count")
@@ -98,7 +98,7 @@ def get_threat_level_references(report_objectid_list):
                 "threat_level": "$scan_results.threat_level"
             }
         }
-    ])
+    ], allowDiskUse=True)
     threat_levels_references_list = []
     for document in command_cursor:
         threat_levels_references_list.append({str(document.get("_id")): document.get("threat_level")})
