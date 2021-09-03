@@ -10,6 +10,7 @@ class ApkLeaksStatisticsReport(StatisticsReport):
     leaks_reference_dict = LazyReferenceField(JsonFile, reverse_delete_rule=CASCADE, required=False)
     leaks_count_dict = DictField(required=False)
 
+    google_api_keys_references = LazyReferenceField(JsonFile, reverse_delete_rule=CASCADE, required=False)
 
 
 

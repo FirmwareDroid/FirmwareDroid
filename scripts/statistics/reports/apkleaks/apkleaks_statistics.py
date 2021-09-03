@@ -1,6 +1,6 @@
 import logging
 
-from model import ApkLeaksStatisticsReport, ApkLeaksReport
+from model import ApkLeaksStatisticsReport, ApkLeaksReport, AndroidApp, AndroidFirmware
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.file_utils.file_util import create_reference_file, object_to_temporary_json_file, stream_to_json_file
 from scripts.statistics.statistics_common import get_app_objectid_list, get_report_objectid_list
@@ -45,6 +45,13 @@ def get_apkleaks_statistics_report(report_objectid_list, statistics_report):
     statistics_report.leaks_count_dict = leaks_count_dict
     statistics_report.save()
     logging.info("Save Leaks frequency to APKLeaks statistics report!")
+
+    google_report_id_list = get_google_api_key_reports(report_objectid_list)
+    api_key_dict = create_google_api_key_references(google_report_id_list)
+    api_key_dict_tempfile = object_to_temporary_json_file(api_key_dict)
+    statistics_report.google_api_keys_references = stream_to_json_file(api_key_dict_tempfile.name).id
+    statistics_report.save()
+    logging.info("Save Google API Keys to APKLeaks statistics report!")
 
 
 def get_leaks_frequency(report_objectid_list):
@@ -93,7 +100,7 @@ def get_leaks_frequency(report_objectid_list):
     for document in command_cursor:
         if str(document.get("_id")):
             result_dict[str(document.get("_id"))] = document.get("count")
-    logging.info(result_dict)
+    #logging.info(result_dict)
     return result_dict
 
 
@@ -140,8 +147,67 @@ def get_leak_references(report_objectid_list):
         if str(document.get("_id")) not in reference_dict:
             reference_dict[str(document.get("_id"))] = {}
         reference_dict[str(document.get("_id"))][str(document.get("name"))] = document.get("numberOfMatches")
-    logging.info(reference_dict)
+    #logging.info(reference_dict)
     return reference_dict
+
+
+def get_google_api_key_reports(report_objectid_list):
+    """
+    Gets a list of report id that have a leaked Google API key
+    :param report_objectid_list:
+    :return:
+    """
+    command_cursor = ApkLeaksReport.objects(pk__in=report_objectid_list).aggregate([
+        {
+            "$match": {
+                "results.results.name": "Google_API_Key"
+            }
+        },
+        {
+            "$project": {
+                "_id": "$_id"
+            }
+        }
+    ])
+    report_id_list = []
+    for document in command_cursor:
+        report_id_list.append(document.get("_id"))
+    #logging.info(report_id_list)
+    return report_id_list
+
+
+def create_google_api_key_references(report_objectid_list):
+    """
+    Create a comma seperated string with all found Google API keys from APKLeaks. Contains additional information
+    for every key about where the key was found.
+    return: dict - header: str - format of the body list
+                   body: list of strings containing the google api key and meta-data about where the key was found.
+    """
+    logging.info(f"Started to create Google API key file wit len: {str(len(report_objectid_list))}")
+
+    text_body = []
+    android_app_list = AndroidApp.objects(apkleaks_report_reference__in=report_objectid_list).only("sha256",
+                                                                                                   "filename",
+                                                                                                   "relative_firmware_path",
+                                                                                                   "apkleaks_report_reference",
+                                                                                                   "firmware_id_reference")
+    for android_app in android_app_list:
+        firmware = AndroidFirmware.objects.get(id=android_app.firmware_id_reference.pk)
+        if android_app.apkleaks_report_reference:
+            apkLeaks_report = android_app.apkleaks_report_reference.fetch()
+            for leak in apkLeaks_report.results["results"]:
+                if leak["name"] and leak["name"] == "Google_API_Key":
+                    for api_key in leak["matches"]:
+                        text_body.append(f"{firmware.original_filename}, "
+                                         f"{firmware.sha256}, "
+                                         f"{android_app.filename}, "
+                                         f"{android_app.relative_firmware_path}, "
+                                         f"{android_app.sha256}, "
+                                         f"{api_key}")
+    text_data = {"header": "Firmware Filename, Firmware SHA256, App Filename, App Packagename, App SHA256, "
+                           "Google API KEY",
+                 "body": text_body}
+    return text_data
 
 
 def create_empty_apkleaks_statistics_report(report_name, report_count, android_app_id_list, android_app_reference_file):

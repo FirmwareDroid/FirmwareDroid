@@ -9,7 +9,7 @@ from api.v1.api_models.serializers import object_id_list
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.request_util import check_app_mode, check_firmware_mode
 from scripts.statistics.reports.firmware_statistics import create_firmware_statistics_report
-from model import ImageFile, JsonFile, AndroidFirmware, ReferenceFile
+from model import ImageFile, JsonFile
 from flask_restx import Resource, Namespace
 from scripts.statistics.reports.androguard.androguard_statistics import create_androguard_statistics_report, \
     create_androguard_plots
@@ -46,26 +46,6 @@ class DownloadImageFiles(Resource):
                                  mimetype="image/png")
         except Exception as err:
             logging.error(str(err))
-            response = "", 400
-        return response
-
-
-@ns.route('/download/references/<string:reference_file_id>',
-          doc={"deprecated": True})
-class DownloadJsonFile(Resource):
-    @ns.doc('get')
-    @admin_jwt_required
-    def get(self, reference_file_id):
-        """
-        DEPCRECATED
-        Download a reference file for a statistics report.
-        :return: txt file with object id references.
-        """
-        try:
-            reference_file = ReferenceFile.objects.get(pk=reference_file_id)
-            response = json.loads(reference_file.file.read().decode("utf-8"))
-        except Exception as err:
-            logging.error(err)
             response = "", 400
         return response
 
@@ -128,41 +108,6 @@ class DownloadJsonFileFiltered(Resource):
             logging.error(str(err))
             response = "", 400
         return response
-
-
-@ns.route('/firmware/create_statistics_report/<int:mode>/<string:report_name>')
-@ns.expect(object_id_list)
-class CreateFirmwareStatistics(Resource):
-    @ns.doc('post')
-    @admin_jwt_required
-    def post(self, mode, report_name):
-        """
-        Create a statistical report for firmware data.
-        :param mode: If mode = 1 all firmware in the database will be used for the report instead of the given json.
-        :param report_name: str - user defined name for identification.
-        :return: job-id
-        """
-        app = flask.current_app
-        # TODO REMOVE THIS TEMPORARY IF STATEMENT
-        if report_name == "UNKNOWN":
-            firmware_list = []
-            firmware_query_list = AndroidFirmware.objects(version_detected__exists=False)
-            firmware_query_zero_list = AndroidFirmware.objects(version_detected=0)
-            for firmware in firmware_query_list:
-                firmware_list.append(firmware)
-            for firmware in firmware_query_zero_list:
-                firmware_list.append(firmware)
-
-            firmware_id_list = []
-            for firmware in firmware_list:
-                firmware_id_list.append(firmware.id)
-        else:
-            firmware_id_list = check_firmware_mode(mode, request)
-        job = app.rq_task_queue_default.enqueue(create_firmware_statistics_report,
-                                                firmware_id_list,
-                                                report_name,
-                                                job_timeout=60 * 60 * 24 * 40)
-        return {"id": job.get_id()}
 
 
 @ns.route('/androguard/create_report_plots/<string:androguard_statistics_report_id>')
