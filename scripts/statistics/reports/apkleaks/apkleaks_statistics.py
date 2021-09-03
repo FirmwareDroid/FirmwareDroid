@@ -111,7 +111,10 @@ def get_leaks_frequency(report_objectid_list):
         ], allowDiskUse=True)
         for document in command_cursor:
             if str(document.get("_id")):
-                result_dict[str(document.get("_id"))] += document.get("count")
+                if str(document.get("_id")) in result_dict:
+                    result_dict[str(document.get("_id"))] += document.get("count")
+                else:
+                    result_dict[str(document.get("_id"))] = document.get("count")
     # logging.info(result_dict)
     return result_dict
 
