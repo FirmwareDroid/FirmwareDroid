@@ -60,99 +60,113 @@ def get_apkleaks_statistics_report(report_objectid_list, statistics_report):
 
 
 def get_leaks_frequency(report_objectid_list):
-    command_cursor = ApkLeaksReport.objects(pk__in=report_objectid_list).aggregate([
-        {
-            "$match": {
-                "results.results": {
-                    "$ne": []
+    """
+    Gets a count of how often a specific leak was found.
+    :param report_objectid_list: list(ObjectId) - list(class:'ApkLeaksReport' ObjectIds)
+    :return: dict(str, int)
+    """
+    result_dict = {}
+    chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
+    for chunk in chunk_list:
+        command_cursor = ApkLeaksReport.objects(pk__in=chunk).aggregate([
+            {
+                "$match": {
+                    "results.results": {
+                        "$ne": []
+                    }
                 }
-            }
-        },
-        {
-            "$project": {
-                "results.results": 1
-            }
-        },
-        {
-            "$unwind": "$results.results"
-        },
-        {
-            "$project": {
-                "name": "$results.results.name",
-                "numberOfMatches": {
-                    "$cond": {
-                        "if": {
-                            "$isArray": "$results.results.matches"
-                        },
-                        "then": {
-                            "$size": "$results.results.matches"
-                        },
-                        "else": 0
+            },
+            {
+                "$project": {
+                    "results.results": 1
+                }
+            },
+            {
+                "$unwind": "$results.results"
+            },
+            {
+                "$project": {
+                    "name": "$results.results.name",
+                    "numberOfMatches": {
+                        "$cond": {
+                            "if": {
+                                "$isArray": "$results.results.matches"
+                            },
+                            "then": {
+                                "$size": "$results.results.matches"
+                            },
+                            "else": 0
+                        }
+                    }
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$name",
+                    "count": {
+                        "$sum": 1
                     }
                 }
             }
-        },
-        {
-            "$group": {
-                "_id": "$name",
-                "count": {
-                    "$sum": 1
-                }
-            }
-        }
-    ], allowDiskUse=True)
-    result_dict = {}
-    for document in command_cursor:
-        if str(document.get("_id")):
-            result_dict[str(document.get("_id"))] = document.get("count")
-    #logging.info(result_dict)
+        ], allowDiskUse=True)
+        for document in command_cursor:
+            if str(document.get("_id")):
+                result_dict[str(document.get("_id"))] += document.get("count")
+    # logging.info(result_dict)
     return result_dict
 
 
 def get_leak_references(report_objectid_list):
-    command_cursor = ApkLeaksReport.objects(pk__in=report_objectid_list).aggregate([
-        {
-            "$match": {
-                "results.results": {
-                    "$ne": [
+    """
+    Gets a the reference where a specific leak was found.
+    :param report_objectid_list: list(ObjectId) - list(class:'ApkLeaksReport' ObjectIds)
+    :return:
+    """
+    reference_dict = {}
+    chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
+    for chunk in chunk_list:
+        command_cursor = ApkLeaksReport.objects(pk__in=chunk).aggregate([
+            {
+                "$match": {
+                    "results.results": {
+                        "$ne": [
 
-                    ]
+                        ]
+                    }
                 }
-            }
-        },
-        {
-            "$project": {
-                "results.results": 1
-            }
-        },
-        {
-            "$unwind": "$results.results"
-        },
-        {
-            "$project": {
-                "_id": "$_id",
-                "name": "$results.results.name",
-                "numberOfMatches": {
-                    "$cond": {
-                        "if": {
-                            "$isArray": "$results.results.matches"
-                        },
-                        "then": {
-                            "$size": "$results.results.matches"
-                        },
-                        "else": 0
+            },
+            {
+                "$project": {
+                    "results.results": 1
+                }
+            },
+            {
+                "$unwind": "$results.results"
+            },
+            {
+                "$project": {
+                    "_id": "$_id",
+                    "name": "$results.results.name",
+                    "numberOfMatches": {
+                        "$cond": {
+                            "if": {
+                                "$isArray": "$results.results.matches"
+                            },
+                            "then": {
+                                "$size": "$results.results.matches"
+                            },
+                            "else": 0
+                        }
                     }
                 }
             }
-        }
-    ], allowDiskUse=True)
-    reference_dict = {}
-    for document in command_cursor:
-        logging.info(document)
-        if str(document.get("_id")) not in reference_dict:
-            reference_dict[str(document.get("_id"))] = {}
-        reference_dict[str(document.get("_id"))][str(document.get("name"))] = document.get("numberOfMatches")
-    #logging.info(reference_dict)
+        ], allowDiskUse=True)
+        for document in command_cursor:
+            logging.info(document)
+            if str(document.get("_id")) not in reference_dict:
+                reference_dict[str(document.get("_id"))] = {}
+            reference_dict[str(document.get("_id"))][str(document.get("name"))] += document.get("numberOfMatches")
+    # logging.info(reference_dict)
     return reference_dict
 
 
@@ -162,22 +176,25 @@ def get_google_api_key_reports(report_objectid_list):
     :param report_objectid_list:
     :return:
     """
-    command_cursor = ApkLeaksReport.objects(pk__in=report_objectid_list).aggregate([
-        {
-            "$match": {
-                "results.results.name": "Google_API_Key"
-            }
-        },
-        {
-            "$project": {
-                "_id": "$_id"
-            }
-        }
-    ], allowDiskUse=True)
     report_id_list = []
-    for document in command_cursor:
-        report_id_list.append(document.get("_id"))
-    #logging.info(report_id_list)
+    chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
+    for chunk in chunk_list:
+        command_cursor = ApkLeaksReport.objects(pk__in=chunk).aggregate([
+            {
+                "$match": {
+                    "results.results.name": "Google_API_Key"
+                }
+            },
+            {
+                "$project": {
+                    "_id": "$_id"
+                }
+            }
+        ], allowDiskUse=True)
+
+        for document in command_cursor:
+            report_id_list.append(document.get("_id"))
+    # logging.info(report_id_list)
     return report_id_list
 
 
