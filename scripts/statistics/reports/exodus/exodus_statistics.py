@@ -4,8 +4,6 @@ from bson import ObjectId
 from model import ExodusReport
 from model.ExodusStatisticsReport import ExodusStatisticsReport
 from scripts.rq_tasks.flask_context_creator import create_app_context
-from scripts.statistics.reports.firmware_statistics import get_firmware_by_vendor_and_version, \
-    get_apps_by_vendor_and_version
 from scripts.utils.file_utils.file_util import create_reference_file
 from scripts.statistics.statistics_common import fetch_chunked_lists
 
@@ -34,10 +32,11 @@ def create_exodus_statistics_report(android_app_id_list, report_name):
 
 
 def add_exodus_statistics(statistics_report, android_app_objectid_list):
-    firmware_by_vendor_and_version_dict = get_firmware_by_vendor_and_version(android_app_objectid_list)
-    app_by_vendor_and_version_dict = get_apps_by_vendor_and_version(firmware_by_vendor_and_version_dict)
-    tracker_frequency_by_fw_version_dict = get_tracker_frequency_by_fw_version(app_by_vendor_and_version_dict)
-    statistics_report.tracker_frequency_by_fw_version_dict = tracker_frequency_by_fw_version_dict
+    #firmware_by_vendor_and_version_dict = get_firmware_by_vendor_and_version(android_app_objectid_list)
+    #app_by_vendor_and_version_dict = get_apps_by_vendor_and_version(firmware_by_vendor_and_version_dict)
+    #tracker_frequency_by_fw_version_dict = get_tracker_frequency_by_fw_version(app_by_vendor_and_version_dict)
+    #statistics_report.tracker_frequency_by_fw_version_dict = tracker_frequency_by_fw_version_dict
+    statistics_report.tracker_frequency_by_fw_version_dict = get_tracker_frequency(android_app_objectid_list)
     statistics_report.save()
     logging.info(f"Added tracker by version and vendor statistics to Exodus!")
 
@@ -118,8 +117,7 @@ def get_tracker_frequency(android_app_objectid_list):
                     tracker_dict[tracker_name] += count
                 else:
                     tracker_dict[tracker_name] = count
-    result_list = [tracker_dict]
-    return result_list
+    return tracker_dict
 
 
 def create_empty_exodus_statistics_report(report_name, report_count, android_app_id_list, android_app_reference_file):

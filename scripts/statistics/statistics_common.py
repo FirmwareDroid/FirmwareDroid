@@ -12,7 +12,7 @@ from multiprocessing import Lock, Manager, get_context
 from bson import ObjectId
 from mongoengine import DoesNotExist
 
-from model import AndroidApp
+from model import AndroidApp, AndroidFirmware
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.database.database import multiprocess_disconnect_all
 from scripts.utils.string_utils.string_util import filter_mongodb_dict_chars

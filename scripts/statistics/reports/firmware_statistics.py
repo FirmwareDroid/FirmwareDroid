@@ -299,7 +299,7 @@ def get_os_version_detected_list():
     return os_version_list
 
 
-def get_firmware_by_vendor_and_version(android_objectid_list):
+def get_firmware_by_vendor_and_version(firmware_objectid_list):
     firmware_by_vendor_and_version_dict = {}
     os_vendor_list = get_detected_firmware_vendors()
     os_version_list = get_os_version_detected_list()
@@ -309,7 +309,7 @@ def get_firmware_by_vendor_and_version(android_objectid_list):
 
         for os_version in os_version_list:
             firmware_list = AndroidFirmware.objects(os_vendor=os_vendor,
-                                                    android_app_id_list__in=android_objectid_list,
+                                                    _id__in=firmware_objectid_list,
                                                     version_detected=os_version).only("android_app_id_list",
                                                                                       "id")
             firmware_by_vendor_and_version_dict[str(os_vendor)][str(os_version)] = firmware_list
