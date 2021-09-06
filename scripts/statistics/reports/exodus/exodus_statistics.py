@@ -63,7 +63,7 @@ def get_tracker_frequency(report_objectid_list):
     tracker_dict = {}
     chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
     for chunk in chunk_list:
-        command_cursor = ExodusReport.objects(_id__in=chunk).aggregate([
+        command_cursor = ExodusReport.objects(pk__in=chunk).aggregate([
           {
             "$match": {
               "results.trackers": {
