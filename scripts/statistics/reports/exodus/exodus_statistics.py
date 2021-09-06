@@ -16,6 +16,7 @@ def create_exodus_statistics_report(android_app_id_list, report_name):
     :param report_name: str - user defined name for identification.
     :param android_app_id_list: list(class:'AndroidApp' object-id's)
     """
+    logging.info(f"Exodus statistics with {len(android_app_id_list)} apps.")
     create_app_context()
     android_app_reference_file = create_reference_file(android_app_id_list)
     reference_attribute = "exodus_report_reference"
