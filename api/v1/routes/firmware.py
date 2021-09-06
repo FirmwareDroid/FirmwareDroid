@@ -203,7 +203,7 @@ class GetLatestFirmware(Resource):
         return response
 
 
-@ns.route('/add_os_vendor_by_filename/<string:os_vendor>')
+@ns.route('/set_os_vendor_by_filename/<string:os_vendor>')
 @ns.expect(string_list)
 class SetFirmwareOsVendor(Resource):
     @ns.doc('post')
@@ -212,7 +212,7 @@ class SetFirmwareOsVendor(Resource):
         """
         Set the os vendor for one or more firmware data objects by the original filename.
         @:param os_vendor: str - OS Vendor name to add ot the firmware.
-        string_list: List(str) - List of Firmware filenames for cross reference.
+        string_list: List(str) - List of firmware filenames for cross reference.
         """
         response = "", 400
         try:
@@ -224,6 +224,29 @@ class SetFirmwareOsVendor(Resource):
                                            job_timeout=60 * 60 * 24)
 
             response = "", 200
+        except Exception as err:
+            logging.error(err)
+        return response
+
+
+@ns.route('/get_firmware_by_os_vendor/<string:os_vendor>')
+class SetFirmwareOsVendor(Resource):
+    @ns.doc('post')
+    @admin_jwt_required
+    def post(self, os_vendor):
+        """
+        Get a list of firmware-id's by os_vendor name.
+        @:param os_vendor: str - OS Vendor name.
+        string_list: List(str) - List of firmware ids.
+        """
+        response = "", 400
+        try:
+            # TODO security enhancement - validate input
+            firmware_list = AndroidFirmware.objects(os_vendor=str(os_vendor)).only("id")
+            firmware_id_list = []
+            for firmware in firmware_list:
+                firmware_id_list.append(str(firmware.id))
+            response = json.dumps(firmware_id_list, cls=DefaultJsonEncoder), 200
         except Exception as err:
             logging.error(err)
         return response

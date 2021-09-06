@@ -47,6 +47,7 @@ def cleanup_firmware_app_references():
     """
     Deletes all class:'AndroidApp' without a referenced Firmware.
     """
+    # TODO refactor this method - use batch delete
     create_app_context()
     chunk_size = 1000
     number_of_apps = AndroidApp.objects.count()

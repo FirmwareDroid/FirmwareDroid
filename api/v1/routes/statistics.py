@@ -126,14 +126,16 @@ class CreateAndroGuardCertStatistics(Resource):
         return "", 200
 
 
-@ns.route('/create_statistics_report/<int:mode>/<string:report_name>/<int:report_type>')
+@ns.route('/create_statistics_report/<int:mode>/<string:report_name>/<int:report_type>/<string:os_vendor>')
+@ns.route('/create_statistics_report/<int:mode>/<string:report_name>/<int:report_type>', defaults={'os_vendor': None})
 @ns.expect(object_id_list)
 class CreateQarkStatistics(Resource):
     @ns.doc('post')
     @admin_jwt_required
-    def post(self, mode, report_name, report_type):
+    def post(self, mode, report_name, report_type, os_vendor=None):
         """
         Create statistics for a specific report.
+        :param os_vendor: str - firmware os vendor.
         :param mode: If mode = 1 all firmware in the database will be used for the report instead of the given json.
         :param report_name: str - A custom tag for the report with a short description.
         :param report_type: int - valid types:
@@ -185,7 +187,7 @@ class CreateQarkStatistics(Resource):
                 firmware_id_list = check_firmware_mode(mode, request)
                 parameter_list = firmware_id_list
             else:
-                android_app_id_list = check_app_mode(mode, request)
+                android_app_id_list = check_app_mode(mode, request, os_vendor=os_vendor)
                 parameter_list = android_app_id_list
 
             if start_function is not None:

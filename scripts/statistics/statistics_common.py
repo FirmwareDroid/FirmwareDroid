@@ -20,6 +20,7 @@ from scripts.utils.mulitprocessing_util.mp_util import create_managed_queue, mul
 from scripts.utils.file_utils.file_util import create_reference_file_from_dict, object_to_temporary_json_file, \
     store_json_file, create_reference_file
 import numpy as np
+
 lock = Lock()
 
 
@@ -361,3 +362,14 @@ def get_report_objectid_list(android_objectid_list, reference_attribute):
         else:
             logging.warning(f"Android app has no report - ignoring: {android_app.id}")
     return report_objectid_list
+
+
+def fetch_chunked_lists(android_app_id_list, reference_attribute):
+    chunk_list = [android_app_id_list[x:x + 1000] for x in range(0, len(android_app_id_list), 1000)]
+    android_app_objectid_list = []
+    report_objectid_list = []
+    for chunk in chunk_list:
+        tmp_objId_list = get_app_objectid_list(chunk)
+        android_app_objectid_list.extend(tmp_objId_list)
+        report_objectid_list.extend(get_report_objectid_list(tmp_objId_list, reference_attribute))
+    return android_app_objectid_list, report_objectid_list

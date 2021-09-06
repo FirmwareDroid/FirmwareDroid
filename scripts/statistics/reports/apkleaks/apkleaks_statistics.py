@@ -3,7 +3,7 @@ import logging
 from model import ApkLeaksStatisticsReport, ApkLeaksReport, AndroidApp, AndroidFirmware
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.file_utils.file_util import create_reference_file, object_to_temporary_json_file, stream_to_json_file
-from scripts.statistics.statistics_common import get_app_objectid_list, get_report_objectid_list
+from scripts.statistics.statistics_common import fetch_chunked_lists
 
 
 def create_apkleaks_statistics_report(android_app_id_list, report_name):
@@ -15,13 +15,7 @@ def create_apkleaks_statistics_report(android_app_id_list, report_name):
     create_app_context()
     android_app_reference_file = create_reference_file(android_app_id_list)
     reference_attribute = "apkleaks_report_reference"
-    chunk_list = [android_app_id_list[x:x + 100] for x in range(0, len(android_app_id_list), 100)]
-    android_app_objectid_list = []
-    report_objectid_list = []
-    for chunk in chunk_list:
-        tmp_objId_list = get_app_objectid_list(chunk)
-        android_app_objectid_list.extend(tmp_objId_list)
-        report_objectid_list.extend(get_report_objectid_list(tmp_objId_list, reference_attribute))
+    android_app_objectid_list, report_objectid_list = fetch_chunked_lists(android_app_id_list, reference_attribute)
     reports_count = len(report_objectid_list)
     logging.info(f"Got APKLeaks report ids: {reports_count}")
     if reports_count > 1:
@@ -233,7 +227,7 @@ def create_google_api_key_references(report_objectid_list):
                                                  f"{android_app.relative_firmware_path}, "
                                                  f"{android_app.sha256}, "
                                                  f"{api_key}")
-    text_data = {"header": "Firmware Filename, Firmware SHA256, App Filename, App Packagename, App SHA256, "
+    text_data = {"header": "Firmware Filename, Firmware SHA256, App Filename, App Path, App SHA256, "
                            "Google API KEY",
                  "body": text_body}
     return text_data

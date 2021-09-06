@@ -8,25 +8,30 @@ from scripts.database.query_document import get_all_document_ids
 from model import AndroidApp, AndroidFirmware
 
 
-def check_app_mode(mode, request):
+def check_app_mode(mode, request, **kwargs):
     """
     Create a list of app id's depending on the mode used.
     :param mode: int -
         mode = 1: All Android Apps from the database will be used.
-        mode = 2: Gets all apps depending on the version.
-        mode > 2 or < 1: Gets all the apps from the request
+        mode = 2: Get Android Apps from the database by firmware os vendor.
+        mode >= 3: Use the mode as version filter. Gets all apps depending on the firmware version.
     :param request: flask.request
     :return: list(object-id's) - list of id's from class:'AndroidApp'
     """
     android_app_id_list = []
     if mode == 1:
         android_app_id_list.extend(get_all_document_ids(AndroidApp))
-    elif mode >= 2:
+    elif mode == 2:
+        if kwargs["os_vendor"]:
+            firmware_list = AndroidFirmware.objects(os_vendor=kwargs["os_vendor"])
+            for firmware in firmware_list:
+                for android_app_lazy in firmware.android_app_id_list:
+                    android_app_id_list.append(str(android_app_lazy.pk))
+    elif mode >= 3:
         firmware_list = AndroidFirmware.objects(version_detected=mode)
         for firmware in firmware_list:
             for android_app_lazy in firmware.android_app_id_list:
                 android_app_id_list.append(str(android_app_lazy.pk))
-        logging.info(f"Mode 2 - Android App: {len(android_app_id_list)}")
     else:
         android_app_id_list = parse_json_object_id_list(request, AndroidApp)
     return android_app_id_list
