@@ -300,11 +300,6 @@ def get_os_version_detected_list():
 
 
 def get_firmware_by_vendor_and_version(android_objectid_list):
-    """
-
-    :param android_objectid_list:
-    :return: dict(str, dict(str, list(ids))) - dict(os-vendor, dict(os-version, list(Android-App ids)))
-    """
     firmware_by_vendor_and_version_dict = {}
     os_vendor_list = get_detected_firmware_vendors()
     os_version_list = get_os_version_detected_list()
@@ -315,7 +310,8 @@ def get_firmware_by_vendor_and_version(android_objectid_list):
         for os_version in os_version_list:
             firmware_list = AndroidFirmware.objects(os_vendor=os_vendor,
                                                     android_app_id_list__in=android_objectid_list,
-                                                    version_detected=os_version)
+                                                    version_detected=os_version).only("android_app_id_list",
+                                                                                      "id")
             firmware_by_vendor_and_version_dict[str(os_vendor)][str(os_version)] = firmware_list
     return firmware_by_vendor_and_version_dict
 
@@ -326,11 +322,12 @@ def get_apps_by_vendor_and_version(firmware_by_vendor_and_version_dict):
         if str(os_vendor) not in app_by_vendor_and_version_dict:
             app_by_vendor_and_version_dict[str(os_vendor)] = {}
         for os_version, firmware_list in os_version_dict.items():
+            logging.info(f"Firmware-List len: {len(firmware_list)}")
             if str(os_version) not in app_by_vendor_and_version_dict[str(os_vendor)]:
                 app_by_vendor_and_version_dict[str(os_vendor)][str(os_version)] = []
             chunk_list = [firmware_list[x:x + 100] for x in range(0, len(firmware_list), 100)]
-            for firmware_chuck in chunk_list:
-                for firmware in firmware_chuck:
+            for firmware_chunk in chunk_list:
+                for firmware in firmware_chunk:
                     app_by_vendor_and_version_dict[str(os_vendor)][str(os_version)].extend(
                         firmware.android_app_id_list)
     return app_by_vendor_and_version_dict
