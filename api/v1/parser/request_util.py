@@ -28,7 +28,10 @@ def check_app_mode(mode, request, **kwargs):
                 for android_app_lazy in firmware.android_app_id_list:
                     android_app_id_list.append(str(android_app_lazy.pk))
     elif mode >= 3:
-        firmware_list = AndroidFirmware.objects(version_detected=mode)
+        if kwargs["os_vendor"]:
+            firmware_list = AndroidFirmware.objects(version_detected=mode, os_vendor=kwargs["os_vendor"])
+        else:
+            firmware_list = AndroidFirmware.objects(version_detected=mode)
         for firmware in firmware_list:
             for android_app_lazy in firmware.android_app_id_list:
                 android_app_id_list.append(str(android_app_lazy.pk))

@@ -26,17 +26,17 @@ def create_exodus_statistics_report(android_app_id_list, report_name):
                                                                   reports_count,
                                                                   android_app_id_list,
                                                                   android_app_reference_file)
-        add_exodus_statistics(statistics_report, android_app_objectid_list)
+        add_exodus_statistics(statistics_report, report_objectid_list)
     else:
         raise ValueError("No reports in the database. Can't create statistics.")
 
 
-def add_exodus_statistics(statistics_report, android_app_objectid_list):
+def add_exodus_statistics(statistics_report, report_objectid_list):
     #firmware_by_vendor_and_version_dict = get_firmware_by_vendor_and_version(android_app_objectid_list)
     #app_by_vendor_and_version_dict = get_apps_by_vendor_and_version(firmware_by_vendor_and_version_dict)
     #tracker_frequency_by_fw_version_dict = get_tracker_frequency_by_fw_version(app_by_vendor_and_version_dict)
     #statistics_report.tracker_frequency_by_fw_version_dict = tracker_frequency_by_fw_version_dict
-    statistics_report.tracker_count_dict = get_tracker_frequency(android_app_objectid_list)
+    statistics_report.tracker_count_dict = get_tracker_frequency(report_objectid_list)
     statistics_report.save()
     logging.info(f"Added tracker by version and vendor statistics to Exodus!")
 
@@ -55,16 +55,15 @@ def get_tracker_frequency_by_fw_version(app_by_vendor_and_version_dict):
     return tracker_frequency_by_fw_version_dict
 
 
-def get_tracker_frequency(android_app_objectid_list):
+def get_tracker_frequency(report_objectid_list):
     """
     Gets the count of AD-Trackers. For each tracker the sum is aggregated over all apps.
-    :param android_app_objectid_list: list(ObjectId) - List of class:'AndroidApp' objectIds.
     :return: List(dict(str, int)) - List(dict("AD-Tracker-Name", Tracker-Count))
     """
     tracker_dict = {}
-    chunk_list = [android_app_objectid_list[x:x + 1000] for x in range(0, len(android_app_objectid_list), 1000)]
+    chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
     for chunk in chunk_list:
-        command_cursor = ExodusReport.objects(android_app_id_reference__in=chunk).aggregate([
+        command_cursor = ExodusReport.objects(_id__in=chunk).aggregate([
           {
             "$match": {
               "results.trackers": {
