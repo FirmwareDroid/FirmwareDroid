@@ -328,7 +328,9 @@ def get_apps_by_vendor_and_version(firmware_by_vendor_and_version_dict):
         for os_version, firmware_list in os_version_dict.items():
             if str(os_version) not in app_by_vendor_and_version_dict[str(os_vendor)]:
                 app_by_vendor_and_version_dict[str(os_vendor)][str(os_version)] = []
-            for firmware in firmware_list:
-                app_by_vendor_and_version_dict[str(os_vendor)][str(os_version)].extend(
-                    firmware.android_app_id_list)
+            chunk_list = [firmware_list[x:x + 1000] for x in range(0, len(firmware_list), 1000)]
+            for firmware_chuck in chunk_list:
+                for firmware in firmware_chuck:
+                    app_by_vendor_and_version_dict[str(os_vendor)][str(os_version)].extend(
+                        firmware.android_app_id_list)
     return app_by_vendor_and_version_dict
