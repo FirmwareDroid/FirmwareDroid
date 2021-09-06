@@ -36,7 +36,7 @@ def add_exodus_statistics(statistics_report, android_app_objectid_list):
     #app_by_vendor_and_version_dict = get_apps_by_vendor_and_version(firmware_by_vendor_and_version_dict)
     #tracker_frequency_by_fw_version_dict = get_tracker_frequency_by_fw_version(app_by_vendor_and_version_dict)
     #statistics_report.tracker_frequency_by_fw_version_dict = tracker_frequency_by_fw_version_dict
-    statistics_report.tracker_frequency_by_fw_version_dict = get_tracker_frequency(android_app_objectid_list)
+    statistics_report.tracker_count_dict = get_tracker_frequency(android_app_objectid_list)
     statistics_report.save()
     logging.info(f"Added tracker by version and vendor statistics to Exodus!")
 
