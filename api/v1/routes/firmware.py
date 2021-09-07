@@ -172,7 +172,8 @@ class DownloadFirmware(Resource):
         """
         try:
             firmware = AndroidFirmware.objects.get(pk=firmware_id)
-            response = send_file(firmware.absolute_store_path,
+            file_path = os.path.join(firmware.absolute_store_path, firmware.filename)
+            response = send_file(file_path,
                                  as_attachment=True,
                                  attachment_filename=firmware.filename,
                                  mimetype="application/zip")
