@@ -7,13 +7,8 @@ from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.string_utils.string_util import filter_mongodb_dict_chars
 from scripts.statistics.statistics_common import dict_to_title_format
 from scripts.database.query_document import create_document_list_by_ids
-
-BUILD_VERSION_RELEASE = "ro_build_version_release"
-PRODUCT_MANUFACTURER = "ro_product_manufacturer"
-PRODUCT_BRAND = "ro_product_brand"
-PRODUCT_LOCALE = "ro_product_locale"
-PRODUCT_LOCAL_REGION = "ro_product_locale_region"
-PRODUCT_MODEL = "ro_product_model"
+from scripts.firmware.const_regex_patterns import BUILD_VERSION_RELEASE_LIST, PRODUCT_BRAND_LIST, PRODUCT_MODEL_LIST, \
+    PRODUCT_LOCALE_LIST, PRODUCT_MANUFACTURER_LIST, PRODUCT_LOCAL_REGION_LIST
 
 
 def create_firmware_statistics_report(firmware_id_list, report_name):
@@ -34,13 +29,18 @@ def create_firmware_statistics_report(firmware_id_list, report_name):
             firmware_id_list=firmware_id_list,
             number_of_firmware_by_android_version=create_main_version_statistics(firmware_list),
             number_of_firmware_by_android_sub_version=filter_mongodb_dict_chars(
-                create_version_statistics(firmware_list)),
-            number_of_firmware_by_brand=filter_mongodb_dict_chars(create_brand_statistics(firmware_list)),
-            number_of_firmware_by_model=filter_mongodb_dict_chars(create_model_statistics(firmware_list)),
-            number_of_firmware_by_locale=filter_mongodb_dict_chars(create_locale_statistics(firmware_list)),
-            number_of_firmware_by_manufacturer=filter_mongodb_dict_chars(create_manufacturer_statistics(firmware_list)),
+                get_property_count(firmware_list, BUILD_VERSION_RELEASE_LIST)),
+            number_of_firmware_by_brand=filter_mongodb_dict_chars(get_property_count(firmware_list,
+                                                                                     PRODUCT_BRAND_LIST)),
+            number_of_firmware_by_model=filter_mongodb_dict_chars(get_property_count(firmware_list,
+                                                                                     PRODUCT_MODEL_LIST)),
+            number_of_firmware_by_locale=filter_mongodb_dict_chars(get_property_count(firmware_list,
+                                                                                      PRODUCT_LOCALE_LIST)),
+            number_of_firmware_by_manufacturer=filter_mongodb_dict_chars(get_property_count(firmware_list,
+                                                                                            PRODUCT_MANUFACTURER_LIST)),
             number_of_firmware_files=AndroidFirmware.objects.count(),
-            number_of_firmware_by_region=filter_mongodb_dict_chars(create_region_statistics(firmware_list)),
+            number_of_firmware_by_region=filter_mongodb_dict_chars(get_property_count(firmware_list,
+                                                                                      PRODUCT_LOCAL_REGION_LIST)),
             android_app_count=firmware_app_count(firmware_list),
             number_of_unique_packagenames=len(get_unique_packagenames(firmware_list)),
             number_of_unique_packagenames_by_android_version=count_unique_packagenames_by_version,
@@ -90,49 +90,34 @@ def count_build_prop(firmware_list, build_property, startswith_filter=""):
     return count
 
 
-def create_manufacturer_statistics(firmware_list):
+def get_property_count(firmware_list, property_name_list):
     """
-    Counts how many firmware images are from which manufacturer.
-    :return: dict(str,int)
+    Count the frequency of a specific build.prop property.
+    :param firmware_list: list(class:'AndroidFirmware')
+    :param property_name_list: list(str)
+    :return: dict(str, int)
     """
-    maufacturer_list = count_by_build_prop_key(firmware_list, PRODUCT_MANUFACTURER)
-    return dict_to_title_format(maufacturer_list)
+    result_dict = {}
+    for build_prop_name in property_name_list:
+        count_dict = count_by_build_prop_key(firmware_list, build_prop_name)
+        result_dict = merge_count_dicts(result_dict, count_dict)
+    return dict_to_title_format(result_dict)
 
 
-def create_brand_statistics(firmware_list):
+def merge_count_dicts(dict1, dict2):
     """
-    Counts how many firmware images are from which brand.
-    :return: dict(str,int)
+    Merge two dicts with counts into one. Example: dict1(str, int1) merge dict2(str, int2) = dict 3(str, int1+int2)
+    :param dict1: dict
+    :param dict2: dict
+    :return: dict - merged dict
     """
-    brand_dict = count_by_build_prop_key(firmware_list, PRODUCT_BRAND)
-    return dict_to_title_format(brand_dict)
-
-
-def create_locale_statistics(firmware_list):
-    """
-    Counts how many firmware images are from which locale.
-    :param firmware_list: The list of class:AndroidFirmware to search through.
-    :return: dict(str,int)
-    """
-    return count_by_build_prop_key(firmware_list, PRODUCT_LOCALE)
-
-
-def create_region_statistics(firmware_list):
-    """
-    Counts how many firmware images are from which region.
-    :param firmware_list: The list of class:AndroidFirmware to search through.
-    :return: dict(str,int)
-    """
-    return count_by_build_prop_key(firmware_list, PRODUCT_LOCAL_REGION)
-
-
-def create_version_statistics(firmware_list):
-    """
-    Counts the number of versions including subversion's.
-    :param firmware_list: The list of class:AndroidFirmware to search through.
-    :return: dict(str,int)
-    """
-    return count_by_build_prop_key(firmware_list, BUILD_VERSION_RELEASE)
+    merged_dict = dict2.copy()
+    for key, value in dict1.items():
+        if key in merged_dict:
+            merged_dict[key] += value
+        else:
+            merged_dict[key] = value
+    return merged_dict
 
 
 def create_main_version_statistics(firmware_list):
@@ -150,15 +135,6 @@ def create_main_version_statistics(firmware_list):
         else:
             main_version_dict[str(main_version)] = 1
     return main_version_dict
-
-
-def create_model_statistics(firmware_list):
-    """
-    Counts the number of firmware with same models.
-    :param firmware_list: The list of class:AndroidFirmware to search through.
-    :return: dict(str,int)
-    """
-    return count_by_build_prop_key(firmware_list, PRODUCT_MODEL)
 
 
 def firmware_app_count(firmware_list):
@@ -238,6 +214,10 @@ def get_unique_packagenames(firmware_list):
 
 
 def get_detected_firmware_vendors():
+    """
+    Get a list of firmware vendors.
+    :return: lis(str)
+    """
     os_vendor_cursor = AndroidFirmware.objects.aggregate([
         {
             "$project": {
@@ -269,6 +249,10 @@ def get_detected_firmware_vendors():
 
 
 def get_os_version_detected_list():
+    """
+    Get a list of represented Android versions.
+    :return: list(str)
+    """
     os_version_cursor = AndroidFirmware.objects.aggregate([
         {
             "$project": {
@@ -300,6 +284,11 @@ def get_os_version_detected_list():
 
 
 def get_firmware_by_vendor_and_version(firmware_objectid_list):
+    """
+    Get a dict of firmware sorted by os version and vendor.
+    :param firmware_objectid_list:
+    :return:
+    """
     firmware_by_vendor_and_version_dict = {}
     os_vendor_list = get_detected_firmware_vendors()
     os_version_list = get_os_version_detected_list()
@@ -317,6 +306,11 @@ def get_firmware_by_vendor_and_version(firmware_objectid_list):
 
 
 def get_apps_by_vendor_and_version(firmware_by_vendor_and_version_dict):
+    """
+
+    :param firmware_by_vendor_and_version_dict:
+    :return:
+    """
     app_by_vendor_and_version_dict = {}
     for os_vendor, os_version_dict in firmware_by_vendor_and_version_dict.items():
         if str(os_vendor) not in app_by_vendor_and_version_dict:

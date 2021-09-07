@@ -14,7 +14,7 @@ def check_app_mode(mode, request, **kwargs):
     :param mode: int -
         mode = 1: All Android Apps from the database will be used.
         mode = 2: Get Android Apps from the database by firmware os vendor.
-        mode >= 3: Use the mode as version filter. Gets all apps depending on the firmware version.
+        mode >= 3 or == 0: Use the mode as version filter. Gets all apps depending on the firmware version.
     :param request: flask.request
     :return: list(object-id's) - list of id's from class:'AndroidApp'
     """
@@ -27,7 +27,7 @@ def check_app_mode(mode, request, **kwargs):
             for firmware in firmware_list:
                 for android_app_lazy in firmware.android_app_id_list:
                     android_app_id_list.append(str(android_app_lazy.pk))
-    elif mode >= 3:
+    elif mode >= 3 or mode == 0:
         if kwargs["os_vendor"]:
             firmware_list = AndroidFirmware.objects(version_detected=mode, os_vendor=kwargs["os_vendor"])
         else:

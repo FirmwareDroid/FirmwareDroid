@@ -65,3 +65,26 @@ PRODUCT_DAT_PATCH_PATTERN_LIST = ["product[.]patch[.]dat"]
 SYSTEM_EXT_DAT_PATCH_PATTERN_LIST = ["system_ext[.]patch[.]dat"]
 SYSTEM_OTHER_DAT_PATCH_PATTERN_LIST = ["system_other[.]patch[.]dat"]
 SYSTEM_DAT_PATCH_PATTERN_LIST = ["system[.]patch[.]dat"]
+
+
+##########################################################################################
+# Build.prop properties
+# ONLY EXACT MATCHES - NO REGEX
+##########################################################################################
+BUILD_VERSION_RELEASE_LIST = ["ro_build_version_release", "ro.build.version.release"]
+PRODUCT_MANUFACTURER_LIST = ["ro_product_manufacturer", "ro.product.manufacturer"]
+PRODUCT_BRAND_LIST = ["ro_product_brand", "ro.product.brand"]
+PRODUCT_LOCALE_LIST = ["ro_product_locale", "ro.product.locale"]
+PRODUCT_LOCAL_REGION_LIST = ["ro_product_locale_region", "ro.product.locale.region"]
+PRODUCT_MODEL_LIST = ["ro.product.model"]
+
+
+
+
+
+
+
+
+
+
+

@@ -5,15 +5,17 @@ import json
 import logging
 import os
 import tempfile
-
 import flask
 import time
 from io import BytesIO
 from zipfile import ZipInfo, ZIP_DEFLATED
+
+from bson import ObjectId
 from flask import request, send_file
 from flask_restx import Resource, Namespace
 from mongoengine import DoesNotExist
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required, user_jwt_required
+from scripts.firmware.firmware_version_detect import detect_by_build_prop
 from scripts.firmware.firmware_os_detect import set_firmware_by_filenames
 from scripts.hashing import md5_from_file
 from scripts.utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
@@ -22,7 +24,7 @@ from api.v1.parser.json_parser import parse_json_object_id_list, parse_string_li
 from model.AndroidFirmware import AndroidFirmwareSchema
 from scripts.database.delete_document import clear_firmware_database
 from scripts.firmware.firmware_importer import start_firmware_mass_import
-from model import AndroidFirmware
+from model import AndroidFirmware, BuildPropFile
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
@@ -69,18 +71,30 @@ class FirmwareGetAppIds(Resource):
         return json.dumps(android_app_id_list, cls=DefaultJsonEncoder)
 
 
-@ns.route('/<string:android_version>', doc={"deprecated": True})
+@ns.route('/set_os_version/')
 class FirmwareByVersion(Resource):
-    @ns.doc('get', params={'android_version': 'A version string Example, 9 or 8.1 or 7.1.1'})
+    @ns.doc('get')
     @admin_jwt_required
-    def get(self, android_version):
+    def post(self):
         """
-        Get a list of firmware-id's with the given version (including subversions).
-        :param android_version: The version number to filter for. Example, 9 or 8.1 or 7.1.1
-        :return: json: list of firmware-id's.
+        Start the version detection for Android firmware. Takes only firmware samples with version 0 and attempts to
+        specify the version of the firmware by parsing build properties.
         """
-        firmware_list = AndroidFirmware.objects(version_detected=android_version).only('id')
-        return json.dumps(firmware_list, cls=DefaultJsonEncoder)
+        response = "", 200
+        firmware_list = AndroidFirmware.objects(version_detected=0)
+        for firmware in firmware_list:
+            build_prop_objectId_list = []
+            for build_prop_lazy_reference in firmware.build_prop_file_id_list:
+                build_prop_objectId_list.append(ObjectId(build_prop_lazy_reference.pk))
+            build_prop_file_list = BuildPropFile.objects(pk__in=build_prop_objectId_list)
+            version_detected = int(detect_by_build_prop(build_prop_file_list))
+            if version_detected > 0:
+                logging.info(f"Detected version for firmware: {firmware.id}")
+                firmware.version_detected = version_detected
+                firmware.save()
+            else:
+                logging.info(f"Could not detect version for firmware: {firmware.id}")
+        return response
 
 
 @ns.route('/start_importer/<bool:create_fuzzy_hashes>')
