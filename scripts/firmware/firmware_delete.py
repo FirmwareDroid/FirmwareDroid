@@ -9,8 +9,7 @@ from scripts.rq_tasks.flask_context_creator import create_app_context
 def delete_firmware_by_id(firmware_id_list):
     """
     Delete all firmware object from the database. Cascades to reference objects as well.
-    :param firmware_objectid_list: list(ObjectId(class:'AndroidFirmware'))
-    :return:
+    :param firmware_id_list: list(str) - ids of class:'AndroidFirmware'
     """
     create_app_context()
     firmware_objectid_list = []
