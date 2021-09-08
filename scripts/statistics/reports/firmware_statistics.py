@@ -61,13 +61,14 @@ def count_by_build_prop_key(firmware_list, build_property_key):
     """
     result_dict_count = {}
     for firmware in firmware_list:
-        # TODO Refactor or remove
-        firmware_properties = firmware.build_prop.properties
-        android_build_property = firmware_properties.get(build_property_key)
-        if android_build_property in result_dict_count:
-            result_dict_count[android_build_property] = result_dict_count[android_build_property] + 1
-        else:
-            result_dict_count[str(android_build_property)] = 1
+        # TODO Refactor or remove - use database query instead to optimize performance
+        if firmware.build_prop and firmware.build_prop.properties:
+            firmware_properties = firmware.build_prop.properties
+            android_build_property = firmware_properties.get(build_property_key)
+            if android_build_property in result_dict_count:
+                result_dict_count[android_build_property] = result_dict_count[android_build_property] + 1
+            else:
+                result_dict_count[str(android_build_property)] = 1
     return result_dict_count
 
 

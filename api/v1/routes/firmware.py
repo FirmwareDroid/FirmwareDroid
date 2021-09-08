@@ -15,6 +15,7 @@ from flask import request, send_file
 from flask_restx import Resource, Namespace
 from mongoengine import DoesNotExist
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required, user_jwt_required
+from scripts.firmware.firmware_delete import delete_firmware_by_id
 from scripts.firmware.firmware_version_detect import detect_by_build_prop
 from scripts.firmware.firmware_os_detect import set_firmware_by_filenames
 from scripts.hashing import md5_from_file
@@ -127,6 +128,21 @@ class FirmwareDeleteAll(Resource):
         app = flask.current_app
         job = app.rq_task_queue_high.enqueue(clear_firmware_database, job_timeout=60 * 60 * 24 * 2)
         return {"id": job.get_id()}
+
+
+@ns.route('/delete/')
+@ns.expect(object_id_list)
+class FirmwareDeleteAll(Resource):
+    @ns.doc('delete')
+    @admin_jwt_required
+    def delete(self):
+        """
+        Deletes firmware from the database.
+        """
+        response = "", 200
+        app = flask.current_app
+        app.rq_task_queue_high.enqueue(delete_firmware_by_id, job_timeout=60 * 60 * 24 * 2)
+        return response
 
 
 @ns.route('/get_import_queue_size/')
