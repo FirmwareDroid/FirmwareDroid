@@ -141,7 +141,7 @@ class FirmwareDeleteAll(Resource):
         """
         response = "", 200
         app = flask.current_app
-        app.rq_task_queue_high.enqueue(delete_firmware_by_id, job_timeout=60 * 60 * 24 * 2)
+        app.rq_task_queue_high.enqueue(delete_firmware_by_id, object_id_list, job_timeout=60 * 60 * 24 * 2)
         return response
 
 
