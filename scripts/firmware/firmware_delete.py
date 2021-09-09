@@ -1,7 +1,7 @@
 import logging
+import traceback
 
 from bson import ObjectId
-
 from model import AndroidFirmware
 from scripts.rq_tasks.flask_context_creator import create_app_context
 
@@ -22,3 +22,4 @@ def delete_firmware_by_id(firmware_id_list):
             firmware.save()
         except Exception as err:
             logging.error(err)
+            traceback.print_stack()
