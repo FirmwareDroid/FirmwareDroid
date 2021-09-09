@@ -61,7 +61,7 @@ def count_by_build_prop_key(firmware_list, build_property_key):
     """
     result_dict_count = {}
     for firmware in firmware_list:
-        # TODO Refactor or remove - use database query instead to optimize performance
+        # TODO Refactor or remove - use a database query instead that optimizes performance
         if firmware.build_prop and firmware.build_prop.properties:
             firmware_properties = firmware.build_prop.properties
             android_build_property = firmware_properties.get(build_property_key)
