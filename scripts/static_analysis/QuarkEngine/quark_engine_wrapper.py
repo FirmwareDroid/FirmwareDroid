@@ -3,6 +3,8 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 import os
+import traceback
+
 from scripts.database.query_document import get_filtered_list
 from model import QuarkEngineReport, AndroidApp
 from scripts.rq_tasks.flask_context_creator import create_app_context
@@ -27,6 +29,9 @@ def quark_engine_worker(android_app_id_queue):
     Start the analysis with quark-engine on a multiprocessor queue.
     :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
     """
+    rule_path = get_quark_engine_rules()
+    if rule_path is None:
+        raise RuntimeError("Could not get quark-engine scanning rules.")
     while not android_app_id_queue.empty():
         android_app_id = android_app_id_queue.get()
         android_app = AndroidApp.objects.get(pk=android_app_id)
@@ -34,7 +39,7 @@ def quark_engine_worker(android_app_id_queue):
                      f"estimated queue-size: {android_app_id_queue.qsize()}")
         try:
             if android_app.file_size_bytes <= 83886080:
-                scan_results = get_quark_engine_scan(android_app.absolute_store_path)
+                scan_results = get_quark_engine_scan(android_app.absolute_store_path, rule_path)
                 create_quark_engine_report(android_app, scan_results)
             else:
                 logging.warning(f"Skipping: Android is over maximal file size for quark-engine. "
@@ -42,25 +47,54 @@ def quark_engine_worker(android_app_id_queue):
         except Exception as err:
             logging.error(f"Quark-Engine could not scan app {android_app.filename} id: {android_app.id} - "
                           f"error: {err}")
+            traceback.print_stack()
     remove_logs()
 
 
-def get_quark_engine_scan(apk_path, rule_path=None):
+def get_quark_engine_rules(rule_path=None):
+    """
+    Download the latest quark-engine rules if no other rule path is specified.
+    :param rule_path: str - path to the rules.
+    :return: str - path to the rules.
+    """
+    from quark.freshquark import entry_point
+    from quark.config import HOME_DIR
+    entry_point()
+    if not rule_path or rule_path is None:
+        rule_path = f"{HOME_DIR}quark-rules"
+    logging.info(f"Quark-Engine loaded rules from: {rule_path}")
+    return rule_path
+
+
+def get_quark_engine_scan(apk_path, rule_path):
     """
     Run quark-engine scan on one apk. Uses default rules if no rules path is given.
     :return: str - json report as string.
     """
     from quark.report import Report
-    from quark.config import HOME_DIR
-    from quark.freshquark import entry_point
-    entry_point()
-    if not rule_path or rule_path is None:
-        rule_path = f"{HOME_DIR}quark-rules"
-
-    logging.info(f"Quark-Engine loaded rules from: {rule_path}")
     report = Report()
     report.analysis(apk_path, rule_path)
-    return report.get_report("json")
+    json_report = report.get_report("json")
+    return json_report
+
+
+def run_paralell_quark(apk_path, rule_path, num_of_process=int(os.cpu_count()/2)):
+    raise NotImplementedError("Not yet implemented")
+    # from quark.core.parallelquark import ParallelQuark
+    # from quark.core.struct.ruleobject import RuleObject
+    # logging.info("Run parallel quark-engine scan")
+    # if os.path.isdir(rule_path):
+    #     rules_list = os.listdir(rule_path)
+    #     paralell_quark = ParallelQuark(apk_path, rule_path, num_of_process)
+    #     for single_rule in rules_list:
+    #         if single_rule.endswith("json"):
+    #             rule_path = os.path.join(rule_path, single_rule)
+    #             rule_checker = RuleObject(rule_path)
+    #             paralell_quark.apply_rules(rule_checker)
+    #             paralell_quark.run(rule_checker)
+    #             json_report = paralell_quark.get_json_report()
+    #             paralell_quark.close()
+    # return json_report
 
 
 def remove_logs():

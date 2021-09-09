@@ -69,7 +69,7 @@ class DownloadApp(Resource):
 @ns.route('/get_page/<int:page>')
 class GetCount(Resource):
     @ns.doc('post')
-    # TODO add security token with @user_jwt_required
+    @admin_jwt_required
     def post(self, page):
         """
         Gets a list of android apps based on the page number.

@@ -22,13 +22,13 @@ def check_app_mode(mode, request, **kwargs):
     if mode == 1:
         android_app_id_list.extend(get_all_document_ids(AndroidApp))
     elif mode == 2:
-        if kwargs["os_vendor"]:
+        if "os_vendor" in kwargs and kwargs["os_vendor"]:
             firmware_list = AndroidFirmware.objects(os_vendor=kwargs["os_vendor"])
             for firmware in firmware_list:
                 for android_app_lazy in firmware.android_app_id_list:
                     android_app_id_list.append(str(android_app_lazy.pk))
     elif mode >= 3 or mode == 0:
-        if kwargs["os_vendor"]:
+        if "os_vendor" in kwargs and kwargs["os_vendor"]:
             firmware_list = AndroidFirmware.objects(version_detected=mode, os_vendor=kwargs["os_vendor"])
         else:
             firmware_list = AndroidFirmware.objects(version_detected=mode)
