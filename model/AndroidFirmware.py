@@ -5,8 +5,6 @@ from mongoengine import LazyReferenceField, DateTimeField, StringField, LongFiel
     ListField, BooleanField, IntField
 from marshmallow import Schema, fields
 
-from model import BuildPropFile
-
 
 class AndroidFirmware(Document):
     indexed_date = DateTimeField(default=datetime.datetime.now)
@@ -30,6 +28,7 @@ class AndroidFirmware(Document):
 
     @classmethod
     def pre_delete(cls, sender, document, **kwargs):
+        from model import BuildPropFile
         for build_prop_id in document.build_prop_file_id_list:
             build_prop_file = BuildPropFile.objects.get(id=build_prop_id)
             build_prop_file.delete()
