@@ -33,8 +33,12 @@ def quark_engine_worker(android_app_id_queue):
         logging.info(f"Quark-Engine scans: {android_app.filename} {android_app.id} "
                      f"estimated queue-size: {android_app_id_queue.qsize()}")
         try:
-            scan_results = get_quark_engine_scan(android_app.absolute_store_path)
-            create_quark_engine_report(android_app, scan_results)
+            if android_app.file_size_bytes <= 83886080:
+                scan_results = get_quark_engine_scan(android_app.absolute_store_path)
+                create_quark_engine_report(android_app, scan_results)
+            else:
+                logging.warning(f"Skipping: Android is over maximal file size for quark-engine. "
+                                f"{android_app.filename} {android_app.id}")
         except Exception as err:
             logging.error(f"Quark-Engine could not scan app {android_app.filename} id: {android_app.id} - "
                           f"error: {err}")
