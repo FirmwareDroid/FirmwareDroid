@@ -4,16 +4,16 @@
 import logging
 import os
 import traceback
-
 from scripts.database.query_document import get_filtered_list
 from model import QuarkEngineReport, AndroidApp
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.mulitprocessing_util.mp_util import start_process_pool
 
 
-def start_quark_engine_scan(android_app_id_list):
+def start_quark_engine_scan(android_app_id_list, use_parallel_mode=False):
     """
     Analysis all apps from the given list with quark-engine.
+    :param use_parallel_mode: boolean - use quark-engines built in parallel mode. Default: false
     :param android_app_id_list: list of class:'AndroidApp' object-ids.
     """
     create_app_context()
@@ -21,7 +21,10 @@ def start_quark_engine_scan(android_app_id_list):
     android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "quark_engine_report_reference")
     logging.info(f"Quark-Engine after filter: {str(len(android_app_list))}")
     if len(android_app_list) > 0:
-        start_process_pool(android_app_list, quark_engine_worker, os.cpu_count())
+        if use_parallel_mode:
+            quark_engine_parallel_worker(android_app_list)
+        else:
+            start_process_pool(android_app_list, quark_engine_worker, os.cpu_count())
 
 
 def quark_engine_worker(android_app_id_queue):
@@ -38,6 +41,7 @@ def quark_engine_worker(android_app_id_queue):
         logging.info(f"Quark-Engine scans: {android_app.filename} {android_app.id} "
                      f"estimated queue-size: {android_app_id_queue.qsize()}")
         try:
+            # TODO remove this if statement as soon as quark-engine fixes this issue.
             if android_app.file_size_bytes <= 83886080:
                 scan_results = get_quark_engine_scan(android_app.absolute_store_path, rule_path)
                 create_quark_engine_report(android_app, scan_results)
@@ -47,8 +51,32 @@ def quark_engine_worker(android_app_id_queue):
         except Exception as err:
             logging.error(f"Quark-Engine could not scan app {android_app.filename} id: {android_app.id} - "
                           f"error: {err}")
-            traceback.print_stack()
+            traceback.print_exc()
     remove_logs()
+
+
+def quark_engine_parallel_worker(android_app_list):
+    """
+    Run Quark-Engine with the built in parallel mode.
+    :param android_app_list: list(class:'AndroidApp')
+    """
+    rule_path = get_quark_engine_rules()
+    for android_app in android_app_list:
+        try:
+            # TODO remove this if statement as soon as quark-engine fixes this issue.
+            if android_app.file_size_bytes <= 83886080:
+                scan_results = run_paralell_quark(android_app.absolute_store_path, rule_path)
+                if not scan_results:
+                    raise RuntimeError()
+                report = create_quark_engine_report(android_app, scan_results)
+                logging.info(f"Scan success: {android_app.filename} {android_app.id} {report.id}")
+            else:
+                logging.warning(f"Skipping: Android is over maximal file size for quark-engine. "
+                                f"{android_app.filename} {android_app.id}")
+        except Exception as err:
+            logging.error(f"Quark-Engine could not scan app {android_app.filename} id: {android_app.id} - "
+                          f"error: {err}")
+            traceback.print_exc()
 
 
 def get_quark_engine_rules(rule_path=None):
@@ -68,8 +96,10 @@ def get_quark_engine_rules(rule_path=None):
 
 def get_quark_engine_scan(apk_path, rule_path):
     """
-    Run quark-engine scan on one apk. Uses default rules if no rules path is given.
-    :return: str - json report as string.
+    Run quark-engine scan on one apk.
+    :param apk_path: str - path of the android app to analyse.
+    :param rule_path: str - path of the directory with the scanning rules.
+    :return: str - scanning results in json format.
     """
     from quark.report import Report
     report = Report()
@@ -78,23 +108,35 @@ def get_quark_engine_scan(apk_path, rule_path):
     return json_report
 
 
-def run_paralell_quark(apk_path, rule_path, num_of_process=int(os.cpu_count()/2)):
-    raise NotImplementedError("Not yet implemented")
-    # from quark.core.parallelquark import ParallelQuark
-    # from quark.core.struct.ruleobject import RuleObject
-    # logging.info("Run parallel quark-engine scan")
-    # if os.path.isdir(rule_path):
-    #     rules_list = os.listdir(rule_path)
-    #     paralell_quark = ParallelQuark(apk_path, rule_path, num_of_process)
-    #     for single_rule in rules_list:
-    #         if single_rule.endswith("json"):
-    #             rule_path = os.path.join(rule_path, single_rule)
-    #             rule_checker = RuleObject(rule_path)
-    #             paralell_quark.apply_rules(rule_checker)
-    #             paralell_quark.run(rule_checker)
-    #             json_report = paralell_quark.get_json_report()
-    #             paralell_quark.close()
-    # return json_report
+def run_paralell_quark(apk_path, rule_path, num_of_process=int(os.cpu_count())):
+    """
+    Wrapper script for quark-engine parallel analysis. Runs quark-engine on multiple processors.
+    :param apk_path: str - path of the android app to analyse.
+    :param rule_path: str - path of the directory with the scanning rules.
+    :param num_of_process: int - number of processors to use for the analysis.
+    :return: str - scanning results in json format.
+    """
+    from quark.core.parallelquark import ParallelQuark
+    from quark.core.struct.ruleobject import RuleObject
+    from tqdm import tqdm
+    logging.info(f"Run parallel quark-engine scan.")
+    json_report = None
+    if os.path.isdir(rule_path):
+        rule_name_list = os.listdir(rule_path)
+        json_list = []
+        for rule_name in rule_name_list:
+            if rule_name.endswith("json"):
+                json_list.append(rule_name)
+        core_library = "androguard"
+        paralell_quark = ParallelQuark(apk_path, core_library, num_of_process)
+        rule_checker_list = [RuleObject(os.path.join(rule_path, rule)) for rule in json_list]
+        paralell_quark.apply_rules(rule_checker_list)
+        for rule_checker in tqdm(rule_checker_list):
+            paralell_quark.run(rule_checker)
+            paralell_quark.generate_json_report(rule_checker)
+        json_report = paralell_quark.get_json_report()
+        paralell_quark.close()
+    return json_report
 
 
 def remove_logs():
@@ -114,7 +156,6 @@ def create_quark_engine_report(android_app, scan_results):
     Create a quark engine report in the database.
     :param android_app: class:'AndroidApp'
     :param scan_results: dict - results of the quark-engine scan.
-    :return:
     """
     from quark import __version__
     report = QuarkEngineReport(
@@ -124,3 +165,4 @@ def create_quark_engine_report(android_app, scan_results):
     ).save()
     android_app.quark_engine_report_reference = report.id
     android_app.save()
+    return report

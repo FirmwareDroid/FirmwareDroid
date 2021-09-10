@@ -16,18 +16,19 @@ ns = api.namespace('quark_engine',
                    prefix='quark_engine')
 
 
-@ns.route('/<int:mode>')
+@ns.route('/<int:mode>/<bool:use_parallel_mode>')
 @ns.expect(object_id_list)
 class QuarkEngineScan(Resource):
     @ns.doc('post')
     @admin_jwt_required
-    def post(self, mode):
+    def post(self, mode, use_parallel_mode):
         """
         Scan the given apps with Quark-Engine.
+        :param use_parallel_mode: boolean - true: use quark-engines built in parallel mode.
         :param mode: If mode = 1 all apps in the database will be used for the report instead of the given json.
         :return: job-id of the rq worker.
         """
         app = flask.current_app
         android_app_id_list = check_app_mode(mode, request)
-        enqueue_jobs(app.rq_task_queue_quark_engine, start_quark_engine_scan, android_app_id_list)
+        enqueue_jobs(app.rq_task_queue_quark_engine, start_quark_engine_scan, android_app_id_list, use_parallel_mode)
         return "", 200

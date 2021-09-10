@@ -17,6 +17,9 @@ def enqueue_jobs(queue, job_method, document_list, *args,
     :param document_list: list(documents) - the list which will be added as method arguments.
     :param job_timeout: int - maximal time of the worker to finish the job before timeout.
     """
-    sublist_list = split_list_into_sublists(document_list, max_job_size)
-    for sublist in sublist_list:
-        queue.enqueue(job_method, sublist, *args, job_timeout=job_timeout, failure_ttl=604800)
+    if len(document_list) > 100:
+        sublist_list = split_list_into_sublists(document_list, max_job_size)
+        for sublist in sublist_list:
+            queue.enqueue(job_method, sublist, *args, job_timeout=job_timeout, failure_ttl=604800)
+    else:
+        queue.enqueue(job_method, document_list, *args, job_timeout=job_timeout, failure_ttl=604800)
