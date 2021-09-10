@@ -61,5 +61,6 @@ def clear_firmware_database():
             shutil.move(firmware.absolute_store_path, destination_path)
             shutil.rmtree(app_store_firmware_path)
             firmware.delete()
+            firmware.save()
         except OSError as err:
             logging.error(str(err))

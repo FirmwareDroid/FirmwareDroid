@@ -29,8 +29,8 @@ class AndroidFirmware(Document):
     @classmethod
     def pre_delete(cls, sender, document, **kwargs):
         from model import BuildPropFile
-        for build_prop_id in document.build_prop_file_id_list:
-            build_prop_file = BuildPropFile.objects.get(id=build_prop_id)
+        for build_prop_lazy in document.build_prop_file_id_list:
+            build_prop_file = BuildPropFile.objects.get(id=build_prop_lazy.pk)
             build_prop_file.delete()
             build_prop_file.save()
         document.save()
