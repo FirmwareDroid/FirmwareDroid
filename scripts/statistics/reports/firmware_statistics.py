@@ -2,7 +2,10 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-from model import FirmwareStatisticsReport, AndroidFirmware, AndroidApp
+
+from bson import ObjectId
+
+from model import FirmwareStatisticsReport, AndroidFirmware, AndroidApp, BuildPropFile
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.string_utils.string_util import filter_mongodb_dict_chars
 from scripts.statistics.statistics_common import dict_to_title_format
@@ -61,14 +64,16 @@ def count_by_build_prop_key(firmware_list, build_property_key):
     """
     result_dict_count = {}
     for firmware in firmware_list:
-        # TODO Refactor or remove - use a database query instead that optimizes performance
-        if firmware.build_prop and firmware.build_prop.properties:
-            firmware_properties = firmware.build_prop.properties
-            android_build_property = firmware_properties.get(build_property_key)
-            if android_build_property in result_dict_count:
-                result_dict_count[android_build_property] = result_dict_count[android_build_property] + 1
-            else:
-                result_dict_count[str(android_build_property)] = 1
+        # TODO Optimize Performance - use a database query instead
+        if len(firmware.build_prop_file_id_list) > 0:
+            for build_prop_lazy in firmware.build_prop_file_id_list:
+                build_prop = BuildPropFile.objects.get(pk=build_prop_lazy.pk)
+                firmware_properties = build_prop.properties
+                android_build_property = firmware_properties.get(build_property_key)
+                if android_build_property in result_dict_count:
+                    result_dict_count[android_build_property] = result_dict_count[android_build_property] + 1
+                else:
+                    result_dict_count[str(android_build_property)] = 1
     return result_dict_count
 
 
@@ -83,11 +88,13 @@ def count_build_prop(firmware_list, build_property, startswith_filter=""):
     """
     count = 0
     for firmware in firmware_list:
-        # TODO Refactor or remove build_prop
-        firmware_properties = firmware.build_prop.properties
-        android_build_property = firmware_properties.get(build_property)
-        if android_build_property.startswith(startswith_filter):
-            count += 1
+        # TODO Optimize Performance - use a database query instead
+        for build_prop_lazy in firmware.build_prop_file_id_list:
+            build_prop = BuildPropFile.objects.get(pk=build_prop_lazy.pk)
+            firmware_properties = build_prop.properties
+            android_build_property = firmware_properties.get(build_property)
+            if android_build_property.startswith(startswith_filter):
+                count += 1
     return count
 
 
@@ -203,14 +210,17 @@ def get_unique_packagenames(firmware_list):
     packagename_list = set()
     for firmware in firmware_list:
         for android_app_lazy in firmware.android_app_id_list:
-            android_app = AndroidApp.objects.get(pk=android_app_lazy.pk)
-            if android_app.packagename:
-                packagename_list.add(android_app.packagename)
-            elif android_app.androguard_report_reference:
-                androguard_report = android_app.androguard_report_reference.fetch()
-                packagename_list.add(androguard_report.packagename)
-            else:
-                logging.warning("Ignore: App has unknown packagename and is not counted.")
+            try:
+                android_app = android_app_lazy.fetch()
+                if android_app.packagename:
+                    packagename_list.add(android_app.packagename)
+                elif android_app.androguard_report_reference:
+                    androguard_report = android_app.androguard_report_reference.fetch()
+                    packagename_list.add(androguard_report.packagename)
+                else:
+                    logging.warning("Ignore: App has unknown packagename and is not counted.")
+            except Exception as err:
+                logging.warning(err)
     return list(packagename_list)
 
 
