@@ -1,4 +1,7 @@
 import datetime
+import logging
+import traceback
+
 import mongoengine
 from flask_mongoengine import Document
 from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, \
@@ -30,9 +33,14 @@ class AndroidFirmware(Document):
     def pre_delete(cls, sender, document, **kwargs):
         from model import BuildPropFile
         for build_prop_lazy in document.build_prop_file_id_list:
-            build_prop_file = BuildPropFile.objects.get(id=build_prop_lazy.pk)
-            build_prop_file.delete()
-            build_prop_file.save()
+            logging.info(f"Delete build prop file: {build_prop_lazy.pk}")
+            try:
+                build_prop_file = BuildPropFile.objects.get(id=build_prop_lazy.pk)
+                build_prop_file.delete()
+                build_prop_file.save()
+            except Exception as err:
+                logging.error(err)
+                traceback.print_exc()
         document.save()
 
 

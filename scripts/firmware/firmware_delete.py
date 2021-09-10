@@ -34,5 +34,4 @@ def delete_firmware_by_id(firmware_id_list):
         except Exception as err:
             logging.error(err)
             traceback.print_exc()
-
         logging.info(f"Firmware {firmware_id} successful removed!")
