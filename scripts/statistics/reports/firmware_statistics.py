@@ -2,10 +2,7 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-
-from bson import ObjectId
-
-from model import FirmwareStatisticsReport, AndroidFirmware, AndroidApp, BuildPropFile
+from model import FirmwareStatisticsReport, AndroidFirmware, BuildPropFile
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.string_utils.string_util import filter_mongodb_dict_chars
 from scripts.statistics.statistics_common import dict_to_title_format
