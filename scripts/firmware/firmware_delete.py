@@ -22,11 +22,17 @@ def delete_firmware_by_id(firmware_id_list):
     firmware_list = AndroidFirmware.objects(pk__in=firmware_objectid_list)
     app_store_path = app.config["FIRMWARE_FOLDER_APP_EXTRACT"]
     for firmware in firmware_list:
+        firmware_id = firmware.id
+        logging.info(f"Delete firmware: {firmware_id}")
         try:
-            app_store_firmware_path = os.path.join(app_store_path, firmware.md5)
-            shutil.rmtree(app_store_firmware_path)
+            md5 = firmware.md5
             firmware.delete()
             firmware.save()
+            app_store_firmware_path = os.path.join(app_store_path, md5)
+            if os.path.exists(app_store_firmware_path):
+                shutil.rmtree(app_store_firmware_path)
         except Exception as err:
             logging.error(err)
-            traceback.print_stack()
+            traceback.print_exc()
+
+        logging.info(f"Firmware {firmware_id} successful removed!")
