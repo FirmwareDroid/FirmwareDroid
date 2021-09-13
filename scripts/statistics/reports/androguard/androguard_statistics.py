@@ -14,7 +14,7 @@ from scripts.statistics.statistics_visualization import save_plots, get_box_plot
 from scripts.statistics.statistics_common import set_attribute_frequencies, get_attribute_distinct_count
 
 
-# TODO CLEAN SCRIPT
+# TODO CleanCode/Performance - Refactor complete script - remove images
 def create_androguard_statistics_report(android_app_id_list, report_name):
     create_app_context()
     logging.info(f"Starting AndroGuard statistics with {len(android_app_id_list)} apps")
@@ -22,11 +22,19 @@ def create_androguard_statistics_report(android_app_id_list, report_name):
     androguard_report_objectid_list = get_androguard_report_ids(android_app_id_list)
     androguard_report_objectid_length = len(androguard_report_objectid_list)
     logging.info(f"Got AndroGuard report ids: {androguard_report_objectid_length}")
-    andro_guard_statistics_report = create_empty_androguard_statistics_report(report_name,
-                                                                              len(androguard_report_objectid_list),
-                                                                              android_app_id_list,
-                                                                              android_app_reference_file)
-    logging.info(f"Created empty AndroGuard statistics: {andro_guard_statistics_report.id}")
+    if androguard_report_objectid_length > 0:
+        andro_guard_statistics_report = create_empty_androguard_statistics_report(report_name,
+                                                                                  len(androguard_report_objectid_list),
+                                                                                  android_app_id_list,
+                                                                                  android_app_reference_file)
+        logging.info(f"Created empty AndroGuard statistics: {andro_guard_statistics_report.id}")
+        get_statistics_data(andro_guard_statistics_report, androguard_report_objectid_list,
+                            androguard_report_objectid_length)
+
+
+def get_statistics_data(andro_guard_statistics_report, androguard_report_objectid_list,
+                        androguard_report_objectid_length):
+
     attibute_name_list = [ATTRIBUTE_MAP_LIST, ATTRIBUTE_MAP_ATOMIC]
     set_attribute_frequencies(attibute_name_list,
                               AndroGuardReport,

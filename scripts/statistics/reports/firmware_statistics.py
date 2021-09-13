@@ -2,13 +2,13 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-from model import FirmwareStatisticsReport, AndroidFirmware, BuildPropFile
+from model import FirmwareStatisticsReport, AndroidFirmware, BuildPropFile, AndroidApp, AndroGuardReport
+from model.FirmwareStatisticsReport import ATTRIBUTE_MAP_ATOMIC
 from scripts.rq_tasks.flask_context_creator import create_app_context
-from scripts.utils.string_utils.string_util import filter_mongodb_dict_chars
-from scripts.statistics.statistics_common import dict_to_title_format
-from scripts.database.query_document import create_document_list_by_ids
-from scripts.firmware.const_regex_patterns import BUILD_VERSION_RELEASE_LIST, PRODUCT_BRAND_LIST, PRODUCT_MODEL_LIST, \
+from scripts.firmware.const_regex_patterns import PRODUCT_BRAND_LIST, PRODUCT_MODEL_LIST, \
     PRODUCT_LOCALE_LIST, PRODUCT_MANUFACTURER_LIST, PRODUCT_LOCAL_REGION_LIST
+from scripts.statistics.statistics_common import create_objectid_list, set_attribute_frequencies, \
+    create_objectid_list_by_documents
 
 
 def create_firmware_statistics_report(firmware_id_list, report_name):
@@ -20,109 +20,216 @@ def create_firmware_statistics_report(firmware_id_list, report_name):
     """
     create_app_context()
     if len(firmware_id_list) > 0:
-        firmware_list = create_document_list_by_ids(firmware_id_list, AndroidFirmware)
-        firmware_version_dict = get_firmware_by_version(firmware_list)
-        count_unique_packagenames_by_version = get_count_unique_packagenames_by_version(firmware_version_dict)
-        firmware_statistics_report = FirmwareStatisticsReport(
-            report_name=report_name,
-            report_count=len(firmware_id_list),
-            firmware_id_list=firmware_id_list,
-            number_of_firmware_by_android_version=create_main_version_statistics(firmware_list),
-            number_of_firmware_by_android_sub_version=filter_mongodb_dict_chars(
-                get_property_count(firmware_list, BUILD_VERSION_RELEASE_LIST)),
-            number_of_firmware_by_brand=filter_mongodb_dict_chars(get_property_count(firmware_list,
-                                                                                     PRODUCT_BRAND_LIST)),
-            number_of_firmware_by_model=filter_mongodb_dict_chars(get_property_count(firmware_list,
-                                                                                     PRODUCT_MODEL_LIST)),
-            number_of_firmware_by_locale=filter_mongodb_dict_chars(get_property_count(firmware_list,
-                                                                                      PRODUCT_LOCALE_LIST)),
-            number_of_firmware_by_manufacturer=filter_mongodb_dict_chars(get_property_count(firmware_list,
-                                                                                            PRODUCT_MANUFACTURER_LIST)),
-            number_of_firmware_files=AndroidFirmware.objects.count(),
-            number_of_firmware_by_region=filter_mongodb_dict_chars(get_property_count(firmware_list,
-                                                                                      PRODUCT_LOCAL_REGION_LIST)),
-            android_app_count=firmware_app_count(firmware_list),
-            number_of_unique_packagenames=len(get_unique_packagenames(firmware_list)),
-            number_of_unique_packagenames_by_android_version=count_unique_packagenames_by_version,
-            total_firmware_byte_size=get_total_firmware_byte_size(firmware_list)
-        )
+        firmware_objectId_list = create_objectid_list(firmware_id_list)
+        firmware_statistics_report = create_empty_firmware_statistics_report(report_name,
+                                                                             firmware_id_list,
+                                                                             firmware_objectId_list)
+        set_firmware_statistics_data(firmware_statistics_report, firmware_objectId_list)
         firmware_statistics_report.save()
     else:
         raise ValueError("No firmware data in the database. Can't create statistics.")
     return firmware_statistics_report
 
 
-def count_by_build_prop_key(firmware_list, build_property_key):
+def create_empty_firmware_statistics_report(report_name, firmware_id_list, firmware_objectid_list):
     """
-    Counts the occurrence of specific build_property value in a key.
-    :param firmware_list: The list of class:AndroidFirmware to search through.
-    :param build_property_key: (str) the property to count. For example: "ro_product_locale"
-    :return: dict(str,int) the build property value and it's count as dict.
+    Create a firmware statistics report object.
+    :param firmware_objectid_list: list(objectId) - list(class:'AndroidFirmware')
+    :param report_name: str - tag the report.
+    :param firmware_id_list: list(str) - list(class:'AndroidFirmware' ids a string)
+    :return: class:'FirmwareStatisticsReport'
+    """
+    firmware_statistics_report = FirmwareStatisticsReport(
+        report_name=report_name,
+        report_count=len(firmware_id_list),
+        firmware_id_list=firmware_id_list,
+        android_app_count=firmware_app_count(firmware_objectid_list)
+    )
+    return firmware_statistics_report
+
+
+def set_firmware_statistics_data(firmware_statistics_report, firmware_objectid_list):
+    """
+    Add the firmware statistics data to the report.
+    :param firmware_statistics_report: class:'FirmwareStatisticsReport'
+    :param firmware_objectid_list: list(objectId) - list(class:'AndroidFirmware')
+    """
+    attibute_name_list = [ATTRIBUTE_MAP_ATOMIC]
+    set_attribute_frequencies(attibute_name_list,
+                              AndroidFirmware,
+                              firmware_statistics_report,
+                              firmware_objectid_list)
+
+    firmware_statistics_report.number_of_firmware_samples = len(firmware_objectid_list)
+    firmware_statistics_report.save()
+
+    firmware_statistics_report.total_firmware_byte_size = get_total_firmware_byte_size(firmware_objectid_list)
+    firmware_statistics_report.save()
+
+    firmware_statistics_report.number_of_unique_packagenames = get_unique_packagename_frequency(firmware_objectid_list)
+    firmware_statistics_report.save()
+
+    set_build_prop_statistics(firmware_statistics_report, firmware_objectid_list)
+
+
+def set_build_prop_statistics(firmware_statistics_report, firmware_objectid_list):
+    """
+    Set statistics bases on build properties.
+    :param firmware_statistics_report: class:'FirmwareStatisticsReport'
+    :param firmware_objectid_list: list(ObjectId()) - list of class:'AndroidFirmware' objectIds
+    """
+    firmware_statistics_report.number_of_firmware_by_brand = get_build_prop_frequency(firmware_objectid_list,
+                                                                                      PRODUCT_BRAND_LIST[0])
+    firmware_statistics_report.save()
+
+    firmware_statistics_report.number_of_firmware_by_model = get_build_prop_frequency(firmware_objectid_list,
+                                                                                      PRODUCT_MODEL_LIST[0])
+    firmware_statistics_report.save()
+
+    firmware_statistics_report.number_of_firmware_by_locale = get_build_prop_frequency(firmware_objectid_list,
+                                                                                       PRODUCT_LOCALE_LIST[0])
+    firmware_statistics_report.save()
+
+    firmware_statistics_report.number_of_firmware_by_manufacturer = \
+        get_build_prop_frequency(firmware_objectid_list, PRODUCT_MANUFACTURER_LIST[0])
+    firmware_statistics_report.save()
+
+    firmware_statistics_report.number_of_firmware_by_region = get_build_prop_frequency(firmware_objectid_list,
+                                                                                       PRODUCT_LOCAL_REGION_LIST[0])
+    firmware_statistics_report.save()
+
+
+def get_build_prop_frequency(firmware_objectid_list, build_prop_name):
+    """
+    Gets the frequency of a specific build.property.
+    :param firmware_objectid_list: list(ObjectId()) - list of class:'AndroidFirmware' objectIds
+    :param build_prop_name: str - name of the property.
+    :return: dict(str, int) - dict(property value, count)
     """
     result_dict_count = {}
-    for firmware in firmware_list:
-        # TODO Optimize Performance - use a database query instead
-        if len(firmware.build_prop_file_id_list) > 0:
-            for build_prop_lazy in firmware.build_prop_file_id_list:
-                build_prop = BuildPropFile.objects.get(pk=build_prop_lazy.pk)
-                firmware_properties = build_prop.properties
-                android_build_property = firmware_properties.get(build_property_key)
-                if android_build_property in result_dict_count:
-                    result_dict_count[android_build_property] = result_dict_count[android_build_property] + 1
-                else:
-                    result_dict_count[str(android_build_property)] = 1
+    android_firmware_list = AndroidFirmware.objects(pk__in=firmware_objectid_list).only("build_prop_file_id_list")
+    build_prop_objectid_list = []
+    for firmware in android_firmware_list:
+        for build_prop_file in firmware.build_prop_file_id_list:
+            build_prop_objectid_list.append(build_prop_file.pk)
+    command_cursor = BuildPropFile.objects(pk__in=build_prop_objectid_list).aggregate([
+        {
+            "$project": {
+                f"properties.{build_prop_name}": 1
+            }
+        },
+        {
+            "$match": {
+                f"properties.{build_prop_name}": {
+                    "$exists": True
+                }
+            }
+        },
+        {
+            "$group": {
+                "_id": f"$properties.{build_prop_name}",
+                "count": {
+                    "$sum": 1
+                }
+            }
+        },
+        {
+            "$addFields": {
+                "group": "group"
+            }
+        },
+        {
+            "$group": {
+                "_id": "group",
+                "frequencies": {
+                    "$push": {
+                        "value": "$_id",
+                        "count": "$count"
+                    }
+                }
+            }
+        }
+    ])
+    for document in command_cursor:
+        logging.info(f"document: {document}")
+        for property_dict in document.get("frequencies"):
+            key = property_dict.get("value")
+            value = property_dict.get("count")
+            if key in result_dict_count:
+                result_dict_count[key] += value
+            else:
+                result_dict_count[key] = value
+    logging.info(f"build_prop_name: {build_prop_name} - {result_dict_count}")
     return result_dict_count
 
 
-def count_build_prop(firmware_list, build_property, startswith_filter=""):
+def get_unique_packagename_frequency(firmware_objectid_list):
     """
-    Counts the occurrence of a specific build property string.
-    :param firmware_list: The list of class:AndroidFirmware to search through.
-    :param build_property: (str) the build property key which will be counted. For example, "ro_product_locale"
-    :param startswith_filter: (str) A startswith filter that is used for the search.
-    If the filter matches the property will be counted. For Example, "en"
-    :return: int - The number of occurrence of a specific string in a build property.
+    Get the count of unique packagenames.
+    :param firmware_objectid_list: list(ObjectId()) - list of class:'AndroidFirmware' objectIds
+    :return int - number of unique packages.
     """
-    count = 0
-    for firmware in firmware_list:
-        # TODO Optimize Performance - use a database query instead
-        for build_prop_lazy in firmware.build_prop_file_id_list:
-            build_prop = BuildPropFile.objects.get(pk=build_prop_lazy.pk)
-            firmware_properties = build_prop.properties
-            android_build_property = firmware_properties.get(build_property)
-            if android_build_property.startswith(startswith_filter):
-                count += 1
-    return count
+    result = 0
+    android_app_list = AndroidApp.objects(firmware_id_reference__in=firmware_objectid_list).only("pk")
+    android_app_objectid_list = create_objectid_list_by_documents(android_app_list)
+    command_cursor = AndroGuardReport.objects(android_app_id_reference__in=android_app_objectid_list).aggregate([
+        {
+            "$project": {
+                "packagename": 1
+            }
+        },
+        {
+            "$group": {
+                "_id": "$packagename",
+                "frequency": {
+                    "$sum": 1
+                }
+            }
+        },
+        {
+            "$match": {
+                "frequency": 1
+            }
+        },
+        {
+            "$count": "frequency"
+        }
+    ])
+    for document in command_cursor:
+        result += document.get("frequency")
+    return result
 
 
-def get_property_count(firmware_list, property_name_list):
+def get_packagename_frequency(android_app_objectid_list):
     """
-    Count the frequency of a specific build.prop property.
-    :param firmware_list: list(class:'AndroidFirmware')
-    :param property_name_list: list(str)
-    :return: dict(str, int)
+    Gets the frequency of Android app packagenames.
+    :param android_app_objectid_list: list(ObjectId()) - list of class:'AndroidApp' objectIds
+    :return: dict(str, int) - dict(packagename, count)
     """
     result_dict = {}
-    for build_prop_name in property_name_list:
-        count_dict = count_by_build_prop_key(firmware_list, build_prop_name)
-        result_dict = merge_count_dicts(result_dict, count_dict)
-    return dict_to_title_format(result_dict)
-
-
-def merge_count_dicts(dict1, dict2):
-    """
-    Merge two dicts with counts into one. Example: dict1(str, int1) merge dict2(str, int2) = dict 3(str, int1+int2)
-    :param dict1: dict
-    :param dict2: dict
-    :return: dict - merged dict
-    """
-    merged_dict = dict2.copy()
-    for key, value in dict1.items():
-        if key in merged_dict:
-            merged_dict[key] += value
+    command_cursor = AndroGuardReport.objects(android_app_id_reference__in=android_app_objectid_list).aggregate([
+        {
+            "$project": {
+                "packagename": 1
+            }
+        },
+        {
+            "$group": {
+                "_id": "$packagename",
+                "frequency": {
+                    "$sum": 1
+                }
+            }
+        }
+    ])
+    for document in command_cursor:
+        key = document.get("_id")
+        value = document.get("frequency")
+        if key in result_dict:
+            result_dict[key] += value
         else:
-            merged_dict[key] = value
-    return merged_dict
+            result_dict[key] = value
+    return result_dict
 
 
 def create_main_version_statistics(firmware_list):
@@ -133,7 +240,6 @@ def create_main_version_statistics(firmware_list):
     """
     main_version_dict = {}
     for firmware in firmware_list:
-        # main_version = detect_by_build_prop(firmware.build_prop)
         main_version = firmware.version_detected
         if main_version in main_version_dict:
             main_version_dict[str(main_version)] = main_version_dict[str(main_version)] + 1
@@ -142,88 +248,45 @@ def create_main_version_statistics(firmware_list):
     return main_version_dict
 
 
-def firmware_app_count(firmware_list):
+def firmware_app_count(firmware_objectid_list):
     """
     Counts the number of apps.
-    :param firmware_list: The list of class:AndroidFirmware to search through.
+    :param firmware_objectid_list: list(ObjectId()) - list of class:'AndroidFirmware' objectIds
     :return: int - number of apps in the firmware list.
     """
-    count = 0
-    for firmware in firmware_list:
-        count += len(firmware.android_app_id_list)
-    return count
+    return AndroidApp.objects(firmware_id_reference__in=firmware_objectid_list).count()
 
 
-def get_total_firmware_byte_size(firmware_list):
+def get_total_firmware_byte_size(firmware_objectid_list):
     """
     Gets the sum of all firmware byte sizes.
-    :param firmware_list: The list of class:'AndroidFirmware' to search through.
+    :param firmware_objectid_list: list(ObjectId()) - list of class:'AndroidFirmware' objectIds
     :return: int - number of bytes on disk.
     """
+    command_cursor = AndroidFirmware.objects(pk__in=firmware_objectid_list).aggregate([
+        {
+            "$project": {
+                "file_size_bytes": 1
+            }
+        },
+        {
+            "$group": {
+                "_id": "file_size_bytes",
+                "size": {
+                    "$sum": "$file_size_bytes"
+                }
+            }
+        }
+    ])
     size = 0
-    for firmware in firmware_list:
-        size = size + firmware.file_size_bytes
+    for document in command_cursor:
+        size += document.get("size")
     return size
-
-
-def get_firmware_by_version(firmware_list):
-    """
-    Sorts the firmware by version and puts it into a dict.
-    :param firmware_list: list(class:'AndroidFirmware')
-    :return: dict(str, list(class:'AndroidFirmware')) - dictionary with version as key as list of firmware as values.
-    """
-    firmware_version_dict = {}
-    for firmware in firmware_list:
-        key = str(firmware.version_detected)
-        if key not in firmware_version_dict:
-            firmware_version_dict[str(firmware.version_detected)] = []
-
-        if firmware.version_detected:
-            firmware_version_dict[str(firmware.version_detected)].append(firmware)
-        else:
-            firmware_version_dict[str(0)].append(firmware)
-    return firmware_version_dict
-
-
-def get_count_unique_packagenames_by_version(firmware_version_dict):
-    """
-    Counts the number of unique packages per Android firmware version.
-    :param firmware_version_dict: dict(str, list(class:'AndroidFirmware'))
-    :return: dict(str, int) - key: version, values: count of unique packages.
-    """
-    unique_packages_by_version = {}
-    for version, firmware_list in firmware_version_dict.items():
-        unique_package_count = len(get_unique_packagenames(firmware_list))
-        unique_packages_by_version[version] = unique_package_count
-    return unique_packages_by_version
-
-
-def get_unique_packagenames(firmware_list):
-    """
-    Gets a list of unique packagenames for Android apps. If the Andrid app has no packagename it is ignored.
-    :param firmware_list: list(class:'AndroidFirmware')
-    :return: list - unique Android packagename.
-    """
-    packagename_list = set()
-    for firmware in firmware_list:
-        for android_app_lazy in firmware.android_app_id_list:
-            try:
-                android_app = android_app_lazy.fetch()
-                if android_app.packagename:
-                    packagename_list.add(android_app.packagename)
-                elif android_app.androguard_report_reference:
-                    androguard_report = android_app.androguard_report_reference.fetch()
-                    packagename_list.add(androguard_report.packagename)
-                else:
-                    logging.warning("Ignore: App has unknown packagename and is not counted.")
-            except Exception as err:
-                logging.warning(err)
-    return list(packagename_list)
 
 
 def get_detected_firmware_vendors():
     """
-    Get a list of firmware vendors.
+    Get a list of all firmware vendors in the database.
     :return: lis(str)
     """
     os_vendor_cursor = AndroidFirmware.objects.aggregate([
@@ -258,7 +321,7 @@ def get_detected_firmware_vendors():
 
 def get_os_version_detected_list():
     """
-    Get a list of represented Android versions.
+    Get a list of all represented Android versions in the database.
     :return: list(str)
     """
     os_version_cursor = AndroidFirmware.objects.aggregate([
@@ -294,8 +357,8 @@ def get_os_version_detected_list():
 def get_firmware_by_vendor_and_version(firmware_objectid_list):
     """
     Get a dict of firmware sorted by os version and vendor.
-    :param firmware_objectid_list:
-    :return:
+    :param firmware_objectid_list: list(ObjectId) - list class:'AndroidFirmware'
+    :return: dict(str, dict(str, list(obj)))
     """
     firmware_by_vendor_and_version_dict = {}
     os_vendor_list = get_detected_firmware_vendors()
@@ -315,9 +378,9 @@ def get_firmware_by_vendor_and_version(firmware_objectid_list):
 
 def get_apps_by_vendor_and_version(firmware_by_vendor_and_version_dict):
     """
-
+    Creates a dictionary with android apps sorted by os vendor and os version.
     :param firmware_by_vendor_and_version_dict:
-    :return:
+    :return: dict(str, dict(str, list(obj)))
     """
     app_by_vendor_and_version_dict = {}
     for os_vendor, os_version_dict in firmware_by_vendor_and_version_dict.items():

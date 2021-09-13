@@ -69,20 +69,21 @@ SYSTEM_DAT_PATCH_PATTERN_LIST = ["system[.]patch[.]dat"]
 
 ##########################################################################################
 # Build.prop properties
-# ONLY EXACT MATCHES - NO REGEX
+# ONLY EXACT MATCHES - NO REGEX HERE
 ##########################################################################################
-BUILD_VERSION_RELEASE_LIST = ["ro_build_version_release", "ro.build.version.release"]
-PRODUCT_MANUFACTURER_LIST = ["ro_product_manufacturer", "ro.product.manufacturer"]
-PRODUCT_BRAND_LIST = ["ro_product_brand", "ro.product.brand"]
-PRODUCT_LOCALE_LIST = ["ro_product_locale", "ro.product.locale"]
-PRODUCT_LOCAL_REGION_LIST = ["ro_product_locale_region", "ro.product.locale.region"]
-PRODUCT_MODEL_LIST = ["ro.product.model"]
+BUILD_PRODUCT_LIST = ["ro_build_product"]
+BUILD_VERSION_RELEASE_LIST = ["ro_build_version_release"]
+BUILD_VERSION_SECURITY_PATCH_LIST = ["ro_build_version_security_patch"]
 
+PRODUCT_MANUFACTURER_LIST = ["ro_product_manufacturer"]
+PRODUCT_BRAND_LIST = ["ro_product_brand"]
+PRODUCT_LOCALE_LIST = ["ro_product_locale"]
+PRODUCT_LOCAL_REGION_LIST = ["ro_product_locale_region"]
+PRODUCT_MODEL_LIST = ["ro_product_model"]
 
-
-
-
-
+SYSTEM_BUILD_VERSION_RELEASE_LIST = ["ro_system_build_version_release"]
+SYSTEM_BUILD_TAGS_LIST = ["ro_system_build_tags"]
+SYSTEM_BUILD_FINGERPRINT_LIST = ["ro_system_build_fingerprint"]
 
 
 

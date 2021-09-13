@@ -332,16 +332,28 @@ def update_reference_file(statistics_report, android_app_id_list):
     statistics_report.save()
 
 
-def get_app_objectid_list(android_app_id_list):
+def create_objectid_list(id_list):
     """
-    Converts the list of Android app IDs to a list of ObjectId objects.
-    :param android_app_id_list: list(str) - List of class:'AndroidApp' IDs.
-    :return: list(ObjectId()) - List of class:'AndroidApp' ObjectIds.
+    Converts the list of string IDs to a list of ObjectId objects.
+    :param id_list: list(str) - List of IDs.
+    :return: list(ObjectId()) - List of ObjectIds.
     """
-    android_objectid_list = []
-    for android_app_id in android_app_id_list:
-        android_objectid_list.append(ObjectId(android_app_id))
-    return android_objectid_list
+    objectid_list = []
+    for document_id in id_list:
+        objectid_list.append(ObjectId(document_id))
+    return objectid_list
+
+
+def create_objectid_list_by_documents(document_list):
+    """
+    Converts the list of string IDs to a list of ObjectId objects.
+    :param document_list: list(document) - List of documents.
+    :return: list(ObjectId()) - List of ObjectIds.
+    """
+    objectid_list = []
+    for document in document_list:
+        objectid_list.append(ObjectId(document.id))
+    return objectid_list
 
 
 def get_report_objectid_list(android_objectid_list, reference_attribute):
@@ -369,7 +381,7 @@ def fetch_chunked_lists(android_app_id_list, reference_attribute):
     android_app_objectid_list = []
     report_objectid_list = []
     for chunk in chunk_list:
-        tmp_objId_list = get_app_objectid_list(chunk)
+        tmp_objId_list = create_objectid_list(chunk)
         android_app_objectid_list.extend(tmp_objId_list)
         report_objectid_list.extend(get_report_objectid_list(tmp_objId_list, reference_attribute))
     return android_app_objectid_list, report_objectid_list

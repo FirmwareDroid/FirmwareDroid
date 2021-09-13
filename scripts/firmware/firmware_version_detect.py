@@ -10,11 +10,14 @@ def detect_by_build_prop(build_prop_file_list):
     :param build_prop_file_list: list(class:'BuildPropFile') - Embedded document with build properties.
     :return: str - main version or 'Unknown'
     """
-    from scripts.firmware.const_regex_patterns import BUILD_VERSION_RELEASE_LIST
+    from scripts.firmware.const_regex_patterns import BUILD_VERSION_RELEASE_LIST, SYSTEM_BUILD_VERSION_RELEASE_LIST
+    build_prop_names = []
+    build_prop_names.extend(BUILD_VERSION_RELEASE_LIST)
+    build_prop_names.extend(SYSTEM_BUILD_VERSION_RELEASE_LIST)
     main_version = 0
     for build_prop_file in build_prop_file_list:
         try:
-            for build_prop_name in BUILD_VERSION_RELEASE_LIST:
+            for build_prop_name in build_prop_names:
                 android_build_property = build_prop_file.properties.get(build_prop_name)
                 if android_build_property:
                     main_version = android_build_property.split(".")[0]
