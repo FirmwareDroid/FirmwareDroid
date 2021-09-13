@@ -280,7 +280,6 @@ def set_attribute_frequencies(attribute_name_list, document_class, statistics_re
     for attribute_map_dict in attribute_name_list:
         for attribute_name, attribute_count_name in attribute_map_dict.items():
             logging.info(f"Getting frequencies for: {attribute_name}")
-            # count_dict = document_class.objects.filter(id__in=report_objectid_list).item_frequencies(attribute_name)
             count_dict = query_set.item_frequencies(attribute_name)
             logging.info(f"Got frequencies for: {attribute_name}")
             count_dict_mongodb = filter_mongodb_dict_chars(count_dict)
@@ -377,6 +376,12 @@ def get_report_objectid_list(android_objectid_list, reference_attribute):
 
 
 def fetch_chunked_lists(android_app_id_list, reference_attribute):
+    """
+    Fetch a large amount of reports and get a list of app and report objectIds.
+    :param android_app_id_list: list(str) - list of class:'AndroidApp' string ids.
+    :param reference_attribute: str - lazy reference attribute name
+    :return: list(objectId), list(objectId) - objectId list for the android apps and reference reports.
+    """
     chunk_list = [android_app_id_list[x:x + 1000] for x in range(0, len(android_app_id_list), 1000)]
     android_app_objectid_list = []
     report_objectid_list = []

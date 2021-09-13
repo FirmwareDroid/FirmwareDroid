@@ -11,8 +11,7 @@ from api.v1.parser.request_util import check_app_mode, check_firmware_mode
 from scripts.statistics.reports.firmware_statistics import create_firmware_statistics_report
 from model import ImageFile, JsonFile
 from flask_restx import Resource, Namespace
-from scripts.statistics.reports.androguard.androguard_statistics import create_androguard_statistics_report, \
-    create_androguard_plots
+from scripts.statistics.reports.androguard.androguard_statistics import create_androguard_statistics_report
 from scripts.statistics.reports.virustotal.virustotal_statistics import create_virustotal_statistic_report
 from scripts.statistics.reports.apkid.apkid_statistcs import create_apkid_statistics_report
 from scripts.statistics.reports.androwarn.androwarn_statistics import create_androwarn_statistics_report
@@ -108,22 +107,6 @@ class DownloadJsonFileFiltered(Resource):
             logging.error(str(err))
             response = "", 400
         return response
-
-
-@ns.route('/androguard/create_report_plots/<string:androguard_statistics_report_id>')
-class CreateAndroGuardCertStatistics(Resource):
-    @ns.doc('post')
-    @admin_jwt_required
-    def post(self, androguard_statistics_report_id):
-        """
-        Create plots for a Androguard statistics report.
-        :return: job-id
-        """
-        app = flask.current_app
-        app.rq_task_queue_default.enqueue(create_androguard_plots,
-                                          androguard_statistics_report_id,
-                                          job_timeout=60 * 60 * 24 * 40)
-        return "", 200
 
 
 @ns.route('/create_statistics_report/<int:mode>/<string:report_name>/<int:report_type>/<string:os_vendor>')
