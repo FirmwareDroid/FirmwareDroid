@@ -24,6 +24,7 @@ def create_firmware_statistics_report(firmware_id_list, report_name):
         firmware_statistics_report = create_empty_firmware_statistics_report(report_name,
                                                                              firmware_id_list,
                                                                              firmware_objectId_list)
+        logging.info("Created empty firmware_statistics_report")
         set_firmware_statistics_data(firmware_statistics_report, firmware_objectId_list)
         firmware_statistics_report.save()
     else:
@@ -59,15 +60,19 @@ def set_firmware_statistics_data(firmware_statistics_report, firmware_objectid_l
                               AndroidFirmware,
                               firmware_statistics_report,
                               firmware_objectid_list)
+    logging.info("Saved attribute frequencies")
 
     firmware_statistics_report.number_of_firmware_samples = len(firmware_objectid_list)
     firmware_statistics_report.save()
+    logging.info("Saved number_of_firmware_samples")
 
     firmware_statistics_report.total_firmware_byte_size = get_total_firmware_byte_size(firmware_objectid_list)
     firmware_statistics_report.save()
+    logging.info("Saved total_firmware_byte_size")
 
     firmware_statistics_report.number_of_unique_packagenames = get_unique_packagename_frequency(firmware_objectid_list)
     firmware_statistics_report.save()
+    logging.info("Saved number_of_unique_packagenames")
 
     set_build_prop_statistics(firmware_statistics_report, firmware_objectid_list)
 
@@ -81,22 +86,27 @@ def set_build_prop_statistics(firmware_statistics_report, firmware_objectid_list
     firmware_statistics_report.number_of_firmware_by_brand = get_build_prop_frequency(firmware_objectid_list,
                                                                                       PRODUCT_BRAND_LIST[0])
     firmware_statistics_report.save()
+    logging.info("Saved number_of_firmware_by_brand")
 
     firmware_statistics_report.number_of_firmware_by_model = get_build_prop_frequency(firmware_objectid_list,
                                                                                       PRODUCT_MODEL_LIST[0])
     firmware_statistics_report.save()
+    logging.info("Saved number_of_firmware_by_model")
 
     firmware_statistics_report.number_of_firmware_by_locale = get_build_prop_frequency(firmware_objectid_list,
                                                                                        PRODUCT_LOCALE_LIST[0])
     firmware_statistics_report.save()
+    logging.info("Saved number_of_firmware_by_locale")
 
     firmware_statistics_report.number_of_firmware_by_manufacturer = \
         get_build_prop_frequency(firmware_objectid_list, PRODUCT_MANUFACTURER_LIST[0])
     firmware_statistics_report.save()
+    logging.info("Saved number_of_firmware_by_manufacturer")
 
     firmware_statistics_report.number_of_firmware_by_region = get_build_prop_frequency(firmware_objectid_list,
                                                                                        PRODUCT_LOCAL_REGION_LIST[0])
     firmware_statistics_report.save()
+    logging.info("Saved number_of_firmware_by_region")
 
 
 def get_build_prop_frequency(firmware_objectid_list, build_prop_name):
@@ -252,7 +262,9 @@ def firmware_app_count(firmware_objectid_list):
     :param firmware_objectid_list: list(ObjectId()) - list of class:'AndroidFirmware' objectIds
     :return: int - number of apps in the firmware list.
     """
-    return AndroidApp.objects(firmware_id_reference__in=firmware_objectid_list).count()
+    count = AndroidApp.objects(firmware_id_reference__in=firmware_objectid_list).count()
+    logging.info(f"Got android app count {count}")
+    return count
 
 
 def get_total_firmware_byte_size(firmware_objectid_list):
