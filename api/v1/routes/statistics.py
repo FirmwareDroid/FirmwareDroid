@@ -167,7 +167,7 @@ class CreateQarkStatistics(Resource):
 
         try:
             if report_type == 0:
-                firmware_id_list = check_firmware_mode(mode, request)
+                firmware_id_list = check_firmware_mode(mode, request, os_vendor=os_vendor)
                 parameter_list = firmware_id_list
             else:
                 android_app_id_list = check_app_mode(mode, request, os_vendor=os_vendor)

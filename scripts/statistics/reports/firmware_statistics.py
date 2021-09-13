@@ -20,6 +20,7 @@ def create_firmware_statistics_report(firmware_id_list, report_name):
     """
     create_app_context()
     if len(firmware_id_list) > 0:
+        logging.info(f"Create FirmwareStatistics with {len(firmware_id_list)} samples.")
         firmware_objectId_list = create_objectid_list(firmware_id_list)
         firmware_statistics_report = create_empty_firmware_statistics_report(report_name,
                                                                              firmware_id_list,

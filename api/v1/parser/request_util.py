@@ -43,10 +43,15 @@ def check_app_mode(mode, request, **kwargs):
     return android_app_id_list
 
 
-def check_firmware_mode(mode, request):
+def check_firmware_mode(mode, request, **kwargs):
     firmware_id_list = []
     if mode == 1:
-        firmware_id_list.extend(get_all_document_ids(AndroidFirmware))
+        if "os_vendor" in kwargs and kwargs["os_vendor"]:
+            firmware_list = AndroidFirmware.objects(os_vendor=kwargs["os_vendor"]).only("id")
+            for firmware in firmware_list:
+                firmware_id_list.append(firmware.id)
+        else:
+            firmware_id_list.extend(get_all_document_ids(AndroidFirmware))
     elif mode > 1:
         firmware_list = AndroidFirmware.objects(version_detected=mode)
         for firmware in firmware_list:
