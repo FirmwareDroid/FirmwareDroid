@@ -151,7 +151,6 @@ def get_build_prop_frequency(firmware_objectid_list, build_prop_name):
         }
     ])
     for document in command_cursor:
-        logging.info(f"document: {document}")
         for property_dict in document.get("frequencies"):
             key = property_dict.get("value")
             value = property_dict.get("count")
@@ -159,7 +158,6 @@ def get_build_prop_frequency(firmware_objectid_list, build_prop_name):
                 result_dict_count[key] += value
             else:
                 result_dict_count[key] = value
-    logging.info(f"build_prop_name: {build_prop_name} - {result_dict_count}")
     return result_dict_count
 
 

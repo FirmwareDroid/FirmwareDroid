@@ -22,7 +22,7 @@ def create_super_statistics_report(android_app_id_list, report_name):
     report_objectid_list = get_report_objectid_list(android_app_objectid_list, reference_attribute)
     reports_count = len(report_objectid_list)
     logging.info(f"Got Super report ids: {reports_count}")
-    if reports_count > 1:
+    if reports_count > 0:
         statistics_report = create_empty_super_statistics_report(report_name,
                                                                  reports_count,
                                                                  android_app_id_list,
