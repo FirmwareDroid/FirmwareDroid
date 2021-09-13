@@ -70,22 +70,16 @@ def get_apkid_statistics_report(android_app_id_list, apkid_report_list, report_c
         android_app_reference_file=android_app_reference_file.id,
         compiler_reference_dict=filter_mongodb_dict_chars(compiler_reference_dict),
         compiler_count_dict=filter_mongodb_dict_chars(compiler_count_dict),
-        compiler_plot_dict={},
         obfuscator_reference_dict=filter_mongodb_dict_chars(obfuscator_reference_dict),
         obfuscator_count_dict=filter_mongodb_dict_chars(obfuscator_count_dict),
-        obfuscator_plot_dict={},
         packer_reference_dict=filter_mongodb_dict_chars(packer_reference_dict),
         packer_count_dict=filter_mongodb_dict_chars(packer_count_dict),
-        packer_plot_dict={},
         anti_vm_reference_dict=filter_mongodb_dict_chars(anti_vm_reference_dict),
         anti_vm_count_dict=filter_mongodb_dict_chars(anti_vm_count_dict),
-        anti_vm_plot_dict={},
         anti_disassembly_reference_dict=filter_mongodb_dict_chars(anti_dis_reference_dict),
         anti_disassembly_count_dict=filter_mongodb_dict_chars(anti_dis_count_dict),
-        anti_disassembly_plot_dict={},
         manipulator_reference_dict=filter_mongodb_dict_chars(manipulator_reference_dict),
         manipulator_count_dict=filter_mongodb_dict_chars(manipulator_count_dict),
-        manipulator_plot_dict={},
     )
     apkid_statistics_report.save()
     return apkid_statistics_report

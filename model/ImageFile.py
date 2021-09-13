@@ -2,6 +2,7 @@ import datetime
 from mongoengine import FileField, StringField, DateTimeField
 from flask_mongoengine import Document
 
+
 class ImageFile(Document):
     save_date = DateTimeField(default=datetime.datetime.now, required=True)
     file = FileField(required=True, collection_name="fs.images")
