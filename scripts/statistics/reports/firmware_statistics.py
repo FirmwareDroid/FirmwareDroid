@@ -70,10 +70,12 @@ def set_firmware_statistics_data(firmware_statistics_report, firmware_objectid_l
     firmware_statistics_report.total_firmware_byte_size = get_total_firmware_byte_size(firmware_objectid_list)
     firmware_statistics_report.save()
     logging.info("Saved total_firmware_byte_size")
-
-    firmware_statistics_report.number_of_unique_packagenames = get_unique_packagename_frequency(firmware_objectid_list)
-    firmware_statistics_report.save()
-    logging.info("Saved number_of_unique_packagenames")
+    try:
+        firmware_statistics_report.number_of_unique_packagenames = get_unique_packagename_frequency(firmware_objectid_list)
+        firmware_statistics_report.save()
+        logging.info("Saved number_of_unique_packagenames")
+    except Exception as err:
+        logging.error(f"Could not estimate number of unique packagenames: {err}")
 
     set_build_prop_statistics(firmware_statistics_report, firmware_objectid_list)
 
