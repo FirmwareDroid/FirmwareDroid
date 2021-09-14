@@ -65,6 +65,7 @@ def quark_engine_parallel_worker(android_app_list):
         try:
             # TODO remove this if statement as soon as quark-engine fixes this issue.
             if android_app.file_size_bytes <= 83886080:
+                logging.info(f"Quark-Engine scans: {android_app.filename} {android_app.id}")
                 scan_results = run_paralell_quark(android_app.absolute_store_path, rule_path)
                 if not scan_results:
                     raise RuntimeError()
