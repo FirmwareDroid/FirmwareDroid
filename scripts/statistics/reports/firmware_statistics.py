@@ -196,16 +196,11 @@ def get_unique_packagename_frequency(firmware_objectid_list):
             }
         },
         {
-            "$match": {
-                "frequency": 1
-            }
-        },
-        {
-            "$count": "frequency"
+            "$count": "packagename_count"
         }
     ])
     for document in command_cursor:
-        result += document.get("frequency")
+        result += document.get("packagename_count")
     return result
 
 
