@@ -54,7 +54,6 @@ def start_qark_app_analysis(android_app):
 
     build_path = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"])
     source = android_app.absolute_store_path
-    report_type = "json"
 
     logging.info("Decompiling...")
     decompiler = Decompiler(path_to_source=source, build_directory=build_path.name)
@@ -68,6 +67,7 @@ def start_qark_app_analysis(android_app):
     logging.info("Finish scans...")
 
     report = Report(issues=set(scanner.issues))
+    report_type = "json"
     report_path = report.generate(file_type=report_type)
     return report_path
 
