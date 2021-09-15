@@ -109,7 +109,7 @@ def get_quark_engine_scan(apk_path, rule_path):
     return json_report
 
 
-def run_paralell_quark(apk_path, rule_path, num_of_process=int(os.cpu_count())):
+def run_paralell_quark(apk_path, rule_path, num_of_process=4):
     """
     Wrapper script for quark-engine parallel analysis. Runs quark-engine on multiple processors.
     :param apk_path: str - path of the android app to analyse.
