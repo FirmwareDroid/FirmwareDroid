@@ -1268,7 +1268,7 @@ services:
     networks:
       - backend
 
-  qark-worker-4:
+  qark-worker-40:
     build:
       context: .
       dockerfile: ./docker/base/Dockerfile_qark
