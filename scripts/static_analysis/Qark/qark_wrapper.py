@@ -55,20 +55,25 @@ def start_qark_app_analysis(android_app):
     build_path = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"])
     source = android_app.absolute_store_path
 
-    logging.info("Decompiling...")
-    decompiler = Decompiler(path_to_source=source, build_directory=build_path.name)
-    decompiler.run()
+    try:
+        logging.info("Decompiling...")
+        decompiler = Decompiler(path_to_source=source, build_directory=build_path.name)
+        decompiler.run()
 
-    logging.info("Running scans...")
-    path_to_source = decompiler.path_to_source if decompiler.source_code else decompiler.build_directory
+        logging.info("Running scans...")
+        path_to_source = decompiler.path_to_source if decompiler.source_code else decompiler.build_directory
 
-    scanner = Scanner(manifest_path=decompiler.manifest_path, path_to_source=path_to_source)
-    scanner.run()
-    logging.info("Finish scans...")
+        scanner = Scanner(manifest_path=decompiler.manifest_path, path_to_source=path_to_source)
+        scanner.run()
+        logging.info("Finish scans...")
 
-    report = Report(issues=set(scanner.issues))
-    report_type = "json"
-    report_path = report.generate(file_type=report_type)
+        report = Report(issues=set(scanner.issues))
+        report_type = "json"
+        report_path = report.generate(file_type=report_type)
+    except SystemExit as err:
+        logging.error(err)
+        raise RuntimeError(f"Qark could not scan {android_app.filename}")
+
     return report_path
 
 
