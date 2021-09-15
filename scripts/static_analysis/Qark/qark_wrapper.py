@@ -6,14 +6,11 @@ import logging
 import os
 import tempfile
 import json
-from multiprocessing import Lock
 import flask
 from scripts.database.query_document import get_filtered_list
 from model import QarkReport, QarkIssue, AndroidApp
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.mulitprocessing_util.mp_util import start_process_pool
-
-lock = Lock()
 
 
 def qark_analyse_apps(android_app_id_list):
@@ -54,12 +51,8 @@ def start_qark_app_analysis(android_app):
     from qark.decompiler.decompiler import Decompiler
     from qark.report import Report
     from qark.scanner.scanner import Scanner
-    with lock:
-        build_path = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"])
-        path = os.path.join(build_path.name + "/qark")
-        os.mkdir(path)
-        logging.info("Path created: " + path)
 
+    build_path = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"])
     source = android_app.absolute_store_path
     report_type = "json"
 
