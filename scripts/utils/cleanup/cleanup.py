@@ -54,11 +54,14 @@ def cleanup_firmware_app_references():
     for x in range(0, number_of_apps, chunk_size):
         android_app_list = AndroidApp.objects(firmware_id_reference__exists=False)[x:x + chunk_size]
         for android_app in android_app_list:
-            if not android_app.firmware_id_reference:
-                logging.info(f"Delete android app: {android_app.id} - Cleanup reason: Has no firmware referenced.")
-                android_app.delete()
-            else:
-                logging.info(f"Cleanup check android app successfully: {android_app.id}")
+            try:
+                if not android_app.firmware_id_reference:
+                    logging.info(f"Delete android app: {android_app.id} - Cleanup reason: Has no firmware referenced.")
+                    android_app.delete()
+                else:
+                    logging.info(f"Cleanup check android app successfully: {android_app.id}")
+            except Exception as err:
+                logging.error(err)
 
 
 def cleanup_app_file_store():
