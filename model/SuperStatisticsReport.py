@@ -7,6 +7,7 @@ ATTRIBUTE_MAP = {}
 
 class SuperStatisticsReport(StatisticsReport):
     vulnerabilities_count_dict = DictField(required=False)
+    vulnerabilities_by_category_count_dict = DictField(required=False)
     vulnerabilities_high_crit_references_file = LazyReferenceField(JsonFile,
                                                                    reverse_delete_rule=CASCADE,
                                                                    required=False)

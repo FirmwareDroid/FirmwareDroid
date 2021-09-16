@@ -224,7 +224,10 @@ def get_array_size_stats(total_number_of_reports, androguard_report_objectid_lis
 def get_grouped_permissions_by_level(permission_by_level_count_dict):
     grouped_permissions_dict = {}
     for protection_level, total_permission_count in permission_by_level_count_dict.items():
-        main_protection_level = protection_level.split("|")[0]
+        main_protection_level = protection_level
+        if "|" in protection_level:
+            main_protection_level = protection_level.split("|")[0]
+
         if main_protection_level not in grouped_permissions_dict:
             grouped_permissions_dict[main_protection_level] = total_permission_count
         else:

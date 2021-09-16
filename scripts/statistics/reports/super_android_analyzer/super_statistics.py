@@ -7,6 +7,8 @@ from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.statistics.statistics_common import create_objectid_list, get_report_objectid_list
 from scripts.utils.file_utils.file_util import create_reference_file, object_to_temporary_json_file, stream_to_json_file
 
+SUPER_SEVERITY_LEVELS = ["lows", "highs", "mediums", "criticals", "warnings"]
+
 
 def create_super_statistics_report(android_app_id_list, report_name):
     """
@@ -42,6 +44,7 @@ def get_super_statistics_report(report_objectid_list, statistics_report):
     vulnerabilities_count_dict = get_vulnerability_counts_per_risk_level(report_objectid_list)
     statistics_report.vulnerabilities_count_dict = vulnerabilities_count_dict
     statistics_report.save()
+
     logging.info("Saved SUPER vulnerabilities per level counts!")
     vulnerabilities_high_crit_references_list = get_references_high_crit_vulns(report_objectid_list)
     vulnerabilities_high_crit_reference_tempfile = \
@@ -49,10 +52,19 @@ def get_super_statistics_report(report_objectid_list, statistics_report):
     statistics_report.vulnerabilities_high_crit_references_file = \
         stream_to_json_file(vulnerabilities_high_crit_reference_tempfile.name).id
     statistics_report.save()
+
     logging.info("Saved SUPER high and critical vulnerability references!")
     statistics_report.vulnerabilities_high_crit_unique_app_count = len(vulnerabilities_high_crit_references_list)
     statistics_report.save()
     logging.info("Saved SUPER high and critical vulnerability count of unique apps!")
+
+    vuln_category_frequencies = {}
+    for severity_level in SUPER_SEVERITY_LEVELS:
+        frequencies_by_category = get_vuln_category_frequency(severity_level, report_objectid_list)
+        vuln_category_frequencies[severity_level] = frequencies_by_category
+    statistics_report.vulnerabilities_by_category_count_dict = vuln_category_frequencies
+    statistics_report.save()
+    logging.info(f"Saved SUPER category frequencies! {vuln_category_frequencies}")
 
 
 def get_references_high_crit_vulns(report_objectid_list):
@@ -61,79 +73,123 @@ def get_references_high_crit_vulns(report_objectid_list):
     :param report_objectid_list: list(ObjectIds) - list(class:'SuperReport'  ObjectIds)
     :return: list(
     """
-    command_cursor = SuperReport.objects(id__in=report_objectid_list).aggregate([
-        {
-            "$match": {
-                "$or": [
-                    {
-                        "results.criticals_len": {
-                            "$gt": 0
-                        }
-                    },
-                    {
-                        "results.highs_len": {
-                            "$gt": 0
-                        }
-                    }
-                ]
-            }
-        },
-        {
-            "$project": {
-                "criticals": "$results.criticals",
-                "highs": "$results.highs"
-            }
-        }
-    ], allowDiskUse=True)
     reference_list = []
-    for document in command_cursor:
-        reference_list.append(document)
+    chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
+    for chunk in chunk_list:
+        command_cursor = SuperReport.objects(id__in=chunk).aggregate([
+            {
+                "$match": {
+                    "$or": [
+                        {
+                            "results.criticals_len": {
+                                "$gt": 0
+                            }
+                        },
+                        {
+                            "results.highs_len": {
+                                "$gt": 0
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "$project": {
+                    "criticals": "$results.criticals",
+                    "highs": "$results.highs"
+                }
+            }
+        ], allowDiskUse=True)
+        for document in command_cursor:
+            reference_list.append(document)
     return reference_list
+
+
+def get_vuln_category_frequency(severity_level, report_objectid_list):
+    """
+    Get the number of vulnerabilities by category and severity.
+    :param severity_level: str - severity string
+    :param report_objectid_list: list(objectId) - list of class:'SuperReport' objectIds
+    :return: dict(str, int) - dict(vuln_category, frequency)
+    """
+    vuln_frequency_dict = {}
+    chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
+    for chunk in chunk_list:
+        command_cursor = SuperReport.objects(pk__in=chunk).aggregate([
+            {
+                "$project": {
+                    f"{severity_level}": f"$results.{severity_level}.name"
+                }
+            },
+            {
+                "$unwind": f"${severity_level}"
+            },
+            {
+                "$group": {
+                    "_id": f"${severity_level}",
+                    "count": {
+                        "$sum": 1
+                    }
+                }
+            }
+        ], allowDiskUse=True)
+
+        for document in command_cursor:
+            category = document.get("_id")
+            if category in vuln_frequency_dict:
+                vuln_frequency_dict[category] += document.get("count")
+            else:
+                vuln_frequency_dict[category] = document.get("count")
+    return vuln_frequency_dict
 
 
 def get_vulnerability_counts_per_risk_level(report_objectid_list):
     """
     Counts the number of vulnerabilities per level.
-    :return: dict(
+    :return: dict(str, int)
     """
-    command_cursor = SuperReport.objects(id__in=report_objectid_list).aggregate([
-        {
-            "$project": {
-                "low_count": "$results.lows_len",
-                "medium_count": "$results.mediums_len",
-                "high_count": "$results.highs_len",
-                "critical_count": "$results.criticals_len",
-                "warning_count": "$results.warnings_len"
-            }
-        },
-        {
-            "$group": {
-                "_id": ObjectId(),
-                "low_count": {
-                    "$sum": "$low_count"
-                },
-                "medium_count": {
-                    "$sum": "$medium_count"
-                },
-                "high_count": {
-                    "$sum": "$high_count"
-                },
-                "critical_count": {
-                    "$sum": "$critical_count"
-                },
-                "warning_count": {
-                    "$sum": "$warning_count"
+    vulnerability_count_dict = {}
+    count_string_list = ["critical_count", "high_count", "medium_count", "low_count", "warning_count"]
+    for count_string in count_string_list:
+        vulnerability_count_dict[count_string] = 0
+    chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
+    for chunk in chunk_list:
+        command_cursor = SuperReport.objects(id__in=chunk).aggregate([
+            {
+                "$project": {
+                    "low_count": "$results.lows_len",
+                    "medium_count": "$results.mediums_len",
+                    "high_count": "$results.highs_len",
+                    "critical_count": "$results.criticals_len",
+                    "warning_count": "$results.warnings_len"
+                }
+            },
+            {
+                "$group": {
+                    "_id": ObjectId(),
+                    "low_count": {
+                        "$sum": "$low_count"
+                    },
+                    "medium_count": {
+                        "$sum": "$medium_count"
+                    },
+                    "high_count": {
+                        "$sum": "$high_count"
+                    },
+                    "critical_count": {
+                        "$sum": "$critical_count"
+                    },
+                    "warning_count": {
+                        "$sum": "$warning_count"
+                    }
                 }
             }
-        }
-    ], allowDiskUse=True)
-    vulnerability_count_dict = {}
-    for document in command_cursor:
-        vulnerability_count_dict = {"critical_count": document.get("critical_count"),
-                                    "high_count": document.get("high_count"),
-                                    "medium_count": document.get("medium_count"),
-                                    "low_count": document.get("low_count"),
-                                    "warning_count": document.get("warning_count")}
+        ], allowDiskUse=True)
+
+        for document in command_cursor:
+            for count_string in count_string_list:
+                vulnerability_count_dict[count_string] += document.get(count_string)
+
     logging.info(vulnerability_count_dict)
     return vulnerability_count_dict
 
