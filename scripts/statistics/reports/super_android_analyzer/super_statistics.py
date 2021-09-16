@@ -4,7 +4,7 @@ from bson import ObjectId
 
 from model import SuperReport, SuperStatisticsReport
 from scripts.rq_tasks.flask_context_creator import create_app_context
-from scripts.statistics.statistics_common import create_objectid_list, get_report_objectid_list
+from scripts.statistics.statistics_common import create_objectid_list, get_report_objectid_list, fetch_chunked_lists
 from scripts.utils.file_utils.file_util import create_reference_file, object_to_temporary_json_file, stream_to_json_file
 
 SUPER_SEVERITY_LEVELS = ["lows", "highs", "mediums", "criticals", "warnings"]
@@ -19,9 +19,10 @@ def create_super_statistics_report(android_app_id_list, report_name):
     create_app_context()
     android_app_reference_file = create_reference_file(android_app_id_list)
     reference_attribute = "super_report_reference"
-    android_app_objectid_list = create_objectid_list(android_app_id_list)
+    #android_app_objectid_list = create_objectid_list(android_app_id_list)
+    #report_objectid_list = get_report_objectid_list(android_app_objectid_list, reference_attribute)
+    android_app_objectid_list, report_objectid_list = fetch_chunked_lists(android_app_id_list, reference_attribute)
     logging.info(f"Got Android ids: {len(android_app_objectid_list)}")
-    report_objectid_list = get_report_objectid_list(android_app_objectid_list, reference_attribute)
     reports_count = len(report_objectid_list)
     logging.info(f"Got Super report ids: {reports_count}")
     if reports_count > 0:
