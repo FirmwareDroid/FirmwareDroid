@@ -14,6 +14,9 @@ ANDROID_APP_REFERENCES = ["androguard_report_reference",
                           "virus_total_report_reference",
                           "androwarn_report_reference",
                           "qark_report_reference",
+                          "super_report_reference",
+                          "apkleaks_report_reference",
+                          "quark_engine_report_reference",
                           "apkid_report_reference"]
 
 
