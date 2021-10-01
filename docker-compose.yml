@@ -1,5 +1,6 @@
 version: '3.7'
 services:
+  # TODO Security enhancement - move env file to docker secrets
   web:
     build: .
     container_name: flask-web
@@ -19,6 +20,7 @@ services:
       - frontend
 
   mongo-db-1:
+    # TODO upgrade mongo-db version
     image: mongo:4.2.8-bionic
     container_name: mongo-db-1
     restart: unless-stopped
@@ -39,6 +41,7 @@ services:
       start_period: 40s
 
   mongo-db-replica-setup:
+    # TODO upgrade mongo-db version
     image: mongo:4.2.8-bionic
     env_file:
       - ./.env
@@ -125,6 +128,7 @@ services:
       - elastic
 
   redis:
+    # TODO upgrade redis version
     image: redis:6-buster
     container_name: redis
     command: redis-server
@@ -149,7 +153,7 @@ services:
     command: rqworker --name firmware-worker --url redis://redis:6379/ high
     networks:
       - backend
-    # TODO replace access right
+    # TODO Security enhancement / compatibility - replace/remove access right
     privileged: true
 
   firmware-worker-high-1:
@@ -168,7 +172,7 @@ services:
     command: rqworker --name firmware-worker-high-1 --url redis://redis:6379/ high
     networks:
       - backend
-    # TODO replace access right
+    # TODO Security enhancement / compatibility - replace/remove access right
     privileged: true
 
   fuzzyhash-worker-1:
@@ -188,7 +192,7 @@ services:
     command: rqworker --name fuzzyhash-worker-1 --url redis://redis:6379/ fuzzyhash
     networks:
       - backend
-    # TODO replace access right
+    # TODO Security enhancement / compatibility - replace/remove access right
     privileged: true
 
   firmware-worker-default-1:
