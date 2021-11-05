@@ -15,7 +15,9 @@ from scripts.utils.mulitprocessing_util.mp_util import start_process_pool
 def start_apkid_scan(android_app_id_list):
     """
     RQ-Task wrapper for apkid tool.
-    :param android_app_id_list: list of class:'AndroidApp' object-ids
+
+    :param android_app_id_list: list of class:'AndroidApp' object-ids.
+
     """
     create_app_context()
     logging.info(f"APKid before filtering: {str(len(android_app_id_list))} app id's")
@@ -30,7 +32,9 @@ def start_apkid_scan(android_app_id_list):
 def apkid_scan(android_app_id_queue):
     """
     Starts to analyze the given android apps with apkid tool.
+
     :param android_app_id_queue: multiprocessor queue with object-id's of class:'AndroidApp'.
+
     """
     from apkid.apkid import Options, Scanner
     while not android_app_id_queue.empty():
@@ -75,9 +79,11 @@ def apkid_scan(android_app_id_queue):
 def store_apkid_result(android_app, report_file_path):
     """
     Creates and APKiD report.
+
     :param android_app: class:'AndroidApp'
     :param report_file_path: path to the apkid report (json).
     :return: class:'ApkidReport'
+
     """
     import apkid
     with open(report_file_path, 'rb') as report_file:
@@ -94,9 +100,11 @@ def store_apkid_result(android_app, report_file_path):
 def parse_apkid_report(report_file_path, apkid_report):
     """
     Parses an apkid report.
+
     :param apkid_report: class:'ApkidReport'
     :param report_file_path: path to the apkid report (json).
-    :return:
+
+
     """
     with open(report_file_path, 'r') as json_file:
         data = json.load(json_file)

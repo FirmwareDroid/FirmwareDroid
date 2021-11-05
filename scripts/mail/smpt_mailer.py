@@ -11,9 +11,11 @@ from email.mime.text import MIMEText
 def send_mail(message_body_html, subject, recipient_list):
     """
     Sends an e-mail (html/plain) to the given recipients as BCC.
+
     :param recipient_list: list(str) - e-mail address list.
     :param subject: str - Title of the e-mail.
     :param message_body_html: str - html text of the e-mail.
+
     """
     app = flask.current_app
     msg = MIMEMultipart('alternative')

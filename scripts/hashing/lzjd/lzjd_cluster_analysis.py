@@ -8,7 +8,7 @@ from scripts.hashing.fuzzy_hash_common import get_fuzzy_hash_documents_by_regex,
 from model import LzjdHash
 from scripts.rq_tasks.flask_context_creator import create_app_context
 
-
+# TODO REMOVE OR FINISH WORK HERE
 def start_cluster_analysis(regex_filter, firmware_id_list):
     create_app_context()
     lzjd_hash_list = get_fuzzy_hash_documents_by_regex(regex_filter, LzjdHash)

@@ -8,7 +8,9 @@ from struct import unpack
 def extract_nb0(source):
     """
     Extracts .nb0 files.
+
     :param source: str - path to the file to extract.
+
     """
     logging.info(f"Extract .nb0 file: {str(source)}")
     with open(source, mode='rb') as file:

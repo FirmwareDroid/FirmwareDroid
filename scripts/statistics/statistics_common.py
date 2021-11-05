@@ -26,11 +26,12 @@ lock = Lock()
 
 def set_attribute_averages(report_list, statistics_report, attribute_name_list):
     """
-    Set the average of the
+    Set the average of an attribute.
+
     :param report_list:
     :param statistics_report:
     :param attribute_name_list:
-    :return:
+
     """
     for attribute_name in attribute_name_list:
         average = calculate_attribute_average(attribute_name, report_list)
@@ -40,9 +41,12 @@ def set_attribute_averages(report_list, statistics_report, attribute_name_list):
 def calculate_attribute_average(attribute_name, report_list):
     """
     Calculates the average over all reports from the given attribute.
+
+
     :param attribute_name: str - attribute name of the report.
     :param report_list: list(document) - list of documents.
     :return: float - average of the attribute.
+
     """
     total_value = 0
     for report in report_list:
@@ -54,11 +58,13 @@ def calculate_attribute_average(attribute_name, report_list):
 def set_attribute_occurrences(statistics_report, report_list, attribute_map_dict, is_atomic):
     """
     Sets the occurrences dicts for the statistics_report.
+
     :param statistics_report: document - report in which the statistics is saved.
     :param report_list: list(document) - list of documents in which the data is hold.
     :param attribute_map_dict: dict(str, str) - dictionary with mapping between attribute name and attribute count.
     :param is_atomic: boolean - true if the attribute list is an atomic (int, string, ...) value
     or false if it is list/dict.
+
     """
     for attribute_name in attribute_map_dict.keys():
         logging.info(f"Set occurrence of: {attribute_name}")
@@ -68,9 +74,11 @@ def set_attribute_occurrences(statistics_report, report_list, attribute_map_dict
 def set_attribute_by_ranges(report_list, statistics_report, attribute_name_list):
     """
     Sets the attributes for range based values like histograms.
+
     :param report_list: list(document) - list of documents that hold the data.
     :param statistics_report: document - statistics report in which the statistics will be saved.
     :param attribute_name_list: list(str) - list of attribute names to the in the statistics report.
+
     """
     for attribute_name in attribute_name_list:
         logging.info(f"Histogram for attribute {attribute_name}")
@@ -81,9 +89,11 @@ def set_attribute_by_ranges(report_list, statistics_report, attribute_name_list)
 def get_occurrence_bin_dict(report_list, attribute_name):
     """
     Creates a tuple of occurrence and bin edges for histograms.
+
     :param report_list: list(document) - list of reports which hold the given attribute.
     :param attribute_name: str - name of the attribute to create the occurrences and bins from.
     :return: dict(frequencies: array, bin_edges: array) - occurrence of the value and the range in which it lays.
+
     """
     value_list = []
     for report in report_list:
@@ -107,8 +117,10 @@ def convert_numpy_to_python(numpy_value_list):
 def count_attribute(attribute_value, attribute_count_dict):
     """
     Counts the occurrence of the given attribute.
+
     :param attribute_value: The value to be counted.
     :param attribute_count_dict: the dict which will be used for the counting state.
+
     """
     if str(attribute_value) in attribute_count_dict:
         attribute_count_dict[str(attribute_value)] = attribute_count_dict[str(attribute_value)] + 1
@@ -119,10 +131,11 @@ def count_attribute(attribute_value, attribute_count_dict):
 def add_attribute_reference(attribute_value, references_dict, reference_id):
     """
     Add the given attribute and reference to the dict.
+
     :param attribute_value: str - the key to set in the dict.
     :param references_dict: dict - the dict to which the attribute and reference will be added.
     :param reference_id: objectId - the reference to add.
-    :return:
+
     """
     if not str(attribute_value) in references_dict:
         references_dict[str(attribute_value)] = [reference_id]
@@ -135,10 +148,12 @@ def add_attribute_reference(attribute_value, references_dict, reference_id):
 def get_report_list(document_list, document_class, attribute_name, only_attribute_list=None):
     """
     Gets a list of reports from the database.
+
     :param document_list: list of class:'Mongoengine.document'
     :param document_class: class:'mongoengine.Document' the report class to get the object id's from.
     :param attribute_name: str - Attribute name of the lazy document in which the object-id of the report is saved.
     :return: list of reports from the given class:'mongoengine.Document'
+
     """
     report_list = []
     for document_instance in document_list:
@@ -158,8 +173,10 @@ def dict_to_title_format(x):
     """
     Converts the given dict to a dict with the first key letters in uppercase.
     Example: "google" --> "Google"
+
     :param x: dict to convert.
     :return: dict - copy of the original dict with converted key names.
+
     """
     y = {}
     for key, value in x.items():
@@ -174,12 +191,14 @@ def dict_to_title_format(x):
 def set_statistics_attribute(attribute_name, statistics_report, report_list, attribute_mapping_dict, is_atomic):
     """
     Sets the statistics values for atomic (string, boolean) report attributes.
+
     :param is_atomic: If true atomic (str, bool) attribute will be set. If false list attributes will be set.
     :param report_list: list of reports to analyse.
     :param attribute_name: The name of the Document attribute which holds the report reference.
     :param attribute_mapping_dict: dict(str,str) - dict(attribute_name, attribute_count_name)
     :param statistics_report: The report in which the attribute will be saved/set.
     :param attribute_mapping_dict: dict(attribute_name, attribute_name_count_dict)
+
     """
     multiprocess_disconnect_all(flask.current_app)
     with Manager() as manager:
@@ -213,10 +232,12 @@ def worker_set_dict_attribute(references_dict, count_dict, attribute_name, repor
     """
     Sets the statistics values for a report and list attributes.
     Counts how often a specific attribute is used and saves the occurrence and references in the statistics report.
+
     :param report_queue: managed multiprocessing queue with reports.
     :param count_dict: dict(attribute, count) in which the count will be saved
     :param references_dict: dict - (attribute, object-id) - dict in which the references will be saved
     :param attribute_name: The name of the Document attribute which holds the report reference.
+
     """
     create_app_context()
     while not report_queue.empty():
@@ -232,10 +253,12 @@ def worker_set_dict_attribute(references_dict, count_dict, attribute_name, repor
 def worker_set_atomic_attribute(references_dict, count_dict, attribute_name, report_queue):
     """
     Sets the statistics values for a report and atomic (str, bool) attributes.
+
     :param report_queue: managed multiprocessing queue with reports.
     :param count_dict: dict(attribute, count) in which the count will be saved
     :param references_dict: dict - (attribute, object-id) - dict in which the references will be saved
     :param attribute_name: The name of the Document attribute which holds the report reference.
+
     """
     create_app_context()
     while not report_queue.empty():
@@ -250,12 +273,14 @@ def worker_set_atomic_attribute(references_dict, count_dict, attribute_name, rep
 def set_report_reference_count_attributes(statistics_report, references_dict, count_dict, attribute_name,
                                           attribute_mapping_dict):
     """
+    Set the frequency for a specific statistics report attribute.
+
     :param statistics_report: The report in which the attribute will be saved/set.
     :param count_dict: dict(attribute, count) in which the count will be saved
     :param references_dict: dict - (attribute, object-id) - dict in which the references will be saved
     :param attribute_name: The name of the Document attribute which holds the report reference.
     :param attribute_mapping_dict: dict(str,str) - dict(attribute_name, attribute_count_name)
-    :return:
+
     """
     reference_attribute_name = attribute_name + "_reference_dict"
     sanitized_dict = filter_mongodb_dict_chars(references_dict)
@@ -271,10 +296,12 @@ def set_report_reference_count_attributes(statistics_report, references_dict, co
 def set_attribute_frequencies(attribute_name_list, document_class, statistics_report, report_objectid_list):
     """
     Calculates the frequency of an attribute and saves the result to a statistics report.
+
     :param attribute_name_list: list(dict(str, str)) - Attribute to get the frequencies from.
     :param document_class: document - report to get the attribute to count from.
     :param statistics_report: Subclass of class:'StaticsReport' - Report to save the frequencies to.
     :param report_objectid_list: list(ObjectID()) - list of documents to count the frequencies.
+
     """
     query_set = document_class.objects(id__in=report_objectid_list)
     for attribute_map_dict in attribute_name_list:
@@ -295,8 +322,10 @@ def get_attribute_distinct_count(attribute_name, document_class, report_objectid
 def has_large_attribute_size(attribute):
     """
     Checks if an object need more than 8MB in size.
+
     :param attribute: object -
     :return: true - if size is larger than 2MB.
+
     """
     return sys.getsizeof(attribute) > 2048
 
@@ -304,10 +333,12 @@ def has_large_attribute_size(attribute):
 def check_attribute_size_and_replace(attribute, attribute_name):
     """
     Checks the size of an attribute and replaces it with a json file if it seems to large for mongodb.
+
     :param attribute: document.attribute - object of a document.
     :param attribute_name: str - name of the attribute
     :return: dict(str,str-id) or attribute - returns the same attribute if it is not too large. Otherwise returns a dict
     with the attribute_name as key and the file id as value.
+
     """
     if has_large_attribute_size(attribute):
         logging.warning(f"Large document attribute detected: {attribute_name}. "
@@ -321,8 +352,10 @@ def check_attribute_size_and_replace(attribute, attribute_name):
 def update_reference_file(statistics_report, android_app_id_list):
     """
     Appends the android references to the reference file.
+
     :param statistics_report: class:'StatisticsReport'
     :param android_app_id_list: str(object-id's) of class:'AndroidApp'
+
     """
     reference_list = json.loads(statistics_report.android_app_reference_file.file.read().decode("uft-8"))
     updated_reference_list = reference_list.extend(android_app_id_list)
@@ -334,8 +367,10 @@ def update_reference_file(statistics_report, android_app_id_list):
 def create_objectid_list(id_list):
     """
     Converts the list of string IDs to a list of ObjectId objects.
+
     :param id_list: list(str) - List of IDs.
     :return: list(ObjectId()) - List of ObjectIds.
+
     """
     objectid_list = []
     for document_id in id_list:
@@ -346,8 +381,10 @@ def create_objectid_list(id_list):
 def create_objectid_list_by_documents(document_list):
     """
     Converts the list of string IDs to a list of ObjectId objects.
+
     :param document_list: list(document) - List of documents.
     :return: list(ObjectId()) - List of ObjectIds.
+
     """
     objectid_list = []
     for document in document_list:
@@ -359,9 +396,11 @@ def get_report_objectid_list(android_objectid_list, reference_attribute):
     """
     Creates a list objectIds for the given references reports. Fetches the referenced report from the android apps and
     adds them to the returned list if the report exists.
+
     :param android_objectid_list: list(ObjectId()) - List of class:'AndroidApp' objectIds.
     :param reference_attribute: str - name of the attribute that references the report.
     :return: list(ObjectId()) - List of report objectIds.
+
     """
     android_app_list = AndroidApp.objects(id__in=android_objectid_list).only(reference_attribute)
     report_objectid_list = []
@@ -378,9 +417,11 @@ def get_report_objectid_list(android_objectid_list, reference_attribute):
 def fetch_chunked_lists(android_app_id_list, reference_attribute):
     """
     Fetch a large amount of reports and get a list of app and report objectIds.
+
     :param android_app_id_list: list(str) - list of class:'AndroidApp' string ids.
     :param reference_attribute: str - lazy reference attribute name
     :return: list(objectId), list(objectId) - objectId list for the android apps and reference reports.
+
     """
     chunk_list = [android_app_id_list[x:x + 1000] for x in range(0, len(android_app_id_list), 1000)]
     android_app_objectid_list = []

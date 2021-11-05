@@ -11,11 +11,13 @@ def enqueue_jobs(queue, job_method, document_list, *args,
     """
     Enqueue a job to the given queue with a standard timeout. Creates several jobs if the number of
     elements is large and enqueues them all to the same queue.
+
     :param max_job_size: int - maximal number of items per job.
     :param queue: class:'rq.Queue'
     :param job_method: function - the function that the worker will execute.
     :param document_list: list(documents) - the list which will be added as method arguments.
     :param job_timeout: int - maximal time of the worker to finish the job before timeout.
+
     """
     if len(document_list) > 100:
         sublist_list = split_list_into_sublists(document_list, max_job_size)

@@ -1,3 +1,2 @@
-#In case of version update --> Please update apkleaks_wrapper.py version as well.
-apkleaks==2.6.1
+apkleaks==2.6.1 #In case of version update --> Please update apkleaks_wrapper.py version as well!
 requests~=2.26.0

@@ -18,7 +18,9 @@ lock = Lock()
 def start_androwarn_analysis(android_app_id_list):
     """
     Analysis all apps from the given list with androwarn.
+
     :param android_app_id_list: list of class:'AndroidApp' object-ids
+
     """
     create_app_context()
     logging.info(f"Androwarn analysis started! With {str(len(android_app_id_list))} apps")
@@ -31,7 +33,9 @@ def start_androwarn_analysis(android_app_id_list):
 def androwarn_scan(android_app_id_queue):
     """
     Start the analysis with androwarn. Wrapper function taken and modified from androwarn.py.
+
     :param android_app_id_queue: multiprocessor queue with class:'AndroidApp'
+
     """
     from androguard.misc import AnalyzeAPK
     from androwarn.warn.analysis.analysis import perform_analysis
@@ -65,9 +69,11 @@ def androwarn_scan(android_app_id_queue):
 def create_androwarn_report(report_file_path, android_app):
     """
     Create an androwarn report object class:'AndrowarnReport'.
+
     :param report_file_path: str file path to Androwarn report json file.
     :param android_app: class:'AndroidApp'
     :return class:'AndrowarnReport'
+
     """
     from androwarn import androwarn
     analysis_result = parse_json_report(report_file_path)
@@ -92,8 +98,10 @@ def create_androwarn_report(report_file_path, android_app):
 def parse_json_report(report_file_path):
     """
     Parse androwarn report and return analysis result.
+
     :param report_file_path: str file path to androwarn report json file.
-    :return:
+    :return: str - androwarn report object
+
     """
     with open(report_file_path, 'r') as json_file:
         data = json.load(json_file)

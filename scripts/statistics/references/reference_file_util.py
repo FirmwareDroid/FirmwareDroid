@@ -10,9 +10,11 @@ from model import JsonFile, AndroidApp
 def group_references_by_firmware_version(json_file_id, add_meta_data=False):
     """
     Sorts the references of a class:'JsonFile' by firmware version.
+
     :param add_meta_data: boolean - True: adds additional reference information to every entry.
     :param json_file_id: str - id of class:'JsonFile'. File with document references.
     :return: dict(str, str) - key: version, str: object-id
+
     """
     reference_file = JsonFile.objects.get(pk=json_file_id)
     reference_list = json.loads(reference_file.file.read().decode("utf-8"))
@@ -40,8 +42,10 @@ def group_references_by_firmware_version(json_file_id, add_meta_data=False):
 def add_reference_meta_data(android_app):
     """
     Gets some meta-data of an android app.
+
     :param android_app: class:'AndroidApp'
     :return: str - "{android_app.filename} {android_app.packagename} {android_app.md5}"
+
     """
     return f" {android_app.filename} {android_app.packagename} {android_app.md5}"
 
@@ -49,8 +53,10 @@ def add_reference_meta_data(android_app):
 def filter_references_by_unique_packagename(reference_file_id):
     """
     Removes all references with duplicated packagenames.
+
     :param reference_file_id: str - id of class:'JsonFile'. File with document references.
     :return: dict(str, list(str)) - key: version, value: list of reference strings filtered by packagename.
+
     """
     sorted_dict = group_references_by_firmware_version(reference_file_id, False)
     NO_PACKAGENAME_KEY = "NoPackagename"

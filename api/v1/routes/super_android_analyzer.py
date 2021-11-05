@@ -25,8 +25,10 @@ class SuperScan(Resource):
     def post(self, mode):
         """
         Scan the given apps with Super.
+
         :param mode: If mode = 1 all apps in the database will be used for the report instead of the given json.
         :return: job-id of the rq worker.
+
         """
         app = flask.current_app
         android_app_id_list = check_app_mode(mode, request)

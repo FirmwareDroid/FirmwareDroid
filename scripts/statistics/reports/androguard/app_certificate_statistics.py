@@ -13,8 +13,10 @@ from scripts.utils.file_utils.file_util import create_reference_file
 def create_app_certificate_statistics_report(android_app_id_list, report_name):
     """
     Creates a class:'AppCertificateStatisticsReport' and saves it to the database.
+
     :param android_app_id_list: list - object-id's of class:'AndroidApp'
     :param report_name: str - user defined name for identification.
+
     """
     # TODO Refactor METHOD
     # create_app_context()
@@ -50,7 +52,9 @@ def create_app_certificate_statistics_report(android_app_id_list, report_name):
 def get_certificate_list(androguard_report_objectid_list):
     """
     Creates a list of all certificates from the given reports.
+
     :param androguard_report_objectid_list: list(object-id) - class:'AndroGuardReport' object-id's
     :return: list(class:'AppCertificate')
+
     """
     return AppCertificate.objects(androguard_report_reference__in=androguard_report_objectid_list)

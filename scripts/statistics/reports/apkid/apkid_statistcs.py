@@ -14,8 +14,10 @@ from scripts.utils.file_utils.file_util import create_reference_file_from_dict, 
 def create_apkid_statistics_report(android_app_id_list, report_name):
     """
     Creates a apkid statistics report.
+
     :param report_name: str - user defined name for identification.
     :param android_app_id_list: list(class:'AndroidApp' object-id's)
+
     """
     create_app_context()
     android_app_list = map(lambda x: AndroidApp.objects.get(pk=x), android_app_id_list)
@@ -31,11 +33,13 @@ def create_apkid_statistics_report(android_app_id_list, report_name):
 def get_apkid_statistics_report(android_app_id_list, apkid_report_list, report_count, report_name):
     """
     Creates statistics for the apkid tool and save the it to the database.
+
     :param report_name: str - Not unique Tag for identification.
     :param report_count: int - number of apkid reports
     :param apkid_report_list: list(class:'ApkidReport')
     :param android_app_id_list: list(class:'AndroidApp' object-id's)
     :return: class:'ApkidStatisticsReport'
+
     """
     android_app_reference_file = create_reference_file(android_app_id_list)
 
@@ -89,11 +93,13 @@ def create_file_match_stats(apkid_report_list, match_string):
     """
     Creates two dicts with basic occurrence statistics of the match_string in the apkid report of the given
     apkid report list.
+
     :param apkid_report_list: list class:'ApkidReport'
     :param match_string: str - apkid string which will be searched for.
     :return: tuple(dict(match_string, objectId), dict(match_string, occurrence_count)
     The first dict contains the object id of the android app which was reported to have the given match_string.
     The second dict contains a counter of how often the match occurred over all reports.
+
     """
     match_references_dict = {}
     match_count_dict = {}

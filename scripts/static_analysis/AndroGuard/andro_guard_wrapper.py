@@ -19,7 +19,9 @@ from scripts.utils.mulitprocessing_util.mp_util import start_process_pool
 def start_androguard_analysis(android_app_id_list):
     """
     Starts multiple instances of AndroGuard to analyse the list of apps on multiple processors.
+
     :param android_app_id_list: A list of class:'AndroidApp' object-ids
+
     """
     create_app_context()
     android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "androguard_report_reference")
@@ -31,8 +33,10 @@ def start_androguard_analysis(android_app_id_list):
 def androguard_worker_multithreading(android_app_queue):
     """
     Runs the analysing in multithreading mode.
+
     :param android_app_queue: queue - The queue to analyse with AndroGuard.
     :return: Throws exception when no item is in the queue.
+
     """
     create_app_context()
     try:
@@ -49,7 +53,9 @@ def androguard_worker_multithreading(android_app_queue):
 def androguard_worker_mulitprocessing(android_app_id_queue):
     """
     Worker process which will work on the given queue.
+
     :param android_app_id_queue: str - object-id's of class:'AndroidApp'.
+
     """
     while not android_app_id_queue.empty():
         android_app_id = android_app_id_queue.get()
@@ -62,7 +68,9 @@ def androguard_worker_mulitprocessing(android_app_id_queue):
 def analyse_and_save(android_app):
     """"
     Analyse an android app with AndroGuard and save the result to the database.
+
     :param android_app: class:'AndroidApp'
+
     """
     try:
         andro_guard_report = analyse_single_apk(android_app)
@@ -77,8 +85,10 @@ def analyse_and_save(android_app):
 def analyse_single_apk(android_app):
     """
     Start AndroGuard Analysis and creates a db object from the result.
+
     :param android_app: class:'AndroidApp'
     :return: class:'AndroGuardReport'
+
     """
     from androguard import __version__
     from androguard.misc import AnalyzeAPK
@@ -135,7 +145,9 @@ def analyse_single_apk(android_app):
 def add_report_crossreferences(report):
     """
     Adds the androguard objectid to the references documents for performance speed up.
+
     :param report: class:'AndroGuardReport'
+
     """
     for cert_id in report.certificate_id_list:
         cert = AppCertificate.objects.get(pk=cert_id.pk)
@@ -156,8 +168,10 @@ def add_report_crossreferences(report):
 def get_class_analysis(dx):
     """
     Creates androguard class analysis and saves it to the database.
+
     :param dx: AndroGuard analysis object.
     :return: A list of object-ids of the generated class:'AndroGuardClassAnalysis'
+
     """
     class_analysis_id_list = []
     class_analysis_list = dx.get_classes()
@@ -178,8 +192,10 @@ def get_class_analysis(dx):
 def get_field_analysis(class_analysis):
     """
     Creates a androguard field analysis.
+
     :param class_analysis: class:'AndroGuardClassAnalysis'
     :return: list of class:'AndroGuardFieldClassAnalysis'
+
     """
     result_list = []
     field_analysis_list = class_analysis.get_fields()
@@ -199,8 +215,10 @@ def get_field_analysis(class_analysis):
 def get_method_analysis(class_analysis):
     """
     Creates a androguard method analysis of the given class.
+
     :param class_analysis: class:'AndroGuardClassAnalysis'
     :return: list of class:'AndroGuardMethodAnalysis'
+
     """
     result_list = []
     method_class_analysis_list = class_analysis.get_methods()
@@ -231,8 +249,10 @@ def get_method_analysis(class_analysis):
 def get_string_analysis(dx):
     """
     Takes AndroGuard string analysis and create a class:'AndroGuardStringAnalysis' from it.
+
     :param dx: AndroGuard analysis object.
     :return: class:'AndroGuardStringAnalysis'
+
     """
     androguard_string_analysis_id_list = []
     analysis_list = dx.get_strings()
@@ -251,9 +271,11 @@ def get_string_analysis(dx):
 def create_certificate_object_list(x509_cert_list, android_app):
     """
     Converts x509 certificates into a mongoEngine object list.
+
     :param android_app: class:'AndroidApp'
     :param x509_cert_list: List of :class:'asn1crypto.x509'
     :return: A list of :class:'AppCertificate'
+
     """
     from androguard.util import get_certificate_name_string
     from asn1crypto import pem

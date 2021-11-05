@@ -7,8 +7,10 @@ import logging
 def detect_by_build_prop(build_prop_file_list):
     """
     Gets the main version of the firmware via ro_build_version_release of the build.prop file.
+
     :param build_prop_file_list: list(class:'BuildPropFile') - Embedded document with build properties.
     :return: str - main version or 'Unknown'
+
     """
     from scripts.firmware.const_regex_patterns import BUILD_VERSION_RELEASE_LIST, SYSTEM_BUILD_VERSION_RELEASE_LIST
     build_prop_names = []

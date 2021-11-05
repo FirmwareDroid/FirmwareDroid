@@ -10,11 +10,13 @@ from model import AndroidApp, LibRadarReport
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.mulitprocessing_util.mp_util import start_process_pool
 
-
+# TODO FINISH DEVELOPING FEATURE
 def start_libradar_scan(android_app_id_list):
     """
     Analysis all apps from the given list with libRadar.
+
     :param android_app_id_list: list of class:'AndroidApp' object-ids.
+
     """
     # TODO FINISH LIBRADAR IMPLEMENTATION
     create_app_context()
@@ -27,7 +29,9 @@ def start_libradar_scan(android_app_id_list):
 def libradar_worker(android_app_id_queue):
     """
     Start the analysis with libradar on a multiprocessor queue.
+
     :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
+
     """
     while not android_app_id_queue.empty():
         android_app_id = android_app_id_queue.get()
@@ -44,9 +48,11 @@ def libradar_worker(android_app_id_queue):
 
 def get_libradar_analysis(apk_file_path):
     """
+    Create a json of the LibRadar report.
 
     :param apk_file_path: str - path to the apk file.
     :return: dict - Libradar results as json.
+
     """
     from LibRadar import LibRadar
     lrd = LibRadar(apk_file_path)
@@ -56,10 +62,10 @@ def get_libradar_analysis(apk_file_path):
 
 def create_report(android_app, libradar_results):
     """
-
+    Create a class:'LibRadarReport' in the database.
     :param android_app: class:'AndroidApp'
     :param libradar_results: dict - results of the Libradar scan.
-    :return:
+    :return: class:'LibRadarReport'
     """
     libradar_report = LibRadarReport(
         android_app_id_reference=android_app.id,
@@ -68,3 +74,4 @@ def create_report(android_app, libradar_results):
     ).save()
     android_app.libradar_report_reference = libradar_report.id
     android_app.save()
+    return libradar_report

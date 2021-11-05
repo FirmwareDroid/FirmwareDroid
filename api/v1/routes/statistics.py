@@ -35,7 +35,9 @@ class DownloadImageFiles(Resource):
     def get(self, image_file_id):
         """
         Download a reference file for a statistics report.
+
         :return: A zip file with all graphics.
+
         """
         try:
             image_file = ImageFile.objects.get(pk=image_file_id)
@@ -56,7 +58,9 @@ class DownloadJsonFile(Resource):
     def get(self, reference_file_id):
         """
         Download a reference file for a statistics report.
+
         :return: txt file with object id references.
+
         """
         try:
             reference_file = JsonFile.objects.get(pk=reference_file_id)
@@ -74,7 +78,9 @@ class DownloadJsonFile(Resource):
     def get(self, json_file_id, add_meta_data):
         """
         Download a reference file for a statistics report.
+
         :return: txt file with app id references.
+
         """
         try:
             response = group_references_by_firmware_version(json_file_id, add_meta_data)
@@ -91,11 +97,13 @@ class DownloadJsonFileFiltered(Resource):
     def get(self, json_file_id, get_count):
         """
         Download a reference file for a statistics report filtered by unqiue packagenames.
+
         :param json_file_id: str - object-id of the file.
         :param get_count: bool -
             True: get only the count of unique packagenames per version.
             False: get references with unique packagenmames,
         :return: txt file with AndroidApp id references or reference counts sorted by firmware version.
+
         """
         try:
             filtered_dict, count_dict = filter_references_by_unique_packagename(json_file_id)
@@ -118,6 +126,7 @@ class CreateQarkStatistics(Resource):
     def post(self, mode, report_name, report_type, os_vendor=None):
         """
         Create statistics for a specific report.
+
         :param os_vendor: str - firmware os vendor.
         :param mode: If mode = 1 all firmware in the database will be used for the report instead of the given json.
         :param report_name: str - A custom tag for the report with a short description.
@@ -134,6 +143,7 @@ class CreateQarkStatistics(Resource):
             9: APKLeaks statistics
             10: Quark-Engine statistics
             11: Super Android Analyzer statistics
+
         """
         app = flask.current_app
         response = "", 400

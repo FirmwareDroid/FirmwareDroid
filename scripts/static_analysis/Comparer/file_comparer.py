@@ -14,8 +14,10 @@ from scripts.extractor.expand_archives import extract_and_mount_all
 def start_firmware_comparer(firmware_id_a, firmware_id_b):
     """
     Creates an app context and starts the firmware differ.
+
     :param firmware_id_a: The main firmware to diff against.
     :param firmware_id_b: the second firmware to use for diff.
+
     """
     create_app_context()
     firmware_a = AndroidFirmware.objects.get(pk=firmware_id_a)
@@ -27,8 +29,10 @@ def start_firmware_comparer(firmware_id_a, firmware_id_b):
 def compare_firmware(firmware_a, firmware_b):
     """
     Compares two firmware files.
+
     :param firmware_a: The main firmware to diff against.
     :param firmware_b: the second firmware to use for diff.
+
     """
     firmware_list = [firmware_a, firmware_b]
     root_mount_directory_list = []
@@ -54,12 +58,14 @@ def compare_firmware(firmware_a, firmware_b):
 def create_comparer_report(report_file_path, firmware_list, files_error_list, files_only_in_list, files_differ_list):
     """
     Creates a instance of class:'ComparerReportFirmware' and save it to the database.
+
     :param report_file_path: str file path to the linux diff report.
     :param firmware_list: list of the two firmware files which were diffed.
     :param files_error_list: list of error files from diff parser.
     :param files_only_in_list: list of added or removed files from diff parser.
     :param files_differ_list: list of differ files from diff parser.
     :return: class:'ComparerReportFirmware'
+
     """
     firmware_id_reference_list = []
     for firmware in firmware_list:
@@ -77,12 +83,14 @@ def create_comparer_report(report_file_path, firmware_list, files_error_list, fi
 def parse_diff(diff_report_file_path):
     """
     Parse the output file from linux diff tool. Deletes the path of the temporary from the output.
+
     :param diff_report_file_path: str - path to the diff report file.
     and replaced with the firmware_id.
     :return: triple(list, list, list)
         - files_error_list: Contains all relative files-paths which were marked as error in diff.
         - files_only_in_list: Contains all string in format path:file which were marked "only in" in diff.
         - files_differ_list: Contains all relative files-paths which differ in diff.
+
     """
     files_error_list = []
     files_only_in_list = []
@@ -104,8 +112,10 @@ def parse_diff(diff_report_file_path):
 def create_file_name_list(firmware):
     """
     Creaates a list of file names from the given firmware.
+
     :param firmware: class:'AndroidFirmware'
     :return: list(str) - file names of class:'FirmwareFiles'
+
     """
     firmware_file_name_list = []
     for lazy_file_id in firmware.firmware_file_id_list:
@@ -117,9 +127,11 @@ def create_file_name_list(firmware):
 def exec_linux_diff_directories(folder_a, folder_b, output_file_path):
     """
     Execute the linux diff commands on the given folders.
+
     :param output_file_path: str - path to the file were the diff result is stored.
     :param folder_a: str path of the folder to diff.
     :param folder_b: str path of the folder to diff.
+
     """
     folder_a = shlex.quote(folder_a)
     folder_b = shlex.quote(folder_b)

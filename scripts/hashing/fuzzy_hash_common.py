@@ -15,11 +15,12 @@ from scripts.utils.string_utils.string_util import filter_mongodb_dict_chars
 def hash_sub_files(firmware_file, fuzzy_hash_document, hash_from_file, hash_from_buffer):
     """
     Creates additional hashes for compressed data or specific code sections.
+
     :param firmware_file: class:'FirmwareFile'
     :param fuzzy_hash_document: document - Fuzzy hash document with sub files.
     :param hash_from_file: function - hashing function for files.
     :param hash_from_buffer: function - hashing function for buffers.
-    :return:
+
     """
     if firmware_file.name.endswith("apk"):
         hash_apk_file(firmware_file, fuzzy_hash_document, hash_from_file, hash_from_buffer)
@@ -31,10 +32,12 @@ def hash_sub_files(firmware_file, fuzzy_hash_document, hash_from_file, hash_from
 def hash_apk_file(firmware_file, fuzzy_hash_document, hash_from_file, hash_from_buffer):
     """
     Creates a hash over the decompressed apk file.
+
     :param hash_from_file: function - hashing function for files.
     :param fuzzy_hash_document: document - Fuzzy hash document with sub files.
         :param hash_from_buffer: function - hashing function for buffers.
     :param firmware_file: class:'FirmwareFile'
+
     """
     temp_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"])
     unzip_file(firmware_file.absolute_store_path, temp_dir.name)
@@ -56,10 +59,12 @@ def hash_apk_file(firmware_file, fuzzy_hash_document, hash_from_file, hash_from_
 def hash_elf_file(file_path, fuzzy_hash_document, identifier, hash_from_buffer):
     """
     Creates additional fuzzy hashes for elf binaries. Hashes over every section in the elf file.
+
     :param hash_from_buffer: function - hashing function for buffers.
     :param identifier: str - unique identifier of the file.
     :param fuzzy_hash_document: document - Fuzzy hash document with sub files.
     :param file_path: str - filepath
+
     """
     import lief
     try:
@@ -86,9 +91,11 @@ def hash_elf_file(file_path, fuzzy_hash_document, identifier, hash_from_buffer):
 def get_fuzzy_hash_documents_by_regex(regex_filter, document_class):
     """
     Gets a list of hash instances (document instances) of the given document class.
+
     :param regex_filter: str - regex to filter by filename attribute.
     :param document_class: mongoengine document - instance of the class to get the documents from.
     :return: list(document instances)
+
     """
     hash_document_list = []
     if not regex_filter:
@@ -103,9 +110,11 @@ def filter_fuzzy_hash_documents_by_firmware(fuzzy_hash_list, firmware_id_list):
     """
     Filters a list of fuzzy hash by firmware. If the file that the fuzzy hash belongs to is nit in the firmware it will
     be removed from the list.
+
     :param fuzzy_hash_list: list(document) - list of fuzzy hashes instances.
     :param firmware_id_list: list(str) - list of class:'FirmwareFile' object-id's
     :return: list(document) - list of filtered fuzzy hashes instances.
+
     """
     filtered_fuzzy_hash_list = []
     for fuzzy_hash in fuzzy_hash_list:

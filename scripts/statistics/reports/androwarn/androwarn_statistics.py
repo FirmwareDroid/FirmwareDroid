@@ -12,9 +12,11 @@ from scripts.utils.file_utils.file_util import create_reference_file
 
 def create_androwarn_statistics_report(android_app_id_list, report_name):
     """
-    Creates a statistic report for androwarn.
+    Creates a statistic report for Androwarn.
+
     :param report_name: str - user defined name for identification.
     :param android_app_id_list: list class:'AndroidApp' object-id's
+
     """
     create_app_context()
     android_app_list = list(map(lambda x: AndroidApp.objects.get(pk=x), android_app_id_list))

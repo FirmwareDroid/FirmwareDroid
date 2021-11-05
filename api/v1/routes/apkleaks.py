@@ -9,7 +9,7 @@ from api.v1.api_models.serializers import object_id_list, string_list
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.request_util import check_app_mode
 from scripts.static_analysis.APKLeaks.apkleaks_wrapper import start_apkleaks_scan
-from scripts.static_analysis.APKLeaks.google_api_verification.api_leaks_verifier import start_leaks_verification
+from scripts.static_analysis.APKLeaks.google_api_verification.api_leaks_verifier import start_google_api_key_verification
 
 api = Api()
 ns = api.namespace('apkleaks',
@@ -25,8 +25,10 @@ class ApkLeaksScan(Resource):
     def post(self, mode):
         """
         Scan the given apps with APKLeaks.
+
         :param mode: If mode = 1 all apps in the database will be used for the report instead of the given json.
         :return: job-id of the rq worker.
+
         """
         app = flask.current_app
         android_app_id_list = check_app_mode(mode, request)
@@ -42,7 +44,9 @@ class APIVerifierScan(Resource):
     def post(self):
         """
         Verifies API keys found by APKLeaks.
+
         :return: job-id of the rq worker.
+
         """
         app = flask.current_app
         # TODO Security improvement: Sanitize input
@@ -50,5 +54,5 @@ class APIVerifierScan(Resource):
         api_key_list = []
         for api_key in json_data["string_list"]:
             api_key_list.append(api_key)
-        app.rq_task_queue_apkleaks.enqueue(start_leaks_verification, api_key_list, job_timeout=60 * 60 * 24)
+        app.rq_task_queue_apkleaks.enqueue(start_google_api_key_verification, api_key_list, job_timeout=60 * 60 * 24)
         return "", 200

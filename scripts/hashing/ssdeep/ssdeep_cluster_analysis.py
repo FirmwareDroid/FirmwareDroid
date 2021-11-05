@@ -15,8 +15,10 @@ from scripts.utils.file_utils.file_util import object_to_temporary_json_file, cr
 def start_ssdeep_clustering(regex_filter, firmware_id_list):
     """
     Create a cluster analysis of ssDeep hashes.
+
     :param firmware_id_list: list(str) - list of object-id's class:'AndroidFirmware'
     :param regex_filter: str - optional filter for filenames to reduce number of files used.
+
     """
     logging.info("ssdeep Clustering started.")
     create_app_context()
@@ -34,9 +36,11 @@ def start_ssdeep_clustering(regex_filter, firmware_id_list):
 def compare_ssdeep_hashes(ssdeep_hash_list):
     """
     Compares potential ssdeep hashes in memory.
+
     :return: tuple(dict, dict) -
         matches: ssDeep digest that have a higher score than 0
         scores: ssDeep comparison scores
+
     """
     integer_dict = {}
     matches_dict = {}
@@ -67,10 +71,12 @@ def compare_ssdeep_hashes(ssdeep_hash_list):
 def add_edge(weighted_edges_dict, node_a_label, node_b_label, weight):
     """
     Adds two (forward, backwards) connections between two nodes.
+
     :param weighted_edges_dict: dict - to store the connection
     :param node_a_label: str - key
     :param node_b_label: str - key
     :param weight: str - weighting of the edge.
+
     """
     if node_a_label not in weighted_edges_dict:
         weighted_edges_dict[node_a_label] = {}
@@ -84,8 +90,10 @@ def add_edge(weighted_edges_dict, node_a_label, node_b_label, weight):
 def get_ssdeep_hashs(regex_filter):
     """
     Gets a list of class:'SsDeepHash' from the database.
+
     :param regex_filter: str - optional filter for filenames.
     :return: list(class:'SsDeepHash')
+
     """
     ssdeep_hash_list = []
     if not regex_filter:
@@ -99,11 +107,13 @@ def get_ssdeep_hashs(regex_filter):
 def get_similiar_ssdeep_digests(block_size, int_7_char_chunks, unique_identifier, integer_dict):
     """
     Gets potential ssDeep digest that are similar to the given chunks.
+
     :param block_size: str - ssDeep block size
     :param int_7_char_chunks: list(str) - strings to pre-filter the ssDeep hash.
     :param unique_identifier: str - key to identify the file.
     :param integer_dict: dict - in memory datastructures for storing the potential match candidates.
     :return: set(str) - potential chunks that are similar.
+
     """
     if block_size not in integer_dict:
         integer_dict[block_size] = {}
@@ -121,8 +131,10 @@ def get_similiar_ssdeep_digests(block_size, int_7_char_chunks, unique_identifier
 def create_groups(matches_dict):
     """
     Creates a list of groups that have a match.
+
     :param matches_dict: dict - dictionary of ssdeep matches.
     :return: list(list(str))
+
     """
     groups = []
     for ssdeep_hash_id in matches_dict.keys():
@@ -149,12 +161,14 @@ def create_groups(matches_dict):
 def create_ssdeep_cluster(matches_dict, scores_dict, gexf, cluster_list, ssdeep_hash_list):
     """
     Creates a class:'SsDeepCluster' object.
+
     :param ssdeep_hash_list: list(class:'SsDeepHash') - list of ssdeep hash documents.
     :param matches_dict: dict - list of ssDeep matches.
     :param scores_dict: dict - list of ssDeep comparison scores.
     :param gexf: str - directed graph file as string.
     :param cluster_list: list - list of matching groups.
     :return: str - id of the saved class:'SsDeepCluster' object.
+
     """
     reference_file = create_reference_file(list(map(lambda x: x.id, ssdeep_hash_list)))
     matches_file = object_to_temporary_json_file(matches_dict).read()

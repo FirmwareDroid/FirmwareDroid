@@ -10,8 +10,10 @@ import logging
 def unzip_file(zip_file_path, destination_dir):
     """
     Extract the file from a *.zip file.
+
     :param zip_file_path: str - path to the *.zip file to extract.
     :param destination_dir: str - path to extract to.
+
     """
     try:
         with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
@@ -23,9 +25,10 @@ def unzip_file(zip_file_path, destination_dir):
 def extract_tar_file(file_path, destination_dir):
     """
     Extracts a tar file to the given folder.
+
     :param file_path: str - path to the *.tar file to extract.
     :param destination_dir: str - path to extract to.
-    :return:
+
     """
     try:
         if os.path.isfile(file_path) and os.access(file_path, os.R_OK):

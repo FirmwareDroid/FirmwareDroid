@@ -27,7 +27,9 @@ class FirmwareExportFileByID(Resource):
     def post(self):
         """
         Exports the specific firmware files.
+
         :return: files are stored on the extract store (on disk).
+
         """
         app = flask.current_app
         firmware_id_list = parse_json_object_id_list(request, FirmwareFile)
@@ -43,8 +45,10 @@ class FirmwareExportFileByName(Resource):
     def post(self, firmware_file_name_regex, mode):
         """
         Exports the specific firmware files from the given firmware list.
+
         :param firmware_file_name_regex: str - regex for firmware file name to export
         :param mode: If mode = 1 use all firmware files in the database.
+
         """
         response = "", 200
         app = flask.current_app
@@ -69,8 +73,10 @@ class FirmwareIndexFiles(Resource):
     def post(self, mode):
         """
         Creates an index of the files within the firmware images.
+
         :param mode: If mode = 1 start to index all firmware files in the database.
         :return: rq-job-id
+
         """
         firmware_id_list = check_firmware_mode(mode, request)
         app = flask.current_app

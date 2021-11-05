@@ -19,7 +19,9 @@ class JobStatus(Resource):
     def post(self, job_id):
         """
         Gets the status uf a background job.
+
         :param job_id: the unique identifier of the job.
+
         """
         response = "", 400
         app = flask.current_app
@@ -38,7 +40,9 @@ class JobStatus(Resource):
     def post(self, job_id):
         """
         Cancel a background job.
+
         :param job_id: the unique identifier of the job.
+
         """
         app = flask.current_app
         try:
@@ -56,7 +60,9 @@ class GetJobs(Resource):
     def get(self, job_id):
         """
         Gets all the currently running job-id's
+
         :returns a list of job-id's
+
         """
         app_instance = flask.current_app
         response = "", 400

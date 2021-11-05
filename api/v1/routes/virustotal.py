@@ -29,7 +29,9 @@ class VirusTotalAllApks(Resource):
     def post(self, mode):
         """
         Scan a list all apps of the given firmware with VirusTotal.
+
         :param mode: If mode = 1 all apps without a report will be scanned.
+
         """
         response = {}
         app = flask.current_app
@@ -93,7 +95,9 @@ class VirusTotalReportCount(Resource):
     def get(self):
         """
         Gets the number of VirusTotal reports in the database.
-        :return: int - count of VirusTotal reports
+
+        :return: int - count of VirusTotal reports.
+
         """
         return VirusTotalReport.objects.count()
 
@@ -105,8 +109,10 @@ class VirusTotalLabels(Resource):
     def get(self, tlsh_cluster_analysis_id):
         """
         Makes all nodes red that are reported to be malicious by virustotal.
+
         :param tlsh_cluster_analysis_id: id of tlsh cluster analysis.
         :return: Overrides the old graph file with the new colorized one.
+
         """
         app = flask.current_app
         tlsh_cluster_analysis = TlshClusterAnalysis.objects.get(pk=tlsh_cluster_analysis_id)

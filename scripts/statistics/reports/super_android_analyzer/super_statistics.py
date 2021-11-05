@@ -13,8 +13,10 @@ SUPER_SEVERITY_LEVELS = ["lows", "highs", "mediums", "criticals", "warnings"]
 def create_super_statistics_report(android_app_id_list, report_name):
     """
     Creates a super statistics report.
+
     :param report_name: str - user defined name for identification.
     :param android_app_id_list: list(class:'AndroidApp' object-id's)
+
     """
     create_app_context()
     android_app_reference_file = create_reference_file(android_app_id_list)
@@ -38,9 +40,10 @@ def create_super_statistics_report(android_app_id_list, report_name):
 def get_super_statistics_report(report_objectid_list, statistics_report):
     """
     Creates statistics for the super android analyzer tool and save the it to the database.
+
     :param report_objectid_list: list(ObjectId) - list(class:'SuperReport' ObjectIds)
     :param statistics_report: class:'SuperStatisticsReport'
-    :return:
+
     """
     vulnerabilities_count_dict = get_vulnerability_counts_per_risk_level(report_objectid_list)
     statistics_report.vulnerabilities_count_dict = vulnerabilities_count_dict
@@ -71,8 +74,10 @@ def get_super_statistics_report(report_objectid_list, statistics_report):
 def get_references_high_crit_vulns(report_objectid_list):
     """
     Gets a list of Android app references with high or critical vulnerabilities.
-    :param report_objectid_list: list(ObjectIds) - list(class:'SuperReport'  ObjectIds)
-    :return: list(
+
+    :param report_objectid_list: list(ObjectIds) - list of class:'SuperReport' object-ids.
+    :return: list(str) - list of class:'AndroidApp' object-ids.
+
     """
     reference_list = []
     chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
@@ -109,9 +114,11 @@ def get_references_high_crit_vulns(report_objectid_list):
 def get_vuln_category_frequency(severity_level, report_objectid_list):
     """
     Get the number of vulnerabilities by category and severity.
+
     :param severity_level: str - severity string
     :param report_objectid_list: list(objectId) - list of class:'SuperReport' objectIds
     :return: dict(str, int) - dict(vuln_category, frequency)
+
     """
     vuln_frequency_dict = {}
     chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
@@ -147,7 +154,9 @@ def get_vuln_category_frequency(severity_level, report_objectid_list):
 def get_vulnerability_counts_per_risk_level(report_objectid_list):
     """
     Counts the number of vulnerabilities per level.
+
     :return: dict(str, int)
+
     """
     vulnerability_count_dict = {}
     count_string_list = ["critical_count", "high_count", "medium_count", "low_count", "warning_count"]
@@ -199,10 +208,12 @@ def create_empty_super_statistics_report(report_name, report_count, android_app_
                                          android_app_reference_file):
     """
     Creates a basic super android analyzer statistics reports without actual report data in the database.
+
     :param report_name: str - A tag for the statistics report.
     :param report_count: int - number of reports.
     :param android_app_id_list: list(str) - class:AndroidApp' IDs.
     :param android_app_reference_file: class:'JsonFile' - File reference for storing app cross references.
+
     """
     return SuperStatisticsReport(
         report_name=report_name,

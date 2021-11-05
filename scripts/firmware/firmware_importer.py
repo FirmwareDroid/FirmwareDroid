@@ -30,8 +30,10 @@ lock = threading.Lock()
 def start_firmware_mass_import(create_fuzzy_hashes):
     """
     Imports all .zip files from the import folder.
+
     :param create_fuzzy_hashes: bool - true if fuzzy hash index should be created.
     :return: list of string with the status (errors/success) of every file.
+
     """
     create_app_context()
     app = flask.current_app
@@ -50,7 +52,9 @@ def start_firmware_mass_import(create_fuzzy_hashes):
 def create_queue():
     """
     Create a queue of firmware files from the import folder.
+
     :return: A queue.
+
     """
     firmware_import_folder_path = flask.current_app.config["FIRMWARE_FOLDER_IMPORT"]
     filename_list = get_filenames(firmware_import_folder_path)
@@ -64,9 +68,11 @@ def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes):
     """
     An multi-threaded import script that extracts meta information of a firmware file from the system.img.
     Stores a firmware into the database if it is not already stored.
+
     :param create_fuzzy_hashes: bool - true if fuzzy hash index should be created.
     :param firmware_file_queue: The queue of files to import.
     :return: A dict of the errors and success messages for every file.
+
     """
     create_app_context()
     app = flask.current_app
@@ -88,9 +94,11 @@ def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes):
 def import_firmware(original_filename, md5, firmware_archive_file_path, create_fuzzy_hashes):
     """
     Attempts to store a firmware archive into the database.
+
     :param original_filename: str - name of the file to import.
     :param md5: md5 - checksum of the file to check.
     :param firmware_archive_file_path: str - path of the firmware archive.
+
     """
     temp_extract_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
                                                    suffix="_extract")
@@ -179,8 +187,10 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
 def get_firmware_archive_content(cache_temp_file_dir_path):
     """
     Creates an index of the files within the firmware and attempts to find the system.img
+
     :param cache_temp_file_dir_path: str - dir path in which the extracted files are.
     :return: list class:'FirmwareFile'
+
     """
     firmware_files = []
     top_level_firmware_files = create_firmware_file_list(cache_temp_file_dir_path, "/")
@@ -196,6 +206,7 @@ def get_partition_firmware_files(archive_firmware_file_list,
     """
     Index all ext files of the given firmware. Creates a list of class:'FirmwareFile' from an Android all
     accessible partitions.
+
     :param file_pattern_list: list(str) - list of regex patterns to detect an image file by name.
     :param temp_dir_path: str - path to the directory in which the image files will be loaded temporarily.
     :param partition_name: str - unique identifier of the partition.
@@ -204,6 +215,7 @@ def get_partition_firmware_files(archive_firmware_file_list,
     :raises: RuntimeError - in case the system partition cannot be accessed.
     :return: list(class:'FirmwareFile') - list of files found in the image. In case the image could not be processed the
     method returns an empty list.
+
     """
     firmware_file_list = []
     try:
@@ -228,6 +240,7 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
                           file_size, build_prop_file_id_list, version_detected, firmware_file_list, hasFuzzyHashIndex):
     """
     Creates class:'AndroidFirmware' object and saves it to the database. Creates references to other documents.
+
     :param hasFuzzyHashIndex: bool - true if fuzzy hash index was created. False if fuzzy hash index was not created.
     :param version_detected: str - detected version of the firmware.
     :param store_filename: str - Name of the file within the file store.
@@ -240,6 +253,7 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
     :param file_size: int - size of firmware file.
     :param build_prop_file_id_list: list(class:'BuildPropFile')
     :param firmware_file_list: list(class:'FirmwareFile')
+
     """
     absolute_store_path = os.path.abspath(firmware_store_path)
     logging.info(f"firmware_store_path: {firmware_store_path} absolute_store_path: {absolute_store_path}")
@@ -266,8 +280,10 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
 def add_app_firmware_references(firmware, android_app_list):
     """
     Adds the firmware reference to the app.
+
     :param firmware: class:'AndroidFirmware'
     :param android_app_list: list - class:'AndroidApp'
+
     """
     for app in android_app_list:
         app.firmware_id_reference = firmware.id
@@ -277,10 +293,12 @@ def add_app_firmware_references(firmware, android_app_list):
 def extract_build_prop(firmware_file_list, mount_path):
     """
     Extracts the build.prop file from the given directory and creates an parsed it's content.
+
     :param mount_path: str - path where the firmware image is mounted to.
     :param firmware_file_list: list(class:'FirmwareFile') - list of firmware-files that contains a
     minimum of one build.prop file
     :return: list(class:'BuildPropFile') - list of BuildPropFile documents.
+
     """
     build_prop_firmware_file_list = find_build_prop_file_paths(firmware_file_list)
     build_prop_file_list = []
@@ -298,8 +316,10 @@ def extract_build_prop(firmware_file_list, mount_path):
 def find_build_prop_file_paths(firmware_file_list):
     """
     Returns a build.prop file if found within the given path.
+
     :param firmware_file_list: list(class:FirmwareFile)
     :return: list(class:FirmwareFile) - list of build.prop firmware files.
+
     """
     build_prop_firmware_file_list = []
     for firmware_file in firmware_file_list:

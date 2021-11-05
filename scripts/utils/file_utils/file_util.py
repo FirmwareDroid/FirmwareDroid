@@ -15,7 +15,9 @@ from scripts.utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
 
 
 def get_filenames(path):
-    """Get list of all filenames from the given path"""
+    """
+    Get list of all filenames from the given path
+    """
     y = []
     try:
         x = [i[2] for i in os.walk(path)]
@@ -28,7 +30,9 @@ def get_filenames(path):
 
 
 def delete_files_in_folder(folder):
-    """Deletes all files in the given folder"""
+    """
+    Deletes all files in the given folder
+    """
     for filename in os.listdir(folder):
         file_path = os.path.join(folder, filename)
         try:
@@ -43,7 +47,9 @@ def delete_files_in_folder(folder):
 def delete_folder(dir_path):
     """
     Removes folder with content.
+
     :param dir_path: str - path of the folder to delete.
+
     """
     try:
         shutil.rmtree(dir_path)
@@ -54,7 +60,9 @@ def delete_folder(dir_path):
 def delete_temporary_files(file_list):
     """
     Deletes all files from the given list.
+
     :param file_list: list(str)
+
     """
     for file in file_list:
         delete_file(file.name)
@@ -63,7 +71,9 @@ def delete_temporary_files(file_list):
 def delete_files_by_path(file_list):
     """
     Deletes all files from the given list.
+
     :param file_list: list(str)
+
     """
     for file in file_list:
         delete_file(file)
@@ -72,7 +82,9 @@ def delete_files_by_path(file_list):
 def delete_file(path):
     """
     Deletes a file from the filesystem
+
     :param path: str - to be removed
+
     """
     os.unlink(path)
     if os.path.exists(path):
@@ -82,8 +94,10 @@ def delete_file(path):
 def create_temporary_file_from_list(string_list):
     """
     Creates a temporary files and writes all the given strings to the file.
+
     :param string_list: list(str)
     :return: class:'tempfile.NamedTemporaryFile'
+
     """
     app = flask.current_app
     file = tempfile.NamedTemporaryFile(delete=False, dir=app.config["FIRMWARE_FOLDER_CACHE"])
@@ -103,8 +117,10 @@ def create_reference_file(string_list):
 def create_reference_file_from_dict(string_dict):
     """
     Creates a class:'JsonFile' in which all reference from the given dict are written to.
+
     :param string_dict: dict(str, list(str (object-ids of class:'AndroidApp'))
     :return: dict(str, object-id of the class:'JsonFile' object)
+
     """
     reference_file_dict = {}
     for key, value in string_dict.items():
@@ -117,8 +133,10 @@ def create_reference_file_from_dict(string_dict):
 def binary_to_temp_file(binary):
     """
     Converts one binary to a tempfile.
+
     :param binary: The binary data to convert.
     :return: A temp_file.
+
     """
     temp_file = tempfile.NamedTemporaryFile(delete=False)
     temp_file.write(binary)
@@ -128,8 +146,10 @@ def binary_to_temp_file(binary):
 def convert_binaries_to_file(binaries):
     """
     Converts a list of binaries to files.
+
     :param binaries: List of binaries.
     :return: array of temporary files.
+
     """
     file_list = []
     for binary in binaries:
@@ -141,7 +161,9 @@ def convert_binaries_to_file(binaries):
 def create_directories(path):
     """
     Creates directory with subdirectories.
+
     :param path: str - path to create.
+
     """
     try:
         os.makedirs(path)
@@ -154,9 +176,11 @@ def create_directories(path):
 def copy_file(source, target):
     """
     Creates a copy of the given source to the target destination.
+
     :param source: str - path of the source file.
     :param target: str - path of the destination folder.
     :return: str - path of the copied file.
+
     """
     shutil.copy(source, target)
     file_name = ntpath.basename(source)
@@ -166,9 +190,11 @@ def copy_file(source, target):
 def check_file_format(regex_patterns, filename):
     """
     Checks if the given pattern match the filename.
+
     :param regex_patterns: list(str) - regex pattern list.
     :param filename: str - filename
     :return: true - if one of the regex pattern matches the filename.
+
     """
     is_match = False
     for pattern in regex_patterns:
@@ -181,8 +207,10 @@ def check_file_format(regex_patterns, filename):
 def str_to_file(str_to_write):
     """
     Write a dictionary to a temporary file as string.
+
     :param str_to_write: str or dict or list - an object to write as string to a file.
     :return: tempfile
+
     """
     tmp_file = tempfile.NamedTemporaryFile()
     f = open(tmp_file.name, "w")
@@ -194,8 +222,10 @@ def str_to_file(str_to_write):
 def object_to_temporary_json_file(obj_to_write):
     """
     Write a string to a temporary file as json.
+
     :param obj_to_write: str - an object to write as json to a file.
     :return: Python.tempfile
+
     """
     tmp_file = tempfile.NamedTemporaryFile()
     input_file = open(tmp_file.name, "w")
@@ -212,8 +242,10 @@ def object_to_temporary_json_file(obj_to_write):
 def store_json_file(file):
     """
     Stores a json file in the database.
+
     :param file: file - must be json parsable.
     :return: class:'JsonFile'
+
     """
     json_file = JsonFile(file=file.read()).save()
     return json_file
@@ -222,8 +254,10 @@ def store_json_file(file):
 def stream_to_json_file(file):
     """
     Stores a json file in the database.
+
     :param file: file - must be json parsable.
     :return: class:'JsonFile'
+
     """
     json_file = JsonFile()
     json_file.file.new_file()
@@ -239,7 +273,9 @@ def stream_to_json_file(file):
 def create_temp_directories():
     """
     Creates temporary directories.
+
     :return: tempdir, tempdir
+
     """
     app = flask.current_app
     cache_temp_file_dir = tempfile.TemporaryDirectory(dir=app.config["FIRMWARE_FOLDER_CACHE"], suffix="_extract")
@@ -251,9 +287,10 @@ def create_temp_directories():
 def cleanup_directories(firmware_file_path, firmware_app_store):
     """
     Moves failed files to the import failed folder. Removes intermediate files.
-    :param firmware_file_path: str - path t
-    :param firmware_app_store: str -
-    :return:
+
+    :param firmware_file_path: str - path to the firmware file.
+    :param firmware_app_store: str - path to application directory for apps.
+
     """
     app = flask.current_app
     shutil.move(firmware_file_path, app.config["FIRMWARE_FOLDER_IMPORT_FAILED"])

@@ -10,7 +10,7 @@ from scripts.utils.file_utils.file_util import create_reference_file
 from scripts.statistics.statistics_common import set_attribute_frequencies, get_attribute_distinct_count, \
     fetch_chunked_lists
 
-
+#TODO ADD METHOD COMMENTS
 def create_androguard_statistics_report(android_app_id_list, report_name):
     create_app_context()
     logging.info(f"Starting AndroGuard statistics with {len(android_app_id_list)} apps")
@@ -32,11 +32,13 @@ def create_empty_androguard_statistics_report(report_name, reports_count, androi
                                               android_app_reference_file):
     """
     Create class:'AndroGuardStatisticsReport' object without any statistics.
+
     :param report_name: str - tag name of the report.
     :param reports_count: int - Number of AndroGuard-Reports
     :param android_app_id_list: list(str) - list of ids class:'AndroidApp'
     :param android_app_reference_file: class:'JsonFile' - file with AndroidApp references.
     :return: class:'AndroGuardStatisticsReport'
+
     """
     return AndroGuardStatisticsReport(
         report_name=report_name,
@@ -49,8 +51,10 @@ def create_empty_androguard_statistics_report(report_name, reports_count, androi
 def set_statistics_data(andro_guard_statistics_report, report_objectid_list):
     """
     Set all the statistics for the statistics report.
+
     :param andro_guard_statistics_report: class:'AndroGuardStatisticsReport' - report to set the data.
     :param report_objectid_list: list(objectId) - list of class:'AndroGuardReport' objectIds
+
     """
     attibute_name_list = [ATTRIBUTE_MAP_LIST, ATTRIBUTE_MAP_ATOMIC]
     set_attribute_frequencies(attibute_name_list,
@@ -210,11 +214,13 @@ def get_permission_by_level_count_dict(report_objectid_list):
 def get_array_size_stats(total_number_of_reports, androguard_report_objectid_list, array_attribute_name, array_size):
     """
     Gets the number of attributes that have an array with a greater than <variable> size.
+
     :param total_number_of_reports:
     :param androguard_report_objectid_list:
     :param array_attribute_name:
     :param array_size:
     :return: dict(str, int) -
+
     """
     has_count = get_count_array_size_greater_than(array_attribute_name, androguard_report_objectid_list, array_size)
     has_not_count = total_number_of_reports - has_count

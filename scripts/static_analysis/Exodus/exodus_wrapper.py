@@ -12,7 +12,9 @@ from scripts.utils.mulitprocessing_util.mp_util import start_process_pool
 def start_exodus_scan(android_app_id_list):
     """
     Analysis all apps from the given list with exodus-core.
+
     :param android_app_id_list: list of class:'AndroidApp' object-ids.
+
     """
     create_app_context()
     android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "exodus_report_reference")
@@ -24,7 +26,9 @@ def start_exodus_scan(android_app_id_list):
 def exodus_worker(android_app_id_queue):
     """
     Start the analysis with exodus on a multiprocessor queue.
+
     :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
+
     """
     while not android_app_id_queue.empty():
         android_app_id = android_app_id_queue.get()
@@ -41,8 +45,10 @@ def exodus_worker(android_app_id_queue):
 def get_exodus_analysis(apk_file_path):
     """
     Analyses one apk with exodus and creates a json report.
+
     :param apk_file_path: str - path to the apk file.
     :return: dict - exodus results as json.
+
     """
     from exodus_core.analysis.static_analysis import StaticAnalysis
 
@@ -75,9 +81,10 @@ def get_exodus_analysis(apk_file_path):
 def create_report(android_app, exodus_results):
     """
     Create a exodus report in the database.
+
     :param android_app: class:'AndroidApp'
     :param exodus_results: dict - results of the exodus scan.
-    :return:
+
     """
     #TODO add dynamic usage for version
     #from exodus_core import __version__

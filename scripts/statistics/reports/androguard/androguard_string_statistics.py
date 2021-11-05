@@ -17,8 +17,10 @@ from scripts.utils.file_utils.file_util import create_reference_file
 def create_string_statistics_report(android_app_id_list, report_name):
     """
     Creates a class:'AndroGuardStringAnalysisStatisticsReport' and saves it to the database.
+
     :param report_name: str - user defined name for identification.
     :param android_app_id_list: list(str) - class:'AndroGuardReport'
+
     """
 #     create_app_context()
 #     logging.warning("START STRING ANALYSIS STATISTICS.")

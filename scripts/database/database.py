@@ -16,8 +16,10 @@ def init_db(app):
 def open_db_con(alias):
     """
     Opens a new mongoEngine db connection with the given alias.
+
     :param alias: a unique connection string not default.
     :return: (str) the connection alias
+
     """
     from app import app
     db_name, host, port, username, password = get_connection_options(app)
@@ -27,8 +29,9 @@ def open_db_con(alias):
 def close_db_con(alias):
     """
     Closes mongoEngine connection by alias.
+
     :param alias: (str) the connection alias
-    :return:
+
     """
     mongoengine.disconnect(alias=alias)
 
@@ -38,7 +41,7 @@ def multiprocess_disconnect_all(app):
     Disconnects all mongoEngine connections and then registers default connection.
     Workaround for using mongoEngine in a multiprocess environment:
     See link: https://stackoverflow.com/questions/49390825/using-mongoengine-with-multiprocessing-how-do-you-close-mongoengine-connection
-    :return:
+
     """
     if not app:
         from app import app
@@ -58,8 +61,10 @@ def register_default_connection(app):
 def reconnect(alias):
     """
     Reconnect if the alias is not connected.
+
     :param alias: str- connection alias
     :return: db connection or None
+
     """
     db_connection = None
     try:
@@ -72,8 +77,10 @@ def reconnect(alias):
 def get_connection_options(app):
     """
     Gets the db connection configuration for mongodb.
+
     :param app: the current flask app instance.
     :return: db_name, host, port, username, password
+
     """
     db_name = app.config["MONGODB_SETTINGS"].get("db")
     host = app.config["MONGODB_SETTINGS"].get("host")

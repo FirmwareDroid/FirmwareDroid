@@ -9,8 +9,10 @@ from scripts.statistics.statistics_common import fetch_chunked_lists
 def create_exodus_statistics_report(android_app_id_list, report_name):
     """
     Creates a statistics report.
+
     :param report_name: str - user defined name for identification.
     :param android_app_id_list: list(class:'AndroidApp' object-id's)
+
     """
     logging.info(f"Exodus statistics with {len(android_app_id_list)} apps.")
     create_app_context()
@@ -32,8 +34,10 @@ def create_exodus_statistics_report(android_app_id_list, report_name):
 def add_exodus_statistics(statistics_report, report_objectid_list):
     """
     Gets the various statistic data for exodus and saves it to the database.
+
     :param statistics_report: class:'ExodusStatisticsReport'
     :param report_objectid_list: list(ObjecIds) - list of class:'ExodusReport' objectids.
+
     """
     statistics_report.tracker_count_dict = get_tracker_frequency(report_objectid_list)
     statistics_report.number_of_apps_with_trackers = get_number_of_apps_by_tracker_number(report_objectid_list,
@@ -49,8 +53,10 @@ def add_exodus_statistics(statistics_report, report_objectid_list):
 def get_tracker_frequency(report_objectid_list):
     """
     Gets the count of AD-Trackers. For each tracker the sum is aggregated over all apps.
+
     :param report_objectid_list: list(ObjecIds) - list of class:'ExodusReport' objectids.
     :return: List(dict(str, int)) - List(dict("AD-Tracker-Name", Tracker-Count))
+
     """
     tracker_dict = {}
     chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
@@ -114,10 +120,12 @@ def get_tracker_frequency(report_objectid_list):
 def get_number_of_apps_by_tracker_number(report_objectid_list, tracker_count, comparison_sign):
     """
     Count the number of apps that have a specific count of trackers.
+
     :param comparison_sign: string - MongoDB aggregation string for comparison. Examples: "$gt", "$eq", "$lt"
     :param tracker_count: int - condition for counting the number of apps if a specific number of trackers are detected.
     :param report_objectid_list: list(ObjecIds) - list of class:'ExodusReport' objectids.
     :return: int
+
     """
     count = 0
     chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
@@ -152,10 +160,12 @@ def get_number_of_apps_by_tracker_number(report_objectid_list, tracker_count, co
 def create_empty_exodus_statistics_report(report_name, report_count, android_app_id_list, android_app_reference_file):
     """
     Creates a basic exodus statistics reports without actual report data in the database.
+
     :param report_name: str - A tag for the statistics report.
     :param report_count: int - number of reports.
     :param android_app_id_list: list(str) - class:AndroidApp' IDs.
     :param android_app_reference_file: class:'JsonFile' - File reference for storing app cross references.
+
     """
     return ExodusStatisticsReport(
         report_name=report_name,

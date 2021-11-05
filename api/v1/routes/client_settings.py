@@ -12,7 +12,7 @@ class SetSetting(Resource):
     def post(self):
         """
         Change the default application settings.
-        :return:
+        :return: "NOT IMPLEMENTED!"
         """
         # TODO Implement application settings
         return "Not implemented", 400
@@ -23,7 +23,9 @@ class GetClientSetting(Resource):
     def get(self):
         """
         Get application settings for a client.
+
         :return: json - public configuration data for clients.
+
         """
         response = "", 400
         app_setting = ApplicationSetting.objects.first()

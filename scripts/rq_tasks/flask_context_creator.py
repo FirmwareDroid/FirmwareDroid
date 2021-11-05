@@ -6,7 +6,7 @@ import logging
 
 def create_app_context():
     """
-    Creates a new app context and pushes it to the stack.
+    Creates a new app context and pushes it to Flask context stack.
     """
     from app import create_app
     app = create_app()

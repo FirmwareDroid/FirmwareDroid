@@ -24,9 +24,11 @@ class QuarkEngineScan(Resource):
     def post(self, mode, use_parallel_mode):
         """
         Scan the given apps with Quark-Engine.
+
         :param use_parallel_mode: boolean - true: use quark-engines built in parallel mode.
         :param mode: If mode = 1 all apps in the database will be used for the report instead of the given json.
         :return: job-id of the rq worker.
+
         """
         app = flask.current_app
         android_app_id_list = check_app_mode(mode, request)

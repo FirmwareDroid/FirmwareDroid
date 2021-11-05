@@ -2,7 +2,7 @@
 # License available at: https://github.com/ozguralp/gmapsapiscanner/blob/master/LICENSE
 import logging
 
-# All these Endpoints cost quota and no additional authentication needed only API key
+# All these Endpoints cost quota and no additional authentication needed (only API key)
 PAYED_ENDPOINTS_DICT = {
 	"YouTube Subscriptions": ["https://www.googleapis.com/youtube/v3/subscriptions?part=snippet&key="],
 	"YouTube SearchList": ["https://www.googleapis.com/youtube/v3/subscriptions?part=snippet&key="],

@@ -15,9 +15,11 @@ CATEGORY_LIST = ["malicious", "suspicious", "undetected"]
 def create_virustotal_statistic_report(android_app_id_list, report_name):
     """
     Creates a VirusTotal statistics report.
+
     :param report_name: str - user defined name for identification.
     :param android_app_id_list: list class:'AndroidApp' object-id's
     :return: class:'VirusTotalStatisticsReport'
+
     """
     create_app_context()
     if VirusTotalReport.objects.count() > 0:
@@ -45,8 +47,10 @@ def create_virustotal_statistic_report(android_app_id_list, report_name):
 def get_virustotal_report_list(android_app_id_list):
     """
     Creates a list of class:'VirusTotalReport'.
+
     :param android_app_id_list: list class:'AndroidApp' object-id's
-    :return: list(class:'VirusTotalReport'
+    :return: list(class:'VirusTotalReport')
+
     """
     virustotal_report_list = []
     for android_app_id in android_app_id_list:
@@ -64,9 +68,11 @@ def create_detection_category(virustotal_report_list):
     Creates a dictionary that maps the virustotal av scan results to a category system. The CATEGORY_THRESHOLD is is
     used to avoid false positives av results. If more av-scanner detect it as malicious than CATEGORY_THRESHOLD
     it is counted as malicious otherwise not.
+
     :param virustotal_report_list: list of class:'VirusTotalReport'
     :return: dict(str, list(ObjectID) = dict(category, list(android_app_id))
     - Returns a dicts with android apps categorized by av-scan results.
+
     """
     category_dict = {}
     count_dict = {}

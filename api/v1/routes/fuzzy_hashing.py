@@ -33,7 +33,9 @@ class SsdeepCompareHash(Resource):
     def post(self):
         """
         Compare two ssdeep fuzzy hashes with each other.
+
         :return: the ssdeep match score (0-100)
+
         """
         response = {}
         if request.is_json:
@@ -53,7 +55,9 @@ class SsdeepCompareHash(Resource):
     def post(self):
         """
         Compare two tlsh fuzzy hashes with each other.
+
         :return: tlsh distance - 0 is an exact similar file.
+
         """
         response = {}
         if request.is_json:
@@ -72,9 +76,7 @@ class FuzzyHashIndexFirmwareFiles(Resource):
     @admin_jwt_required
     def post(self, mode):
         """
-        Creates fuzzy hashes for every file of the given firmware. Supported hashes:
-         - SSDeep
-         - TLSH
+        Creates fuzzy hashes for every file of the given firmware. Supported hashes: SSDeep, TLSH
         """
         firmware_id_list = check_firmware_mode(mode, request)
         app = flask.current_app
@@ -90,7 +92,9 @@ class SsdeepIndexCreateClusters(Resource):
     def post(self, regex_filter, mode):
         """
         Creates a cluster analysis for ssdeep digests.
-        :type regex_filter: str - regex which can be used for filtering filenames.
+
+        :param regex_filter: str - regex which can be used for filtering filenames.
+
         """
         app = flask.current_app
         firmware_id_list = check_firmware_mode(mode, request)
@@ -108,8 +112,10 @@ class DownloadClusterAnalysis(Resource):
     def post(self, cluster_analysis_id, fuzzy_hash_type):
         """
         Download a graph file for a cluster analysis.
+
         :param fuzzy_hash_type: int - ssdeep = 1, tlsh = 2.
-        :type cluster_analysis_id: str - id of the cluster analysis.
+        :param cluster_analysis_id: str - id of the cluster analysis.
+
         """
         response = "", 400
         try:
@@ -140,7 +146,9 @@ class DownloadClusterAnalysis(Resource):
     def post(self, cluster_analysis_id):
         """
         Download a graph file for a TLSH cluster analysis.
-        :type cluster_analysis_id: str - id of the cluster analysis.
+
+        :param cluster_analysis_id: str - id of the cluster analysis.
+
         """
         response = "", 400
         try:
@@ -180,6 +188,7 @@ class TlshCreateCluster(Resource):
     def post(self, regex_filter, mode, distance_threshold, compare_mode, tlsh_similiarity_lookup_id, description):
         """
         Creates a clustering analysis for tlsh digests.
+
         :param tlsh_similiarity_lookup_id: id of the lookup table to use.
         :param description: str - description of the cluster analysis.
         :param compare_mode: int - the mode of the clustering algorithm. 0 == compare all O(n^2),
@@ -190,7 +199,8 @@ class TlshCreateCluster(Resource):
             >1: Android version to use.
         :param distance_threshold: int - maximal allowed distance to be considered for the analysis. 0 < all distances
         are considered.
-        :type regex_filter: str - regex which can be used for filtering filenames.
+        :param regex_filter: str - regex which can be used for filtering filenames.
+
         """
         app = flask.current_app
         firmware_id_list = check_firmware_mode(mode, request)
@@ -212,7 +222,9 @@ class TlshCreateSimilarityLookupTable(Resource):
     def post(self, tlsh_similiarity_lookup_id):
         """
         Updates a similarity lookup table
-        :return:
+
+        :return: 200
+
         """
         app = flask.current_app
         tlsh_similiarity_lookup = TlshSimiliarityLookup.objects.get(pk=tlsh_similiarity_lookup_id)
@@ -264,7 +276,9 @@ class TlshFindSimilar(Resource):
         """
         Creates tlsh lookup tables and cluster analysis with various sizes for evaluation purposes.
         Needs at least 20'000apk files in the database to run.
-        :return:
+
+        :return: 200
+
         """
         response = "", 200
         try:

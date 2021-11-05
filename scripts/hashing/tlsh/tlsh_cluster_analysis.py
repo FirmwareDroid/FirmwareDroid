@@ -16,11 +16,12 @@ from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.file_utils.file_util import object_to_temporary_json_file, create_reference_file
 from scripts.utils.string_utils.string_util import filter_mongodb_dict_chars
 
-
+# TODO FINISH WORK HERE
 def start_tlsh_clustering(compare_mode, regex_filter, firmware_id_list, distance_threshold,
                           tlsh_similiarity_lookup_id=None, description="", tlsh_hash_list=None):
     """
     Creates a cluster analysis for tlsh digests.
+
     :param description: str - cluster analysis description
     :param tlsh_similiarity_lookup_id: id - class:'TlshSimiliarityLookup'
     :param compare_mode: int - the mode of the clustering algorithm. 0 == compare all O(n^2),
@@ -28,6 +29,7 @@ def start_tlsh_clustering(compare_mode, regex_filter, firmware_id_list, distance
     :param firmware_id_list: list(str) - List of class:'FirmwareFile' object-id's.
     :param distance_threshold: int - defines the maximal allowed distance. If set < 0 no max. distances is set.
     :param regex_filter: str - filter for filenames that should be included.
+
     """
     logging.info("TLSH Clustering started")
     create_app_context()
@@ -119,12 +121,14 @@ def get_tlsh_similar_list(tlsh_hash, similiarity_lookup_dict, table_length, band
                           band_width_threshold):
     """
     Gets a list of potential candidate hashes by using the number of intersections in the lookup table.
+
     :param tlsh_hash: class:'TlshHash' - hash to find candidates for.
     :param similiarity_lookup_dict: dict(str, str) - dict in which the candidat hashes will be stored.
     :param table_length: int - the length of the TLSH hash.
     :param band_width: int - the width of the lookup table column.
     :param band_width_threshold: int - the minimal number to be considered as potential similar hash.
     :return: list(str) - list of class:'TlshHash' object-ids.
+
     """
     #similar_hash_id_list = set()
     potential_hashes_list = []
@@ -158,9 +162,11 @@ def get_tlsh_similar_list(tlsh_hash, similiarity_lookup_dict, table_length, band
 def filter_distances_by_threshold(distances_dict, distance_threshold):
     """
     Reduces all the entries which are over the distance threshold.
+
     :param distances_dict: dict(str, dict(str, int))
     :param distance_threshold: int - defines the maximal allowed distance.
     :return:
+
     """
     if distance_threshold >= 0:
         filtered_distances = {}
@@ -178,11 +184,13 @@ def filter_distances_by_threshold(distances_dict, distance_threshold):
 def calc_tlsh_distance(tlsh_hash, similar_hash_list, distances_dict):
     """
     Calculates the distances of a tlsh digest to a list of similar tlsh digests.
+
     :param tlsh_hash: class:'TlshHash'
     :param similar_hash_list: list(class:'TlshHash' object-id)
     :param distances_dict: dict - dictionary with the edges and weights.
     :return: dict - dictionary with the distances between the tlsh hashes. A distance of 0 means that the files
     are identical.
+
     """
     for similar_tlsh_hash in similar_hash_list:
         distance = tlsh_compare_hashs(tlsh_hash.tlsh_digest, similar_tlsh_hash.tlsh_digest)
@@ -196,8 +204,10 @@ def calc_tlsh_distance(tlsh_hash, similar_hash_list, distances_dict):
 def calc_all_distances(tlsh_hash_list):
     """
     Creates for every tlsh hash the distance to all other tlsh hashes. Does not scale well.
+
     :param tlsh_hash_list: list(class:'TlshHash')
     :return: dict(str, dict(str, int))
+
     """
     distances_dict = {}
     for tlsh_hash in tlsh_hash_list:
@@ -208,8 +218,10 @@ def calc_all_distances(tlsh_hash_list):
 def count_number_of_groups(groups_list):
     """
     Counts the number of members in the groups.
+
     :param groups_list: list(str)
     :return: list(int)
+
     """
     groups_number_list = []
     for group in groups_list:
@@ -222,6 +234,7 @@ def create_tlsh_cluster_analysis(distances_dict, tlsh_hash_list, gexf_file, dist
                                  distances_unfiltered_dict):
     """
     Creates a class:'TlshClusterAnalysis' document in the database.
+
     :param groups_list: list(str) - list of groups of similar tlsh hash.
     :param group_number_list: list(int) - Number of elements in every group.
     :param gexf_file: file - graph file to store in database.
@@ -229,6 +242,7 @@ def create_tlsh_cluster_analysis(distances_dict, tlsh_hash_list, gexf_file, dist
     :param distances_dict: dict - dictionary with the edges and weights.
     :param distance_threshold: int - defines the maximal allowed distance. If set < 0 no max. distances is set.
     :return: class:'TlshClusterAnalysis'
+
     """
     reference_file = create_reference_file(list(map(lambda x: x.id, tlsh_hash_list)))
     distances_dict_file = object_to_temporary_json_file(distances_dict).read()

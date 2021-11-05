@@ -21,7 +21,9 @@ class CleanupReferencesFirmware(Resource):
     def delete(self):
         """
         Checks if the android app references are still valid and removes invalid references.
+
         :return: rq-job-id
+
         """
         app = flask.current_app
         job = app.rq_task_queue_default.enqueue(cleanup_firmware_app_references, job_timeout=60 * 60 * 24 * 7)
@@ -35,7 +37,9 @@ class CleanupReferencesStaticTool(Resource):
     def delete(self):
         """
         Checks if the android app references are still valid and removes invalid references.
+
         :return: rq-job-id
+
         """
         app = flask.current_app
         job = app.rq_task_queue_default.enqueue(cleanup_android_app_references, job_timeout=60 * 60 * 24 * 7)
@@ -49,7 +53,9 @@ class CleanupReferencesFirmware(Resource):
     def delete(self):
         """
         Deletes all dead firmware files references.
-        :return: rq-job-id
+
+        :return: 200
+
         """
         app = flask.current_app
         app.rq_task_queue_default.enqueue(enqueue_firmware_file_cleanup, job_timeout=60 * 60 * 24 * 7)
@@ -63,7 +69,9 @@ class CleanupReferencesCerts(Resource):
     def get(self):
         """
         Add missing certificates.
-        :return: rq-job-id
+
+        :return: 200
+
         """
         app = flask.current_app
         android_app_id_list = check_app_mode(1, request)
@@ -82,6 +90,9 @@ class CleanupReferencesCerts(Resource):
     def post(self):
         """
         Checks if all certificate references are correctly set and correct them if necessary.
+
+        :return: 200
+
         """
         app = flask.current_app
         android_app_id_list = check_app_mode(1, request)

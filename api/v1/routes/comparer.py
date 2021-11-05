@@ -21,7 +21,9 @@ class FirmwareCompare(Resource):
     def post(self):
         """
         Compares (diff) the files from the first firmware with the second.
+
         :return: rq-job-id
+
         """
         response = {}
         firmware_id_list = parse_json_object_id_list(request, AndroidFirmware)

@@ -20,13 +20,14 @@ from scripts.extractor.brotli_extractor import extract_brotli
 def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_file):
     """
     Decompress a zip/tar/lz4/pac/nb0 file and its contents recursively, including nested zip/tar/lz4 files.
+
     :param compressed_file_path: str - path to the compressed file.
     :param destination_dir: str - path to extract to.
     :param delete_compressed_file: boolean - if true, deletes the archive after it is extracted.
-    :return:
+
     """
     supported_file_types_regex = r'\.zip$|\.tar$|\.tar$\.md5$|\.lz4$|\.pac$|\.nb0$|\.bin$|\.br$|\.dat$'
-    # TODO important security! Make this function more secure - set maximal recursion depth!
+    # TODO enhance security! Make this function more secure - set maximal recursion depth! Check file format headers!
     try:
         if compressed_file_path.lower().endswith(".zip"):
             logging.info(f"Attempt to extract .zip file: {compressed_file_path}")

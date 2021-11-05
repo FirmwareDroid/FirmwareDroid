@@ -9,8 +9,10 @@ def extract_lz4(lz4_file_path, destination_dir):
     """
     Extracts the given Lz4 files to the destination dir.
     Name of the output file is the input file without the .lz4 extension.
+
     :param lz4_file_path: str - path to the *.lz4 file.
     :param destination_dir: str - path to extract the *.lz4 to.
+
     """
     import lz4framed
     from _lz4framed import Lz4FramedNoDataError

@@ -10,7 +10,9 @@ from flask_jwt_extended import verify_jwt_in_request
 
 
 def admin_jwt_required(fn):
-    """Define a custom decorator for the role of an admin."""
+    """
+    Define a custom decorator for the role of an admin.
+    """
     @wraps(fn)
     def wrapper(*args, **kwargs):
         """ Verifies the JWT is present in the request,
@@ -29,7 +31,9 @@ def admin_jwt_required(fn):
 
 
 def user_jwt_required(fn):
-    """Define a custom decorator for the role of a user."""
+    """
+    Define a custom decorator for the role of a user.
+    """
     @wraps(fn)
     def wrapper(*args, **kwargs):
         """
@@ -49,7 +53,9 @@ def user_jwt_required(fn):
 
 
 def jwt_required(fn):
-    """Decorator for jwt of any role."""
+    """
+    Decorator for jwt of any role.
+    """
     @wraps(fn)
     def wrapper(*args, **kwargs):
         """

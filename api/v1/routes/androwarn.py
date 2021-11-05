@@ -24,9 +24,11 @@ class CreateAndrowarnReport(Resource):
     @admin_jwt_required
     def post(self, mode):
         """
-        Analysis apps with androwarn.
+        Analysis apps with Androwarn.
+
         :param mode: If mode = 1 all apps in the database will be used for the report instead of the given json.
         :return: job-id of the rq worker.
+
         """
         app = flask.current_app
         android_app_id_list = check_app_mode(mode, request)
@@ -40,9 +42,11 @@ class GetAndrowarnReport(Resource):
     @admin_jwt_required
     def get(self, androwarn_id):
         """
-        Gets the json report of an androwarn report.
+        Gets the json report of an Androwarn report.
+
         :param androwarn_id: the Object-Id of the report.
-        :return:
+        :return: str - class:'AndrowarnReport' in JSON format.
+
         """
         response = {}
         androwarn_report = AndrowarnReport.objects.get(pk=androwarn_id)
@@ -59,6 +63,8 @@ class AndrowarnReportCount(Resource):
     def get(self):
         """
         Gets the number of Androwarn reports in the database.
+
         :return: int - count of Androwarn reports
+
         """
         return AndrowarnReport.objects.count()

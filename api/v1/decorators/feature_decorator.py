@@ -10,8 +10,10 @@ from model import ApplicationSetting
 def requires_signup_is_active(f):
     """
     Decorator for signup feature.
+
     :param f: function
     :return: function or tupel - returns the function if the feature is active. Returns
+
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
@@ -25,8 +27,10 @@ def requires_signup_is_active(f):
 def requires_firmware_upload_is_active(f):
     """
     Decorator for firmware upload feature.
+
     :param f: function
     :return: function or tupel - returns the function if the feature is active. Returns
+
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):

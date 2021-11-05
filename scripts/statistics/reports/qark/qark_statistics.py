@@ -11,8 +11,10 @@ from scripts.utils.file_utils.file_util import create_reference_file
 def create_qark_statistics_report(android_app_id_list, report_name):
     """
     Creates a statistics report for qark reports.
+
     :param report_name: str - user defined name for identification.
     :param android_app_id_list: list class:'AndroidApp' object-id's
+
     """
     create_app_context()
     android_app_list = map(lambda x: AndroidApp.objects.get(pk=x), android_app_id_list)
@@ -43,8 +45,10 @@ def create_qark_statistics_report(android_app_id_list, report_name):
 def get_issue_list(qark_report_list):
     """
     Gets a list of all qark issues of the given reports.
+
     :param qark_report_list: list class:'QarkReport'
     :return: list class:'QarkIssue'
+
     """
     issue_list = []
     for qark_report in qark_report_list:

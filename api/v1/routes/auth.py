@@ -68,7 +68,9 @@ class Signup(Resource):
     def get(self, token):
         """
         Confirms user e-mail address by validating a confirmation token.
+
         :param token: str - user e-mail confirmation token.
+
         """
         response = {"status": "error"}, 400
         try:
@@ -98,7 +100,9 @@ class Login(Resource):
     def post(self):
         """
         Checks the users passwords and creates a JWT token if the password is valid.
+
         :return: str - JWT access token.
+
         """
         response = "", 401
         try:
@@ -121,7 +125,9 @@ class Login(Resource):
     def delete(self):
         """
         Logout user by invalidating their JWT access token.
+
         :return: str - JWT access token.
+
         """
         response = "", 400
         try:

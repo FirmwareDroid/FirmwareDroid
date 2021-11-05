@@ -1,4 +1,7 @@
-# CODE SOURCE FROM https://github.com/cyxx/extract_android_ota_payload
+"""
+CODE SOURCE FROM https://github.com/cyxx/extract_android_ota_payload
+LICENCE UNKNOWN
+"""
 # !/usr/bin/env python
 
 import hashlib

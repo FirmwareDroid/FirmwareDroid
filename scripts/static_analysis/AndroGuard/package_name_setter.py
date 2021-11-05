@@ -9,7 +9,9 @@ from scripts.rq_tasks.flask_context_creator import create_app_context
 def set_android_app_package_names(android_app_id_list):
     """
     Takes the packagename from androguard and copies it to the android app model.
+
     :param android_app_id_list: list(str) - list of class:'AndroidApp' object-id's.
+
     """
     create_app_context()
     for android_app_id in android_app_id_list:

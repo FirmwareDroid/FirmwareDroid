@@ -17,8 +17,9 @@ from scripts.utils.file_utils.file_util import create_temp_directories
 def start_fuzzy_hasher(firmware_id_list):
     """
     Creats a context and starts the ssdeep hasher.
+
     :param firmware_id_list: list(str) - list of class:'AndroidFirmware' object-id's.
-    :return:
+
     """
     create_app_context()
     logging.info(f"Fuzzy hashing started: {len(firmware_id_list)} firmware archives")
@@ -30,7 +31,9 @@ def start_fuzzy_hasher(firmware_id_list):
 def hash_firmware_files_parallel(firmware_id_queue):
     """
     Create fuzzy hashes for all firmware files. Extracts and mounts the firmware.
+
     :param firmware_id_queue: multiprocessing.queue - queue if class:'AndroidFirmware' object-ids
+
     """
     while not firmware_id_queue.empty():
         firmware_id = firmware_id_queue.get()
@@ -56,8 +59,10 @@ def hash_firmware_files_parallel(firmware_id_queue):
 def fuzzy_hash_firmware(firmware, mount_path):
     """
     Create fuzzy hashes for all firmware files. Needs the firmware files to be accessible.
+
     :param firmware: class:'AndroidFirmware' - Android firmware which will be indexed.
     :param mount_path: str - path where the firmware is mounted.
+
     """
     for firmware_file_id_lazy in firmware.firmware_file_id_list:
         firmware_file = firmware_file_id_lazy.fetch()
@@ -68,8 +73,10 @@ def fuzzy_hash_firmware(firmware, mount_path):
 def fuzzy_hash_firmware_files(firmware_file_list, mount_path):
     """
     Create fuzzy hashes for a firmware file. Needs the firmware file to be accessible in the file system.
+
     :param firmware_file_list: list(class:'FirmwareFile') - Android firmware file which will be indexed.
     :param mount_path: str - path where the firmware is accessible.
+
     """
     for firmware_file in firmware_file_list:
         if not firmware_file.isDirectory: #and firmware_file.partition_name == "system":
@@ -84,8 +91,10 @@ def fuzzy_hash_firmware_files(firmware_file_list, mount_path):
 def create_fuzzy_hashes(firmware_file):
     """
     Creates a fuzzy hash for the given file.
+
     :param firmware_file: class:'FirmwareFile'
-    :return:
+
+
     """
     if not firmware_file.ssdeep_reference:
         start_ssdeep_hashing(firmware_file)

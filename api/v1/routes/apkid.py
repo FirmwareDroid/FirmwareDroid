@@ -26,8 +26,10 @@ class APKiDApps(Resource):
     def post(self, mode):
         """
         Scan the given apps with APKiD.
+
         :param mode: If mode = 1 all apps in the database will be used for the report instead of the given json.
         :return: job-id of the rq worker.
+
         """
         app = flask.current_app
         android_app_id_list = check_app_mode(mode, request)
@@ -42,6 +44,8 @@ class APKiDReportCount(Resource):
     def get(self):
         """
         Gets the number of APKiD reports in the database.
+
         :return: int - count of APKiD reports
+
         """
         return ApkidReport.objects.count()

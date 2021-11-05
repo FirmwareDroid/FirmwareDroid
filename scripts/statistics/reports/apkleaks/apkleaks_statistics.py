@@ -5,12 +5,14 @@ from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.utils.file_utils.file_util import create_reference_file, object_to_temporary_json_file, stream_to_json_file
 from scripts.statistics.statistics_common import fetch_chunked_lists
 
-
+#TODO Create all Method Comments
 def create_apkleaks_statistics_report(android_app_id_list, report_name):
     """
     Creates a apkleaks statistics report.
+
     :param report_name: str - user defined name for identification.
     :param android_app_id_list: list(class:'AndroidApp' object-id's)
+
     """
     create_app_context()
     android_app_reference_file = create_reference_file(android_app_id_list)
@@ -31,8 +33,10 @@ def create_apkleaks_statistics_report(android_app_id_list, report_name):
 def get_apkleaks_statistics_report(report_objectid_list, statistics_report):
     """
     Creates statistics for the apkleaks tool and save the it to the database.
+
     :param report_objectid_list: list(ObjectId) - list(class:'ApkLeaksReport' ObjectIds)
     :param statistics_report: class:'ApkLeaksStatisticsReport'
+
     """
     leaks_reference_dict = get_leak_references(report_objectid_list)
     leaks_reference_tempfile = object_to_temporary_json_file(leaks_reference_dict)
@@ -56,8 +60,10 @@ def get_apkleaks_statistics_report(report_objectid_list, statistics_report):
 def get_leaks_frequency(report_objectid_list):
     """
     Gets a count of how often a specific leak was found.
+
     :param report_objectid_list: list(ObjectId) - list(class:'ApkLeaksReport' ObjectIds)
     :return: dict(str, int)
+
     """
     result_dict = {}
     chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
@@ -117,8 +123,10 @@ def get_leaks_frequency(report_objectid_list):
 def get_leak_references(report_objectid_list):
     """
     Gets a the reference where a specific leak was found.
+
     :param report_objectid_list: list(ObjectId) - list(class:'ApkLeaksReport' ObjectIds)
     :return:
+
     """
     reference_dict = {}
     chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
@@ -171,8 +179,10 @@ def get_leak_references(report_objectid_list):
 def get_google_api_key_reports(report_objectid_list):
     """
     Gets a list of report id that have a leaked Google API key
+
     :param report_objectid_list:
     :return:
+
     """
     report_id_list = []
     chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
@@ -200,8 +210,10 @@ def create_google_api_key_references(report_objectid_list):
     """
     Create a comma seperated string with all found Google API keys from APKLeaks. Contains additional information
     for every key about where the key was found.
-    return: dict - header: str - format of the body list
+
+    :return: dict - header: str - format of the body list
                    body: list of strings containing the google api key and meta-data about where the key was found.
+
     """
     logging.info(f"Started to create Google API key file wit len: {str(len(report_objectid_list))}")
 
@@ -236,10 +248,12 @@ def create_google_api_key_references(report_objectid_list):
 def create_empty_apkleaks_statistics_report(report_name, report_count, android_app_id_list, android_app_reference_file):
     """
     Creates a basic apkleaks statistics reports without actual report data in the database.
+
     :param report_name: str - A tag for the statistics report.
     :param report_count: int - number of reports.
     :param android_app_id_list: list(str) - class:AndroidApp' IDs.
     :param android_app_reference_file: class:'JsonFile' - File reference for storing app cross references.
+
     """
     return ApkLeaksStatisticsReport(
         report_name=report_name,

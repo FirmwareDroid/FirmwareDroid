@@ -13,10 +13,12 @@ from model import AndroidApp
 def store_android_apps(search_path, firmware_app_store, firmware_file_list):
     """
     Finds and stores all android .apk files.
+
     :param firmware_file_list: list(class:'FirmwareFile') - list of firmware file that contains the android app.
     :param search_path: str - path to search for .apk files.
     :param firmware_app_store: str - path in which the .apk files will be stored.
     :return: list of class:'AndroidApp'
+
     """
     firmware_app_list = extract_android_app(search_path, firmware_app_store, firmware_file_list)
     for android_app in firmware_app_list:
@@ -27,8 +29,10 @@ def store_android_apps(search_path, firmware_app_store, firmware_file_list):
 def add_firmware_file_reference(android_app, firmware_file_list):
     """
     Adds references between Android app and firmware files.
+
     :param android_app: class:'AndroidApp' - app to save reference to.
     :param firmware_file_list: list - class:'FirmwareFile'
+
     """
     firmware_file = list(filter(lambda x: x.md5 == android_app.md5, firmware_file_list))[0]
     android_app.firmware_file_reference = firmware_file.id
@@ -40,9 +44,11 @@ def add_firmware_file_reference(android_app, firmware_file_list):
 def copy_apk_file(android_app, destination_folder, firmware_mount_path):
     """
     Copies apps to the filesystem and saves the Android app in the database.
+
     :param android_app: class:'AndroidApp'
     :param destination_folder: The root-folder the apps will be copied to.
     :param firmware_mount_path: The source path in which the firmware is mounted.
+
     """
     apk_source_path = os.path.join(firmware_mount_path,
                                    "." + android_app.relative_firmware_path,
@@ -63,11 +69,13 @@ def copy_apk_file(android_app, destination_folder, firmware_mount_path):
 def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_list):
     """
     Returns a list of class: files within the given path.
+
     :param firmware_file_list: list(class:'FirmwareFile') - list of firmware file that contains the android apps and
     it's optimized files (.odex, .vdex, ...).
     :param firmware_app_store: str - path in which the .apk files will be stored.
     :param firmware_mount_path: str - The path to search for android apps.
     :return: List of object class:'AndroidApp'.
+
     """
     firmware_apps = []
     #
@@ -101,10 +109,12 @@ def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_l
 
 def add_optimized_firmware_files(android_app, optimized_firmware_file_list, firmware_app_store, firmware_mount_path):
     """
-    Extracts android code optimized files (.odex, .vdex, ...) to the file system and saves the firmeare file references.
+    Extracts android code optimized files (.odex, .vdex, ...) to the file system and saves the firmware file references.
+
     :param android_app: class:'AndroidApp' -  app to save the reference in.
     :param optimized_firmware_file_list: list(class:'FirmwareFile') - list of opt firmware files to reference and copy.
     :param firmware_app_store: str - path to the app store root folder.
+
     """
     firmware_file_id_list = []
     for optimized_firmware_file in optimized_firmware_file_list:
@@ -131,10 +141,12 @@ def add_optimized_firmware_files(android_app, optimized_firmware_file_list, firm
 def create_android_app(filename, relative_firmware_path, firmware_mount_path):
     """
     Creates a class:'AndroidApp' with minimal attributes. Does not save the app in the database.
+
     :param filename: str - name of the apk file.
     :param relative_firmware_path: str - relative path of the apk file within the firmware partition.
     :param firmware_mount_path: The source path in which the firmware is mounted.
     :return: class:'AndroidApp'
+
     """
     apk_abs_path = os.path.join(firmware_mount_path,
                                 "." + relative_firmware_path,
@@ -159,10 +171,12 @@ def find_optimized_android_apps(search_path, search_filename, firmware_file_list
     """
     Searches for optimized android files (.odex, .art, .vdex,...) in the directory including sub-directories.
     Uses the filename for search matching and matches only exact filename matches.
+
     :param search_path: str - root dir to search through.
     :param search_filename: str - file to search for.
     :param firmware_file_list: list(class:'FirmwareFile') - list of firmware file that contains the android app.
     :return: list(class:'FirmwareFile') - list of firmware files that contain optimized code for an android app.
+
     """
     file_format_list = [".odex", ".art", ".vdex", ".apk.prof"]
     optimized_firmware_file_list = []
@@ -178,9 +192,11 @@ def find_optimized_android_apps(search_path, search_filename, firmware_file_list
 def find_file_in_directory(search_path, filename):
     """
     Finds all files of a given filetype in the search path and it's sub folders.
+
     :param search_path: str - root dir to search through.
     :param filename: str - file to search for.
     :return: list(str) - absolute file path of the found files.
+
     """
     result_file_path_list = []
     for root, dirs, file_list in os.walk(search_path):

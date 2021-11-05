@@ -20,7 +20,9 @@ lock = Lock()
 def start_firmware_indexer(firmware_id_list):
     """
     Starts the firmware file indexer, which generates a list of all files in the firmware. Function for rq-worker.
+
     :param firmware_id_list: list(str) - id's of class:'AndroidFirmware'
+
     """
     create_app_context()
     #firmware_list = filter_firmware(firmware_id_list)
@@ -30,8 +32,10 @@ def start_firmware_indexer(firmware_id_list):
 def filter_firmware(firmware_id_list):
     """
     Filter firmware files which are already indexed.
+
     :param firmware_id_list: list(str) - list of class:'AndroidFirmware' object-id's
     :return: list of class:'AndroidFirmware' - filtered by hasFileIndex == False
+
     """
     filtered_firmware_list = []
     for firmware_id in firmware_id_list:
@@ -47,7 +51,9 @@ def filter_firmware(firmware_id_list):
 def start_parallel_file_index(firmware_id_list):
     """
     Starts the file indexer with multiple processes.
+
     :param firmware_id_list: list(object-id's) of class:'AndroidFirmware'
+
     """
     logging.info(f"Start to index firmware files: {len(firmware_id_list)}")
     start_threads(firmware_id_list, index_image_files, number_of_threads=10)
@@ -58,7 +64,9 @@ def start_parallel_file_index(firmware_id_list):
 def index_image_files(firmware_id_queue):
     """
     Creates a file list of the given firmware and save it to the database. Create an index only if it not exists yet.
-    :type firmware_id_queue: multiprocessor queue(str)
+
+    :param firmware_id_queue: multiprocessor queue(str)
+
     """
     create_app_context()
     while True:
@@ -93,9 +101,11 @@ def index_image_files(firmware_id_queue):
 def create_firmware_file_list(scan_directory, partition_name):
     """
     Creates a list of firmware files from the given directory.
+
     :param partition_name: str - name of the partition.
     :param scan_directory: str - path to the directory to scan
     :return: list(class:'FirmwareFile')
+
     """
     result_firmware_file_list = []
     logging.info(f"Start scanning through directory for files: {scan_directory}")
@@ -134,6 +144,7 @@ def create_firmware_file_list(scan_directory, partition_name):
 def create_firmware_file(name, parent_name, isDirectory, relative_file_path, partition_name, md5, file_size_bytes=None):
     """
     Creates a class:'FirmwareFile' document. Does not save the document to the database.
+
     :param file_size_bytes: int - file size in bytes
     :param partition_name: str - name of the partition.
     :param name: str - name of file or directory
@@ -142,6 +153,7 @@ def create_firmware_file(name, parent_name, isDirectory, relative_file_path, par
     :param relative_file_path: str - relative path within the firmware
     :param md5: str - md5 digest of the file.
     :return: class:'FirmwareFile'
+
     """
     return FirmwareFile(name=name,
                         parent_dir=parent_name,
@@ -156,8 +168,10 @@ def create_firmware_file(name, parent_name, isDirectory, relative_file_path, par
 def add_firmware_file_references(firmware, firmware_file_list):
     """
     Add the firmware references for the given files. Saves the reference in the database.
+
     :param firmware: class:'AndroidFirmware'
     :param firmware_file_list: list of class:'FirmwareFile'
+
     """
     if len(firmware_file_list) > 0:
         logging.info(f"Add file references for: {firmware.id}")

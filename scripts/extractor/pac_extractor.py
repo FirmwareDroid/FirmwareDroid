@@ -67,7 +67,9 @@ class PartitionHeader:
 def unpack_pac(path):
     """
     Decompresses a *.pac file.
+
     :param path: str - path to the *.pac file.
+
     """
     if os.path.isfile(path) and path.lower().endswith(".pac"):
         try:
@@ -81,8 +83,10 @@ def unpack_pac(path):
 def create_pac_header(path):
     """
     Gets the PAC header from the file. The header contains the meta-data needed to extract the files.
+
     :param path: str - path to the *.pac file.
     :return: class'PacHeader'
+
     """
     with open(path, "rb") as poc_file:
         some_field = poc_file.read(48)
@@ -117,9 +121,11 @@ def create_pac_header(path):
 def create_partition_headers(path, pac_header):
     """
     Extracts the partition headers from the information found in the pac header.
+
     :param path: str - path to the *.pac file.
     :param pac_header: class: 'PacHeader' - pac header of the file.
     :return: list of class:'PartitionHeader'
+
     """
     with open(path, "rb") as poc_file:
         seek_position = pac_header.partitionsListStart
@@ -160,8 +166,10 @@ def create_partition_headers(path, pac_header):
 def create_partition_files(path, partition_header_list):
     """
     Extracts the partition files with the partition header information. Writes the extracted files to the disk.
+
     :param path: str - path to the *.pac file.
     :param partition_header_list: list of class'PartitionHeader'
+
     """
     with open(path, "rb") as poc_file:
         for partition_header in partition_header_list:

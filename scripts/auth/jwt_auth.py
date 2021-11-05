@@ -12,9 +12,11 @@ from model import RevokedJwtToken
 def check_if_token_is_revoked(jwt_header, jwt_payload):
     """
     Checks if a jwt token is in the revoked list of the db.
+
     :param jwt_header: str - jwt header.
     :param jwt_payload: str - jwt token.
     :return: bool - true if it is in the list.
+
     """
     revoked_token = None
     try:
@@ -28,8 +30,10 @@ def check_if_token_is_revoked(jwt_header, jwt_payload):
 def create_jwt_access_token(user_account):
     """
     Create a jwt toke used for api access.
+
     :param user_account: class:'UserAccount' - user to create the token for.
     :return: str - jwt access token.
+
     """
     identity = json.dumps({
         "role_list": user_account.role_list,

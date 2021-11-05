@@ -14,7 +14,10 @@ class BuildPropParser:
         self.parse_props()
 
     def parse_props(self):
-        """Creates a dict from all properties available in the build.prop file. """
+        """
+        Creates a dict from all properties available in the build.prop file.
+
+        """
         with open(self.build_prop_file_path, "rb") as input_file:
             for line in input_file:
                 line = line.decode('utf-8')
@@ -32,9 +35,11 @@ class BuildPropParser:
                         # TODO Add code to follow @import statements in build.prop file
                         logging.warning("Found import statement in build.prop - can't follow import statements")
 
-
     def create_build_prop_document(self):
-        """ Creates a db document of the build prop file. """
+        """
+        Creates a db document of the build prop file.
+
+        """
         build_prop_file = open(self.build_prop_file_path, "rb")
         if self.properties is {}:
             self.properties["error"] = "could not parse build.prop properties"

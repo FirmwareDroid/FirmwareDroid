@@ -30,10 +30,13 @@ class AndroGuardAnalysis(Resource):
     @admin_jwt_required
     def post(self, mode):
         """
+
         Analyse all the apps of the given list with AndroGuard parallel mode.
         Parallel-Mode: Process firmware on multiple cpu cores.
+
         :param mode: If mode = 1 all apps in the database will be used for the report instead of the given json.
         :return: job id
+
         """
         app = flask.current_app
         android_app_id_list = check_app_mode(mode, request)
@@ -48,7 +51,9 @@ class AndroGuardReportCount(Resource):
     def get(self):
         """
         Gets the number of AndroGuard reports in the database.
+
         :return: int - count of AndroGuard reports
+
         """
         return AndroGuardReport.objects.count()
 
@@ -60,7 +65,9 @@ class AndroGuardStringAnalysisReportCount(Resource):
     def get(self):
         """
         Gets the number of AndroGuard string analysis reports in the database.
+
         :return: int - count of AndroGuard string analysis reports
+
         """
         return AndroGuardStringAnalysis.objects.count()
 
@@ -72,7 +79,9 @@ class AppCertificateCount(Resource):
     def get(self):
         """
         Gets the number of AndroGuard certificate reports in the database.
+
         :return: int - count of AndroGuard certificate reports
+
         """
         return AppCertificate.objects.count()
 
@@ -85,8 +94,10 @@ class StringAnalysis(Resource):
     def post(self, mode):
         """
         Starts the meta analysis of AndroGuard string analysis.
-        :type mode: int - 1 = using all app.
-        :return:
+
+        :param mode: int - 1 = using all app.
+        :return: 200
+
         """
         app = flask.current_app
         android_app_id_list = check_app_mode(mode, request)
@@ -101,9 +112,12 @@ class AppCertificateDownload(Resource):
     def post(self, certificate_id, cert_format):
         """
         Download an app certificate as DER/PEM encoded file.
+
         :param certificate_id: str - object-id of the certificate to export.
-        :type cert_format: str - pem or der format specifier.
+        :param cert_format: str - pem or der format specifier.
+
         :return file - returns a der or pem formatted certificate.
+
         """
         try:
             app_certificate = AppCertificate.objects.get(pk=certificate_id)
@@ -133,8 +147,10 @@ class SetPackagenames(Resource):
     def post(self, mode):
         """
         Copies AndroGuard packagename to the Android app model.
-        :type mode: int - 1 = using all app.
-        :return:
+
+        :param mode: int - 1 = using all app.
+        :return: 200
+
         """
         app = flask.current_app
         android_app_id_list = check_app_mode(mode, request)

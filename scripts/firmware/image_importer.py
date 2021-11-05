@@ -13,9 +13,11 @@ from scripts.firmware.ext4_mount_util import mount_android_image
 def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
     """
     Checks within the given file list if there is a mountable system partition.
+
     :param image_filename_pattern_list: str - a list of regex pattern for searching the images filename.
     :param firmware_file_list: The files which will be checked for their names.
     :return: class:'FirmwareFile' object of the system.img or system.ext4.img file.
+
     """
     for firmware_file in firmware_file_list:
         file_name = firmware_file.name.lower()
@@ -29,8 +31,10 @@ def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
 def extract_image_files(image_path, extract_dir_path):
     """
     Expands all files from the firmware and mounts the system.img.
+
     :param image_path: str - absolute path to the image file.
     :param extract_dir_path: str - path where the files will be extracted or mounted to.
+
     """
     if extract_simg_ext4(image_path, extract_dir_path):
         logging.info("Image extraction successful with simg_ext4extractor")
@@ -47,9 +51,11 @@ def extract_image_files(image_path, extract_dir_path):
 def create_abs_image_file_path(image_file, cache_temp_file_dir_path):
     """
     Attempts to create a path for the given image.
+
     :param image_file: class:'FirmwareFile'
     :param cache_temp_file_dir_path: temporaryDirectory
     :return: str - absolute path of the file if it exists or none if not.
+
     """
     image_absolute_path = os.path.abspath(os.path.join(cache_temp_file_dir_path, image_file.relative_path))
     if not os.path.exists(image_absolute_path):
@@ -64,10 +70,12 @@ def create_abs_image_file_path(image_file, cache_temp_file_dir_path):
 def find_image_abs_path(firmware, source_dir_path, image_filename_pattern_list):
     """
     Attempts to find the images absolute path within the extracted firmware archive.
+
     :param firmware: class:'AndroidFirmware' - Android firmware to search through.
     :param source_dir_path: str - path to the firmware root directory where the image was extracted to.
     :param image_filename_pattern_list: str - a list of regex pattern for searching the images filename.
     :return: str - absolute path to the image file.
+
     """
     image_firmware_file = get_firmware_file_by_regex_list(firmware, image_filename_pattern_list)
     if not image_firmware_file:

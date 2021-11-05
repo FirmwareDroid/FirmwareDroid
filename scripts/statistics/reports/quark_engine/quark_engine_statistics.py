@@ -10,8 +10,10 @@ from scripts.utils.file_utils.file_util import create_reference_file, object_to_
 def create_quark_engine_statistics_report(android_app_id_list, report_name):
     """
     Creates a apkleaks statistics report.
+
     :param report_name: str - user defined name for identification.
     :param android_app_id_list: list(class:'AndroidApp' object-id's)
+
     """
     create_app_context()
     android_app_reference_file = create_reference_file(android_app_id_list)
@@ -33,6 +35,10 @@ def create_quark_engine_statistics_report(android_app_id_list, report_name):
 def get_quark_engine_statistics_report(report_objectid_list, statistics_report):
     """
     Creates statistics for the QuarkEngine tool and save the it to the database.
+
+    :param statistics_report: class:'QuarkEngineStatisticsReport'
+    :param report_objectid_list: list(str) - list of class:'QuarkEngineReport' object-ids.
+
     """
     threat_levels_count_dict = get_threat_level_frequency(report_objectid_list)
     statistics_report.threat_level_count_dict = threat_levels_count_dict
@@ -47,8 +53,10 @@ def get_quark_engine_statistics_report(report_objectid_list, statistics_report):
 def get_threat_level_frequency(report_objectid_list):
     """
     Counts the frequencies of the threat level.
+
     :param report_objectid_list: list(ObjectId) - list(class:'QuarkEngineReport' objectIds)
     :return: dict(str, int) - dict(threat level, count)
+
     """
     command_cursor = QuarkEngineReport.objects(id__in=report_objectid_list).aggregate([
         {
@@ -82,8 +90,10 @@ def get_threat_level_frequency(report_objectid_list):
 def get_threat_level_references(report_objectid_list):
     """
     Gets a list of threat level and object references.
+
     :param report_objectid_list: list(ObjectId) - list(class:'QuarkEngineReport' object-id's)
     :return: list(dict(str, str)) - list(dict(id, threat level))
+
     """
     command_cursor = QuarkEngineReport.objects(id__in=report_objectid_list).aggregate([
         {
@@ -112,10 +122,12 @@ def create_empty_quarkengine_statistics_report(report_name,
                                                android_app_reference_file):
     """
     Creates a basic QuarkEngine statistics reports without actual report data in the database.
+
     :param report_name: str - A tag for the statistics report.
     :param report_count: int - number of reports.
     :param android_app_id_list: list(str) - class:AndroidApp' IDs.
     :param android_app_reference_file: class:'JsonFile' - File reference for storing app cross references.
+
     """
     return QuarkEngineStatisticsReport(
         report_name=report_name,

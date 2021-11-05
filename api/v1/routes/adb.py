@@ -1,9 +1,13 @@
+""""
+Test class.
+"""
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 from flask import request
 from flask_restx import Resource, Namespace
 from api.v1.api_models.serializers import object_id_list
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.json_parser import parse_json_object_id_list
 from model import AndroidApp
 from scripts.dynamic_analysis.emulator_control.emulator_runner import start_dynamic_analysis
@@ -15,8 +19,14 @@ ns = Namespace('adb', description='Operations related to adb and android emulato
 @ns.expect(object_id_list)
 class EmulatorHealthCheck(Resource):
     @ns.doc('post')
-    @ns.doc(security='apikey')
+    @admin_jwt_required
     def post(self):
+        """
+        Experimental feature for testing adb connection.
+
+        :return: HTTP 200 or HTTP 400
+
+        """
         response = "", 200
         emulator_url = "firmware-emulator.cloudlab.zhaw.ch"
         emulator_port = 5555

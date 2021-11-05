@@ -22,7 +22,9 @@ class GetAppByID(Resource):
     def post(self):
         """
         Get Android app meta data as json report.
+
         :return: str - AndroidApp json.
+
         """
         android_app_id_list = parse_json_object_id_list(request, AndroidApp)
         if len(android_app_id_list) > 0:
@@ -41,7 +43,9 @@ class GetCount(Resource):
     def get(self):
         """
         Gets the number of apps in the database.
+
         :return: Int - number of android pps.
+
         """
         return AndroidApp.objects.count()
 
@@ -53,7 +57,9 @@ class DownloadApp(Resource):
     def get(self, android_app_id):
         """
         Download the app with the given id.
+
         :return: apk download
+
         """
         try:
             android_app = AndroidApp.objects.get(pk=android_app_id)
@@ -67,19 +73,21 @@ class DownloadApp(Resource):
 
 
 @ns.route('/get_page/<int:page>')
-class GetCount(Resource):
+class GetAppPage(Resource):
     @ns.doc('post')
     @admin_jwt_required
     def post(self, page):
         """
         Gets a list of android apps based on the page number.
+
         :return: json - {
             "current_page": current page number.
             "total_pages_for_query": total number of pages available.
             "item_per_page": number of apps on page.
             "total_number_of_items_that_match_query": total number of apps in database.
             "android_app_list": list deserialized android apps.
-        }
+            }
+
         """
         response = "", 400
         try:

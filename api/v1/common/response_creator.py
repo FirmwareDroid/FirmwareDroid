@@ -10,8 +10,10 @@ from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
 def create_zip_file(file_dict):
     """
     Creates a zip file from a dict with filenames and file objects.
+
     :param file_dict: dict(filename, file)
     :return: BytesIO - zip file in memory.
+
     """
     memory_file = BytesIO()
     with ZipFile(memory_file, 'w') as zf:

@@ -16,8 +16,10 @@ def mount_android_image(android_ext4_path, mount_folder_path):
     """
     Attempts to mount the given android image (only *.img) to the file system. Uses different mounting strategies to
     find a working configuration.
+
     :param android_ext4_path: str path to the image file to convert or mount.
     :param mount_folder_path: str path to the folder in which the partition will be mounted.
+
     """
     logging.info("Attempt to extract ext with mounting.")
     if is_path_mounted(android_ext4_path):
@@ -56,8 +58,9 @@ def mount_android_image(android_ext4_path, mount_folder_path):
 def execute_chown(path):
     """
     Overtakes the ownership of a directory.
+
     :param path: str - path to the folder.
-    :return:
+
     """
     try:
         target_path = shlex.quote(str(path))
@@ -73,10 +76,12 @@ def execute_chown(path):
 def attempt_ext4_mount(source, target, mount_options):
     """
     Mounts an android ext4 image. If the image is not a raw ex SYSTEM IMAGE PATH ABSt4 it is converted with sim2img.
+
     :param mount_options: str - mount options flags.
     :param source: str - the file-path to be mounted.
     :param target: str - the destination path where the file will be mounted to.
     :return: bool - true if mount was successful.
+
     """
     logging.info(f"Attempt ext4 mount {source}")
     is_mounted = False
@@ -94,10 +99,12 @@ def attempt_ext4_mount(source, target, mount_options):
 def attempt_fuse_ext4_mount(source, target, mount_options):
     """
     Mount image with fuse kernel extension
+
     :param source: str - the file-path to be mounted.
     :param target: str - the destination path where the file will be mounted to.
     :param mount_options: str - mount options flags.
     :return: bool - true if mount was successful.
+
     """
     logging.info(f"Attempt fuse ext4 mount {source}")
     is_mounted = False
@@ -115,10 +122,12 @@ def attempt_fuse_ext4_mount(source, target, mount_options):
 def attempt_simg2img_mount(source, target, mount_options):
     """
     Converts the given image with simg2img and attempts to mount it.
+
     :param source: str - the file-path to be mounted.
     :param target: str - the destination path where the file will be mounted to.
     :param mount_options: str - mount options flags.
     :return: bool - true if mount was successful.
+
     """
     logging.info(f"Attempt simg2img mount {source}")
     is_mounted = False
@@ -141,10 +150,12 @@ def attempt_simg2img_mount(source, target, mount_options):
 def attempt_repair_and_mount(source, target, mount_options):
     """
     Attempts to repair the given source file.
+
     :param source: str - the file-path to be mounted.
     :param target: str - the destination path where the file will be mounted to.
     :param mount_options: str - mount options flags.
     :return: bool - true if mount was successful.
+
     """
     logging.info(f"Attempt repair and mount {source}")
     is_mounted = False
@@ -164,10 +175,12 @@ def attempt_repair_and_mount(source, target, mount_options):
 def attempt_resize_and_mount(source, target, mount_options):
     """
     Attempts to repair and resize the given source file.
+
     :param source: str - the file-path to be mounted.
     :param target: str - the destination path where the file will be mounted to.
     :param mount_options: str - mount options flags.
     :return: bool - true if mount was successful.
+
     """
     logging.info(f"Attempt repair, resize and mount {source}")
     is_mounted = False
@@ -186,9 +199,11 @@ def attempt_resize_and_mount(source, target, mount_options):
 
 def simg2img_convert_ext4(android_ext4_path, destination_folder):
     """
-    Unwrapp Android's custom ext4 to a standard ext4 format with simg2img.
+    Unwrap Android's custom ext4 to a standard ext4 format with simg2img.
+
     :param android_ext4_path: the ext4 image-path which will be converted. For example, './somedir/system.img'
     :param destination_folder: the path to which the outputfile will be written.
+
     """
     try:
         output_file_name = "raw" + str(os.path.basename(android_ext4_path))
@@ -205,9 +220,11 @@ def simg2img_convert_ext4(android_ext4_path, destination_folder):
 def exec_mount(source, target, mount_options):
     """
     Executes mount command on the host with the given source to the target with read-only.
+
     :param mount_options: str - mount options flags.
     :param source: the file-path to be mounted.
     :param target: the destination path where the file will be mounted to.
+
     """
     try:
         source_path = shlex.quote(str(source))
@@ -221,10 +238,11 @@ def exec_mount(source, target, mount_options):
 def exec_fuse_mount(source, target, mount_options):
     """
     Mount read-only with fuseext2.
+
     :param source: the file-path to be mounted.
     :param mount_options: str - mount options flags.
     :param target: the destination path where the file will be mounted to.
-    :return:
+
     """
     try:
         source_path = shlex.quote(str(source))
@@ -238,7 +256,9 @@ def exec_fuse_mount(source, target, mount_options):
 def exec_umount(mount_path):
     """
     Execute the linux umount command on the given path.
+
     :param mount_path: path of the folder to umount.
+
     """
     logging.info(f"Umount {mount_path}")
     try:
@@ -254,12 +274,20 @@ def exec_umount(mount_path):
 def is_path_mounted(mount_path):
     """
     Checks if the path is already mounted.
+
     :param mount_path: str the directory path.
+
     """
     return os.path.ismount(mount_path)
 
 
 def has_files_in_folder(mount_path):
+    """
+    Check if a folder contains any files.
+
+    :param mount_path: str - path to check for readable files.
+    :return: bool
+    """
     return bool(os.listdir(mount_path))
 
 

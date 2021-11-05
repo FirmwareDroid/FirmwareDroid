@@ -11,7 +11,9 @@ from scripts.rq_tasks.flask_context_creator import create_app_context
 def remove_fuzzy_hashes(firmware_id_list):
     """
     Deletes all instances of class:'SsDeepHash' from the given firmware.
+
     :param firmware_id_list: str - object-id's of class:'AndroidFirmware'
+
     """
     create_app_context()
     for firmware_id in firmware_id_list:

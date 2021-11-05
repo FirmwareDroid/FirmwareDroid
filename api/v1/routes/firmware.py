@@ -44,8 +44,10 @@ class GetByMd5(Resource):
     def get(self, md5):
         """
         Gets a json report for the firmware.
+
         :param md5: str - md5 hash of the firmware archive.
         :return: json containing firmware meta-data and references.
+
         """
         try:
             android_firmware = AndroidFirmware.objects.get(md5=md5)
@@ -63,7 +65,9 @@ class FirmwareGetAppIds(Resource):
     def post(self):
         """
         Creates a list of class:'AndroidApp' object-ids for the given firmware.
+
         :return: list(object-ids)
+
         """
         firmware_id_list = parse_json_object_id_list(request, AndroidFirmware)
         android_app_id_list = []
@@ -106,7 +110,9 @@ class FirmwareMassImport(Resource):
     def post(self, create_fuzzy_hashes):
         """
         Starts the mass import of firmware files from the filesystem.
+
         :return: rq-job-id
+
         """
         if create_fuzzy_hashes is None:
             create_fuzzy_hashes = False
@@ -155,7 +161,9 @@ class FirmwareMassImportQueue(Resource):
     def post(self):
         """
         Counts the number of files in the firmware import folder.
+
         :return: the number of files waiting to be imported.
+
         """
         app = flask.current_app
         import_folder_path = app.config["FIRMWARE_FOLDER_IMPORT"]
@@ -170,7 +178,9 @@ class DownloadBuildProps(Resource):
     def get(self):
         """
         Download all build-props as zip file.
+
         :return: zip download.
+
         """
         from zipfile import ZipFile
         try:
@@ -201,7 +211,9 @@ class DownloadFirmware(Resource):
     def get(self, firmware_id):
         """
         Download a firmware as archive.
+
         :return: Firmware archive download.
+
         """
         try:
             firmware = AndroidFirmware.objects.get(pk=firmware_id)
@@ -222,7 +234,9 @@ class GetLatestFirmware(Resource):
     def get(self):
         """
         Gets a list of the latest firmware uploads.
-        :return: json - list of Android firmware
+
+        :return: json - list of Android firmware.
+
         """
         response = "", 400
         # TODO add caching to increase performance
@@ -245,8 +259,9 @@ class SetFirmwareOsVendor(Resource):
     def post(self, os_vendor):
         """
         Set the os vendor for one or more firmware data objects by the original filename.
-        @:param os_vendor: str - OS Vendor name to add ot the firmware.
-        string_list: List(str) - List of firmware filenames for cross reference.
+
+        :param os_vendor: str - OS Vendor name to add ot the firmware.
+
         """
         response = "", 400
         try:
@@ -270,8 +285,9 @@ class SetFirmwareOsVendor(Resource):
     def post(self, os_vendor):
         """
         Get a list of firmware-id's by os_vendor name.
-        @:param os_vendor: str - OS Vendor name.
-        string_list: List(str) - List of firmware ids.
+
+        :param os_vendor: str - OS Vendor name.
+
         """
         response = "", 400
         try:

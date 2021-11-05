@@ -17,9 +17,11 @@ from scripts.firmware.firmware_file_search import find_file_path_by_regex
 def convert_dat2img(dat_file_path, destination_path):
     """
     Convert .dat file to an .img file and store it in the destination path.
+
     :param dat_file_path: str - path to the .dat file
     :param destination_path: str - path where the .img file will be stored
     :return: str - path to the converted .img file.
+
     """
     if not dat_file_path.endswith("dat"):
         raise AssertionError(f"Only .dat file-type supported. {dat_file_path}")

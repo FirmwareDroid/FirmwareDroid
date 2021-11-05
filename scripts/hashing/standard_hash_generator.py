@@ -7,8 +7,10 @@ import hashlib
 def create_checksums_from_file(source):
     """
     Creates md5, sha1, sha256 checksum from file
+
     :param source:
     :return: md5, sha1, sha256
+
     """
     md5 = md5_from_file(source)
     sha1 = sha1_from_file(source)
@@ -19,8 +21,10 @@ def create_checksums_from_file(source):
 def sha256_from_file(filepath):
     """
     Creates a sha256 from the given file.
+
     :param filepath: str
     :return: str sha256
+
     """
     h = hashlib.sha256()
     b = bytearray(128*1024)
@@ -34,8 +38,10 @@ def sha256_from_file(filepath):
 def md5_from_file(filepath):
     """
     Creates a md5 from the given file.
+
     :param filepath: str
     :return: str md5
+
     """
     blocksize = 65536
     hasher = hashlib.md5()
@@ -50,8 +56,10 @@ def md5_from_file(filepath):
 def sha1_from_file(filepath):
     """
     Creates a sha1 from the given file.
+
     :param filepath: str
     :return: str sha1
+
     """
     blocksize = 65536
     hasher = hashlib.sha1()
@@ -64,10 +72,20 @@ def sha1_from_file(filepath):
 
 
 def sha256_from_string(text):
+    """
+    Create a sha256 hash from a string.
+    :param text: str
+    :return: sha256 hex digest
+    """
     hash_object = hashlib.sha512(bytes(text, 'utf-8'))
     return hash_object.hexdigest()
 
 
 def sha256_from_bytes(bytes):
+    """
+    Create a sha256 hash from a byte buffer.
+    :param bytes: bytes
+    :return: sha256 hex digest
+    """
     hash_object = hashlib.sha512(bytes)
     return hash_object.hexdigest()

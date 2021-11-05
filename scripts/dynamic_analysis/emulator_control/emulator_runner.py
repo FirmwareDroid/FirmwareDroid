@@ -8,11 +8,10 @@ from scripts.dynamic_analysis.emulator_control.adb.adb_wrapper import load_adb_r
     is_device_available, is_app_installed, install_app, push_file
 from scripts.rq_tasks.flask_context_creator import create_app_context
 
-
+# TODO REMOVE OR FINISH WORK HERE
 def start_dynamic_analysis(emulator_url, emulator_port, android_app_id_list):
     """
-
-    :return:
+    Experimental Feature
     """
     create_app_context()
     adb_device = open_emulator_connection(emulator_url, emulator_port)
@@ -34,7 +33,6 @@ def start_frida_smoke_test(device_ip, frida_port):
 def open_emulator_connection(emulator_url, emulator_port):
     """
     Opens an adb connection to the standard emulator_control.
-    :return:
     """
     rsa_signer = load_adb_rsa_signer()
     adb_device = connect_adb_device_tcp(emulator_url, emulator_port, rsa_signer)
