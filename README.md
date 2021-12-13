@@ -25,10 +25,9 @@ docker-compose based framework including several third party analysis tools.
 
 ### Installation & Documentation
 
-See our [online documentation]():
-* [Installation guide]()
-* [Developers guide]()
-* [API]()
+See our [online documentation](https://firmwardroid.readthedocs.io/en/latest/):
+* [Installation guide](https://firmwardroid.readthedocs.io/en/latest/01_installation.html)
+* [API](https://firmwardroid.readthedocs.io/en/latest/06_code-documentation.html)
 
 All Sphinx docs can be found within this repository in the [docs](https://github.com/FirmwareDroid/FirmwareDroid/tree/main/docs) folder.
 The docs can be build with Sphinx:
@@ -41,19 +40,14 @@ make html
 The docs should then be available as html under the `/docs/build/` folder. If something is missing in the docs please
 open an issue or better a pull request.
 
+
 ### Citation & Dataset
 
-More information about the framework and it's usage can be found as well in the [master thesis]() of Thomas Sutter 
-or in our [research paper](). If you use FirmwareDroid for you own research please cite our work.
-
+More information about the framework and it's usage can be found as well in the [here](). 
+If you use FirmwareDroid for you own research please cite our work.
 ``` 
 Bibtext citation comming soon
 ```
-Our firmware dataset is free of charge available for accredited researchers. See [here]() for more information.
-
-### Contributions
-
-Please see our [developers guide]() for code contributions.
 
 ### Copyright and Third Party Software Distributed with FirmwareDroid:
 FirmwareDroid is licenced under the GNU General Public License v3.0
