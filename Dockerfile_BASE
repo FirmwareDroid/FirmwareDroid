@@ -5,7 +5,7 @@
 FROM python:3.8-buster as firmwaredroid-base
 
 ########################################################
-# Apt installation                                     #docker
+# Apt installation                                     #
 ########################################################
 RUN apt-get update -y && \
     apt-get -y install --no-install-recommends apt-utils && \
