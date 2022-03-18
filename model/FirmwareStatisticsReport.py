@@ -20,6 +20,7 @@ class FirmwareStatisticsReport(StatisticsReport):
     number_of_firmware_by_region = DictField(required=False)
     total_firmware_byte_size = LongField(required=False)
     number_of_unique_packagenames = LongField(required=False)
+    number_of_unique_sha256 = LongField(required=False)
 
 
 class FirmwareStatisticsReportSchema(Schema):

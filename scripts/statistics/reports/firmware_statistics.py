@@ -77,7 +77,9 @@ def set_firmware_statistics_data(firmware_statistics_report, firmware_objectid_l
     firmware_statistics_report.save()
     logging.info("Saved total_firmware_byte_size")
     try:
-        firmware_statistics_report.number_of_unique_packagenames = get_unique_packagename_frequency(firmware_objectid_list)
+        firmware_statistics_report.number_of_unique_packagenames = \
+            get_unique_packagename_frequency(firmware_objectid_list)
+        firmware_statistics_report.number_of_unique_sha256 = get_unique_sha256_frequency(firmware_objectid_list)
         firmware_statistics_report.save()
         logging.info("Saved number_of_unique_packagenames")
     except Exception as err:
@@ -215,6 +217,41 @@ def get_unique_packagename_frequency(firmware_objectid_list):
     ])
     for document in command_cursor:
         result += document.get("packagename_count")
+    return result
+
+
+def get_unique_sha256_frequency(firmware_objectid_list):
+    """
+    Get the count of unique md5 hashes.
+
+    :param firmware_objectid_list: list(ObjectId()) - list of class:'AndroidFirmware' objectIds
+    :return int - number of unique packages.
+
+    """
+    # TODO Refactoring - Remove duplicated code
+    result = 0
+    android_app_list = AndroidApp.objects(firmware_id_reference__in=firmware_objectid_list).only("pk")
+    android_app_objectid_list = create_objectid_list_by_documents(android_app_list)
+    command_cursor = AndroidApp.objects(pk__in=android_app_objectid_list).aggregate([
+        {
+            "$project": {
+                "sha256": 1
+            }
+        },
+        {
+            "$group": {
+                "_id": "$sha256",
+                "frequency": {
+                    "$sum": 1
+                }
+            }
+        },
+        {
+            "$count": "sha256_count"
+        }
+    ])
+    for document in command_cursor:
+        result += document.get("sha256_count")
     return result
 
 
