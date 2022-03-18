@@ -21,13 +21,14 @@ services:
 
   mongo-db-1:
     # TODO upgrade mongo-db version
+    # TODO Security - Do not expose the Database Port by default
     image: mongo:4.2.8-bionic
     container_name: mongo-db-1
     restart: unless-stopped
     env_file:
       - ./.env
     ports:
-      - "127.0.0.1:27017:27017"
+      - "27017:27017"
     volumes:
       - ./env/mongo/init/:/docker-entrypoint-initdb.d/
     networks:
