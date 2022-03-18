@@ -26,14 +26,14 @@ services:
       - discovery.seed_hosts=elasticsearch-worker-1
       - discovery.type=single-node
     volumes:
-      - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ${ELASTIC_SEARCH_DB_PATH}node1/:/usr/share/elasticsearch/data/
     ports:
       - "127.0.0.1:9200:9200"
 
 #  elasticsearch-worker-1:
 #    volumes:
-#      - $PWD/env/elasticsearch/config/elasticsearch_node_1.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+#      - ./env/elasticsearch/config/elasticsearch_node_1.yml:/usr/share/elasticsearch/config/elasticsearch.yml
 #      - ${ELASTIC_SEARCH_DB_PATH}node1/:/usr/share/elasticsearch/data/
 #    environment:
 #      - node.name=elasticsearch-worker-1
@@ -55,7 +55,7 @@ services:
 #      - discovery.seed_hosts=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
 #      - cluster.initial_master_nodes=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
 #    volumes:
-#      - $PWD/env/elasticsearch/config/elasticsearch_node_2.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+#      - ./env/elasticsearch/config/elasticsearch_node_2.yml:/usr/share/elasticsearch/config/elasticsearch.yml
 #      - ${ELASTIC_SEARCH_DB_PATH}node2/:/usr/share/elasticsearch/data/
 #    ulimits:
 #      memlock:
@@ -77,7 +77,7 @@ services:
 #      - discovery.seed_hosts=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
 #      - cluster.initial_master_nodes=elasticsearch-worker-1,elasticsearch-worker-2,elasticsearch-worker-3
 #    volumes:
-#      - $PWD/env/elasticsearch/config/elasticsearch_node_3.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+#      - ./env/elasticsearch/config/elasticsearch_node_3.yml:/usr/share/elasticsearch/config/elasticsearch.yml
 #      - ${ELASTIC_SEARCH_DB_PATH}node3/:/usr/share/elasticsearch/data/
 #    ulimits:
 #      memlock:
@@ -90,8 +90,8 @@ services:
 
   nginx:
     volumes:
-      - $PWD/env/certbot/conf:/etc/letsencrypt
-      - $PWD/env/certbot/www:/var/www/certbot
+      - ./env/certbot/conf:/etc/letsencrypt
+      - ./env/certbot/www:/var/www/certbot
 
   redis:
     container_name: redis
@@ -128,7 +128,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -145,7 +145,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -162,7 +162,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -179,7 +179,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -196,7 +196,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -213,7 +213,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -230,7 +230,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -247,7 +247,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -264,7 +264,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -285,7 +285,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -302,7 +302,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -319,7 +319,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -336,7 +336,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -353,7 +353,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -370,7 +370,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -387,7 +387,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -404,7 +404,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -421,7 +421,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -438,7 +438,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -455,7 +455,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -472,7 +472,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -489,7 +489,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -506,7 +506,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -523,7 +523,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -540,7 +540,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -557,7 +557,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -574,7 +574,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -591,7 +591,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -613,7 +613,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -630,7 +630,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -647,7 +647,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -664,7 +664,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -681,7 +681,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -698,7 +698,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -715,7 +715,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -732,7 +732,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -749,7 +749,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -770,7 +770,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -788,7 +788,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -805,7 +805,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -822,7 +822,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -839,7 +839,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -856,7 +856,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -873,7 +873,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -890,7 +890,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -907,7 +907,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -924,7 +924,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -949,7 +949,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -966,7 +966,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -983,7 +983,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1000,7 +1000,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1018,7 +1018,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1035,7 +1035,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1052,7 +1052,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1073,7 +1073,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1090,7 +1090,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1107,7 +1107,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1124,7 +1124,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1141,7 +1141,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1159,7 +1159,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1176,7 +1176,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1193,7 +1193,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1210,7 +1210,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1235,7 +1235,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1252,7 +1252,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1269,7 +1269,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1286,7 +1286,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1303,7 +1303,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1320,7 +1320,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1337,7 +1337,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1354,7 +1354,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1371,7 +1371,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1388,7 +1388,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1405,7 +1405,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1422,7 +1422,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1439,7 +1439,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1456,7 +1456,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1473,7 +1473,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1490,7 +1490,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1507,7 +1507,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1524,7 +1524,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1541,7 +1541,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1562,7 +1562,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1579,7 +1579,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1596,7 +1596,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1613,7 +1613,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1630,7 +1630,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1647,7 +1647,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1664,7 +1664,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1681,7 +1681,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1698,7 +1698,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1715,7 +1715,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1732,7 +1732,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1749,7 +1749,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1766,7 +1766,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1783,7 +1783,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1800,7 +1800,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1817,7 +1817,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1834,7 +1834,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1851,7 +1851,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1868,7 +1868,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1885,7 +1885,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
     env_file:
       - ./.env
@@ -1903,6 +1903,6 @@ services:
       - nginx
     command: certonly --webroot --webroot-path=${CERT_WEBROOT_PATH} --email ${CERT_EMAIL} --agree-tos --no-eff-email -d ${CERT_DOMAIN}
     volumes:
-      - $PWD/env/certbot/conf:/etc/letsencrypt
-      - $PWD/env/certbot/logs:/var/log/letsencrypt
-      - $PWD/env/certbot/data:/var/www/certbot
+      - ./env/certbot/conf:/etc/letsencrypt
+      - ./env/certbot/logs:/var/log/letsencrypt
+      - ./env/certbot/data:/var/www/certbot

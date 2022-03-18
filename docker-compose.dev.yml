@@ -21,7 +21,7 @@ services:
       - discovery.seed_hosts=elasticsearch-worker-1
       - discovery.type=single-node
     volumes:
-      - $PWD/env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./env/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
       - ${DEV_ELASTIC_SEARCH_DB_PATH}node1/:/usr/share/elasticsearch/data/
     ports:
       - "127.0.0.1:9200:9200"

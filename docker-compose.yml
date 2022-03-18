@@ -11,7 +11,7 @@ services:
     expose:
       - 5000
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
     depends_on:
       - mongo-db-1
       - redis
@@ -29,7 +29,7 @@ services:
     ports:
       - "127.0.0.1:27017:27017"
     volumes:
-      - $PWD/env/mongo/init/:/docker-entrypoint-initdb.d/
+      - ./env/mongo/init/:/docker-entrypoint-initdb.d/
     networks:
       - backend
       - elastic
@@ -52,7 +52,7 @@ services:
     networks:
       - backend
     volumes:
-      - $PWD/scripts/database/mongo_replica_set_setup.sh:/scripts/mongo_replica_set_setup.sh
+      - ./scripts/database/mongo_replica_set_setup.sh:/scripts/mongo_replica_set_setup.sh
     restart: "no"
     entrypoint: [ "bash", "./scripts/mongo_replica_set_setup.sh" ]
 
@@ -66,8 +66,8 @@ services:
       - elasticsearch-worker-1
       - kibana
     volumes:
-      - $PWD/requirements/requirements_mongo_connector.txt:/var/www/requirements_mongo_connector.txt
-      - $PWD/env/mongo-connector/mongo-connector-config.json:/var/www/mongo-connector-config.json
+      - ./requirements/requirements_mongo_connector.txt:/var/www/requirements_mongo_connector.txt
+      - ./env/mongo-connector/mongo-connector-config.json:/var/www/mongo-connector-config.json
     env_file:
       - ./.env
     networks:
@@ -114,11 +114,11 @@ services:
     depends_on:
       - web
     volumes:
-      - $PWD/env/nginx:/etc/nginx/conf.d
-      - $PWD/env/certbot/conf:/etc/letsencrypt
-      - $PWD/env/certbot/www:/var/www/certbot
-      - $PWD/env/elasticsearch/kibana.htpasswd:/var/www/kibana.htpasswd
-      - $PWD/firmware-droid-client/build:/usr/share/nginx/build
+      - ./env/nginx:/etc/nginx/conf.d
+      - ./env/certbot/conf:/etc/letsencrypt
+      - ./env/certbot/www:/var/www/certbot
+      - ./env/elasticsearch/kibana.htpasswd:/var/www/kibana.htpasswd
+      - ./firmware-droid-client/build:/usr/share/nginx/build
     ports:
       - "80:80"
       - "443:443"
@@ -146,7 +146,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - ./.env
@@ -165,7 +165,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - ./.env
@@ -185,7 +185,7 @@ services:
       - redis
       - firmware-worker
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
       - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - ./.env
@@ -204,7 +204,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
     env_file:
       - ./.env
     command: rqworker --name firmware-worker-default-1 --url redis://redis:6379/ default
@@ -220,7 +220,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
     env_file:
       - ./.env
     command: rqworker --name androguard-worker-1 --url redis://redis:6379/ androguard
@@ -236,7 +236,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
     env_file:
       - ./.env
     command: rqworker --name androwarn-worker-1 --url redis://redis:6379/ androwarn
@@ -252,7 +252,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
     env_file:
       - ./.env
     command: rqworker --name apkid-worker-1 --url redis://redis:6379/ apkid
@@ -268,7 +268,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
     env_file:
       - ./.env
     command: rqworker --name exodus-worker-1 --url redis://redis:6379/ exodus
@@ -284,7 +284,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
     env_file:
       - ./.env
     command: rqworker --name frida-worker-1 --url redis://redis:6379/ frida
@@ -300,7 +300,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
     env_file:
       - ./.env
     command: rqworker --name qark-worker-1 --url redis://redis:6379/ qark
@@ -316,7 +316,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
     env_file:
       - ./.env
     command: rqworker --name quark_engine-worker-1 --url redis://redis:6379/ quark_engine
@@ -332,7 +332,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
     env_file:
       - ./.env
     command: rqworker --name super_android_analyzer-worker-1 --url redis://redis:6379/ super_android_analyzer
@@ -348,7 +348,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
     env_file:
       - ./.env
     command: rqworker --name virustotal-worker-1 --url redis://redis:6379/ virustotal
@@ -364,7 +364,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
     env_file:
       - ./.env
     command: rqworker --name apkleaks-worker-1 --url redis://redis:6379/ apkleaks
@@ -380,7 +380,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - $PWD:/var/www/
+      - .:/var/www/
     env_file:
       - ./.env
     command: rqworker --name libradar-worker-1 --url redis://redis:6379/ libradar
