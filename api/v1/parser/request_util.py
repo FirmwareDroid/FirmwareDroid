@@ -8,8 +8,6 @@ from scripts.database.query_document import get_all_document_ids
 from model import AndroidApp, AndroidFirmware
 
 # TODO Security enhancement - Improve input validation and parsing for all methods.
-
-
 def check_app_mode(mode, request, **kwargs):
     """
     Create a list of app id's depending on the mode used.
@@ -22,6 +20,7 @@ def check_app_mode(mode, request, **kwargs):
     :return: list(object-id's) - list of id's from class:'AndroidApp'
 
     """
+    # TODO Security enhancement - Assure that the input parameters a sanitized. Possible NO-SQL Injection
     android_app_id_list = []
     logging.info(f"Selected Mode: {mode}")
     if mode == 1:
@@ -54,7 +53,8 @@ def check_firmware_mode(mode, request, **kwargs):
     :param mode: int -
         mode == 1: Selects all available firmware. Optional: If the 'os_vendor' attribute is set, it will only select
         the available firmware of the specific vendor.
-        mode > 1: Select a set of firmware based on the Android version. Uses the mode as version.
+        mode > 1 or mode == 0: Select a set of firmware based on the Android version. Uses the mode as version.
+            mode 0 select all unknown versions.
         mode < 1: Verify the firmware ids that were sent with the request.
 
     :param request: flask.request
@@ -63,6 +63,7 @@ def check_firmware_mode(mode, request, **kwargs):
     :return: list(str) - list of class:'AndroidFirmware' ids.
 
     """
+    # TODO Security enhancement - Assure that the input parameters a sanitized. Possible NO-SQL Injection
     firmware_id_list = []
     if mode == 1:
         if "os_vendor" in kwargs and kwargs["os_vendor"]:
@@ -71,7 +72,7 @@ def check_firmware_mode(mode, request, **kwargs):
                 firmware_id_list.append(firmware.id)
         else:
             firmware_id_list.extend(get_all_document_ids(AndroidFirmware))
-    elif mode > 1:
+    elif mode > 1 or mode == 0:
         firmware_list = AndroidFirmware.objects(version_detected=mode)
         for firmware in firmware_list:
             firmware_id_list.append(firmware.id)

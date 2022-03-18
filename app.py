@@ -247,6 +247,7 @@ def setup_folders(app_instance):
     """Creates basic folder structure of the app instance"""
     for path in app_instance.config["ALL_FOLDERS"]:
         try:
+            # TODO Fix a permission bug here
             if not os.path.exists(path):
                 os.makedirs(path)
         except OSError as exception:
