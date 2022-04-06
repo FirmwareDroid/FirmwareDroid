@@ -17,8 +17,7 @@ def create_statistics_stratified(number_of_app_samples, os_vendor, report_name):
     create_app_context()
     android_app_id_list = []
     app_sha256_set = set()
-    firmware_list = AndroidFirmware.objects(os_vendor=os_vendor, version_detected__in=["10", "11"]).aggregate(
-        [{"$sample": {"size": 500}}])
+    firmware_list = AndroidFirmware.objects(os_vendor=os_vendor, version_detected__in=["10", "11"])
     number_of_selected_samples = 0
     while number_of_selected_samples <= number_of_app_samples:
         random_firmware = random.choice(firmware_list)
