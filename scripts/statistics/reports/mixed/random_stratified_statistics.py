@@ -32,6 +32,8 @@ def create_statistics_stratified(number_of_app_samples, os_vendor, report_name):
     random.shuffle(android_app_id_list)
     logging.info(f"Finished shuffling")
     for android_app_lazy in android_app_id_list:
+        if len(selected_android_app_id_list) >= number_of_app_samples:
+            break
         android_app = android_app_lazy.fetch()
         if android_app_lazy.pk not in android_app_id_list \
                 and android_app.sha256 not in app_sha256_set \
