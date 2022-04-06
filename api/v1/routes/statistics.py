@@ -200,8 +200,7 @@ class CreateStatistics(Resource):
 
 @ns.route('/create_statistics_report/permissions_stratified_/<int:number_of_app_samples>/'
           '<string:os_vendor>/<string:report_name>')
-@ns.expect(object_id_list)
-class CreateStatistics(Resource):
+class CreateStratifiedStatistics(Resource):
     @ns.doc('post')
     @admin_jwt_required
     def post(self, number_of_app_samples, os_vendor, report_name):
