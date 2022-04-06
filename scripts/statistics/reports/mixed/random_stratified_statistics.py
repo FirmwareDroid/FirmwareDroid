@@ -25,7 +25,7 @@ def create_statistics_stratified(number_of_app_samples, os_vendor, report_name):
     count = 0
     for firmware in firmware_list:
         count += 1
-        logging.info(f"Search in firmware {count}/{len(firmware_list)}")
+        logging.info(f"Search in firmware {count}/{len(firmware_list)} - {os_vendor}")
         if firmware.android_app_id_list:
             android_app_lazy = random.choice(firmware.android_app_id_list)
             android_app = android_app_lazy.fetch()
