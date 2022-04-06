@@ -1,3 +1,5 @@
+import logging
+
 from model import AndroidFirmware
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.statistics.reports.androguard.androguard_statistics import create_androguard_statistics_report
@@ -19,17 +21,20 @@ def create_statistics_stratified(number_of_app_samples, os_vendor, report_name):
     app_sha256_set = set()
     firmware_list = AndroidFirmware.objects(os_vendor=os_vendor, version_detected__in=["10", "11"])
     firmware_list = list(firmware_list)
-    number_of_selected_samples = 0
     random.shuffle(firmware_list)
-    while number_of_selected_samples <= number_of_app_samples:
-        for firmware in firmware_list:
-            android_app_lazy = random.choice(firmware.android_app_id_list)
-            android_app = android_app_lazy.fetch()
-            if android_app_lazy.pk not in android_app_id_list \
-                    and android_app.sha256 not in app_sha256_set \
-                    and android_app.super_report_reference \
-                    and android_app.androguard_report_reference:
-                app_sha256_set.add(android_app.sha256)
-                android_app_id_list.append(str(android_app_lazy.pk))
+    for firmware in firmware_list:
+        logging.info(f"Search in firmware for app")
+        android_app_lazy = random.choice(firmware.android_app_id_list)
+        android_app = android_app_lazy.fetch()
+        if android_app_lazy.pk not in android_app_id_list \
+                and android_app.sha256 not in app_sha256_set \
+                and android_app.super_report_reference \
+                and android_app.androguard_report_reference:
+            app_sha256_set.add(android_app.sha256)
+            android_app_id_list.append(str(android_app_lazy.pk))
+            logging.info(f"Found {len(android_app_id_list)} unique apps out of {number_of_app_samples}.")
+    logging.info(f"Found {len(android_app_id_list)} unique apps.")
     create_androguard_statistics_report(android_app_id_list, report_name)
+    logging.info(f"Created AndroGuardStatisticsReport")
     create_super_statistics_report(android_app_id_list, report_name)
+    logging.info(f"Created SuperStatisticsReport")
