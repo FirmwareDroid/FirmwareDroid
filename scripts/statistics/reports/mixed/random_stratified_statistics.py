@@ -1,4 +1,5 @@
 from model import AndroidFirmware
+from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.statistics.reports.androguard.androguard_statistics import create_androguard_statistics_report
 from scripts.statistics.reports.super_android_analyzer.super_statistics import create_super_statistics_report
 import random
@@ -13,6 +14,7 @@ def create_statistics_stratified(number_of_app_samples, os_vendor, report_name):
     :param report_name - str - Name of the statistics report.
 
     """
+    create_app_context()
     android_app_id_list = []
     app_sha256_set = set()
     firmware_list = AndroidFirmware.objects(os_vendor=os_vendor, version_detected__in=["10", "11"]).aggregate(
