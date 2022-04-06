@@ -24,6 +24,7 @@ from scripts.statistics.reports.exodus.exodus_statistics import create_exodus_st
 from scripts.statistics.reports.apkleaks.apkleaks_statistics import create_apkleaks_statistics_report
 from scripts.statistics.reports.quark_engine.quark_engine_statistics import create_quark_engine_statistics_report
 from scripts.statistics.reports.super_android_analyzer.super_statistics import create_super_statistics_report
+from scripts.statistics.reports.mixed.random_stratified_statistics import create_statistics_stratified
 
 ns = Namespace('statistics', description='Operations related to Dataset statistics.')
 
@@ -120,7 +121,7 @@ class DownloadJsonFileFiltered(Resource):
 @ns.route('/create_statistics_report/<int:mode>/<string:report_name>/<int:report_type>/<string:os_vendor>')
 @ns.route('/create_statistics_report/<int:mode>/<string:report_name>/<int:report_type>', defaults={'os_vendor': None})
 @ns.expect(object_id_list)
-class CreateQarkStatistics(Resource):
+class CreateStatistics(Resource):
     @ns.doc('post')
     @admin_jwt_required
     def post(self, mode, report_name, report_type, os_vendor=None):
@@ -148,6 +149,7 @@ class CreateQarkStatistics(Resource):
         app = flask.current_app
         response = "", 400
         report_type = int(report_type)
+        # TODO refactoring. Make this code fragment more scaleable
         if report_type == 0:
             start_function = create_firmware_statistics_report
         elif report_type == 1:
@@ -194,3 +196,41 @@ class CreateQarkStatistics(Resource):
         except Exception as err:
             logging.error(err)
         return response
+
+
+@ns.route('/create_statistics_report/permissions_stratified_/<int:number_of_app_samples>/'
+          '<string:os_vendor>/<string:report_name>')
+@ns.expect(object_id_list)
+class CreateStatistics(Resource):
+    @ns.doc('post')
+    @admin_jwt_required
+    def post(self, number_of_app_samples, os_vendor, report_name):
+        """
+        Creates a stratified sampling statistics report (permissions-only) for all vendors.
+
+        :param number_of_app_samples:
+
+        """
+        app = flask.current_app
+        response = "", 400
+        try:
+            app.rq_task_queue_default.enqueue(create_statistics_stratified,
+                                              number_of_app_samples,
+                                              os_vendor,
+                                              report_name,
+                                              job_timeout=60 * 60 * 24 * 40)
+            response = "", 200
+        except Exception as err:
+            logging.error(err)
+
+        return response
+
+
+
+
+
+
+
+
+
+
