@@ -40,7 +40,7 @@ def create_statistics_stratified(number_of_app_samples, os_vendor, report_name):
                 and android_app.super_report_reference \
                 and android_app.androguard_report_reference:
             app_sha256_set.add(android_app.sha256)
-            android_app_id_list.append(str(android_app_lazy.pk))
+            selected_android_app_id_list.append(str(android_app_lazy.pk))
             logging.info(f"Found {len(android_app_id_list)} unique apps out of {number_of_app_samples}.")
 
     logging.info(f"Found {len(android_app_id_list)} unique apps.")
