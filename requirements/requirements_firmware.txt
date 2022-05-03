@@ -6,7 +6,7 @@ lief==0.11.0
 ubi-reader==0.7.0
 py-lz4framed==0.14.0
 python-lzo==1.12
-
+pymongo~=4.1.1
 
 # Requirements for string analysis
 Morfessor==2.0.6
