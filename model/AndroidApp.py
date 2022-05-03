@@ -32,6 +32,7 @@ class AndroidApp(Document):
     apkleaks_report_reference = LazyReferenceField('ApkLeaksReport', reverse_delete_rule=DO_NOTHING)
     libradar_report_reference = LazyReferenceField('LibRadarReport', reverse_delete_rule=DO_NOTHING)
     opt_firmware_file_reference_list = ListField(LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING))
+    app_twins_reference_list = ListField(LazyReferenceField('AndroidApp', reverse_delete_rule=DO_NOTHING))
 
 
 class AndroidAppSchema(Schema):

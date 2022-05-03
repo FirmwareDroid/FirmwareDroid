@@ -14,10 +14,6 @@ services:
       - APP_ENV=testing
     command: mongod --replSet $TST_MONGODB_REPLICA_SET --auth
 
-  elasticsearch-worker-1:
-    volumes:
-      - ${TST_ELASTIC_SEARCH_DB_PATH}:/usr/share/elasticsearch/data/
-
   redis:
     volumes:
       - ${TST_REDIS_DB_PATH}:/var/lib/redis

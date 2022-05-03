@@ -21,7 +21,6 @@ docker-compose based framework including several third party analysis tools.
 * Fuzzy-Hashing
   * [SSDeep](https://ssdeep-project.github.io/ssdeep/index.html)
   * [TLSH](https://tlsh.org/)
-* [ElasticSearch](https://www.elastic.co/)
 
 ### Installation & Documentation
 

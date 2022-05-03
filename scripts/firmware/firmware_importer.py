@@ -156,7 +156,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
                               build_prop_file_id_list=build_prop_file_list,
                               version_detected=version_detected,
                               firmware_file_list=firmware_file_list,
-                              hasFuzzyHashIndex=create_fuzzy_hashes)
+                              has_fuzzy_hash_index=create_fuzzy_hashes)
         logging.info(f"Firmware Import success: {original_filename}")
     except Exception as e:
         logging.exception(f"Firmware Import failed: {original_filename} error: {str(e)}")
@@ -166,14 +166,14 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
             for firmware_file in firmware_file_list:
                 firmware_file_id_object_list.append(ObjectId(firmware_file.id))
             FirmwareFile.objects(pk__in=firmware_file_id_object_list).delete()
-            logging.info(f"Cleanup: Removed firmware-files from DB")
+            logging.info("Cleanup: Removed firmware-files from DB")
 
         if firmware_app_list and len(firmware_app_list) > 0:
             android_app_id_object_list = []
             for android_app in firmware_app_list:
                 android_app_id_object_list.append(ObjectId(android_app.id))
             AndroidApp.objects(pk__in=android_app_id_object_list).delete()
-            logging.info(f"Cleanup: Removed android apps from DB")
+            logging.info("Cleanup: Removed android apps from DB")
 
         shutil.move(firmware_archive_file_path, flask.current_app.config["FIRMWARE_FOLDER_IMPORT_FAILED"])
         logging.info(f"Cleanup: Firmware file moved to failed folder: {original_filename}")
@@ -181,7 +181,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
         try:
             temp_extract_dir.cleanup()
         except OSError as err:
-            logging.warning(f"Cleanup: could not remove cache folder")
+            logging.warning("Cleanup: could not remove cache folder")
 
 
 def get_firmware_archive_content(cache_temp_file_dir_path):
@@ -229,19 +229,20 @@ def get_partition_firmware_files(archive_firmware_file_list,
         partition_firmware_files = create_firmware_file_list(temp_dir_path, partition_name)
         firmware_file_list.extend(partition_firmware_files)
     except (RuntimeError, ValueError) as err:
-        if partition_name == "system":  # Abort if we cannot import system partition.
-            raise
-        else:
+        if partition_name != "system":
             logging.warning(err)
+        else:  # Abort if we cannot import system partition.
+            raise
     return firmware_file_list
 
 
 def store_firmware_object(store_filename, original_filename, firmware_store_path, md5, sha256, sha1, android_app_list,
-                          file_size, build_prop_file_id_list, version_detected, firmware_file_list, hasFuzzyHashIndex):
+                          file_size, build_prop_file_id_list, version_detected, firmware_file_list,
+                          has_fuzzy_hash_index):
     """
     Creates class:'AndroidFirmware' object and saves it to the database. Creates references to other documents.
 
-    :param hasFuzzyHashIndex: bool - true if fuzzy hash index was created. False if fuzzy hash index was not created.
+    :param has_fuzzy_hash_index: bool - true if fuzzy hash index was created. False if fuzzy hash index was not created.
     :param version_detected: str - detected version of the firmware.
     :param store_filename: str - Name of the file within the file store.
     :param original_filename: str - original filename before renaming.
@@ -268,7 +269,7 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
                                file_size_bytes=file_size,
                                version_detected=version_detected,
                                hasFileIndex=True,
-                               hasFuzzyHashIndex=hasFuzzyHashIndex,
+                               hasFuzzyHashIndex=has_fuzzy_hash_index,
                                build_prop_file_id_list=build_prop_file_id_list)
     firmware.save()
     logging.info(f"Stored firmware with id {str(firmware.id)} in database.")

@@ -33,7 +33,6 @@ services:
       - ./env/mongo/init/:/docker-entrypoint-initdb.d/
     networks:
       - backend
-      - elastic
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongo mongo-db-1:27017/test --quiet
       interval: 1m30s
@@ -57,55 +56,6 @@ services:
     restart: "no"
     entrypoint: [ "bash", "./scripts/mongo_replica_set_setup.sh" ]
 
-  elasticsearch-mongo-connector:
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_mongo_connector
-    container_name: elasticsearch-mongo-connector
-    depends_on:
-      - mongo-db-1
-      - elasticsearch-worker-1
-      - kibana
-    volumes:
-      - ./requirements/requirements_mongo_connector.txt:/var/www/requirements_mongo_connector.txt
-      - ./env/mongo-connector/mongo-connector-config.json:/var/www/mongo-connector-config.json
-    env_file:
-      - ./.env
-    networks:
-      - backend
-      - elastic
-
-  elasticsearch-worker-1:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.1
-    container_name: elasticsearch-worker-1
-    restart: unless-stopped
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    healthcheck:
-      test: [ "CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1" ]
-      interval: 30s
-      timeout: 30s
-      retries: 3
-    depends_on:
-      - mongo-db-1
-    networks:
-      - elastic
-
-  kibana:
-    container_name: kibana
-    restart: unless-stopped
-    image: docker.elastic.co/kibana/kibana:7.12.1
-    ports:
-      - "127.0.0.1:5601:5601"
-    depends_on:
-      - elasticsearch-worker-1
-    environment:
-      - ELASTICSEARCH_HOSTS="http://elasticsearch-worker-1:9200"
-    networks:
-      - elastic
-
   nginx:
     container_name: nginx-frontend
     build:
@@ -118,7 +68,6 @@ services:
       - ./env/nginx:/etc/nginx/conf.d
       - ./env/certbot/conf:/etc/letsencrypt
       - ./env/certbot/www:/var/www/certbot
-      - ./env/elasticsearch/kibana.htpasswd:/var/www/kibana.htpasswd
       - ./firmware-droid-client/build:/usr/share/nginx/build
     ports:
       - "80:80"
@@ -126,7 +75,6 @@ services:
       - "5602:5602"
     networks:
       - frontend
-      - elastic
 
   redis:
     # TODO upgrade redis version
@@ -397,7 +345,4 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.driver.mtu: 1450
-  elastic:
-    driver: bridge
-    driver_opts:
-      com.docker.network.driver.mtu: 1450
+

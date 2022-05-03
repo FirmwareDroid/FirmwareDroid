@@ -12,7 +12,7 @@ from model import AndroidApp
 
 def store_android_apps(search_path, firmware_app_store, firmware_file_list):
     """
-    Finds and stores all android .apk files.
+    Finds and stores android .apk files.
 
     :param firmware_file_list: list(class:'FirmwareFile') - list of firmware file that contains the android app.
     :param search_path: str - path to search for .apk files.
@@ -56,14 +56,39 @@ def copy_apk_file(android_app, destination_folder, firmware_mount_path):
     app_root_folder = destination_folder + android_app.relative_firmware_path + "/"
     Path(app_root_folder).mkdir(parents=True, exist_ok=True)
     android_app_destination_filepath = os.path.join(app_root_folder, android_app.filename)
-    copyfile(apk_source_path, android_app_destination_filepath)
-    if not os.path.isfile(android_app_destination_filepath):
-        raise OSError(f"Could not copy Android app: from {apk_source_path} "
-                      f"to {android_app_destination_filepath}. Is path available?")
-    android_app.relative_store_path = android_app_destination_filepath
-    android_app.absolute_store_path = os.path.abspath(android_app_destination_filepath)
-    android_app.save()
-    logging.info(f"Exported Android app: {android_app.filename}")
+    existing_android_app = is_apk_in_database(android_app)
+    if existing_android_app is None:
+        copyfile(apk_source_path, android_app_destination_filepath)
+        if not os.path.isfile(android_app_destination_filepath):
+            raise OSError(f"Could not copy Android app: from {apk_source_path} "
+                          f"to {android_app_destination_filepath}. Is path available?")
+        android_app.relative_store_path = android_app_destination_filepath
+        android_app.absolute_store_path = os.path.abspath(android_app_destination_filepath)
+        android_app.save()
+        logging.info(f"Exported Android app: {android_app.filename}")
+    else:
+        android_app.relative_store_path = existing_android_app.relative_store_path
+        android_app.absolute_store_path = existing_android_app.absolute_store_path
+        android_app.app_twins_reference_list.append(existing_android_app.pk)
+        android_app.save()
+        existing_android_app.app_twins_reference_list.append(android_app.pk)
+        existing_android_app.save()
+        logging.info(f"Found twin app: {android_app.filename} / {existing_android_app.filename}")
+
+
+def is_apk_in_database(android_app):
+    """
+    Checks if an apk is already stored in the database based on querying the md5 hash of the file.
+
+    :return: true - Class:AndroidApp, false - None
+
+    """
+    existing_android_app_list = AndroidApp.objects(md5=android_app.md5).limit(1)
+    if len(existing_android_app_list) > 0:
+        existing_android_app = existing_android_app_list[0]
+    else:
+        existing_android_app = None
+    return existing_android_app
 
 
 def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_list):

@@ -12,6 +12,7 @@ from marshmallow import Schema, fields
 class AndroidFirmware(Document):
     indexed_date = DateTimeField(default=datetime.datetime.now)
     file_size_bytes = LongField(required=True)
+    tag = StringField(required=False, max_length=1024)
     relative_store_path = StringField(required=True, max_length=2048)
     absolute_store_path = StringField(required=True, max_length=2048)
     original_filename = StringField(required=True, max_length=1024)

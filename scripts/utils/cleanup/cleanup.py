@@ -194,3 +194,42 @@ def cleanup_androguard_certificate_references(android_app_id_list):
                              f"set correct reference: {androguard_report.id}")
                 certificate.androguard_report_reference = androguard_report.id
                 certificate.save()
+
+
+def cleanup_app_duplicates(android_app_id_list):
+    """
+    Removes apps from the host system that are already in the database. Save a lot of space on disk.
+
+    :param android_app_id_list:
+    """
+    create_app_context()
+    android_apps_done_list = []
+    for android_app_id in android_app_id_list:
+        if len(android_apps_done_list) > 0:
+            logging.info(f"android_apps_done_list: {android_apps_done_list[0]}")
+        if android_app_id not in android_apps_done_list:
+            logging.info(f"Searching {android_app_id} not in {len(android_apps_done_list)}")
+            android_app = AndroidApp.objects.get(pk=android_app_id)
+            try:
+                existing_app_list = AndroidApp.objects.get(md5=android_app.md5)
+                for twin_app in existing_app_list:
+                    try:
+                        if os.path.exists(twin_app.absolute_store_path):
+                            #os.remove(twin_app.absolute_store_path)
+                            logging.info(f"Delete {twin_app.absolute_store_path}")
+                        else:
+                            raise FileNotFoundError(f"File does not exist {twin_app.absolute_store_path}")
+                    except FileNotFoundError as err:
+                        logging.error(err)
+                    twin_app.absolute_store_path = android_app.absolute_store_path
+                    twin_app.relative_store_path = android_app.relative_store_path
+                    if android_app.pk not in twin_app.app_twins_reference_list:
+                        twin_app.app_twins_reference_list.append(android_app.pk)
+                    if twin_app.pk not in android_app.app_twins_reference_list:
+                        android_app.app_twins_reference_list.append(twin_app.pk)
+                    android_apps_done_list.append(twin_app.pk)
+                    #twin_app.save()
+                android_apps_done_list.append(android_app.pk)
+                #android_app.save()
+            except DoesNotExist as war:
+                logging.info(war)
