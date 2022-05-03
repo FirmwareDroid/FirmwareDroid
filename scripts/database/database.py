@@ -22,8 +22,9 @@ def open_db_con(alias):
 
     """
     from app import app
-    db_name, host, port, username, password = get_connection_options(app)
-    mongoengine.connect(db=db_name, alias=alias, host=host, port=port, username=username, password=password)
+    db_name, host, port, username, password, authentication_source = get_connection_options(app)
+    mongoengine.connect(db=db_name, alias=alias, host=host, port=port, username=username, password=password,
+                        authentication_source=authentication_source)
 
 
 def close_db_con(alias):
@@ -89,5 +90,3 @@ def get_connection_options(app):
     password = app.config["MONGODB_SETTINGS"].get("password")
     authentication_source = app.config["MONGODB_SETTINGS"].get("auth_src")
     return db_name, host, port, username, password, authentication_source
-
-
