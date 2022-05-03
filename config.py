@@ -88,6 +88,7 @@ class ApplicationConfig(Config):
     DB_HOST = os.environ[Config.ENV + 'MONGODB_HOSTNAME']
     DB_HOST_PORT = int(os.environ[Config.ENV + 'MONGODB_PORT'])
     DB_NAME = os.environ[Config.ENV + 'MONGODB_DATABASE']
+    DB_AUTH_SRC = os.environ[Config.ENV + 'MONGODB_AUTH_SRC']
     DB_URI = 'mongodb://' + os.environ[Config.ENV + 'MONGODB_USERNAME'] \
              + ':' + os.environ[Config.ENV + 'MONGODB_PASSWORD'] \
              + '@' + os.environ[Config.ENV + 'MONGODB_HOSTNAME'] \
@@ -98,7 +99,8 @@ class ApplicationConfig(Config):
         'username': os.environ[Config.ENV + 'MONGODB_USERNAME'],
         'password': os.environ[Config.ENV + 'MONGODB_PASSWORD'],
         "host": DB_HOST,
-        "port": DB_HOST_PORT
+        "port": DB_HOST_PORT,
+        "auth_src": DB_AUTH_SRC
     }
     ####################
     # REST API Config
