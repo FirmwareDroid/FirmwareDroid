@@ -95,13 +95,15 @@ class ApplicationConfig(Config):
              + ':' + str(DB_HOST_PORT) \
              + '/' + os.environ[Config.ENV + 'MONGODB_DATABASE'] \
              + '?authSource=' + DB_AUTH_SRC
+    # Settings side-loaded by mongo-engine
     MONGODB_SETTINGS = {
         "db": DB_NAME,
         'username': os.environ[Config.ENV + 'MONGODB_USERNAME'],
         'password': os.environ[Config.ENV + 'MONGODB_PASSWORD'],
         "host": DB_HOST,
         "port": DB_HOST_PORT,
-        "authSource": DB_AUTH_SRC
+        "authSource": DB_AUTH_SRC,
+        'connect': False
     }
     ####################
     # REST API Config

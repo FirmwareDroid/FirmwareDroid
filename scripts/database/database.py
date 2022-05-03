@@ -51,11 +51,11 @@ def multiprocess_disconnect_all(app):
     """
     if not app:
         from app import app
-    mongoengine.disconnect_all()
-    connection._connections = {}
-    connection._connection_settings = {}
-    connection._dbs = {}
-    register_default_connection(app)
+    #mongoengine.disconnect_all()
+    #connection._connections = {}
+    #connection._connection_settings = {}
+    #connection._dbs = {}
+    #register_default_connection(app)
 
 
 def register_default_connection(app):
