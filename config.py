@@ -99,8 +99,7 @@ class ApplicationConfig(Config):
         'username': os.environ[Config.ENV + 'MONGODB_USERNAME'],
         'password': os.environ[Config.ENV + 'MONGODB_PASSWORD'],
         "host": DB_HOST,
-        "port": DB_HOST_PORT,
-        "auth_src": DB_AUTH_SRC
+        "port": DB_HOST_PORT
     }
     ####################
     # REST API Config

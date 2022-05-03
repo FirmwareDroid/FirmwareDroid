@@ -88,5 +88,5 @@ def get_connection_options(app):
     port = app.config["MONGODB_SETTINGS"].get("port")
     username = app.config["MONGODB_SETTINGS"].get("username")
     password = app.config["MONGODB_SETTINGS"].get("password")
-    authentication_source = app.config["MONGODB_SETTINGS"].get("auth_src")
+    authentication_source = app.config["DB_AUTH_SRC"]
     return db_name, host, port, username, password, authentication_source
