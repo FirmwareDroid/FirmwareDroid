@@ -23,7 +23,12 @@ def open_db_con(alias):
     """
     from app import app
     db_name, host, port, username, password, authentication_source = get_connection_options(app)
-    mongoengine.connect(db=db_name, alias=alias, host=host, port=port, username=username, password=password,
+    mongoengine.connect(db=db_name,
+                        alias=alias,
+                        host=host,
+                        port=port,
+                        username=username,
+                        password=password,
                         authentication_source=authentication_source)
 
 
