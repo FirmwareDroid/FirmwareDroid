@@ -204,12 +204,13 @@ def cleanup_app_duplicates(android_app_id_list):
     """
     create_app_context()
     android_apps_done_list = []
+    deleted_count = 0
     for android_app_id in android_app_id_list:
         if len(android_apps_done_list) > 0:
-            logging.info(f"android_apps_done_list: {android_apps_done_list[0]}")
+            logging.info(f"android_apps_done_list lenght: {len(android_apps_done_list)}")
         if android_app_id not in android_apps_done_list:
-            logging.info(f"Searching {android_app_id}")
             android_app = AndroidApp.objects.get(pk=android_app_id)
+            logging.info(f"Searching {android_app.filename} - {android_app_id}")
             try:
                 existing_app_list = AndroidApp.objects(md5=android_app.md5)
                 logging.info(f"existing_app_list length: {existing_app_list}")
@@ -217,7 +218,8 @@ def cleanup_app_duplicates(android_app_id_list):
                     try:
                         if os.path.exists(twin_app.absolute_store_path):
                             #os.remove(twin_app.absolute_store_path)
-                            logging.info(f"Delete {twin_app.absolute_store_path}")
+                            deleted_count += 1
+                            logging.info(f"Delete {twin_app.absolute_store_path} - Count: {deleted_count}")
                         else:
                             raise FileNotFoundError(f"File does not exist {twin_app.absolute_store_path}")
                     except FileNotFoundError as err:
