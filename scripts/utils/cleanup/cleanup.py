@@ -205,6 +205,7 @@ def cleanup_app_duplicates(android_app_id_list):
     create_app_context()
     android_apps_done_list = []
     deleted_count = 0
+    logging.info(f"Apps to check {len(android_app_id_list)}")
     for android_app_id in android_app_id_list:
         if len(android_apps_done_list) > 0:
             logging.info(f"android_apps_done_list lenght: {len(android_apps_done_list)}")
