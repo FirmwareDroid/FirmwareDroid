@@ -211,7 +211,8 @@ def cleanup_app_duplicates(android_app_id_list):
             logging.info(f"Searching {android_app_id} not in {len(android_apps_done_list)}")
             android_app = AndroidApp.objects.get(pk=android_app_id)
             try:
-                existing_app_list = AndroidApp.objects.get(md5=android_app.md5)
+                existing_app_list = AndroidApp.objects(md5=android_app.md5)
+                logging.info(f"existing_app_list length: {existing_app_list}")
                 for twin_app in existing_app_list:
                     try:
                         if os.path.exists(twin_app.absolute_store_path):
