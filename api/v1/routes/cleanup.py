@@ -117,8 +117,7 @@ class CleanupAndroidApps(Resource):
         """
         app = flask.current_app
         android_app_id_list = check_app_mode(1, request)
-        enqueue_jobs(app.rq_task_queue_high,
-                     cleanup_app_duplicates,
+        app.rq_task_queue_high.enqueue(cleanup_app_duplicates,
                      android_app_id_list,
                      job_timeout=60 * 60 * 24 * 7)
         return "", 200
