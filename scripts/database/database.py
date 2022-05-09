@@ -2,26 +2,29 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
+import uuid
 import mongoengine
 from flask_mongoengine import MongoEngine
 from mongoengine import connection
 
 
 def init_db(app):
-    register_default_connection(app)
+    #register_default_connection(app)
+    alias = uuid.uuid4()
+    open_db_con(app, alias)
     mongo_db = MongoEngine(app)
     return mongo_db
 
 
-def open_db_con(alias):
+def open_db_con(app, alias):
     """
     Opens a new mongoEngine db connection with the given alias.
 
+    :param app: flask app to use the environment config from.
     :param alias: a unique connection string not default.
     :return: (str) the connection alias
 
     """
-    from app import app
     db_name, host, port, username, password, authentication_source = get_connection_options(app)
     mongoengine.connect(db=db_name,
                         alias=alias,
@@ -51,11 +54,11 @@ def multiprocess_disconnect_all(app):
     """
     if not app:
         from app import app
-    #mongoengine.disconnect_all()
-    #connection._connections = {}
-    #connection._connection_settings = {}
-    #connection._dbs = {}
-    #register_default_connection(app)
+    mongoengine.disconnect_all()
+    connection._connections = {}
+    connection._connection_settings = {}
+    connection._dbs = {}
+    register_default_connection(app)
 
 
 def register_default_connection(app):
