@@ -203,18 +203,17 @@ def cleanup_app_duplicates(android_app_id_list):
     :param android_app_id_list:
     """
     create_app_context()
-    android_apps_done_list = []
+    android_apps_done_list = set()
     deleted_count = 0
-    logging.info(f"Apps to check {len(android_app_id_list)}")
+    logging.info(f"Number of apps to check {len(android_app_id_list)}")
     for android_app_id in android_app_id_list:
         if len(android_apps_done_list) > 0:
-            logging.info(f"android_apps_done_list lenght: {len(android_apps_done_list)}")
+            logging.info(f"Apps done: {len(android_apps_done_list)}")
         if android_app_id not in android_apps_done_list:
             android_app = AndroidApp.objects.get(pk=android_app_id)
             logging.info(f"Searching {android_app.filename} - {android_app_id}")
             try:
                 existing_app_list = AndroidApp.objects(md5=android_app.md5)
-                logging.info(f"existing_app_list length: {existing_app_list}")
                 for twin_app in existing_app_list:
                     try:
                         if os.path.exists(twin_app.absolute_store_path):
@@ -231,9 +230,9 @@ def cleanup_app_duplicates(android_app_id_list):
                         twin_app.app_twins_reference_list.append(android_app.pk)
                     if twin_app.pk not in android_app.app_twins_reference_list:
                         android_app.app_twins_reference_list.append(twin_app.pk)
-                    android_apps_done_list.append(twin_app.pk)
                     #twin_app.save()
-                android_apps_done_list.append(android_app.pk)
+                    android_apps_done_list.add(twin_app.pk)
+                android_apps_done_list.add(android_app.pk)
                 #android_app.save()
             except DoesNotExist as war:
                 logging.info(war)
