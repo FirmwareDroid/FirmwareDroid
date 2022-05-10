@@ -236,3 +236,5 @@ def cleanup_app_duplicates(android_app_id_list):
                 #android_app.save()
             except DoesNotExist as war:
                 logging.info(war)
+        else:
+            logging.info(f"Skipped {android_app_id}")
