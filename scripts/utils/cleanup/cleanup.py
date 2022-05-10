@@ -231,8 +231,9 @@ def cleanup_app_duplicates(android_app_id_list):
                     if twin_app.pk not in android_app.app_twins_reference_list:
                         android_app.app_twins_reference_list.append(twin_app.pk)
                     #twin_app.save()
+                    logging.info(f"Twin-App PK: {twin_app.pk}")
                     android_apps_done_list.add(twin_app.pk)
-                android_apps_done_list.add(android_app.pk)
+                android_apps_done_list.add(android_app_id)
                 #android_app.save()
             except DoesNotExist as war:
                 logging.info(war)
