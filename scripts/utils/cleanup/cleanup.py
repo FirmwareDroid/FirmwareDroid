@@ -210,9 +210,9 @@ def cleanup_app_duplicates(android_app_id_list):
         logging.info(f"Apps done: {len(android_apps_done_list)}")
         android_app = AndroidApp.objects.get(pk=android_app_id)
         logging.info(f"Searching {android_app.filename} - {android_app_id}")
-        if android_app.md5 not in android_apps_done_list:
+        if android_app.sha256 not in android_apps_done_list:
             try:
-                existing_app_list = AndroidApp.objects(md5=android_app.md5)
+                existing_app_list = AndroidApp.objects(sha256=android_app.sha256)
                 for twin_app in existing_app_list:
                     try:
                         if os.path.exists(twin_app.absolute_store_path):
@@ -231,7 +231,7 @@ def cleanup_app_duplicates(android_app_id_list):
                         android_app.app_twins_reference_list.append(twin_app.pk)
                     twin_app.save()
                     #logging.info(f"Twin-App PK: {twin_app.pk}")
-                android_apps_done_list.add(str(android_app.md5))
+                android_apps_done_list.add(str(android_app.sha256))
                 android_app.save()
             except DoesNotExist as war:
                 logging.info(war)
