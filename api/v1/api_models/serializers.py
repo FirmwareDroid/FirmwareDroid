@@ -20,10 +20,10 @@ object_id_list = Model('object_id_list', {
 })
 
 integer_list = Model('integer_list', {
-    'object_id_list': fields.List(fields.Integer(required=True),
-                                  required=True,
-                                  description='A list of integers',
-                                  example=[1, 2])
+    'integer_list': fields.List(fields.Integer(required=True),
+                                required=True,
+                                description='A list of integers',
+                                example=[1, 2])
 })
 
 fuzzy_hash_compare_model = Model('fuzzy_hash_compare_model', {
