@@ -74,6 +74,7 @@ def parse_integer_list(request):
     integer_list = set()
     if request_has_json(request):
         json_data = request.get_json()
+        logging.info(json_data)
         for integer in json_data["integer_list"]:
             if not isinstance(integer, int):
                 raise TypeError("The provided value is not an integer.")
