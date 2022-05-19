@@ -8,10 +8,10 @@ import flask
 import logging
 import os
 import shutil
-from scripts.firmware.image_importer import create_abs_image_file_path, find_image_firmware_file, extract_image_files
-from scripts.hashing.fuzzy_hash_creator import fuzzy_hash_firmware_files
 from model import AndroidFirmware, FirmwareFile, AndroidApp
 from threading import Thread
+from scripts.firmware.image_importer import create_abs_image_file_path, find_image_firmware_file, extract_image_files
+from scripts.hashing.fuzzy_hash_creator import fuzzy_hash_firmware_files
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.firmware.firmware_file_indexer import create_firmware_file_list, add_firmware_file_references
 from scripts.firmware.const_regex_patterns import BUILD_PROP_PATTERN_LIST, EXT_IMAGE_PATTERNS_DICT

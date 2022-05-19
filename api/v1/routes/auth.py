@@ -36,7 +36,6 @@ class Signup(Resource):
         user = None
         try:
             body = request.get_json()
-            logging.info(body)
             UserAccountSchema().load(data=body)
             user = UserAccount(**body)
             user.role_list = ['user']
@@ -76,15 +75,18 @@ class Signup(Resource):
         try:
             app = flask.current_app
             email = validate_token(token, app.config["MAIL_SECRET_KEY"], app.config["MAIL_SALT"])
+            logging.info(f"Validate token {email}")
             if email:
                 user_account = UserAccount.objects.get(email=email)
                 if user_account.registration_status == RegistrationStatus.WAIT:
-                    logging.info("Valid Token")
+                    logging.debug("Valid Token")
                     user_account.registration_status = RegistrationStatus.VERIFIED
                     user_account.save()
                     response = redirect(f"https://{app.config['DOMAIN_NAME']}/login", code=302)
                     access_token = create_jwt_access_token(user_account)
                     set_access_cookies(response, access_token)
+                else:
+                    logging.warning("Invalid Token entered for signup token")
         except RuntimeError as err:
             logging.error(err)
             traceback.print_exc()
