@@ -21,7 +21,7 @@ from scripts.firmware.firmware_version_detect import detect_by_build_prop
 from scripts.firmware.firmware_os_detect import set_firmware_by_filenames
 from scripts.hashing import md5_from_file
 from scripts.utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
-from api.v1.api_models.serializers import object_id_list, string_list
+from api.v1.api_models.serializers import object_id_list, string_list, integer_list
 from api.v1.parser.json_parser import parse_json_object_id_list, parse_string_list
 from model.AndroidFirmware import AndroidFirmwareSchema
 from scripts.database.delete_document import clear_firmware_database
@@ -31,6 +31,7 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 
 ns = Namespace('firmware', description='Operations related to Android firmware.')
+ns.add_model("integer_list", integer_list)
 ns.add_model("object_id_list", object_id_list)
 ns.add_model("string_list", string_list)
 parser = ns.parser()
