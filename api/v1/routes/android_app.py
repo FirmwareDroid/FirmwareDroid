@@ -53,7 +53,7 @@ class GetCount(Resource):
 @ns.route('/download/<string:android_app_id>')
 class DownloadApp(Resource):
     @ns.doc('get')
-    @admin_jwt_required
+    @user_jwt_required
     def get(self, android_app_id):
         """
         Download the app with the given id.
