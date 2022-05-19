@@ -6,10 +6,10 @@ import logging
 from flask import request, send_file, jsonify
 from flask_restx import Resource, Namespace
 from mongoengine import DoesNotExist
-from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
-from api.v1.parser.json_parser import parse_json_object_id_list
+from api.v1.decorators.jwt_auth_decorator import admin_jwt_required, user_jwt_required
+from api.v1.parser.json_parser import parse_json_object_id_list, parse_integer_list
 from model.AndroidApp import AndroidAppSchema, AndroidApp
-from api.v1.api_models.serializers import object_id_list
+from api.v1.api_models.serializers import object_id_list, integer_list
 
 ns = Namespace('android_app', description='Operations related to Android app files.')
 
@@ -110,3 +110,30 @@ class GetAppPage(Resource):
         except Exception as err:
             logging.error(err)
         return response
+
+
+@ns.route('/by_index/')
+@ns.expect(integer_list)
+class GetAppByIndex(Resource):
+    @ns.doc('post')
+    @user_jwt_required
+    def post(self):
+        """
+        Get Android meta data by using an integer index value. This API Endpoint is for testing purposes only.
+
+        :return: json - list of AndroidApp meta data in json format.
+        """
+        response = "Bad Request", 400
+        index_list = parse_integer_list(request)
+        if len(index_list) > 0:
+            android_app_list = []
+            for index in index_list:
+                android_app = AndroidApp.objects[index]
+                android_app_list.append(android_app)
+            response = AndroidAppSchema(many=True).dump(android_app_list)
+        return response
+
+
+
+
+

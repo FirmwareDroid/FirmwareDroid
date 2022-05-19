@@ -15,9 +15,11 @@ def parse_json_object_id_list(request, document_class):
     """
     id_list = set()
     # TODO security improvement - sanitize inputs
-    if request.is_json:
+    if request_has_json(request):
         json_data = request.get_json()
         for object_id in json_data["object_id_list"]:
+            if not isinstance(str, object_id):
+                raise TypeError("The provided value is not a string.")
             try:
                 document_class.objects.get(pk=object_id)
                 id_list.add(object_id)
@@ -37,8 +39,10 @@ def parse_virustotal_api_key(request):
     :return: str - api key
     """
     # TODO security improvement - sanitize inputs
-    if request.is_json:
+    if request_has_json(request):
         json_data = request.get_json()
+        if not isinstance(str, json_data["api_key"]):
+            raise TypeError("The provided value is not a string.")
         return json_data["api_key"]
     else:
         raise ValueError("Expected JSON")
@@ -52,8 +56,42 @@ def parse_string_list(request):
     """
     # TODO security improvement - sanitize inputs
     string_list = []
-    if request.is_json:
+    if request_has_json(request):
         json_data = request.get_json()
         for filename in json_data["string_list"]:
+            if not isinstance(str, filename):
+                raise TypeError("The provided value is not a string.")
             string_list.append(filename)
     return string_list
+
+
+def parse_integer_list(request):
+    """
+    Parses the integer_list model.
+    :param request: Flask request
+    :return: set(int) - in case of parsing error an empty list will be returned
+    """
+    integer_list = set()
+    if request_has_json(request):
+        json_data = request.get_json()
+        for integer in json_data["integer_list"]:
+            if not isinstance(integer, int):
+                raise TypeError("The provided value is not an integer.")
+            integer_list.add(integer)
+    return integer_list
+
+
+def request_has_json(request):
+    """
+    Checks if a flask request has a json body.
+    :param request: Flask request
+    :return: bool - true if it json.
+    """
+    return request.is_json
+
+
+
+
+
+
+

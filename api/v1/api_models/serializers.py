@@ -19,6 +19,13 @@ object_id_list = Model('object_id_list', {
                                   example=["5eeddfe82ea100614bd8327b", "5eeddff52ea100614bd8327c"])
 })
 
+integer_list = Model('integer_list', {
+    'object_id_list': fields.List(fields.Integer(required=True),
+                                  required=True,
+                                  description='A list of integers',
+                                  example=[1, 2])
+})
+
 fuzzy_hash_compare_model = Model('fuzzy_hash_compare_model', {
     'hash_a': fields.String(required=True, description='Fuzzy Hash',
                             example="25165824:FlZB/ydRAx7V49SzGlnap0sXeiqzhStZ7CSBTgIEbEriDwwuc://yTSS20sXreStkS5gvYrPwuc"),

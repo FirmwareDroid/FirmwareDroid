@@ -85,8 +85,8 @@ class Signup(Resource):
                     response = redirect(f"https://{app.config['DOMAIN_NAME']}/login", code=302)
                     access_token = create_jwt_access_token(user_account)
                     set_access_cookies(response, access_token)
-                else:
-                    logging.warning("Invalid Token entered for signup token")
+            else:
+                raise ValueError("Invalid Token")
         except RuntimeError as err:
             logging.error(err)
             traceback.print_exc()
