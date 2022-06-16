@@ -6,10 +6,9 @@ import os
 import shutil
 import tempfile
 import flask
+from pathlib import Path
 from mongoengine import DoesNotExist
-
 from scripts.firmware.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
-from scripts.firmware.android_app_import import copy_apk_file
 from model import AndroidApp, AndroidFirmware, FirmwareFile
 from api.v1.common.rq_job_creator import enqueue_jobs
 from scripts.firmware.firmware_importer import open_firmware, get_partition_firmware_files
@@ -211,6 +210,14 @@ def restore_apk_files():
     create_app_context()
     firmware_list = AndroidFirmware.objects()
     for firmware in firmware_list:
+        path = Path(firmware.absolute_store_path)
+        if os.path.exists(firmware.absolute_store_path) and not path.is_file():
+            old_file_path = firmware.absolute_store_path + "/" + firmware.original_filename
+            firmware.absolute_store_path = firmware.absolute_store_path + "/" + firmware.filename
+            firmware.relative_store_path = firmware.relative_store_path + "/" + firmware.filename
+            firmware.save()
+            os.rename(old_file_path, firmware.absolute_store_path)
+
         logging.info(f"Firmware: {firmware.absolute_store_path}")
         temp_extract_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
                                                        suffix="_extract")
