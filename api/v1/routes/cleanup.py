@@ -7,10 +7,9 @@ from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.request_util import check_app_mode
 from scripts.utils.cleanup.cleanup import cleanup_android_app_references, cleanup_firmware_app_references, \
     cleanup_der_certificates, enqueue_firmware_file_cleanup, cleanup_androguard_certificate_references, \
-    cleanup_app_duplicates
+    restore_apk_files
 import flask
 from flask_restx import Resource, Namespace
-
 
 ns = Namespace('cleanup', description='Operations related to cleanup the database.')
 
@@ -104,31 +103,18 @@ class CleanupReferencesCerts(Resource):
         return "", 200
 
 
-@ns.route('/android_app/remove_duplicates')
+@ns.route('/android_app/restore_apps/')
 class CleanupAndroidApps(Resource):
     @ns.doc('post')
     @admin_jwt_required
     def post(self):
         """
-        Removes all duplicated apk files from the host system and changes the file references.
+        Verifies that all APK files in the store exist and attempts to restore in case of a missing apk file.
 
         :return: 200
 
         """
         app = flask.current_app
-        android_app_id_list = check_app_mode(1, request)
-        app.rq_task_queue_high.enqueue(cleanup_app_duplicates,
-                     android_app_id_list,
-                     job_timeout=60 * 60 * 24 * 7)
+        app.rq_task_queue_high.enqueue(restore_apk_files,
+                                       job_timeout=60 * 60 * 24 * 7)
         return "", 200
-
-
-
-
-
-
-
-
-
-
-

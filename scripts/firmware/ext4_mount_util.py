@@ -10,7 +10,7 @@ import time
 import traceback
 import flask
 from scripts.firmware.image_repair import attempt_repair, attempt_repair_and_resize
-
+import re
 
 def mount_android_image(android_ext4_path, mount_folder_path):
     """
@@ -86,7 +86,10 @@ def attempt_ext4_mount(source, target, mount_options):
     logging.info(f"Attempt ext4 mount {source}")
     is_mounted = False
     try:
-        exec_mount(source, target, mount_options)
+        try:
+            exec_mount(source, target, mount_options)
+        except OSError:
+            exec_mount_by_offset(source, target, mount_options)
         is_mounted = True
     except Exception as err:
         logging.info(err)
@@ -138,7 +141,10 @@ def attempt_simg2img_mount(source, target, mount_options):
             try:
                 exec_fuse_mount(ext4_raw_image_path, target, mount_options)
             except OSError:
-                exec_mount(ext4_raw_image_path, target, mount_options)
+                try:
+                    exec_mount(ext4_raw_image_path, target, mount_options)
+                except OSError:
+                    exec_mount_by_offset(ext4_raw_image_path, target, mount_options)
             is_mounted = True
     except Exception as err:
         logging.info(err)
@@ -226,6 +232,38 @@ def exec_mount(source, target, mount_options):
     :param target: the destination path where the file will be mounted to.
 
     """
+    try:
+        source_path = shlex.quote(str(source))
+        target_path = shlex.quote(str(target))
+        response = subprocess.run(["mount", "-o", mount_options, source_path, target_path], timeout=600)
+        response.check_returncode()
+    except subprocess.CalledProcessError as err:
+        raise OSError(err)
+
+
+def exec_mount_by_offset(source, target, mount_options):
+    """
+     Executes mount command on the host with the given source to the target (read-only). Attempts to find the offset
+     of the ext4 image before mounting.
+
+    :param mount_options: str - mount options flags.
+    :param source: the file-path to be mounted.
+    :param target: the destination path where the file will be mounted to.
+
+    """
+    logging.info("Attempt to mount by offset")
+    offset = 0
+    try:
+        with open(source, 'rb') as image_file:
+            file_bytes = image_file.read()
+        offset = file_bytes.find(b'\x53\xEF')
+        mount_offset_option = f"offset=0x{offset}"
+        mount_offset_option = shlex.quote(str(mount_offset_option))
+        mount_options += mount_offset_option
+    except subprocess.CalledProcessError as err:
+        raise OSError(err)
+
+    logging.info(f"Found image offset: {offset}")
     try:
         source_path = shlex.quote(str(source))
         target_path = shlex.quote(str(target))

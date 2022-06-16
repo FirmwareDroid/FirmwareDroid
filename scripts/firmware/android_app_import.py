@@ -46,8 +46,8 @@ def copy_apk_file(android_app, destination_folder, firmware_mount_path):
     Copies apps to the filesystem and saves the Android app in the database.
 
     :param android_app: class:'AndroidApp'
-    :param destination_folder: The root-folder the apps will be copied to.
-    :param firmware_mount_path: The source path in which the firmware is mounted.
+    :param destination_folder: str - The root-folder the apps will be copied to.
+    :param firmware_mount_path: str - the source path in which the firmware is mounted.
 
     """
     apk_source_path = os.path.join(firmware_mount_path,

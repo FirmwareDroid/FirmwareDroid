@@ -28,5 +28,5 @@ RUN --mount=type=cache,target=/var/www/tmp/firmware/.cache \
 # RUN pip install git+https://github.com/hexedit/ext4extract.git
 
 
-# TODO security important! Find a way to mount without root user
+# TODO security important! Set correct permissions to mount without root user
 #USER $USER_ID:$GROUP_ID

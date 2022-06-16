@@ -20,6 +20,7 @@ def convert_dat2img(dat_file_path, destination_path):
 
     :param dat_file_path: str - path to the .dat file
     :param destination_path: str - path where the .img file will be stored
+
     :return: str - path to the converted .img file.
 
     """
@@ -28,17 +29,19 @@ def convert_dat2img(dat_file_path, destination_path):
 
     path = Path(dat_file_path)
     filename = os.path.basename(dat_file_path)
-    search_folder_path = path.parent.absolute()
-    transfer_file_path, patch_file_path = search_transfer_list(search_folder_path, filename)
-    if transfer_file_path is not None:
-        out_filename = filename.replace(".new.dat", ".img")
-        img_file_path = os.path.join(destination_path, out_filename)
-        start_dat_conversion(dat_file_path, transfer_file_path, img_file_path)
-        logging.info(f"Converted dat: {dat_file_path} to img: {img_file_path}")
-        patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file_path)
+    if "patch" not in filename and not filename.startswith("._"):
+        search_folder_path = path.parent.absolute()
+        transfer_file_path, patch_file_path = search_transfer_list(search_folder_path, filename)
+        if transfer_file_path is not None:
+            out_filename = filename.replace(".dat", "dat.conv.img")
+            img_file_path = os.path.join(destination_path, out_filename)
+            start_dat_conversion(dat_file_path, transfer_file_path, img_file_path)
+            logging.info(f"Converted dat: {dat_file_path} to img: {img_file_path}")
+            patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file_path)
+        else:
+            raise AssertionError("Could not find system.file.list")
     else:
-        raise AssertionError("Could not find system.file.list")
-
+        raise AssertionError("Skip and continue. Ignore specific dat file.")
     return img_file_path
 
 
@@ -97,7 +100,7 @@ def patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file
                                    img_file_path,
                                    transfer_file_path,
                                    dat_file_path,
-                                   patch_file_path], timeout=600)
+                                   patch_file_path], timeout=900)
         response.check_returncode()
         logging.info(f"BlockImageUpdate Patch successful: {img_file_path}")
     except subprocess.CalledProcessError as err:

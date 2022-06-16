@@ -102,9 +102,10 @@ def set_logging_config(app_instance):
     """
     app_instance.logger.setLevel(logging.INFO)
     logging.basicConfig(
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        level=logging.INFO,
-        datefmt='%Y-%m-%d %H:%M:%S')
+        format='%(asctime)s.%(msecs)03d %(levelname)s %(module)s - %(funcName)s: %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S',
+        level=logging.INFO
+    )
 
 
 def setup_redis_and_rq(app_instance):
@@ -247,7 +248,7 @@ def setup_folders(app_instance):
     """Creates basic folder structure of the app instance"""
     for path in app_instance.config["ALL_FOLDERS"]:
         try:
-            # TODO Fix a permission bug here
+            # TODO Fix bug here - concurrent event. Needs a semaphore
             if not os.path.exists(path):
                 os.makedirs(path)
         except OSError as exception:

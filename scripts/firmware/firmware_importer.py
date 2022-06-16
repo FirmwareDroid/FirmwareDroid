@@ -91,6 +91,67 @@ def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes):
         firmware_file_queue.task_done()
 
 
+def open_firmware(firmware_archive_file_path, temp_extract_dir):
+    """
+    Extracts a firmware to the given folder.
+
+    :param firmware_archive_file_path: str - path to the firmware to extract.
+    :param temp_extract_dir: str - destination folder to extract the firmware to.
+
+    :return: list(class:FirmwareFile)
+
+    """
+    extract_all_nested(firmware_archive_file_path, temp_extract_dir.name, False)
+    archive_firmware_file_list = get_firmware_archive_content(temp_extract_dir.name)
+    return archive_firmware_file_list
+
+
+def get_partition_firmware_files(archive_firmware_file_list,
+                                 temp_extract_dir,
+                                 partition_name,
+                                 file_pattern_list,
+                                 partition_temp_dir):
+    """
+    Creates a list of firmware files from known file partitions.
+
+    :param partition_temp_dir:
+    :param partition_name:
+    :param file_pattern_list:
+    :param archive_firmware_file_list: list(class:FirmwareFile) - list of firmware archive firmware files.
+    :param temp_extract_dir: tempfile.TemporaryDirectory - directory where the firmware archive was extracted to.
+
+    :return: list(class:FirmwareFile) - list of found partition firmware files.
+    """
+    firmware_file_list = []
+    partition_firmware_file_list = create_partition_index(partition_name,
+                                                          file_pattern_list,
+                                                          archive_firmware_file_list,
+                                                          temp_extract_dir,
+                                                          partition_temp_dir)
+    firmware_file_list.extend(partition_firmware_file_list)
+    return firmware_file_list
+
+
+def create_partition_index(partition_name, file_pattern_list, archive_firmware_file_list,
+                           temp_extract_dir, partition_temp_dir):
+    """
+
+    :param partition_name:
+    :param file_pattern_list:
+    :param archive_firmware_file_list:
+    :param temp_extract_dir:
+    :param partition_temp_dir:
+
+    :return:
+    """
+    partition_firmware_file_list = create_partition_firmware_files(archive_firmware_file_list,
+                                                                   temp_extract_dir.name,
+                                                                   file_pattern_list,
+                                                                   partition_name,
+                                                                   partition_temp_dir.name)
+    return partition_firmware_file_list
+
+
 def import_firmware(original_filename, md5, firmware_archive_file_path, create_fuzzy_hashes):
     """
     Attempts to store a firmware archive into the database.
@@ -103,51 +164,53 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
     temp_extract_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
                                                    suffix="_extract")
     firmware_app_list = []
-    firmware_file_list = []
     build_prop_file_list = []
+    firmware_file_list = []
     try:
         sha1 = sha1_from_file(firmware_archive_file_path)
         sha256 = sha256_from_file(firmware_archive_file_path)
         file_size = os.path.getsize(firmware_archive_file_path)
-        extract_all_nested(firmware_archive_file_path, temp_extract_dir.name, False)
-        archive_firmware_file_list = get_firmware_archive_content(temp_extract_dir.name)
+        archive_firmware_file_list = open_firmware(firmware_archive_file_path, temp_extract_dir)
         firmware_file_list.extend(archive_firmware_file_list)
         for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
-            logging.info(f"Scan partition {partition_name} for apps and other files.")
-            temp_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
-                                                   suffix=f"_mount_{partition_name}")
-            partition_firmware_file_list = get_partition_firmware_files(archive_firmware_file_list,
-                                                                        temp_extract_dir.name,
-                                                                        file_pattern_list,
-                                                                        partition_name,
-                                                                        temp_dir.name)
+            partition_temp_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
+                                                             suffix=f"_mount_{partition_name}")
+            partition_firmware_file_list = create_partition_index(partition_name,
+                                                                  file_pattern_list,
+                                                                  archive_firmware_file_list,
+                                                                  temp_extract_dir,
+                                                                  partition_temp_dir)
             firmware_file_list.extend(partition_firmware_file_list)
             firmware_app_store = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_APP_EXTRACT"],
                                               md5,
                                               partition_name)
             try:
-                firmware_app_list.extend(store_android_apps(temp_dir.name, firmware_app_store, firmware_file_list))
+                firmware_app_list.extend(store_android_apps(partition_temp_dir.name, firmware_app_store,
+                                                            firmware_file_list))
             except ValueError:
                 pass
-            build_prop_file_list.extend(extract_build_prop(partition_firmware_file_list, temp_dir.name))
+            build_prop_file_list.extend(extract_build_prop(partition_firmware_file_list, partition_temp_dir.name))
             if create_fuzzy_hashes:
-                fuzzy_hash_firmware_files(partition_firmware_file_list, temp_dir.name)
+                fuzzy_hash_firmware_files(partition_firmware_file_list, partition_temp_dir.name)
             try:
-                temp_dir.cleanup()
+                partition_temp_dir.cleanup()
             except OSError as err:
                 logging.warning(f"Cleanup: could not remove cache folder: {err}")
 
         version_detected = detect_by_build_prop(build_prop_file_list)
         filename, file_extension = os.path.splitext(firmware_archive_file_path)
+        if file_extension != ".zip" or file_extension != ".tar":
+            file_extension = ".zip"
         store_filename = md5 + file_extension
         firmware_archive_store_path = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_STORE"],
                                                    version_detected,
                                                    md5)
         create_directories(firmware_archive_store_path)
-        shutil.move(firmware_archive_file_path, firmware_archive_store_path)
+        rename_path = os.path.join(firmware_archive_store_path, store_filename)
+        shutil.move(firmware_archive_file_path, rename_path)
         store_firmware_object(store_filename=store_filename,
                               original_filename=original_filename,
-                              firmware_store_path=firmware_archive_store_path,
+                              firmware_store_path=rename_path,
                               md5=md5,
                               sha256=sha256,
                               sha1=sha1,
@@ -186,7 +249,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
 
 def get_firmware_archive_content(cache_temp_file_dir_path):
     """
-    Creates an index of the files within the firmware and attempts to find the system.img
+    Creates an index of the files within the firmware.
 
     :param cache_temp_file_dir_path: str - dir path in which the extracted files are.
     :return: list class:'FirmwareFile'
@@ -198,11 +261,11 @@ def get_firmware_archive_content(cache_temp_file_dir_path):
     return firmware_files
 
 
-def get_partition_firmware_files(archive_firmware_file_list,
-                                 extracted_archive_dir_path,
-                                 file_pattern_list,
-                                 partition_name,
-                                 temp_dir_path):
+def create_partition_firmware_files(archive_firmware_file_list,
+                                    extracted_archive_dir_path,
+                                    file_pattern_list,
+                                    partition_name,
+                                    temp_dir_path):
     """
     Index all ext files of the given firmware. Creates a list of class:'FirmwareFile' from an Android all
     accessible partitions.

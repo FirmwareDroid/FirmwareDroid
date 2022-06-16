@@ -3,11 +3,16 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 import os
-
+import shutil
+import tempfile
 import flask
 from mongoengine import DoesNotExist
-from api.v1.common.rq_job_creator import enqueue_jobs
+
+from scripts.firmware.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
+from scripts.firmware.android_app_import import copy_apk_file
 from model import AndroidApp, AndroidFirmware, FirmwareFile
+from api.v1.common.rq_job_creator import enqueue_jobs
+from scripts.firmware.firmware_importer import open_firmware, get_partition_firmware_files
 from scripts.rq_tasks.flask_context_creator import create_app_context
 
 ANDROID_APP_REFERENCES = ["androguard_report_reference",
@@ -196,44 +201,49 @@ def cleanup_androguard_certificate_references(android_app_id_list):
                 certificate.save()
 
 
-def cleanup_app_duplicates(android_app_id_list):
+def restore_apk_files():
     """
-    Removes apps from the host system that are already in the database. Save a lot of space on disk.
+    Restores all missing apk files from the store.
 
-    :param android_app_id_list:
+    :return:
+
     """
     create_app_context()
-    android_apps_done_list = set()
-    deleted_count = 0
-    logging.info(f"Number of apps to check {len(android_app_id_list)}")
-    for android_app_id in android_app_id_list:
-        logging.info(f"Apps done: {len(android_apps_done_list)}")
-        android_app = AndroidApp.objects.get(pk=android_app_id)
-        logging.info(f"Searching {android_app.filename} - {android_app_id}")
-        if android_app.sha256 not in android_apps_done_list:
-            try:
-                existing_app_list = AndroidApp.objects(sha256=android_app.sha256)
-                for twin_app in existing_app_list:
-                    try:
-                        if os.path.exists(twin_app.absolute_store_path):
-                            os.remove(twin_app.absolute_store_path)
-                            deleted_count += 1
-                            logging.info(f"Delete {twin_app.absolute_store_path} - Count: {deleted_count}")
-                        else:
-                            raise FileNotFoundError(f"File does not exist {twin_app.absolute_store_path}")
-                    except FileNotFoundError as err:
-                        logging.error(err)
-                    twin_app.absolute_store_path = android_app.absolute_store_path
-                    twin_app.relative_store_path = android_app.relative_store_path
-                    if android_app.pk not in twin_app.app_twins_reference_list:
-                        twin_app.app_twins_reference_list.append(android_app.pk)
-                    if twin_app.pk not in android_app.app_twins_reference_list:
-                        android_app.app_twins_reference_list.append(twin_app.pk)
-                    twin_app.save()
-                    #logging.info(f"Twin-App PK: {twin_app.pk}")
-                android_apps_done_list.add(str(android_app.sha256))
-                android_app.save()
-            except DoesNotExist as war:
-                logging.info(war)
-        else:
-            logging.info(f"Skipped {android_app_id}")
+    firmware_list = AndroidFirmware.objects()
+    for firmware in firmware_list:
+        logging.info(f"Firmware: {firmware.absolute_store_path}")
+        temp_extract_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
+                                                       suffix="_extract")
+        try:
+            firmware_file_list = open_firmware(firmware.absolute_store_path, temp_extract_dir)
+            for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
+                partition_temp_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
+                                                                 suffix=f"_mount_{partition_name}")
+                partition_file_list = get_partition_firmware_files(firmware_file_list,
+                                                                   temp_extract_dir,
+                                                                   partition_name,
+                                                                   file_pattern_list,
+                                                                   partition_temp_dir)
+                logging.info(f"Found Partition Firmware Files: {len(partition_file_list)}")
+                for firmware_file in partition_file_list:
+                    if ".apk" in firmware_file.name:
+                        android_app_list = AndroidApp.objects(md5=firmware_file.md5)
+                        for android_app in android_app_list:
+                            try:
+                                apk_file_path = firmware_file.absolute_store_path
+                                logging.info(f"Attempt to restore apk file {apk_file_path}")
+                                apk_source_path = os.path.join(partition_temp_dir.name,
+                                                               "." + android_app.relative_firmware_path,
+                                                               android_app.filename)
+
+                                logging.info(f"Source:{apk_source_path} "
+                                             f"Destination: {android_app.absolute_store_path}")
+                                shutil.copy(apk_source_path, android_app.absolute_store_path)
+                                logging.info(f"Restored apk_file_path: {apk_file_path}")
+                            except Exception as err:
+                                logging.warning(err)
+        except Exception as err:
+            logging.error(err)
+
+
+
