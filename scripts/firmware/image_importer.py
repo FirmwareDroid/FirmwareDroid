@@ -20,9 +20,9 @@ def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
 
     """
     for firmware_file in firmware_file_list:
-        file_name = firmware_file.name.lower()
+        filename = firmware_file.name.lower()
         for pattern in image_filename_pattern_list:
-            if not firmware_file.isDirectory and re.search(pattern, file_name.lower()):
+            if not firmware_file.isDirectory and re.search(pattern, filename) and not filename.startswith("._"):
                 logging.info("Found image file: " + str(firmware_file.name))
                 return firmware_file
     raise ValueError("Could not find image file!")

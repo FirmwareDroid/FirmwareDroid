@@ -216,6 +216,7 @@ def restore_apk_files():
             firmware.absolute_store_path = firmware.absolute_store_path + "/" + firmware.filename
             firmware.relative_store_path = firmware.relative_store_path + "/" + firmware.filename
             firmware.save()
+            logging.info(f"Rename: {old_file_path} to {firmware.absolute_store_path}")
             os.rename(old_file_path, firmware.absolute_store_path)
 
         logging.info(f"Firmware: {firmware.absolute_store_path}")
