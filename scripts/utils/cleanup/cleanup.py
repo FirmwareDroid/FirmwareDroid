@@ -209,13 +209,13 @@ def restore_apk_files():
     """
     create_app_context()
     firmware_list = AndroidFirmware.objects()
-    firmware_id_list = []
+    firmware_md5_list = []
     for firmware in firmware_list:
-        firmware_id_list.append(firmware.md5)
+        firmware_md5_list.append(firmware.md5)
 
-    for firmware_hash in firmware_id_list:
+    for firmware_hash in firmware_md5_list:
         logging.info(f"Test Firmware md5: {firmware_hash}")
-        firmware = AndroidFirmware.objects(md5=firmware_hash)
+        firmware = AndroidFirmware.objects.get(md5=firmware_hash)
         path = Path(firmware.absolute_store_path)
         if os.path.exists(firmware.absolute_store_path) and not path.is_file():
             old_file_path = firmware.absolute_store_path + "/" + firmware.original_filename
