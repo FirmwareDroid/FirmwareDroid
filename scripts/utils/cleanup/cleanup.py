@@ -5,6 +5,7 @@ import logging
 import os
 import shutil
 import tempfile
+from threading import Thread
 import flask
 from pathlib import Path
 from mongoengine import DoesNotExist
@@ -13,6 +14,7 @@ from model import AndroidApp, AndroidFirmware, FirmwareFile
 from api.v1.common.rq_job_creator import enqueue_jobs
 from scripts.firmware.firmware_importer import open_firmware, get_partition_firmware_files
 from scripts.rq_tasks.flask_context_creator import create_app_context
+from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
 
 ANDROID_APP_REFERENCES = ["androguard_report_reference",
                           "virus_total_report_reference",
@@ -208,12 +210,35 @@ def restore_apk_files():
 
     """
     create_app_context()
+    app = flask.current_app
+    num_threads = int(app.config["MASS_IMPORT_NUMBER_OF_THREADS"])
     firmware_list = AndroidFirmware.objects()
     firmware_md5_list = []
     for firmware in firmware_list:
         firmware_md5_list.append(firmware.md5)
+    firmware_md5_queue = create_multi_threading_queue(firmware_md5_list)
+    worker_list = []
+    for i in range(num_threads):
+        worker = Thread(target=cleanup_firmware_apps, args=(firmware_md5_queue,))
+        worker.setDaemon(True)
+        worker.start()
+        worker_list.append(worker)
+    firmware_md5_queue.join()
 
-    for firmware_hash in firmware_md5_list:
+
+
+def cleanup_firmware_apps(firmware_md5_queue):
+    """
+    Worker thread to restore apk files.
+
+    :param firmware_md5_queue:
+
+    :return:
+    """
+    create_app_context()
+    app = flask.current_app
+    while True:
+        firmware_hash = firmware_md5_queue.get()
         logging.info(f"Test Firmware md5: {firmware_hash}")
         firmware = AndroidFirmware.objects.get(md5=firmware_hash)
         path = Path(firmware.absolute_store_path)
@@ -258,6 +283,7 @@ def restore_apk_files():
                                 logging.warning(err)
         except Exception as err:
             logging.error(err)
+        firmware_md5_queue.task_done()
 
 
 

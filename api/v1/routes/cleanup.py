@@ -116,5 +116,5 @@ class CleanupAndroidApps(Resource):
         """
         app = flask.current_app
         app.rq_task_queue_high.enqueue(restore_apk_files,
-                                       job_timeout=60 * 60 * 24 * 7)
+                                       job_timeout=60 * 60 * 24 * 21)
         return "", 200
