@@ -14,7 +14,7 @@ from model import AndroidApp, AndroidFirmware, FirmwareFile
 from api.v1.common.rq_job_creator import enqueue_jobs
 from scripts.firmware.firmware_importer import open_firmware, get_partition_firmware_files
 from scripts.rq_tasks.flask_context_creator import create_app_context
-from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
+from scripts.utils.mulitprocessing_util.mp_util import create_multi_threading_queue
 
 ANDROID_APP_REFERENCES = ["androguard_report_reference",
                           "virus_total_report_reference",
