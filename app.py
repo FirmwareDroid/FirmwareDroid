@@ -19,7 +19,7 @@ from redis import Redis
 from api.v1.converter.BoolConverter import BoolConverter
 from scripts.auth.jwt_auth import check_if_token_is_revoked
 from model.UserAccount import RegistrationStatus
-from scripts.config.app_settings import get_application_setting
+from scripts.config.app_settings import get_application_setting, set_active_storage_folders
 from scripts.auth.basic_auth import basic_auth
 from config import ApplicationConfig
 from model import UserAccount
@@ -41,7 +41,7 @@ from api.v1.routes.cleanup import ns as cleanup_namespace
 from api.v1.routes.adb import ns as adb_namespace
 from api.v1.routes.frida import ns as frida_namespace
 from api.v1.routes.exodus import ns as exodus_namespace
-from api.v1.routes.client_settings import ns as client_settings_namespace
+from api.v1.routes.server_settings import ns as server_settings_namespace
 from api.v1.routes.quark_engine import ns as quark_engine_namespace
 from api.v1.routes.super_android_analyzer import ns as super_android_analyzer_namespace
 from api.v1.routes.apkleaks import ns as apkleaks_namespace
@@ -85,9 +85,9 @@ def create_app():
     setup_marshmallow(app_instance)
     app_instance.mongo_db = init_db(app_instance)
     setup_application_settings()
+    set_active_storage_folders(app_instance)
     setup_default_users(app_instance)
     setup_cors(app_instance)
-    setup_folders(app_instance)
     setup_redis_and_rq(app_instance)
     api.init_app(app=app_instance)
     clear_cache(app_instance)
@@ -230,7 +230,7 @@ def register_api_namespaces(api):
     api.add_namespace(adb_namespace, path='/v1/adb')
     api.add_namespace(frida_namespace, path='/v1/frida')
     api.add_namespace(exodus_namespace, path='/v1/exodus')
-    api.add_namespace(client_settings_namespace, path='/v1/settings')
+    api.add_namespace(server_settings_namespace, path='/v1/settings')
     api.add_namespace(quark_engine_namespace, path='/v1/quark_engine')
     api.add_namespace(super_android_analyzer_namespace, path='/v1/super_android_analyzer')
     api.add_namespace(apkleaks_namespace, path="/v1/apkleaks")
@@ -242,18 +242,6 @@ def setup_api_converter(app_instance):
     Register route view converters.
     """
     app_instance.url_map.converters['bool'] = BoolConverter
-
-
-def setup_folders(app_instance):
-    """Creates basic folder structure of the app instance"""
-    for path in app_instance.config["ALL_FOLDERS"]:
-        try:
-            # TODO Fix bug here - concurrent event. Needs a semaphore
-            if not os.path.exists(path):
-                os.makedirs(path)
-        except OSError as exception:
-            message = f"Could not create folder: {path} - Exception: {exception}"
-            logging.error(message)
 
 
 def setup_application_settings():

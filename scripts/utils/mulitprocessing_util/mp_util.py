@@ -101,12 +101,9 @@ def start_process_pool(item_list, worker_function, number_of_processes=os.cpu_co
         with get_context("fork").Pool(processes=number_of_processes,
                                       maxtasksperchild=3,
                                       initializer=multiprocess_initializer) as pool:
-            #pool.starmap(worker_function, [(item_id_queue,)])
             pool.starmap_async(worker_function, [(item_id_queue,)])
-            #pool.terminate()
             pool.close()
             pool.join()
-        #item_id_queue.join()
 
 
 def multiprocess_initializer():

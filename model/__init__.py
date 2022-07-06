@@ -37,6 +37,7 @@ from .LzjdHash import LzjdHash
 from .TlshSimiliarityLookup import TlshSimiliarityLookup
 from .TlshEvaluation import TlshEvaluation
 from .ApplicationSetting import ApplicationSetting
+from .StoreSetting import StoreSetting
 from .QuarkEngineReport import QuarkEngineReport
 from .SuperReport import SuperReport
 from .ApkLeaksReport import ApkLeaksReport

@@ -21,22 +21,18 @@ class ApplicationConfig(Config):
     ####################
     # Folder Config
     ####################
-    MAIN_FOLDER = os.environ[Config.ENV+'APP_DATA_FOLDER']
-    FILE_FOLDER = MAIN_FOLDER + "00_file_storage/"
-    FIRMWARE_FOLDER_IMPORT = FILE_FOLDER + "firmware_import/"
-    FIRMWARE_FOLDER_IMPORT_FAILED = FILE_FOLDER + "firmware_import_failed/"
-    FIRMWARE_FOLDER_STORE = FILE_FOLDER + "firmware_store/"
-    FIRMWARE_FOLDER_APP_EXTRACT = FILE_FOLDER + "android_app_store/"
-    FIRMWARE_FOLDER_FILE_EXTRACT = FILE_FOLDER + "firmware_file_store/"
-    FIRMWARE_FOLDER_CACHE = FILE_FOLDER + "cache/"
-    LIBS_FOLDER = FILE_FOLDER + "libs/"
-    ALL_FOLDERS = [FILE_FOLDER,
-                   FIRMWARE_FOLDER_IMPORT,
-                   FIRMWARE_FOLDER_IMPORT_FAILED,
-                   FIRMWARE_FOLDER_STORE,
-                   FIRMWARE_FOLDER_APP_EXTRACT,
-                   FIRMWARE_FOLDER_FILE_EXTRACT,
-                   FIRMWARE_FOLDER_CACHE]
+    MAIN_FOLDER = os.environ[Config.ENV + 'APP_DATA_FOLDER']
+    FILE_STORAGE_FOLDER = ""
+    FIRMWARE_FOLDER_IMPORT = ""
+    FIRMWARE_FOLDER_IMPORT_FAILED = ""
+    FIRMWARE_FOLDER_STORE = ""
+    FIRMWARE_FOLDER_APP_EXTRACT = ""
+    FIRMWARE_FOLDER_FILE_EXTRACT = ""
+    FIRMWARE_FOLDER_CACHE = ""
+    LIBS_FOLDER = ""
+
+
+
     ####################
     # Redis Config
     ####################
