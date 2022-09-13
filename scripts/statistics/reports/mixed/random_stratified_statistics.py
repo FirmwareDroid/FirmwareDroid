@@ -1,10 +1,10 @@
 import logging
-
+import random
 from model import AndroidFirmware
 from scripts.rq_tasks.flask_context_creator import create_app_context
 from scripts.statistics.reports.androguard.androguard_statistics import create_androguard_statistics_report
 from scripts.statistics.reports.super_android_analyzer.super_statistics import create_super_statistics_report
-import random
+from scripts.statistics.reports.exodus.exodus_statistics import create_exodus_statistics_report
 
 
 def create_statistics_stratified(number_of_app_samples, os_vendor, report_name):
@@ -45,5 +45,7 @@ def create_statistics_stratified(number_of_app_samples, os_vendor, report_name):
     logging.info(f"Found {len(selected_android_app_id_list)} unique apps.")
     create_androguard_statistics_report(selected_android_app_id_list, report_name)
     logging.info(f"Created AndroGuardStatisticsReport")
+    create_exodus_statistics_report(selected_android_app_id_list, report_name)
+    logging.info(f"Created ExodusStatisticsReport")
     create_super_statistics_report(selected_android_app_id_list, report_name)
     logging.info(f"Created SuperStatisticsReport")
