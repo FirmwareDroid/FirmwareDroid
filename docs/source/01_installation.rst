@@ -26,7 +26,7 @@ Production environment:
 - `docker-compose <https://docs.docker.com/compose/install/>`_
 
 
-Installation (Linux)
+Building the tool (Linux)
 --------------------
 We recommend the installation on a Debian 10 or a similar Linux distribution.
 

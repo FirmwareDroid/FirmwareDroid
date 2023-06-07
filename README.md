@@ -22,13 +22,19 @@ docker-compose based framework including several third party analysis tools.
   * [SSDeep](https://ssdeep-project.github.io/ssdeep/index.html)
   * [TLSH](https://tlsh.org/)
 
-### Installation & Documentation
+### Usage
 
+Docker hub images coming soon. Please refer to our [documentation](https://firmwardroid.readthedocs.io/en/latest/) 
+to build the code yourself in the meantime.
+
+### Building the code yourself
 See our [online documentation](https://firmwardroid.readthedocs.io/en/latest/):
 * [Installation guide](https://firmwardroid.readthedocs.io/en/latest/01_installation.html)
 * [API](https://firmwardroid.readthedocs.io/en/latest/06_code-documentation.html)
 
-All Sphinx docs can be found within this repository in the [docs](https://github.com/FirmwareDroid/FirmwareDroid/tree/main/docs) folder.
+### Building the docs
+All Sphinx docs can be found within this repository in the 
+[docs](https://github.com/FirmwareDroid/FirmwareDroid/tree/main/docs) folder.
 The docs can be build with Sphinx:
 ```
 pip install -r requirements.txt
@@ -48,27 +54,6 @@ If you use FirmwareDroid for you own research please cite our work.
 Bibtext citation comming soon
 ```
 
-### Copyright and Third Party Software Distributed with FirmwareDroid:
-FirmwareDroid is licenced under the GNU General Public License v3.0
-(see [licence](https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md)). 
-
-The FirmwareDroid software contains code written by third parties. Such software will
-have its own individual licences. You as a user of this project must review, 
-accept and comply with the license terms of each downloaded/installed 
-package listed below or in our "requirements*.txt" files or /requirements/* folder. By proceeding with the installation, 
-you are accepting the license terms of each package, and acknowledging that your 
-use of each package will be subject to its respective license terms.
-
-List of third party packages:
-
-[AndroGuard](https://github.com/androguard/androguard/blob/master/LICENCE-2.0),
-[Androwarn](https://github.com/maaaaz/androwarn/blob/master/COPYING),
-[APKiD](https://github.com/rednaga/APKiD/blob/master/LICENSE.COMMERCIAL),
-[APKLeaks](https://github.com/dwisiswant0/apkleaks/blob/master/LICENSE),
-[Exodus-Core](https://github.com/Exodus-Privacy/exodus-core/blob/v1/LICENSE), 
-[Qark](https://github.com/linkedin/qark/blob/master/LICENSE),
-[Quark-Engine](https://github.com/quark-engine/quark-engine/blob/master/LICENSE),
-[SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/blob/master/LICENSE),
-[VirusTotal-Python](https://github.com/dbrennand/virustotal-python/blob/master/LICENSE),
-[ext4extract](https://github.com/hexedit/ext4extract),
-[imgpatchtools](https://github.com/erfanoabdi/imgpatchtools), ...
+### License:
+FirmwareDroid is a non-profit research project licenced under the GNU General Public License v3.0
+(see our [licence](https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md)). 

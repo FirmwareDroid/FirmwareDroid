@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this software for your research, please cite it as below."
+authors:
+  - family-names: Sutter
+    given-names: Thomas
+    orcid: https://orcid.org/0000-0003-2649-3299
+  - family-names: Tellenbach
+    given-names: Bernhard
+    orcid: https://orcid.org/0000-0002-5008-1107
+title: "FirmwareDroid: Towards Automated Static Analysis of Pre-Installed Android Apps"
+version: 1.0
+doi: 10.1109/MOBILSoft59058.2023.00009
+date-released: 2023-05-15
