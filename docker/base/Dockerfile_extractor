@@ -28,6 +28,9 @@ USER www
 RUN --mount=type=cache,target=/var/www/tmp/.cache \
     pip install -r /var/www/requirements/requirements_extractor.txt
 
+RUN --mount=type=cache,target=/var/www/tmp/.cache \
+    pip install -r /var/www/requirements/requirements_backend.txt \
+
 ENV PATH "$PATH:/home/www/.local/bin/"
 #ENV PYTHONPATH "/home/www/source/:$PYTHONPATH"
 # TODO refactor this with pypi: https://github.com/hexedit/ext4extract/issues/3
