@@ -8,6 +8,6 @@ USER root
 RUN apt-get -y install dexdump
 USER $USER_ID:$GROUP_ID
 
-RUN --mount=type=cache,target=/var/www/tmp/exodus/.cache \
-    pip install -r ./requirements/requirements_exodus.txt
+RUN --mount=type=cache,target=/var/www/tmp/.cache \
+    pip install -r /var/www/requirements/requirements_exodus.txt
 

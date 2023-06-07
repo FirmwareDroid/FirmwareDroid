@@ -20,5 +20,5 @@ RUN export PATH=$PATH
 # Installing python requirements    #
 #####################################
 WORKDIR /var/www/
-RUN --mount=type=cache,target=/var/www/tmp/apkleaks/.cache \
-    pip install -r ./requirements/requirements_apkleaks.txt
+RUN --mount=type=cache,target=/var/www/tmp/.cache \
+    pip install -r /var/www/requirements/requirements_apkleaks.txt

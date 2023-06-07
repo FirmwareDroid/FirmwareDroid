@@ -4,5 +4,5 @@
 
 FROM firmwaredroid-base as androguard-worker
 
-RUN --mount=type=cache,target=/var/www/tmp/androguard/.cache \
-    pip install -r ./requirements/requirements_androguard.txt
+RUN --mount=type=cache,target=/var/www/tmp/.cache \
+    pip install -r /var/www/requirements/requirements_androguard.txt

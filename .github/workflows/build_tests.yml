@@ -79,11 +79,11 @@ jobs:
           cp -r ./documentation/example_config/example_env/* ./env/
           ls ./env/
       - name: Install dependencies
-        run: bash ./make/build_images_all.sh
+        run: bash ./build/build_docker_images.sh
       - name: Start main docker containers
         run: docker-compose up -d database web nginx redis
       - name: Run Unit Tests
-        run: python -m unittest scripts/tests/integration/test_app.py
+        run: python -m unittest source/tests/integration/test_app.py
         
         
         

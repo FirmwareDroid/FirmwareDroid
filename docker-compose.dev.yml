@@ -19,22 +19,17 @@ services:
       - ${DEV_REDIS_DB_PATH}:/var/lib/redis
       - ${DEV_REDIS_CONFIG_PATH}:/usr/local/etc/redis/redis.conf
 
-  firmware-worker:
+  extractor-worker-high-1:
     volumes:
       - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
       - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
-  firmware-worker-high-1:
-    volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+#  fuzzyhash-worker-1:
+#    volumes:
+#      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+#      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
-  fuzzyhash-worker-1:
-    volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
-
-  firmware-worker-default-1:
+  extractor-worker-default-1:
     volumes:
       - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
       - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
@@ -85,11 +80,6 @@ services:
       - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
   apkleaks-worker-1:
-    volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
-
-  libradar-worker-1:
     volumes:
       - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
       - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage

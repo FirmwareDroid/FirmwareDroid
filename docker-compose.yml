@@ -1,10 +1,14 @@
 version: '3.7'
 services:
-  # TODO Security enhancement - move env file to docker secrets
   web:
-    build: .
-    container_name: flask-web
-    working_dir: /var/www
+    platform: "linux/amd64"
+    user: www
+    build:
+      context: .
+      dockerfile: docker/base/Dockerfile_backend
+    image: firmwaredroid-backend-worker
+    container_name: firmwaredroid-backend
+    working_dir: /var/www/
     restart: unless-stopped
     env_file:
       - ./.env
@@ -19,44 +23,8 @@ services:
       - backend
       - frontend
 
-  mongo-db-1:
-    # TODO upgrade mongo-db version
-    # TODO Security - Do not expose the Database Port by default
-    image: mongo:4.2.8-bionic
-    container_name: mongo-db-1
-    restart: unless-stopped
-    env_file:
-      - ./.env
-    ports:
-      - "27017:27017"
-    volumes:
-      - ./env/mongo/init/:/docker-entrypoint-initdb.d/
-    networks:
-      - backend
-    healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo mongo-db-1:27017/test --quiet
-      interval: 1m30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
-
-  mongo-db-replica-setup:
-    # TODO upgrade mongo-db version
-    image: mongo:4.2.8-bionic
-    env_file:
-      - ./.env
-    links:
-      - mongo-db-1:mongo-db-1
-    depends_on:
-      - mongo-db-1
-    networks:
-      - backend
-    volumes:
-      - ./scripts/database/mongo_replica_set_setup.sh:/scripts/mongo_replica_set_setup.sh
-    restart: "no"
-    entrypoint: [ "bash", "./scripts/mongo_replica_set_setup.sh" ]
-
   nginx:
+    platform: "linux/amd64"
     container_name: nginx-frontend
     build:
       context: ./
@@ -76,7 +44,48 @@ services:
     networks:
       - frontend
 
+  mongo-db-1:
+    # TODO upgrade mongo-db version
+    # TODO Security - Do not expose the Database Port by default
+    platform: "linux/amd64"
+    image: mongo:4.2.8-bionic
+    container_name: mongo-db-1
+    restart: unless-stopped
+    user: 1000:1000
+    env_file:
+      - ./.env
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./env/mongo/init/:/docker-entrypoint-initdb.d/
+    networks:
+      - backend
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongo-db-1:27017/test --quiet
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  mongo-db-replica-setup:
+    # TODO upgrade mongo-db version
+    platform: "linux/amd64"
+    image: mongo:4.2.8-bionic
+    env_file:
+      - ./.env
+    links:
+      - mongo-db-1:mongo-db-1
+    depends_on:
+      - mongo-db-1
+    networks:
+      - backend
+    volumes:
+      - ./source/database/mongo_replica_set_setup.sh:/source/mongo_replica_set_setup.sh
+    restart: "no"
+    entrypoint: [ "bash", "./source/mongo_replica_set_setup.sh" ]
+
   redis:
+    platform: "linux/amd64"
     # TODO upgrade redis version
     image: redis:6-buster
     container_name: redis
@@ -86,11 +95,13 @@ services:
     networks:
       - backend
 
-  firmware-worker:
+  extractor-worker-high-1:
+    platform: "linux/amd64"
+    user: www
     build:
       context: .
-      dockerfile: ./docker/base/Dockerfile_firmware
-    container_name: firmware-worker
+      dockerfile: docker/base/Dockerfile_extractor
+    container_name: extractor-worker-high-1
     restart: unless-stopped
     depends_on:
       - redis
@@ -99,56 +110,43 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - ./.env
-    command: rqworker --name firmware-worker --url redis://redis:6379/ high
+    #command: sleep infinity
+    command: rqworker --name extractor-worker-high-1 --url redis://redis:6379/ high --path /var/www/ --path /var/www/source
     networks:
       - backend
     # TODO Security enhancement / compatibility - replace/remove access right
     privileged: true
+    #cap_add:
+    #  - SYS_ADMIN
 
-  firmware-worker-high-1:
+#  fuzzyhash-worker-1:
+#    platform: "linux/amd64"
+#    build:
+#      context: .
+#      dockerfile: ./docker/base/Dockerfile_fuzzyhash
+#    container_name: fuzzyhash-worker-1
+#    restart: unless-stopped
+#    depends_on:
+#      - redis
+#      - extractor-worker-high-1
+#    volumes:
+#      - .:/var/www/
+#      - /var/run/docker.sock:/var/run/docker.sock
+#    env_file:
+#      - ./.env
+#    command: rqworker --name fuzzyhash-worker-1 --url redis://redis:6379/ fuzzyhash
+#    networks:
+#      - backend
+#    # TODO Security enhancement / compatibility - replace/remove access right
+#    privileged: true
+
+  extractor-worker-default-1:
+    platform: "linux/amd64"
+    user: www
     build:
       context: .
-      dockerfile: ./docker/base/Dockerfile_firmware
-    container_name: firmware-worker-high-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - .:/var/www/
-      - /var/run/docker.sock:/var/run/docker.sock
-    env_file:
-      - ./.env
-    command: rqworker --name firmware-worker-high-1 --url redis://redis:6379/ high
-    networks:
-      - backend
-    # TODO Security enhancement / compatibility - replace/remove access right
-    privileged: true
-
-  fuzzyhash-worker-1:
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_fuzzyhash
-    container_name: fuzzyhash-worker-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-      - firmware-worker
-    volumes:
-      - .:/var/www/
-      - /var/run/docker.sock:/var/run/docker.sock
-    env_file:
-      - ./.env
-    command: rqworker --name fuzzyhash-worker-1 --url redis://redis:6379/ fuzzyhash
-    networks:
-      - backend
-    # TODO Security enhancement / compatibility - replace/remove access right
-    privileged: true
-
-  firmware-worker-default-1:
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_firmware
-    container_name: firmware-worker-default-1
+      dockerfile: docker/base/Dockerfile_extractor
+    container_name: extractor-worker-default-1
     restart: unless-stopped
     depends_on:
       - redis
@@ -156,11 +154,14 @@ services:
       - .:/var/www/
     env_file:
       - ./.env
-    command: rqworker --name firmware-worker-default-1 --url redis://redis:6379/ default
+    #command: sleep infinity
+    command: rqworker --name extractor-worker-default-1 --url redis://redis:6379/ default
     networks:
       - backend
 
   androguard-worker-1:
+    platform: "linux/amd64"
+    user: www
     build:
       context: .
       dockerfile: ./docker/base/Dockerfile_androguard
@@ -177,6 +178,8 @@ services:
       - backend
 
   androwarn-worker-1:
+    platform: "linux/amd64"
+    user: www
     build:
       context: .
       dockerfile: ./docker/base/Dockerfile_androwarn
@@ -193,6 +196,8 @@ services:
       - backend
 
   apkid-worker-1:
+    platform: "linux/amd64"
+    user: www
     build:
       context: .
       dockerfile: ./docker/base/Dockerfile_apkid
@@ -209,6 +214,8 @@ services:
       - backend
 
   exodus-worker-1:
+    platform: "linux/amd64"
+    user: www
     build:
       context: .
       dockerfile: ./docker/base/Dockerfile_exodus
@@ -225,6 +232,8 @@ services:
       - backend
 
   frida-worker-1:
+    platform: "linux/amd64"
+    user: www
     build:
       context: .
       dockerfile: ./docker/base/Dockerfile_frida
@@ -241,6 +250,8 @@ services:
       - backend
 
   qark-worker-1:
+    platform: "linux/amd64"
+    user: www
     build:
       context: .
       dockerfile: ./docker/base/Dockerfile_qark
@@ -257,6 +268,8 @@ services:
       - backend
 
   quark_engine-worker-1:
+    platform: "linux/amd64"
+    user: www
     build:
       context: .
       dockerfile: ./docker/base/Dockerfile_quark_engine
@@ -273,6 +286,8 @@ services:
       - backend
 
   super-android-analyzer-worker-1:
+    platform: "linux/amd64"
+    user: www
     build:
       context: .
       dockerfile: ./docker/base/Dockerfile_super_android_analyzer
@@ -289,6 +304,8 @@ services:
       - backend
 
   virustotal-worker-1:
+    platform: "linux/amd64"
+    user: www
     build:
       context: .
       dockerfile: ./docker/base/Dockerfile_virustotal
@@ -305,6 +322,8 @@ services:
       - backend
 
   apkleaks-worker-1:
+    platform: "linux/amd64"
+    user: www
     build:
       context: .
       dockerfile: ./docker/base/Dockerfile_apkleaks
@@ -320,21 +339,6 @@ services:
     networks:
       - backend
 
-  libradar-worker-1:
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_libradar
-    container_name: libradar-worker-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - .:/var/www/
-    env_file:
-      - ./.env
-    command: rqworker --name libradar-worker-1 --url redis://redis:6379/ libradar
-    networks:
-      - backend
 
 networks:
   frontend:

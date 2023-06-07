@@ -4,5 +4,5 @@
 
 FROM firmwaredroid-base-java as qark-worker
 
-RUN --mount=type=cache,target=/var/www/tmp/qark/.cache \
-    pip install -r ./requirements/requirements_qark.txt
+RUN --mount=type=cache,target=/var/www/tmp/.cache \
+    pip install -r /var/www/requirements/requirements_qark.txt

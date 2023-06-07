@@ -10,5 +10,5 @@ RUN apt-get -y install android-tools-adb && \
     adb start-server # Start adb to generate ADB keys
 USER $USER_ID:$GROUP_ID
 
-RUN --mount=type=cache,target=/var/www/tmp/frida/.cache \
-    pip install -r ./requirements/requirements_frida.txt
+RUN --mount=type=cache,target=/var/www/tmp/.cache \
+    pip install -r /var/www/requirements/requirements_frida.txt

@@ -1,0 +1,39 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
+
+FROM firmwaredroid-base as extractor-worker
+
+USER root
+# Dependency for libssl1.0.0 -> necessary for .dat patching
+# TODO: Refactor Dependency - Temporarily disabled
+#RUN echo "deb http://security.debian.org/debian-security jessie/updates main" >> /etc/apt/sources.list
+#RUN echo "deb http://security.debian.org/debian-security stable-security/updates main" >> /etc/apt/sources.list
+RUN apt-get update
+RUN apt-get -y install pkgconf && \
+    apt-get -y install simg2img && \
+    apt-get -y install liblzo2-dev && \
+    apt-get -y install fuse && \
+    #apt-get -y install fuseext2 && \ # TODO: Refactor Dependency - Temporarily disabled
+    apt-get -y install brotli
+    #&& \ apt-get -y install libssl1.0.0 # TODO: Refactor Dependency - Temporarily disabled
+
+# Install dependencies for unblob
+# libhyperscan-dev
+RUN apt-get -y install e2fsprogs p7zip-full unar zlib1g-dev liblzo2-dev lzop lziprecover img2simg zstd
+# TODO Remove this after integrating unblob
+RUN echo "www ALL=(root) NOPASSWD: /bin/mount" >> /etc/sudoers
+
+USER www
+RUN --mount=type=cache,target=/var/www/tmp/.cache \
+    pip install -r /var/www/requirements/requirements_extractor.txt
+
+ENV PATH "$PATH:/home/www/.local/bin/"
+#ENV PYTHONPATH "/home/www/source/:$PYTHONPATH"
+# TODO refactor this with pypi: https://github.com/hexedit/ext4extract/issues/3
+# RUN pip install git+https://github.com/hexedit/ext4extract.git
+
+# TODO security important! Set correct permissions to mount without root user
+#USER $USER_ID:$GROUP_ID
+#USER root
+WORKDIR /var/www/source/

@@ -1,39 +1,36 @@
 ########################################################
 # Firmwaredroid docker core                            #
-# Base dependency for docker workers                   #
+# Base dependency for docker workers_old                   #
 ########################################################
-FROM python:3.8-buster as firmwaredroid-base
+FROM python:3.8-slim-buster as firmwaredroid-base
 
+RUN mkdir -p /var/www/tmp/ && mkdir -p /var/www/
+ADD ./ /var/www/
+WORKDIR /var/www/
+ENV PATH "$PATH:/home/www/.local/bin/"
+ENV PATH "$PATH:/var/www/source/"
+ENV PYTHONPATH "/var/www/source/:$PYTHONPATH"
 ########################################################
-# Apt installation                                     #
+# Update installation                                  #
 ########################################################
 RUN apt-get update -y && \
     apt-get -y install --no-install-recommends apt-utils && \
-    apt-get -y install liblzo2-dev
+    apt-get -y install tar gzip build-essential git unzip curl wget
 
 ########################################################
 # User generation                                      #
 ########################################################
-WORKDIR /var/www/
 ENV GROUP_ID=1000 \
     USER_ID=1000
-# Add local user
 RUN groupadd -r www -g $GROUP_ID
+# /sbin/nologin -> Debug with -s /bin/sh to get shell
 RUN useradd -r -g $GROUP_ID -u $USER_ID www -s /bin/sh -m
 RUN chown $USER_ID:$GROUP_ID /var/www/
 
-########################################################
-# Python requirements                                  #
-########################################################
-COPY requirements.txt ./requirements.txt
-RUN /usr/local/bin/python -m pip install --upgrade pip
-RUN --mount=type=cache,target=/tmp/.cache \
-    pip install -r requirements.txt
-
-########################################################
-# Code generation                                      #
-########################################################
-# Copy main application
-COPY . /var/www/
-
 USER $USER_ID:$GROUP_ID
+
+########################################################
+# Install Python dependencies                          #
+########################################################
+RUN python3 -m pip install --upgrade pip && pip install -r ./requirements.txt
+

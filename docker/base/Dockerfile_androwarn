@@ -3,5 +3,6 @@
 # See the file 'LICENSE' for copying permission.
 
 FROM firmwaredroid-base as androwarn-worker
-RUN --mount=type=cache,target=/var/www/tmp/androwarn/.cache \
-    pip install -r ./requirements/requirements_androwarn.txt
+
+RUN --mount=type=cache,target=/var/www/tmp/.cache \
+    pip install -r /var/www/requirements/requirements_androwarn.txt

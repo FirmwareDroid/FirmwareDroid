@@ -1921,7 +1921,7 @@ services:
   firmware-worker-default-2:
     build:
       context: .
-      dockerfile: ./docker/workers/Dockerfile_firmware
+      dockerfile: docker/base/Dockerfile_extractor
     container_name: firmware-worker-default-2
     restart: unless-stopped
     depends_on:
