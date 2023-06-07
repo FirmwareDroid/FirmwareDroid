@@ -24,7 +24,7 @@ docker-compose based framework including several third party analysis tools.
 
 ### Usage
 
-Docker hub images coming soon. Please refer to our [documentation](https://firmwardroid.readthedocs.io/en/latest/) 
+A docker hub image for a simple installation is coming soon. Please refer to our [documentation](https://firmwardroid.readthedocs.io/en/latest/) 
 to build the code yourself in the meantime.
 
 ### Building the code yourself
@@ -47,7 +47,6 @@ open an issue or better a pull request.
 
 
 ### Citation & Dataset
-
 More information about the framework and it's usage can be found as well in the [here](). 
 If you use FirmwareDroid for you own research please cite our work.
 ``` 
