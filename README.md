@@ -50,7 +50,15 @@ open an issue or better a pull request.
 More information about the framework and it's usage can be found as well in the [here](). 
 If you use FirmwareDroid for you own research please cite our work.
 ``` 
-Bibtext citation comming soon
+@INPROCEEDINGS{FirmwareDroid,
+  author={Sutter, Thomas and Tellenbach, Bernhard},
+  booktitle={2023 IEEE/ACM 10th International Conference on Mobile Software Engineering and Systems (MOBILESoft)}, 
+  title={FirmwareDroid: Towards Automated Static Analysis of Pre-Installed Android Apps}, 
+  year={2023},
+  month={May},
+  pages={12-22},
+  doi={10.1109/MOBILSoft59058.2023.00009}
+}
 ```
 
 ### License:
