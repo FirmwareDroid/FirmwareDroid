@@ -1,6 +1,5 @@
-from flask_mongoengine import Document
 from mongoengine import LazyReferenceField, CASCADE, StringField, BooleanField, ListField, IntField, \
-    EmbeddedDocumentListField
+    EmbeddedDocumentListField, Document
 
 from model import AndroGuardMethodAnalysis, AndroGuardFieldAnalysis
 

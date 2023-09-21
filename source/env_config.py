@@ -5,14 +5,14 @@ class Config:
     """General Config"""
     DEBUG = False
     if os.environ['APP_ENV'] == "development":
-        ENV = "DEV_"
+        ENV = ""
     elif os.environ['APP_ENV'] == "production":
         ENV = ""
     elif os.environ['APP_ENV'] == "testing":
         os.environ['TESTING'] = "True"
         ENV = "TST_"
     else:
-        ENV = "DEV_"
+        ENV = ""
 
 
 class ApplicationConfig(Config):

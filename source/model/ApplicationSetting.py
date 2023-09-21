@@ -1,7 +1,6 @@
 import datetime
-from flask_mongoengine import Document
+from mongoengine import Document
 from mongoengine import DateTimeField, BooleanField, DictField
-from marshmallow import Schema, fields
 
 
 class ApplicationSetting(Document):
@@ -21,7 +20,7 @@ class ApplicationSetting(Document):
     })
 
 
-class ApplicationSettingSchema(Schema):
-    is_signup_active = fields.Boolean()
-    is_firmware_upload_active = fields.Boolean()
-    active_scanners_dict = fields.Dict()
+# class ApplicationSettingSchema(Schema):
+#     is_signup_active = fields.Boolean()
+#     is_firmware_upload_active = fields.Boolean()
+#     active_scanners_dict = fields.Dict()

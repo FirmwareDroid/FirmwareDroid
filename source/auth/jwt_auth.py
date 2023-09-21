@@ -3,7 +3,7 @@
 # See the file 'LICENSE' for copying permission.
 import datetime
 import json
-from flask_jwt_extended import create_access_token
+# from flask_jwt_extended import create_access_token
 from mongoengine import DoesNotExist
 
 from model import RevokedJwtToken

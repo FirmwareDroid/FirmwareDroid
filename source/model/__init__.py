@@ -1,6 +1,6 @@
 from .AndroidFirmware import AndroidFirmware
 from .AndroidApp import AndroidApp
-from .UserAccount import UserAccount, UserAccountSchema, RegistrationStatus
+#from .UserAccount import User
 from .JsonFile import JsonFile
 from .ReferenceFile import ReferenceFile
 from .ImageFile import ImageFile
@@ -8,7 +8,6 @@ from .StatisticsReport import StatisticsReport
 from .FirmwareStatisticsReport import FirmwareStatisticsReport
 from .AndroGuardStatisticsReport import AndroGuardStatisticsReport
 from .VirusTotalStatisticsReport import VirusTotalStatisticsReport
-from .ComparerReportFirmware import ComparerReportFirmware
 from .AndrowarnReport import AndrowarnReport
 from .ApkidReport import ApkidReport
 from .ExodusReport import ExodusReport

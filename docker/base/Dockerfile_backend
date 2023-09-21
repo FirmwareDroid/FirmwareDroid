@@ -19,4 +19,4 @@ RUN --mount=type=cache,target=/tmp/.cache \
 ########################################################
 # Run Webserver                                        #
 ########################################################
-CMD [ "/home/www/.local/bin/gunicorn", "-w", "17", "--bind", "0.0.0.0:5000", "--worker-tmp-dir", "/dev/shm", "--chdir", "/var/www/source/", "--timeout", "300", "--worker-class", "gevent", "--threads", "12", "--log-level", "debug", "app:app"]
+CMD [ "/home/www/.local/bin/gunicorn", "-w", "17", "--bind", "0.0.0.0:5000", "--worker-tmp-dir", "/dev/shm", "--chdir", "/var/www/source/", "--timeout", "300", "--worker-class", "gevent", "--threads", "12", "--log-level", "debug", "webserver.wsgi:app"]

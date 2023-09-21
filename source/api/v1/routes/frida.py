@@ -2,7 +2,7 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-from flask_restx import Resource, Namespace
+# from flask_restx import Resource, Namespace
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required

@@ -5,10 +5,10 @@ from mongoengine import DoesNotExist
 from database.delete_document import delete_referenced_document_instance, delete_document_attribute
 from model import AndroidFirmware
 from model.FirmwareFile import FUZZY_HASH_ATTRIBUTE_NAMES
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 
 
-@push_app_context
+@create_db_context
 def remove_fuzzy_hashes(firmware_id_list):
     """
     Deletes all instances of class:'SsDeepHash' from the given firmware.

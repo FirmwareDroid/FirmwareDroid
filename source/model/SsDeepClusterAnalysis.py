@@ -1,6 +1,6 @@
-from mongoengine import FileField, ListField, DictField, LazyReferenceField, CASCADE, IntField
+from mongoengine import FileField, ListField, DictField, LazyReferenceField, CASCADE, IntField, Document
 from model import JsonFile
-from flask_mongoengine import Document
+
 
 class SsDeepClusterAnalysis(Document):
     ssdeep_hash_reference_file = LazyReferenceField(JsonFile, reverse_delete_rule=CASCADE, required=True)

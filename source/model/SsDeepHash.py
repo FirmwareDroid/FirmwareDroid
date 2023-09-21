@@ -1,7 +1,6 @@
 import base64
 from struct import unpack
-from mongoengine import StringField, ListField, IntField, LazyReferenceField, CASCADE, signals, DictField
-from flask_mongoengine import Document
+from mongoengine import StringField, ListField, IntField, LazyReferenceField, CASCADE, signals, DictField, Document
 
 class SsDeepHash(Document):
     firmware_id_reference = LazyReferenceField('AndroidFirmware', reverse_delete_rule=CASCADE)

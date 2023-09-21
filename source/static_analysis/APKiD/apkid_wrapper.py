@@ -5,13 +5,13 @@ import json
 import os
 import logging
 import tempfile
-import flask
+# import flask
 from database.query_document import get_filtered_list
 from model import ApkidReport, AndroidApp
-from context.context_creator import push_app_context
-from utils.mulitprocessing_util.mp_util import start_process_pool
+from context.context_creator import create_db_context
+from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
-@push_app_context
+@create_db_context
 def start_apkid_scan(android_app_id_list):
     """
     RQ-Task wrapper for apkid tool.
@@ -23,7 +23,7 @@ def start_apkid_scan(android_app_id_list):
     android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "apkid_report_reference")
     logging.info(f"APKid Analysis started! With {str(len(android_app_list))} apps")
     if len(android_app_list) > 0:
-        start_process_pool(android_app_list, apkid_scan, number_of_processes=os.cpu_count(), use_id_list=True)
+        start_python_interpreter(android_app_list, apkid_scan, number_of_processes=os.cpu_count(), use_id_list=True)
     else:
         logging.warning("No Android apps to scan with apkid!")
 

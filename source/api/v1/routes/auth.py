@@ -3,7 +3,7 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 import traceback
-import flask
+# import flask
 from mongoengine import DoesNotExist, NotUniqueError
 from api.v1.decorators.feature_decorator import requires_signup_is_active
 from api.v1.decorators.jwt_auth_decorator import jwt_required
@@ -13,9 +13,9 @@ from language.en_us import REGISTRATION_MAIL_BODY, REGISTRATION_MAIL_SUBJECT
 from mail.smpt_mailer import send_mail
 from model import UserAccount, RevokedJwtToken
 from model.UserAccount import UserAccountSchema
-from flask import request, redirect, jsonify
-from flask_jwt_extended import get_jwt, set_access_cookies, unset_jwt_cookies
-from flask_restx import Resource, Namespace
+# from flask import request, redirect, jsonify
+# from flask_jwt_extended import get_jwt, set_access_cookies, unset_jwt_cookies
+# from flask_restx import Resource, Namespace
 from model.UserAccount import RegistrationStatus
 
 ns = Namespace('auth', description='Operations related to Authentication.')
@@ -40,7 +40,7 @@ class Signup(Resource):
             UserAccountSchema().load(data=body)
             user = UserAccount(**body)
             user.role_list = ['user']
-            user.hash_password()
+            hash_password()
             user.save()
             response = {"status": user.registration_status.value}, 200
             data = f"{user.email}"

@@ -5,16 +5,16 @@ import logging
 import os
 import shutil
 import time
-import flask
 from firmware_handler.image_importer import extract_image_files
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 from firmware_handler.ext4_mount_util import is_path_mounted, exec_umount
 from model import FirmwareFile
-from utils.mulitprocessing_util.mp_util import start_process_pool
+from utils.mulitprocessing_util.mp_util import start_python_interpreter
 from utils.file_utils.file_util import create_temp_directories
+from webserver.settings import FIRMWARE_FOLDER_FILE_EXTRACT
 
 
-@push_app_context
+@create_db_context
 def start_file_export_by_regex(filename_regex, firmware_id_list):
     """
     Starts a firmware file export. Uses a regex and the given firmware to pre-filter firmware-files.
@@ -48,7 +48,7 @@ def get_filtered_firmware_file_list(filename_regex, firmware_id_list):
     return firmware_file_id_list
 
 
-@push_app_context
+@create_db_context
 def start_file_export_by_id(firmware_file_id_list):
     """
     Starts to export firmware files to the filesystem.
@@ -58,9 +58,9 @@ def start_file_export_by_id(firmware_file_id_list):
 
     """
     if len(firmware_file_id_list) > 0:
-        start_process_pool(firmware_file_id_list, export_firmware_files_by_id,
-                           number_of_processes=os.cpu_count(),
-                           use_id_list=False)
+        start_python_interpreter(firmware_file_id_list, export_firmware_files_by_id,
+                                 number_of_processes=os.cpu_count(),
+                                 use_id_list=False)
 
 
 def export_firmware_files_by_id(firmware_file_id_queue):
@@ -129,8 +129,7 @@ def get_destination_folder(firmware_file):
     :return: str - absolute path of the output folder.
 
     """
-    app = flask.current_app
-    destination_folder = os.path.join(app.config["FIRMWARE_FOLDER_FILE_EXTRACT"],
+    destination_folder = os.path.join(FIRMWARE_FOLDER_FILE_EXTRACT,
                                       str(firmware_file.id),
                                       "." + firmware_file.relative_path)
     return os.path.abspath(destination_folder)

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
-import flask
-from flask import request, jsonify
-from flask_restx import Api, Resource
+# import flask
+# from flask import request, jsonify
+# from flask_restx import Api, Resource
 from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.api_models.serializers import object_id_list
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required

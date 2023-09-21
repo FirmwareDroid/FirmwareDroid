@@ -3,12 +3,12 @@ Script to migrate the virustotal collection from an old database to a newer
 """
 import logging
 import traceback
-import flask
+# import flask
 from model import VirusTotalReport, AndroidApp
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 
 
-@push_app_context
+@create_db_context
 def start_migration():
     """Copies VirusTotal entries from an old database to a new one."""
     db_con = connect_to_old_database()

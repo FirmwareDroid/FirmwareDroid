@@ -2,10 +2,10 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-import flask
-from flask import request
-from flask_jwt_extended import jwt_required, get_jwt_identity
-from flask_restx import Api, Resource
+# import flask
+# from flask import request
+# from flask_jwt_extended import jwt_required, get_jwt_identity
+# from flask_restx import Api, Resource
 from api.v1.api_models.serializers import virustotal_api_key_model, object_id_list
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.json_parser import parse_virustotal_api_key

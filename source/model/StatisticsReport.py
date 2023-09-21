@@ -1,6 +1,5 @@
 import datetime
-from flask_mongoengine import Document
-from mongoengine import StringField, DateTimeField, LazyReferenceField, CASCADE, LongField
+from mongoengine import StringField, DateTimeField, LazyReferenceField, CASCADE, LongField, Document
 
 from model import JsonFile
 

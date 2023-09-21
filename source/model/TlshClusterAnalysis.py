@@ -1,6 +1,6 @@
-from mongoengine import LazyReferenceField, CASCADE, DictField, FileField, IntField, ListField, StringField
+from mongoengine import LazyReferenceField, CASCADE, DictField, FileField, IntField, ListField, StringField, Document
 from model import JsonFile
-from flask_mongoengine import Document
+
 
 class TlshClusterAnalysis(Document):
     description = StringField(required=True, min_length=0, max_length=2048)

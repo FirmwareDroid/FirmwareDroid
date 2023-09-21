@@ -3,9 +3,9 @@
 # See the file 'LICENSE' for copying permission.
 
 import functools
-import flask
+# import flask
 from secrets import compare_digest
-from flask import request, Response
+# from flask import request, Response
 
 
 def check_auth(username, password):

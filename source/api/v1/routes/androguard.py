@@ -2,9 +2,9 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-import flask
-from flask import request, send_file
-from flask_restx import Resource, Namespace
+# import flask
+# from flask import request, send_file
+# from flask_restx import Resource, Namespace
 from mongoengine import DoesNotExist
 from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.api_models.serializers import object_id_list

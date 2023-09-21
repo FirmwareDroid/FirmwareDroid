@@ -2,10 +2,10 @@ import logging
 import traceback
 from bson import ObjectId
 from model import AndroidFirmware
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 
 
-@push_app_context
+@create_db_context
 def delete_firmware_by_id(firmware_id_list):
     """
     Delete all firmware object from the database and the filesystem. Cascades to reference objects as well.

@@ -5,11 +5,11 @@ from dynamic_analysis.frida.frida_server_installer import install_frida_server, 
 from model import AndroidApp
 from dynamic_analysis.emulator_control.adb.adb_wrapper import load_adb_rsa_signer, connect_adb_device_tcp, \
     is_device_available, is_app_installed, install_app, push_file
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 
 
 # TODO REMOVE OR FINISH WORK HERE - Experimental
-@push_app_context
+@create_db_context
 def start_dynamic_analysis(emulator_url, emulator_port, android_app_id_list):
     """
     Experimental Feature

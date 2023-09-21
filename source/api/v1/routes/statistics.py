@@ -3,13 +3,13 @@
 # See the file 'LICENSE' for copying permission.
 import json
 import logging
-import flask
-from flask import request, send_file
+# import flask
+# from flask import request, send_file
 from api.v1.api_models.serializers import object_id_list
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.request_util import check_app_mode, check_firmware_mode
 from model import ImageFile, JsonFile
-from flask_restx import Resource, Namespace
+# from flask_restx import Resource, Namespace
 from statistics.reports.firmware_statistics import create_firmware_statistics_report
 from statistics.reports.androguard.androguard_statistics import create_androguard_statistics_report
 from statistics.reports.virustotal.virustotal_statistics import create_virustotal_statistic_report

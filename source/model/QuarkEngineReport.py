@@ -1,7 +1,6 @@
-from mongoengine import LazyReferenceField, DateTimeField, StringField, CASCADE, DictField
+from mongoengine import LazyReferenceField, DateTimeField, StringField, CASCADE, DictField, Document
 from model import AndroidApp
 import datetime
-from flask_mongoengine import Document
 
 
 class QuarkEngineReport(Document):

@@ -3,10 +3,10 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 from model import AndroidApp
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 
 
-@push_app_context
+@create_db_context
 def set_android_app_package_names(android_app_id_list):
     """
     Takes the packagename from androguard and copies it to the android app model.

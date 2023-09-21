@@ -21,11 +21,11 @@ def get_all_document_ids(document_class):
     return id_list
 
 
-def create_document_list_by_ids(document_id_list, document_class, only_attribute_list=None):
+def create_document_list_by_ids(document_id_list, document_class, attribute_filter_list=None):
     """
     Gets a list of document instances from the database.
 
-    :param only_attribute_list:
+    :param attribute_filter_list: list(str) - inclusion list of attributes name to fetch from the object.
     :param document_id_list: str - list of object-id's
     :param document_class: document - type of the document to fetch
     :return: list(document_instances)
@@ -34,10 +34,10 @@ def create_document_list_by_ids(document_id_list, document_class, only_attribute
     document_instance_list = []
     for document_id in document_id_list:
         try:
-            if not only_attribute_list:
+            if not attribute_filter_list:
                 document_instance = document_class.objects.get(pk=document_id)
             else:
-                document_instance = document_class.objects.only(*only_attribute_list).get(pk=document_id)
+                document_instance = document_class.objects.only(*attribute_filter_list).get(pk=document_id)
             document_instance_list.append(document_instance)
         except DoesNotExist:
             logging.warning(f"ID does not exist {document_id} {document_class}")

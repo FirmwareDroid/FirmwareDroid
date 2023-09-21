@@ -2,8 +2,8 @@ version: '3.7'
 services:
   web:
     volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
     environment:
       - APP_ENV=development
 
@@ -11,75 +11,76 @@ services:
     environment:
       - APP_ENV=development
     volumes:
-      - ${DEV_LOCAL_MONGO_DB_PATH_NODE1}:/data/db
-    command: mongod --replSet $DEV_MONGODB_REPLICA_SET --auth
+      - ${LOCAL_MONGO_DB_PATH_NODE1}:/data/db
+    #command: mongod --replSet $MONGODB_REPLICA_SET --auth
+    command: mongod --auth --port 27017 --replSet ${MONGODB_REPLICA_SET} --bind_ip_all --keyFile ${MONGODB_KEYFILE} --dbpath /data/db
 
   redis:
     volumes:
-      - ${DEV_REDIS_DB_PATH}:/var/lib/redis
-      - ${DEV_REDIS_CONFIG_PATH}:/usr/local/etc/redis/redis.conf
+      - ${REDIS_DB_PATH}:/var/lib/redis
+      - ${REDIS_CONFIG_PATH}:/usr/local/etc/redis/redis.conf
 
   extractor-worker-high-1:
     volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
 #  fuzzyhash-worker-1:
 #    volumes:
-#      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-#      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+#      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+#      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
   extractor-worker-default-1:
     volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
   androguard-worker-1:
     volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
   androwarn-worker-1:
     volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
   apkid-worker-1:
     volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
   exodus-worker-1:
     volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
   frida-worker-1:
     volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
   qark-worker-1:
     volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
   quark_engine-worker-1:
     volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
   virustotal-worker-1:
     volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
   super-android-analyzer-worker-1:
     volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
 
   apkleaks-worker-1:
     volumes:
-      - ${DEV_LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${DEV_LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage

@@ -91,59 +91,59 @@ This is an example environment config (.env) for all environments::
     #
     ##########################################################################################
     # Docker-Compose
-    DEV_LOCAL_STORAGE_PATH=./00_file_storage
-    DEV_LOCAL_MONGO_DB_PATH_NODE1=./mongodb_data/node1/
-    DEV_ELASTIC_SEARCH_DB_PATH=./elastic_search_data/data/
-    DEV_ELASTIC_SEARCH_CONFIG_PATH=./elastic_search_data/config/
+    LOCAL_STORAGE_PATH=./00_file_storage
+    LOCAL_MONGO_DB_PATH_NODE1=./mongodb_data/node1/
+    ELASTIC_SEARCH_DB_PATH=./elastic_search_data/data/
+    ELASTIC_SEARCH_CONFIG_PATH=./elastic_search_data/config/
 
     # Redis-Database
-    DEV_REDIS_DB_PATH=./redis-data
-    DEV_REDIS_CONFIG_PATH=./env/redis/redis.conf
+    REDIS_DB_PATH=./redis-data
+    REDIS_CONFIG_PATH=./env/redis/redis.conf
 
     # RQ-Dashboard
-    DEV_RQ_DASHBOARD_REDIS_URL=redis://redis:6379
-    DEV_RQ_DASHBOARD_PASSWORD=sOmE_sEcUrE_pAsS_sOmE_sEcUrE_pAsS
-    DEV_RQ_DASHBOARD_USERNAME=redis-admin
-    DEV_REDIS_HOST_PORT=redis:6379
+    RQ_DASHBOARD_REDIS_URL=redis://redis:6379
+    RQ_DASHBOARD_PASSWORD=sOmE_sEcUrE_pAsS_sOmE_sEcUrE_pAsS
+    RQ_DASHBOARD_USERNAME=redis-admin
+    REDIS_HOST_PORT=redis:6379
 
     # Mongo-Database
-    DEV_MONGO_INITDB_DATABASE=DevFirmwareDroid
-    DEV_MONGO_INITDB_ROOT_USERNAME=Devmongodbroot
-    DEV_MONGO_INITDB_ROOT_PASSWORD=your_mongodb_root_password
-    DEV_MONGODB_USERNAME=Devmongodbuser
-    DEV_MONGODB_PASSWORD=your_mongodb_user_password
-    DEV_MONGODB_HOSTNAME=mongo-db-1
-    DEV_MONGODB_DATABASE=DevFirmwareDroid
-    DEV_MONGODB_PORT=27017
-    DEV_MONGODB_REPLICA_SET=mongo_cluster_1
+    MONGO_INITDB_DATABASE=DevFirmwareDroid
+    MONGO_INITDB_ROOT_USERNAME=Devmongodbroot
+    MONGO_INITDB_ROOT_PASSWORD=your_mongodb_root_password
+    MONGODB_USERNAME=Devmongodbuser
+    MONGODB_PASSWORD=your_mongodb_user_password
+    MONGODB_HOSTNAME=mongo-db-1
+    MONGODB_DATABASE=DevFirmwareDroid
+    MONGODB_PORT=27017
+    MONGODB_REPLICA_SET=mongo_cluster_1
 
     # Web
-    DEV_APP_DATA_FOLDER=./file_store/
-    DEV_BASIC_AUTH_USERNAME=admin
-    DEV_BASIC_AUTH_PASSWORD=CHANGE_THIS_SECRET
-    DEV_BASIC_AUTH_FORCE=True
-    DEV_JWT_SECRET_KEY=JWT_TEST_TOKEN_CHANGE_THIS
-    DEV_FLASK_ADMIN_PW=CHANGE_THIS_SECRET
-    DEV_FLASK_ADMIN_MAIL=example@example.ch
-    DEV_FLASK_ADMIN_USERNAME=devAdmin
-    DEV_MASS_IMPORT_NUMBER_OF_THREADS=3
-    DEV_DOMAIN_NAME=firmwaredroid.cloudlab.zhaw.ch
+    APP_DATA_FOLDER=./file_store/
+    BASIC_AUTH_USERNAME=admin
+    BASIC_AUTH_PASSWORD=CHANGE_THIS_SECRET
+    BASIC_AUTH_FORCE=True
+    JWT_SECRET_KEY=JWT_TEST_TOKEN_CHANGE_THIS
+    FLASK_ADMIN_PW=CHANGE_THIS_SECRET
+    FLASK_ADMIN_MAIL=example@example.ch
+    FLASK_ADMIN_USERNAME=devAdmin
+    MASS_IMPORT_NUMBER_OF_THREADS=3
+    DOMAIN_NAME=firmwaredroid.cloudlab.zhaw.ch
 
     # Web - Swagger
-    DEV_API_TITLE="FirmwareDroid API - Development"
-    DEV_API_VERSION=1.0
-    DEV_API_DESCRIPTION="REST API documentation for the FirmwareDroid tool"
-    DEV_API_PREFIX=/api
-    DEV_API_DOC_FOLDER=/docs
+    API_TITLE="FirmwareDroid API - Development"
+    API_VERSION=1.0
+    API_DESCRIPTION="REST API documentation for the FirmwareDroid tool"
+    API_PREFIX=/api
+    API_DOC_FOLDER=/docs
 
     # Web - Mail
-    DEV_MAIL_SERVER=smtp.office365.com
-    DEV_MAIL_PORT=587
-    DEV_MAIL_USERNAME=example@outlook.com
-    DEV_MAIL_PASSWORD=CHANGE_THIS_SECRET
-    DEV_MAIL_DEFAULT_SENDER=example@outlook.com
-    DEV_MAIL_SECRET_KEY=SUPERaweseomeSECRET
-    DEV_MAIL_SALT=SaltAndPepperAreTheBest
+    MAIL_SERVER=smtp.office365.com
+    MAIL_PORT=587
+    MAIL_USERNAME=example@outlook.com
+    MAIL_PASSWORD=CHANGE_THIS_SECRET
+    MAIL_DEFAULT_SENDER=example@outlook.com
+    MAIL_SECRET_KEY=SUPERaweseomeSECRET
+    MAIL_SALT=SaltAndPepperAreTheBest
 
 
     ##########################################################################################

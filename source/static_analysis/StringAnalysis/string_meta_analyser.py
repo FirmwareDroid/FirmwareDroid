@@ -8,7 +8,7 @@ import re
 from bson import ObjectId
 
 from model import StringMetaAnalysis, AndroGuardStringAnalysis
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 from static_analysis.StringAnalysis.entropy_calculation import set_entropy
 from static_analysis.StringAnalysis.language_detection import set_language
 from static_analysis.StringAnalysis.word_tokenizer import set_string_lengths, string_is_numeric
@@ -18,7 +18,7 @@ from static_analysis.StringAnalysis.encoding_detection import detect_encoding, d
 from utils.mulitprocessing_util.mp_util import start_threads
 
 
-@push_app_context
+@create_db_context
 def start_string_meta_analysis(android_app_id_list):
     """
     Starts the string meta analysis. Collects meta-data (entropy, language, size, ...) of a given
@@ -56,7 +56,7 @@ def get_string_analysis_list(android_app_id_list):
     return string_analysis_id_list
 
 
-@push_app_context
+@create_db_context
 def meta_analyzer_worker(string_analysis_id_queue):
     """
     Worker thread for string meta analysis.

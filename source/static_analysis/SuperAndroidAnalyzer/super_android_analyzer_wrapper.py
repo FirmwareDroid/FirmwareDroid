@@ -11,11 +11,11 @@ import tempfile
 from pathlib import Path
 from model import AndroidApp, SuperReport
 from database.query_document import get_filtered_list
-from context.context_creator import push_app_context
-from utils.mulitprocessing_util.mp_util import start_process_pool
+from context.context_creator import create_db_context
+from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
 
-@push_app_context
+@create_db_context
 def start_super_android_analyzer_scan(android_app_id_list):
     """
     Analysis all apps from the given list with super android analyzer.
@@ -24,7 +24,7 @@ def start_super_android_analyzer_scan(android_app_id_list):
     android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "super_report_reference")
     logging.info(f"Super after filter: {str(len(android_app_list))}")
     if len(android_app_list) > 0:
-        start_process_pool(android_app_list, super_android_analyzer_worker, os.cpu_count())
+        start_python_interpreter(android_app_list, super_android_analyzer_worker, os.cpu_count())
 
 
 def super_android_analyzer_worker(android_app_id_queue):

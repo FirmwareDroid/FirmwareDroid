@@ -1,7 +1,6 @@
 import datetime
-from mongoengine import FileField, DateTimeField, signals
+from mongoengine import FileField, DateTimeField, signals, Document
 import json
-from flask_mongoengine import Document
 
 
 class JsonFile(Document):

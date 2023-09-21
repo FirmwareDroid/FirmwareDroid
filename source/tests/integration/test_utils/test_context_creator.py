@@ -1,7 +1,7 @@
 import os
-import flask
+# import flask
 from dotenv import load_dotenv
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 
 
 def setup_flask_testing_client():
@@ -30,7 +30,7 @@ def get_flask_test_client():
     app = get_test_app()
     return app.test_client()
 
-@push_app_context
+@create_db_context
 def get_test_app():
     """
     Creates an app for testing.

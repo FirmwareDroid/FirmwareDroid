@@ -2,8 +2,8 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-import flask
-from flask_restx import Resource, Namespace
+# import flask
+# from flask_restx import Resource, Namespace
 
 from model.StoreSetting import FILE_STORE_NAME_LIST
 from config.app_settings import set_active_storage_folders

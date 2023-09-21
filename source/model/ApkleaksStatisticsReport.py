@@ -1,5 +1,4 @@
 from mongoengine import DictField, LazyReferenceField, CASCADE
-
 from model import JsonFile
 from model.StatisticsReport import StatisticsReport
 

@@ -6,14 +6,14 @@ import logging
 import os
 import tempfile
 import json
-import flask
+# import flask
 from database.query_document import get_filtered_list
 from model import QarkReport, QarkIssue, AndroidApp
-from context.context_creator import push_app_context
-from utils.mulitprocessing_util.mp_util import start_process_pool
+from context.context_creator import create_db_context
+from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
 
-@push_app_context
+@create_db_context
 def qark_analyse_apps(android_app_id_list):
     """
     Analysis all apps from the given firmware list with qark.
@@ -23,7 +23,7 @@ def qark_analyse_apps(android_app_id_list):
     android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "qark_report_reference")
     logging.info(f"Qark after filter: {str(len(android_app_list))}")
     if len(android_app_list) > 0:
-        start_process_pool(android_app_list, qark_worker, os.cpu_count())
+        start_python_interpreter(android_app_list, qark_worker, os.cpu_count())
 
 
 def qark_worker(android_app_id_queue):

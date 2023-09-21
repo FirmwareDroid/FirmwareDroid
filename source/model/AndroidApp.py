@@ -1,10 +1,9 @@
 import datetime
-from flask_mongoengine import Document
 from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, CASCADE, \
-    ListField
-from api.v1.marshmallow_fields.LazyReference import LazyReferenceConverter
+    ListField, Document
+#from api.v1.marshmallow_fields.LazyReference import LazyReferenceConverter
 from model import AndroidFirmware
-from marshmallow import Schema, fields
+#from marshmallow import Schema, fields
 
 
 class AndroidApp(Document):
@@ -33,27 +32,27 @@ class AndroidApp(Document):
     app_twins_reference_list = ListField(LazyReferenceField('AndroidApp', reverse_delete_rule=DO_NOTHING))
 
 
-class AndroidAppSchema(Schema):
-    id = fields.Str()
-    firmware_id_reference = fields.Str()
-    indexed_date = fields.DateTime()
-    md5 = fields.Str()
-    sha256 = fields.Str()
-    sha1 = fields.Str()
-    ssdeep_digest = fields.Str()
-    filename = fields.Str()
-    relative_firmware_path = fields.Str()
-    file_size_bytes = fields.Float()
-    relative_store_path = fields.Str()
-    androguard_report_reference = LazyReferenceConverter()
-    virus_total_report_reference = LazyReferenceConverter()
-    androwarn_report_reference = LazyReferenceConverter()
-    qark_report_reference = LazyReferenceConverter()
-    apkid_report_reference = LazyReferenceConverter()
-    exodus_report_reference = LazyReferenceConverter()
-    quark_engine_report_reference = LazyReferenceConverter()
-    super_report_reference = LazyReferenceConverter()
-    apkleaks_report_reference = LazyReferenceConverter()
-
-    class Meta:
-        load_only = ('firmware_id_reference', 'relative_store_path')
+# class AndroidAppSchema(Schema):
+#     id = fields.Str()
+#     firmware_id_reference = fields.Str()
+#     indexed_date = fields.DateTime()
+#     md5 = fields.Str()
+#     sha256 = fields.Str()
+#     sha1 = fields.Str()
+#     ssdeep_digest = fields.Str()
+#     filename = fields.Str()
+#     relative_firmware_path = fields.Str()
+#     file_size_bytes = fields.Float()
+#     relative_store_path = fields.Str()
+#     androguard_report_reference = LazyReferenceConverter()
+#     virus_total_report_reference = LazyReferenceConverter()
+#     androwarn_report_reference = LazyReferenceConverter()
+#     qark_report_reference = LazyReferenceConverter()
+#     apkid_report_reference = LazyReferenceConverter()
+#     exodus_report_reference = LazyReferenceConverter()
+#     quark_engine_report_reference = LazyReferenceConverter()
+#     super_report_reference = LazyReferenceConverter()
+#     apkleaks_report_reference = LazyReferenceConverter()
+#
+#     class Meta:
+#         load_only = ('firmware_id_reference', 'relative_store_path')

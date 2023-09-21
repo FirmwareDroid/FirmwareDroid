@@ -1,5 +1,5 @@
-from mongoengine import DictField
-from flask_mongoengine import Document
+from mongoengine import DictField, Document
+
 
 class TlshEvaluation(Document):
     evaluation = DictField(required=True)

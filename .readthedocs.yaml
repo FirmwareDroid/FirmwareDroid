@@ -1,7 +1,3 @@
-# .readthedocs.yaml
-# Read the Docs configuration file
-# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
-
 version: 2
 build:
   os: ubuntu-20.04
@@ -10,10 +6,6 @@ build:
 
 sphinx:
    configuration: docs/source/conf.py
-
-# If using Sphinx, optionally build your docs in additional formats such as PDF
-# formats:
-#    - pdf
 
 python:
    install:

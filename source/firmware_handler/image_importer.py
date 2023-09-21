@@ -5,6 +5,7 @@ import logging
 import os
 import re
 from extractor.ext4_extractor import extract_simg_ext4, extract_ext4
+from extractor.unblob_extractor import unblob_extract
 from firmware_handler.firmware_file_search import get_firmware_file_by_regex_list
 from extractor.ubi_extractor import extract_ubi_image
 from firmware_handler.ext4_mount_util import mount_android_image
@@ -36,6 +37,9 @@ def extract_image_files(image_path, extract_dir_path):
     :param extract_dir_path: str - path where the files will be extracted or mounted to.
 
     """
+    if unblob_extract(image_path, extract_dir_path, delete_compressed_file=False):
+        logging.info("Image extraction successful with unblob_extract")
+
     if extract_simg_ext4(image_path, extract_dir_path):
         logging.info("Image extraction successful with simg_ext4extractor")
     elif extract_ext4(image_path, extract_dir_path):

@@ -7,11 +7,11 @@ import os
 import re
 import shutil
 import logging
-import flask
 from model import JsonFile
 import tempfile
 import time
 from utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
+from webserver.settings import FIRMWARE_FOLDER_CACHE
 
 
 def get_filenames(path):
@@ -99,14 +99,13 @@ def create_temporary_file_from_list(string_list):
     :return: class:'tempfile.NamedTemporaryFile'
 
     """
-    app = flask.current_app
-    file = tempfile.NamedTemporaryFile(delete=False, dir=app.config["FIRMWARE_FOLDER_CACHE"])
-    with open(file.name, 'ab+') as file:
+    file_temp = tempfile.NamedTemporaryFile(delete=False, dir=FIRMWARE_FOLDER_CACHE)
+    with open(file_temp.name, 'ab+') as file:
         for string_element in string_list:
             file.write(bytes(str(string_element), encoding='utf-8'))
             file.write(b'\n')
-    delete_file(file.name)
-    return file
+    delete_file(file_temp.name)
+    return file_temp
 
 
 def create_reference_file(string_list):

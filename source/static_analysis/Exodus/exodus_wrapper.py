@@ -5,11 +5,13 @@ import logging
 import os
 from database.query_document import get_filtered_list
 from model import ExodusReport, AndroidApp
-from context.context_creator import push_app_context
-from utils.mulitprocessing_util.mp_util import start_process_pool
+from context.context_creator import create_db_context
+from utils.mulitprocessing_util.mp_util import start_python_interpreter
+
+EXODUS_VERSION = "1.3.8"
 
 
-@push_app_context
+@create_db_context
 def start_exodus_scan(android_app_id_list):
     """
     Analysis all apps from the given list with exodus-core.
@@ -20,7 +22,7 @@ def start_exodus_scan(android_app_id_list):
     android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "exodus_report_reference")
     logging.info(f"Exodus after filter: {str(len(android_app_list))}")
     if len(android_app_list) > 0:
-        start_process_pool(android_app_list, exodus_worker, os.cpu_count())
+        start_python_interpreter(android_app_list, exodus_worker, os.cpu_count())
 
 
 def exodus_worker(android_app_id_queue):
@@ -91,7 +93,7 @@ def create_report(android_app, exodus_results):
     #from exodus_core import __version__
     exodus_report = ExodusReport(
         android_app_id_reference=android_app.id,
-        exodus_version="1.3.3",
+        exodus_version=EXODUS_VERSION,
         results=exodus_results
     ).save()
     android_app.exodus_report_reference = exodus_report.id

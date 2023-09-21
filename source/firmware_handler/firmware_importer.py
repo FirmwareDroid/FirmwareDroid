@@ -4,7 +4,6 @@
 import re
 import tempfile
 import threading
-import flask
 import logging
 import os
 import shutil
@@ -12,7 +11,7 @@ from model import AndroidFirmware, FirmwareFile, AndroidApp
 from threading import Thread
 from firmware_handler.image_importer import create_abs_image_file_path, find_image_firmware_file, extract_image_files
 from hashing.fuzzy_hash_creator import fuzzy_hash_firmware_files
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 from firmware_handler.firmware_file_indexer import create_firmware_file_list, add_firmware_file_references
 from firmware_handler.const_regex_patterns import BUILD_PROP_PATTERN_LIST, EXT_IMAGE_PATTERNS_DICT
 from firmware_handler.android_app_import import store_android_apps
@@ -24,9 +23,12 @@ from firmware_handler.firmware_version_detect import detect_by_build_prop
 from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
 from bson import ObjectId
 
+from webserver.settings import FIRMWARE_FOLDER_IMPORT, FIRMWARE_FOLDER_CACHE, FIRMWARE_FOLDER_APP_EXTRACT, \
+    FIRMWARE_FOLDER_STORE, FIRMWARE_FOLDER_IMPORT_FAILED
+
 lock = threading.Lock()
 
-@push_app_context
+
 def start_firmware_mass_import(create_fuzzy_hashes):
     """
     Imports all .zip files from the import folder.
@@ -35,11 +37,9 @@ def start_firmware_mass_import(create_fuzzy_hashes):
     :return: list of string with the status (errors/success) of every file.
 
     """
-    app = flask.current_app
     logging.info("FIRMWARE MASS IMPORT STARTED!")
-    num_threads = int(app.config["MASS_IMPORT_NUMBER_OF_THREADS"])
     firmware_file_queue = create_queue()
-
+    num_threads = 5
     worker_list = []
     for i in range(num_threads):
         logging.info(f"Start importer thread {i}")
@@ -57,18 +57,18 @@ def create_queue():
     :return: A queue.
 
     """
-    firmware_import_folder_path = flask.current_app.config["FIRMWARE_FOLDER_IMPORT"]
+    firmware_import_folder_path = FIRMWARE_FOLDER_IMPORT
     filename_list = get_filenames(firmware_import_folder_path)
     logging.info(f"Files to import ({len(filename_list)} from {firmware_import_folder_path}")
     filename_list = list(filter(lambda x: x.endswith(".zip") or x.endswith(".tar"), filename_list))
     if len(filename_list) == 0:
-        raise ValueError("No .zip files in import folder!")
+        raise ValueError("No files in import folder!")
     file_queue = create_multi_threading_queue(filename_list)
     logging.info(f"Approximate number of files to import ({len(filename_list)} {file_queue.qsize()}) from {firmware_import_folder_path}")
     return file_queue
 
 
-@push_app_context
+@create_db_context
 def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes):
     """
     An multi-threaded import script that extracts meta information of a firmware file from the system.img.
@@ -79,12 +79,11 @@ def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes):
     :return: A dict of the errors and success messages for every file.
 
     """
-    app = flask.current_app
     while True:
         filename = firmware_file_queue.get()
         logging.info(f"Attempt to import: {str(filename)}")
         try:
-            firmware_file_path = os.path.join(app.config["FIRMWARE_FOLDER_IMPORT"], filename)
+            firmware_file_path = os.path.join(FIRMWARE_FOLDER_IMPORT, filename)
             md5 = md5_from_file(firmware_file_path)
             if not AndroidFirmware.objects(md5=md5) or (AndroidFirmware.objects(md5=md5) is not None):
                 import_firmware(filename, md5, firmware_file_path, create_fuzzy_hashes)
@@ -106,6 +105,7 @@ def open_firmware(firmware_archive_file_path, temp_extract_dir):
 
     """
     extract_all_nested(firmware_archive_file_path, temp_extract_dir.name, False)
+    #unblob_extract(firmware_archive_file_path, temp_extract_dir.name, False)
     archive_firmware_file_list = get_firmware_archive_content(temp_extract_dir.name)
     return archive_firmware_file_list
 
@@ -165,7 +165,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
     :param firmware_archive_file_path: str - path of the firmware archive.
 
     """
-    temp_extract_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
+    temp_extract_dir = tempfile.TemporaryDirectory(dir=FIRMWARE_FOLDER_CACHE,
                                                    suffix="_extract")
     firmware_app_list = []
     build_prop_file_list = []
@@ -177,7 +177,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
         archive_firmware_file_list = open_firmware(firmware_archive_file_path, temp_extract_dir)
         firmware_file_list.extend(archive_firmware_file_list)
         for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
-            partition_temp_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"],
+            partition_temp_dir = tempfile.TemporaryDirectory(dir=FIRMWARE_FOLDER_CACHE,
                                                              suffix=f"_mount_{partition_name}")
             partition_firmware_file_list = create_partition_index(partition_name,
                                                                   file_pattern_list,
@@ -185,7 +185,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
                                                                   temp_extract_dir,
                                                                   partition_temp_dir)
             firmware_file_list.extend(partition_firmware_file_list)
-            firmware_app_store = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_APP_EXTRACT"],
+            firmware_app_store = os.path.join(FIRMWARE_FOLDER_APP_EXTRACT,
                                               md5,
                                               partition_name)
             try:
@@ -206,7 +206,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
         if file_extension != ".zip" or file_extension != ".tar":
             file_extension = ".zip"
         store_filename = md5 + file_extension
-        firmware_archive_store_path = os.path.join(flask.current_app.config["FIRMWARE_FOLDER_STORE"],
+        firmware_archive_store_path = os.path.join(FIRMWARE_FOLDER_STORE,
                                                    version_detected,
                                                    md5)
         create_directories(firmware_archive_store_path)
@@ -242,7 +242,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
             AndroidApp.objects(pk__in=android_app_id_object_list).delete()
             logging.info("Cleanup: Removed android apps from DB")
 
-        shutil.move(firmware_archive_file_path, flask.current_app.config["FIRMWARE_FOLDER_IMPORT_FAILED"])
+        shutil.move(firmware_archive_file_path, FIRMWARE_FOLDER_IMPORT_FAILED)
         logging.info(f"Cleanup: Firmware file moved to failed folder: {original_filename}")
     finally:
         try:

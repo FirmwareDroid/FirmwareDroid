@@ -4,9 +4,9 @@
 import logging
 import os
 import shutil
-import flask
+# import flask
 from model import AndroidFirmware
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 
 
 def delete_referenced_document_instance(document, attribute_name):
@@ -46,7 +46,7 @@ def delete_document_attribute(document, attribute_name):
         logging.warning(err)
 
 
-@push_app_context
+@create_db_context
 def clear_firmware_database():
     """
     Deletes all firmware and related objects from the database.

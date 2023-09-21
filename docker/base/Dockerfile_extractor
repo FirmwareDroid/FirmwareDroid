@@ -21,7 +21,8 @@ RUN apt-get -y install pkgconf && \
 # Install dependencies for unblob
 # libhyperscan-dev
 RUN apt-get -y install e2fsprogs p7zip-full unar zlib1g-dev liblzo2-dev lzop lziprecover img2simg zstd
-# TODO Remove this after integrating unblob
+# TODO Problematic security rights for user www. Find alternative solution to mounting
+RUN echo "www ALL=(root) NOPASSWD: /bin/unmount" >> /etc/sudoers
 RUN echo "www ALL=(root) NOPASSWD: /bin/mount" >> /etc/sudoers
 
 USER www
@@ -29,7 +30,7 @@ RUN --mount=type=cache,target=/var/www/tmp/.cache \
     pip install -r /var/www/requirements/requirements_extractor.txt
 
 RUN --mount=type=cache,target=/var/www/tmp/.cache \
-    pip install -r /var/www/requirements/requirements_backend.txt \
+    pip install -r /var/www/requirements/requirements_backend.txt
 
 ENV PATH "$PATH:/home/www/.local/bin/"
 #ENV PYTHONPATH "/home/www/source/:$PYTHONPATH"

@@ -1,3 +1,4 @@
-FROM nginx:1.18-alpine
-COPY --from=firmwaredroid-frontend /usr/src/app/build /usr/share/nginx/build
+FROM nginx:1.25.2-alpine
+#COPY --from=firmwaredroid-frontend /usr/src/app/build /usr/share/nginx/build
+ADD ./source/static /usr/share/nginx/static
 CMD ["nginx", "-g", "daemon off;"]

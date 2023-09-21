@@ -1,8 +1,6 @@
 import mongoengine
-from flask_mongoengine import Document
-from mongoengine import LazyReferenceField, DateTimeField, StringField, ListField, FileField, CASCADE
+from mongoengine import LazyReferenceField, DateTimeField, StringField, ListField, FileField, CASCADE, Document
 import datetime
-
 from model import AndroidApp
 
 

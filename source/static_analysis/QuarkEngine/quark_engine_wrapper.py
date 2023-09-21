@@ -6,11 +6,11 @@ import os
 import traceback
 from database.query_document import get_filtered_list
 from model import QuarkEngineReport, AndroidApp
-from context.context_creator import push_app_context
-from utils.mulitprocessing_util.mp_util import start_process_pool
+from context.context_creator import create_db_context
+from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
 
-@push_app_context
+@create_db_context
 def start_quark_engine_scan(android_app_id_list, use_parallel_mode=False):
     """
     Analysis all apps from the given list with quark-engine.
@@ -24,7 +24,7 @@ def start_quark_engine_scan(android_app_id_list, use_parallel_mode=False):
         if use_parallel_mode:
             quark_engine_parallel_worker(android_app_list)
         else:
-            start_process_pool(android_app_list, quark_engine_worker, os.cpu_count())
+            start_python_interpreter(android_app_list, quark_engine_worker, os.cpu_count())
 
 
 def quark_engine_worker(android_app_id_queue):

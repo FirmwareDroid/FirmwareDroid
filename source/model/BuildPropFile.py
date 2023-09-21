@@ -1,5 +1,4 @@
-from mongoengine import FileField, DictField, CASCADE, LazyReferenceField
-from flask_mongoengine import Document
+from mongoengine import FileField, DictField, CASCADE, LazyReferenceField, Document
 from model import AndroidFirmware, FirmwareFile
 
 

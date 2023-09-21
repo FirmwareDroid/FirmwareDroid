@@ -9,7 +9,7 @@ from firmware_handler.ext4_mount_util import is_path_mounted, exec_umount
 from hashing.fuzzy_hash_creator import fuzzy_hash_firmware
 from model import FirmwareFile, AndroidFirmware
 from utils.mulitprocessing_util.mp_util import start_threads
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 from hashing import md5_from_file
 from utils.file_utils.file_util import create_temp_directories
 
@@ -17,7 +17,7 @@ lock = Lock()
 
 
 @DeprecationWarning
-@push_app_context
+@create_db_context
 def start_firmware_indexer(firmware_id_list):
     """
     Starts the firmware file indexer, which generates a list of all files in the firmware. Function for rq-worker.
@@ -61,7 +61,7 @@ def start_parallel_file_index(firmware_id_list):
 
 
 @DeprecationWarning
-@push_app_context
+@create_db_context
 def index_image_files(firmware_id_queue):
     """
     Creates a file list of the given firmware and save it to the database. Create an index only if it not exists yet.

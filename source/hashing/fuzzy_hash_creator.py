@@ -9,12 +9,12 @@ from model import AndroidFirmware
 from firmware_handler.firmware_file_exporter import get_firmware_file_abs_path, extract_image_files
 from hashing.ssdeep.ssdeep_hasher import start_ssdeep_hashing
 from hashing.tlsh.tlsh_hasher import start_tlsh_hashing
-from context.context_creator import push_app_context
-from utils.mulitprocessing_util.mp_util import start_process_pool
+from context.context_creator import create_db_context
+from utils.mulitprocessing_util.mp_util import start_python_interpreter
 from utils.file_utils.file_util import create_temp_directories
 
 
-@push_app_context
+@create_db_context
 def start_fuzzy_hasher(firmware_id_list):
     """
     Creats a context and starts the ssdeep hasher.
@@ -23,9 +23,9 @@ def start_fuzzy_hasher(firmware_id_list):
 
     """
     logging.info(f"Fuzzy hashing started: {len(firmware_id_list)} firmware archives")
-    start_process_pool(firmware_id_list, hash_firmware_files_parallel,
-                       number_of_processes=os.cpu_count(),
-                       use_id_list=False)
+    start_python_interpreter(firmware_id_list, hash_firmware_files_parallel,
+                             number_of_processes=os.cpu_count(),
+                             use_id_list=False)
 
 
 def hash_firmware_files_parallel(firmware_id_queue):

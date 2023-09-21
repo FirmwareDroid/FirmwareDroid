@@ -4,8 +4,8 @@
 
 import json
 from functools import wraps
-from flask_jwt_extended import get_jwt, get_jwt_identity
-from flask_jwt_extended import verify_jwt_in_request
+# from flask_jwt_extended import get_jwt, get_jwt_identity
+# from flask_jwt_extended import verify_jwt_in_request
 
 
 def admin_jwt_required(fn):

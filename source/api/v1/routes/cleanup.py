@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
-from flask import request
+# from flask import request
 from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 from api.v1.parser.request_util import check_app_mode
 from utils.cleanup.cleanup import cleanup_android_app_references, cleanup_firmware_app_references, \
     cleanup_der_certificates, enqueue_firmware_file_cleanup, cleanup_androguard_certificate_references, \
     restore_apk_files
-import flask
-from flask_restx import Resource, Namespace
+# import flask
+# from flask_restx import Resource, Namespace
 
 ns = Namespace('cleanup', description='Operations related to cleanup the database.')
 

@@ -1,12 +1,12 @@
 import datetime
-from flask_mongoengine import Document
 from mongoengine import LazyReferenceField, CASCADE, StringField, DateTimeField, BooleanField, ListField, \
     DictField, DO_NOTHING
-
 from model import AndroidApp
+from model.ApkScannerResult import ApkScannerResult
 
+SCANNER_NAME = "AndroGuard"
 
-class AndroGuardReport(Document):
+class AndroGuardReport(ApkScannerResult):
     meta = {
         'indexes': ['packagename', #'$packagename', '#packagename',
                     #'app_name', '$app_name', '#app_name',
@@ -18,9 +18,9 @@ class AndroGuardReport(Document):
                     ]
     }
 
-    android_app_id_reference = LazyReferenceField(AndroidApp, reverse_delete_rule=CASCADE, required=True)
-    androguard_version = StringField(required=True)
-    report_date = DateTimeField(required=True, default=datetime.datetime.now)
+    #android_app_id_reference = LazyReferenceField(AndroidApp, reverse_delete_rule=CASCADE, required=True)
+    #androguard_version = StringField(required=True)
+    #report_date = DateTimeField(required=True, default=datetime.datetime.now)
     packagename = StringField(required=True)
     app_name = StringField(required=False)
     is_multidex = BooleanField(required=False)

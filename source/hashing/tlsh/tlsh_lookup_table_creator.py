@@ -9,7 +9,7 @@ from bson import ObjectId
 from mongoengine import Q
 from hashing.tlsh.tlsh_cluster_analysis import start_tlsh_clustering
 from model import TlshSimiliarityLookup, TlshHash, TlshEvaluation
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 from utils.file_utils.file_util import object_to_temporary_json_file, store_json_file, stream_to_json_file
 
 TABLE_LENGTH = 70  # min: 1, max:70
@@ -17,7 +17,7 @@ BAND_WIDTH = 1  # min: 1, max:70
 BAND_WIDTH_THRESHOLD = 13  # min: 1, max:70
 
 # TODO Delete this script entirely
-@push_app_context
+@create_db_context
 def start_similarity_lookup_table(similarity_lookup_table=None, tlsh_hash_list=None):
     """
     Creates a tlsh lookup table for pre-filtering.
@@ -74,7 +74,7 @@ def start_similarity_lookup_table(similarity_lookup_table=None, tlsh_hash_list=N
     save_lookup_progress(lookup_file, lookup_table_json_file, similarity_lookup_table)
     logging.info(f"Finished TLSh lookup dict creation")
 
-@push_app_context
+@create_db_context
 def index_apks_only():
     # TODO REMOVE THIS METHOD
     similarity_lookup_table = create_empty_lookup_table()
@@ -138,7 +138,7 @@ def create_table_index(tlsh_hash, global_dict):
         tlsh_hash.isIndexed = True
         tlsh_hash.save()
 
-@push_app_context
+@create_db_context
 def start_table_size_evaluator(firmware_id_list,
                                regex_filter,
                                number_of_test_files,

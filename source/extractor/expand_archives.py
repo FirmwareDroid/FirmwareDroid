@@ -4,14 +4,14 @@
 import logging
 import os
 import re
+import shlex
+import subprocess
 
 from extractor.ext4_extractor import extract_dat_ext4
 from extractor.bin_extractor.bin_extractor import extract_bin
-from firmware_handler.const_regex_patterns import SYSTEM_IMG_PATTERN_LIST
-from model import FirmwareFile
-from firmware_handler.ext4_mount_util import mount_android_image, is_path_mounted, exec_umount
 from extractor.nb0_extractor import extract_nb0
 from extractor.pac_extractor import unpack_pac
+from extractor.unblob_extractor import unblob_extract
 from extractor.unzipper import extract_tar_file, unzip_file
 from extractor.lz4_extractor import extract_lz4
 from extractor.brotli_extractor import extract_brotli
@@ -53,6 +53,8 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
         elif compressed_file_path.lower().endswith(".dat"):
             logging.info(f"Attempt to extract dat file: {compressed_file_path}")
             extract_dat_ext4(compressed_file_path, destination_dir)
+        else:
+            unblob_extract(compressed_file_path, destination_dir, False)
     except Exception as err:
         logging.warning(f"Skip file due to decompression error: {err}")
 
@@ -77,36 +79,3 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
 
 
 
-
-
-@DeprecationWarning
-def extract_and_mount_all(firmware, cache_path, mount_path):
-    """
-    Extracts the given firmware to a temporary directory and attempts to mount system.img file.
-    :param mount_path: str - path where the firmware is mounted
-    :param cache_path: str - path of the temporary directory to work in.
-    :param firmware: class:'AndroidFirmware' firmware file to mount files from.
-    """
-    # TODO REMOVE THIS METHOD
-    extract_all_nested(compressed_file_path=firmware.absolute_store_path,
-                       destination_dir=cache_path,
-                       delete_compressed_file=False)
-    has_mounted = False
-    for system_pattern in SYSTEM_IMG_PATTERN_LIST:
-        if has_mounted:
-            break
-        pattern = re.compile(system_pattern)
-        firmware_file_list = FirmwareFile.objects(firmware_id_reference=firmware.id, name=pattern)
-        for firmware_file in firmware_file_list:
-            try:
-                img_file_absolute_path = cache_path + firmware_file.relative_path
-                mount_android_image(android_ext4_path=img_file_absolute_path,
-                                    mount_folder_path=mount_path)
-                logging.info(f"Mounted success: {img_file_absolute_path}")
-                has_mounted = True
-                break
-            except (OSError, ValueError) as err:
-                if is_path_mounted(mount_path):
-                    exec_umount(mount_path)
-                logging.warning(err)
-    return has_mounted

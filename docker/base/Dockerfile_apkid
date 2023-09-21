@@ -7,6 +7,7 @@ FROM firmwaredroid-base as apkid-worker
 ########################################################
 # Python requirements                                  #
 ########################################################
+# TODO UPDATE APKID version with new pypi package
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip wheel --quiet --no-cache-dir --wheel-dir=/tmp/yara-python --build-option="build" --build-option="--enable-dex" git+https://github.com/VirusTotal/yara-python.git@v3.11.0 && \
     pip install --quiet --no-cache-dir --no-index --find-links=/tmp/yara-python yara-python && \

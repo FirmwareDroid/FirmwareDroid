@@ -1,7 +1,6 @@
 from mongoengine import LazyReferenceField, DateTimeField, StringField, CASCADE, LongField, BooleanField, \
-    DO_NOTHING
+    DO_NOTHING, Document
 import datetime
-from flask_mongoengine import Document
 
 FUZZY_HASH_ATTRIBUTE_NAMES = ["ssdeep_reference", "tlsh_reference"]
 

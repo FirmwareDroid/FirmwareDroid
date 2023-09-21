@@ -5,7 +5,7 @@ import logging
 import os
 import re
 import tempfile
-import flask
+# import flask
 from extractor.unzipper import unzip_file
 from firmware_handler.const_regex_patterns import ELF_BINARY_FORMATS_PATTERN_LIST
 from utils.file_utils.file_util import check_file_format

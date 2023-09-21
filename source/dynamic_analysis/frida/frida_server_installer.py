@@ -2,7 +2,7 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-import flask
+# import flask
 from dynamic_analysis.emulator_control.adb.adb_wrapper import push_file, file_exists, \
     send_shell_command_streamed, adb_root
 

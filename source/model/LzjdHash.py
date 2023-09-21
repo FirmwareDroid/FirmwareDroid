@@ -1,5 +1,5 @@
-from mongoengine import StringField, LazyReferenceField, CASCADE, DictField
-from flask_mongoengine import Document
+from mongoengine import StringField, LazyReferenceField, CASCADE, DictField, Document
+
 
 class LzjdHash(Document):
     firmware_file_reference = LazyReferenceField('FirmwareFile', reverse_delete_rule=CASCADE, required=True)

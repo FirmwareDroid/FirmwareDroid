@@ -2,11 +2,11 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-import flask
-from flask import send_file
+# import flask
+# from flask import send_file
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
-from flask_restx import Resource, Namespace
+# from flask_restx import Resource, Namespace
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
 
 ns = Namespace('jobs', description='Operations related to background processing and jobs.')

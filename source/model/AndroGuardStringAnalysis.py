@@ -1,5 +1,4 @@
-from flask_mongoengine import Document
-from mongoengine import LazyReferenceField, StringField, CASCADE, DictField, ListField, DO_NOTHING
+from mongoengine import LazyReferenceField, StringField, CASCADE, DictField, ListField, DO_NOTHING, Document
 from model import AndroidApp
 
 

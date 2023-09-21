@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from hashing.fuzzy_hash_common import get_fuzzy_hash_documents_by_regex, filter_fuzzy_hash_documents_by_firmware
 from model import LzjdHash
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 
 
 # TODO REMOVE OR FINISH WORK HERE
-@push_app_context
+@create_db_context
 def start_cluster_analysis(regex_filter, firmware_id_list):
     lzjd_hash_list = get_fuzzy_hash_documents_by_regex(regex_filter, LzjdHash)
     lzjd_hash_list = filter_fuzzy_hash_documents_by_firmware(lzjd_hash_list, firmware_id_list)

@@ -2,7 +2,7 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 
-from flask_restx import fields, Model
+# from flask_restx import fields, Model
 
 test = Model('test', {
     'id': fields.String(required=True, description='The unique identifier of a blog post'),

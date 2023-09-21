@@ -2,9 +2,9 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-import flask
-from flask_restx import Resource, Namespace
-from flask import request, send_file
+# import flask
+# from flask_restx import Resource, Namespace
+# from flask import request, send_file
 from api.v1.common.response_creator import create_zip_file
 from api.v1.common.rq_job_creator import enqueue_jobs
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required

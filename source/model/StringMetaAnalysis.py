@@ -1,5 +1,4 @@
-from mongoengine import LazyReferenceField, StringField, CASCADE, BooleanField, IntField, FloatField
-from flask_mongoengine import Document
+from mongoengine import LazyReferenceField, StringField, CASCADE, BooleanField, IntField, FloatField, Document
 from model import AndroidApp
 
 

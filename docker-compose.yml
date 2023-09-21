@@ -25,7 +25,7 @@ services:
 
   nginx:
     platform: "linux/amd64"
-    container_name: nginx-frontend
+    #container_name: nginx-frontend
     build:
       context: ./
       dockerfile: Dockerfile_NGINX
@@ -36,7 +36,7 @@ services:
       - ./env/nginx:/etc/nginx/conf.d
       - ./env/certbot/conf:/etc/letsencrypt
       - ./env/certbot/www:/var/www/certbot
-      - ./firmware-droid-client/build:/usr/share/nginx/build
+      #- ./firmware-droid-client/build:/usr/share/nginx/build
     ports:
       - "80:80"
       - "443:443"
@@ -45,10 +45,7 @@ services:
       - frontend
 
   mongo-db-1:
-    # TODO upgrade mongo-db version
-    # TODO Security - Do not expose the Database Port by default
-    platform: "linux/amd64"
-    image: mongo:4.2.8-bionic
+    image: mongo:6.0.10
     container_name: mongo-db-1
     restart: unless-stopped
     user: 1000:1000
@@ -58,6 +55,7 @@ services:
       - "27017:27017"
     volumes:
       - ./env/mongo/init/:/docker-entrypoint-initdb.d/
+      - ./env/mongo/auth/cluster.key:/etc/mongodb/cluster.key
     networks:
       - backend
     healthcheck:
@@ -67,10 +65,8 @@ services:
       retries: 3
       start_period: 40s
 
-  mongo-db-replica-setup:
-    # TODO upgrade mongo-db version
-    platform: "linux/amd64"
-    image: mongo:4.2.8-bionic
+  mongo-init:
+    image: mongo:6.0.10
     env_file:
       - ./.env
     links:
@@ -86,10 +82,9 @@ services:
 
   redis:
     platform: "linux/amd64"
-    # TODO upgrade redis version
-    image: redis:6-buster
+    image: redis:7.2.0
     container_name: redis
-    command: redis-server
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     ports:
       - "127.0.0.1:6379:6379"
     networks:
@@ -156,6 +151,25 @@ services:
       - ./.env
     #command: sleep infinity
     command: rqworker --name extractor-worker-default-1 --url redis://redis:6379/ default
+    networks:
+      - backend
+
+  apk_scanner-worker-1:
+    platform: "linux/amd64"
+    user: www
+    build:
+      context: .
+      dockerfile: ./docker/base/Dockerfile_apk_scanner
+    container_name: apk_scanner-worker-1
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - .:/var/www/
+    env_file:
+      - ./.env
+    #command: sleep infinity
+    command: rqworker --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
     networks:
       - backend
 

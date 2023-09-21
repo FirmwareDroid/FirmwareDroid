@@ -3,7 +3,7 @@
 # See the file 'LICENSE' for copying permission.
 
 import smtplib
-import flask
+# import flask
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 

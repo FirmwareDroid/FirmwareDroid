@@ -1,6 +1,5 @@
 import datetime
-from flask_mongoengine import Document
-from mongoengine import StringField, DateTimeField
+from mongoengine import StringField, DateTimeField, Document
 
 
 class RevokedJwtToken(Document):

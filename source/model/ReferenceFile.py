@@ -1,5 +1,4 @@
-from mongoengine import FileField, BooleanField
-from flask_mongoengine import Document
+from mongoengine import FileField, BooleanField, Document
 
 class ReferenceFile(Document):
     """

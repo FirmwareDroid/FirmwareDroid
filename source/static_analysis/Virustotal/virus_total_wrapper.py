@@ -9,11 +9,11 @@ import os
 from database.query_document import get_filtered_list
 from model import UserAccount, AndroidApp
 from model import VirusTotalReport
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 from utils.string_utils.string_util import filter_mongodb_dict_chars
 
 
-@push_app_context
+@create_db_context
 def start_virustotal_scan(android_app_id_list, user_account_id):
     """
     :param android_app_id_list: list(str) - id^^ of class:'AndroidApp'.

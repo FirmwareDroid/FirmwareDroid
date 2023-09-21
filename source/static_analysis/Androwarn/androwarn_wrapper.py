@@ -9,13 +9,13 @@ import tempfile
 from multiprocessing import Lock
 from database.query_document import get_filtered_list
 from model import AndrowarnReport, AndroidApp
-from context.context_creator import push_app_context
-from utils.mulitprocessing_util.mp_util import start_process_pool
+from context.context_creator import create_db_context
+from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
 lock = Lock()
 
 
-@push_app_context
+@create_db_context
 def start_androwarn_analysis(android_app_id_list):
     """
     Analysis all apps from the given list with androwarn.
@@ -27,7 +27,7 @@ def start_androwarn_analysis(android_app_id_list):
     android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "androwarn_report_reference")
     logging.info(f"Androwarn after filter: {str(len(android_app_list))}")
     if len(android_app_list) > 0:
-        start_process_pool(android_app_list, androwarn_scan, os.cpu_count())
+        start_python_interpreter(android_app_list, androwarn_scan, os.cpu_count())
 
 
 def androwarn_scan(android_app_id_queue):

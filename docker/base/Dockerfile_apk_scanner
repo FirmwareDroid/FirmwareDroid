@@ -1,0 +1,30 @@
+FROM firmwaredroid-base as apk_scanner-worker
+
+#ENV PYTHONPATH "/var/www/source/:$PYTHONPATH"
+#####################################
+# Installing jadx                   #
+#####################################
+#RUN mkdir -p /var/jadx/jadx/
+#WORKDIR /var/jadx/jadx/
+# TODO Security enhancement: add checksum check of downloaded zip file
+#RUN wget https://github.com/skylot/jadx/releases/download/v1.2.0/jadx-1.2.0.zip
+#RUN unzip ./jadx-1.2.0.zip
+#ENV JADX "/var/jadx/jadx/bin"
+#ENV PATH "${JADX}:${PATH}"
+#RUN export PATH=$PATH
+#####################################
+# Installing apktool                #
+#####################################
+ENV PYTHONPATH "/var/www/source/:$PYTHONPATH"
+WORKDIR /var/www/source/
+
+##################################################
+# Installing python-based static-analysis tools  #
+##################################################
+RUN python3 /var/www/docker/setup_apk_scanner.py
+
+#RUN --mount=type=cache,target=/var/www/tmp/.cache \
+#    pip install -r /var/www/requirements/requirements_apk_scanner
+
+
+
