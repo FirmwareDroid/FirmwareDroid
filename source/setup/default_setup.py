@@ -47,7 +47,6 @@ def setup_storage_folders(paths_dict):
     """
     for path in paths_dict.values():
         try:
-            logging.error(f"Check Path {path}")
             if not os.path.exists(path):
                 os.makedirs(path)
         except OSError as exception:
@@ -63,12 +62,11 @@ def setup_file_store_setting():
 
     """
     with lock:
-        store_setting = StoreSetting.objects.first()
-        if not store_setting:
+        store_setting_list = StoreSetting.objects.all()
+        if len(store_setting_list) == 0:
             for storage_folder in STORAGE_FOLDERS:
                 store_setting = create_file_store_setting(storage_folder)
-        else:
-            logging.info("Setup Folders")
+        for store_setting in store_setting_list:
             for key in store_setting.store_options_dict.keys():
                 store_dict = store_setting.store_options_dict[key]
                 setup_storage_folders(store_dict["paths"])
