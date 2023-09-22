@@ -7,8 +7,10 @@ from model.StoreSetting import StoreSetting
 from webserver.settings import MAIN_FOLDER
 import uuid
 
+STORAGE_FOLDERS = ["00_file_storage", "01_file_storage"]
 
-def create_file_store_setting():
+
+def create_file_store_setting(storage_folder):
     """
     Creates a class:'StoreSetting' instance and saves it to the database. Sets the default options for the file store.
 
@@ -17,7 +19,7 @@ def create_file_store_setting():
     """
     store_options_dict = {}
     uuid_str = str(uuid.uuid4())
-    file_storage_folder = MAIN_FOLDER + uuid_str + "/"
+    file_storage_folder = MAIN_FOLDER + storage_folder + "/" + uuid_str + "/"
     store_options_dict[uuid_str] = {}
     store_options_dict[uuid_str]["paths"] = {}
     store_options_dict[uuid_str]["paths"]["FILE_STORAGE_FOLDER"] = file_storage_folder
@@ -34,6 +36,7 @@ def create_file_store_setting():
     store_options_dict[uuid_str]["paths"]["FIRMWARE_FOLDER_CACHE"] = file_storage_folder + "cache/"
     store_options_dict[uuid_str]["paths"]["LIBS_FOLDER"] = file_storage_folder + "libs/"
     setup_storage_folders(store_options_dict[uuid_str]["paths"])
+
     return StoreSetting(store_options_dict=store_options_dict, uuid=uuid_str).save()
 
 
@@ -44,6 +47,7 @@ def setup_storage_folders(paths_dict):
     """
     for path in paths_dict.values():
         try:
+            logging.error(f"Check Path {path}")
             if not os.path.exists(path):
                 os.makedirs(path)
         except OSError as exception:
@@ -59,10 +63,15 @@ def setup_file_store_setting():
 
     """
     with lock:
-        print("Setup Store")
         store_setting = StoreSetting.objects.first()
         if not store_setting:
-            store_setting = create_file_store_setting()
+            for storage_folder in STORAGE_FOLDERS:
+                store_setting = create_file_store_setting(storage_folder)
+        else:
+            logging.info("Setup Folders")
+            for key in store_setting.store_options_dict.keys():
+                store_dict = store_setting.store_options_dict[key]
+                setup_storage_folders(store_dict["paths"])
     return store_setting
 
 

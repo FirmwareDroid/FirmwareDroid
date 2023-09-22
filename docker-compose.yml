@@ -25,7 +25,6 @@ services:
 
   nginx:
     platform: "linux/amd64"
-    #container_name: nginx-frontend
     build:
       context: ./
       dockerfile: Dockerfile_NGINX
@@ -36,7 +35,6 @@ services:
       - ./env/nginx:/etc/nginx/conf.d
       - ./env/certbot/conf:/etc/letsencrypt
       - ./env/certbot/www:/var/www/certbot
-      #- ./firmware-droid-client/build:/usr/share/nginx/build
     ports:
       - "80:80"
       - "443:443"
