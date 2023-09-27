@@ -1,10 +1,9 @@
 import mongoengine
 from mongoengine import LazyReferenceField, DateTimeField, StringField, ListField, CASCADE, \
-    DictField, LongField, BooleanField, Document, FileField
+    DictField, LongField, BooleanField, Document
 
 
 class AppCertificate(Document):
-    androguard_report_reference = LazyReferenceField("AndroGuardReport", reverse_delete_rule=CASCADE, required=False)
     android_app_id_reference = LazyReferenceField("AndroidApp", reverse_delete_rule=CASCADE, required=True)
     sha1 = StringField(required=True)
     sha256 = StringField(required=True)
@@ -40,8 +39,9 @@ class AppCertificate(Document):
     issuer_serial = StringField(required=False)
     key_identifier = StringField(required=False)
     serial_number = StringField(required=False)
-    certificate_DER_encoded = FileField(required=True, collection_name="fs.app_certificate_der")
-    certificate_PEM_encoded = FileField(required=True, collection_name="fs.app_certificate_pem")
+    # TODO FIGURE OUT WHY GRAPHENE CAN?T RESOLVE THIS TYPES
+    #certificate_DER_encoded = FileField(required=True, collection_name="fs.app_certificate_der")
+    #certificate_PEM_encoded = FileField(required=True, collection_name="fs.app_certificate_pem")
 
     @classmethod
     def pre_delete(cls, sender, document, **kwargs):

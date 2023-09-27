@@ -1,6 +1,6 @@
 import logging
 
-from model import ApkLeaksStatisticsReport, ApkLeaksReport, AndroidApp, AndroidFirmware
+from model import ApkLeaksStatisticsReport, ApkleaksReport, AndroidApp, AndroidFirmware
 from context.context_creator import create_db_context
 from utils.file_utils.file_util import create_reference_file, object_to_temporary_json_file, stream_to_json_file
 from statistics.statistics_common import fetch_chunked_lists
@@ -34,7 +34,7 @@ def get_apkleaks_statistics_report(report_objectid_list, statistics_report):
     """
     Creates statistics for the apkleaks tool and save the it to the database.
 
-    :param report_objectid_list: list(ObjectId) - list(class:'ApkLeaksReport' ObjectIds)
+    :param report_objectid_list: list(ObjectId) - list(class:'ApkleaksReport' ObjectIds)
     :param statistics_report: class:'ApkLeaksStatisticsReport'
 
     """
@@ -61,14 +61,14 @@ def get_leaks_frequency(report_objectid_list):
     """
     Gets a count of how often a specific leak was found.
 
-    :param report_objectid_list: list(ObjectId) - list(class:'ApkLeaksReport' ObjectIds)
+    :param report_objectid_list: list(ObjectId) - list(class:'ApkleaksReport' ObjectIds)
     :return: dict(str, int)
 
     """
     result_dict = {}
     chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
     for chunk in chunk_list:
-        command_cursor = ApkLeaksReport.objects(pk__in=chunk).aggregate([
+        command_cursor = ApkleaksReport.objects(pk__in=chunk).aggregate([
             {
                 "$match": {
                     "results.results": {
@@ -124,14 +124,14 @@ def get_leak_references(report_objectid_list):
     """
     Gets a the reference where a specific leak was found.
 
-    :param report_objectid_list: list(ObjectId) - list(class:'ApkLeaksReport' ObjectIds)
+    :param report_objectid_list: list(ObjectId) - list(class:'ApkleaksReport' ObjectIds)
     :return:
 
     """
     reference_dict = {}
     chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
     for chunk in chunk_list:
-        command_cursor = ApkLeaksReport.objects(pk__in=chunk).aggregate([
+        command_cursor = ApkleaksReport.objects(pk__in=chunk).aggregate([
             {
                 "$match": {
                     "results.results": {
@@ -187,7 +187,7 @@ def get_google_api_key_reports(report_objectid_list):
     report_id_list = []
     chunk_list = [report_objectid_list[x:x + 1000] for x in range(0, len(report_objectid_list), 1000)]
     for chunk in chunk_list:
-        command_cursor = ApkLeaksReport.objects(pk__in=chunk).aggregate([
+        command_cursor = ApkleaksReport.objects(pk__in=chunk).aggregate([
             {
                 "$match": {
                     "results.results.name": "Google_API_Key"

@@ -1,17 +1,33 @@
-FROM firmwaredroid-base as apk_scanner-worker
-
+FROM openjdk:8-jdk-slim-buster as apk_scanner-worker
+COPY --from=firmwaredroid-base / /
+#FROM firmwaredroid-base as apk_scanner-worker
 #ENV PYTHONPATH "/var/www/source/:$PYTHONPATH"
+
+
+
+#####################################
+# Installing apktool                #
+#####################################
+RUN APKTOOL_VERSION=$(curl -s "https://api.github.com/repos/iBotPeaches/Apktool/releases/latest"  \
+    | grep -Po '"tag_name": "v\K[0-9.]+')  \
+    && curl -Lo /usr/local/bin/apktool.jar "https://github.com/iBotPeaches/Apktool/releases/latest/download/apktool_${APKTOOL_VERSION}.jar"
+RUN curl -o /usr/local/bin/apktool https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool
+RUN chmod a+x /usr/local/bin/apktool.jar && chmod a+x /usr/local/bin/apktool
+
 #####################################
 # Installing jadx                   #
 #####################################
-#RUN mkdir -p /var/jadx/jadx/
-#WORKDIR /var/jadx/jadx/
-# TODO Security enhancement: add checksum check of downloaded zip file
-#RUN wget https://github.com/skylot/jadx/releases/download/v1.2.0/jadx-1.2.0.zip
-#RUN unzip ./jadx-1.2.0.zip
-#ENV JADX "/var/jadx/jadx/bin"
-#ENV PATH "${JADX}:${PATH}"
-#RUN export PATH=$PATH
+RUN mkdir -p /tmp/jadx-temp/jadx/ && mkdir -p /opt/jadx/bin
+WORKDIR /tmp/jadx-temp/
+RUN JADX_VERSION=$(curl -s "https://api.github.com/repos/skylot/jadx/releases/latest"  \
+    | grep -Po '"tag_name": "v\K[0-9.]+')  \
+    && curl -Lo jadx.zip "https://github.com/skylot/jadx/releases/latest/download/jadx-${JADX_VERSION}.zip"
+RUN unzip jadx.zip -d /tmp/jadx-temp/
+RUN mv /tmp/jadx-temp/* /opt/jadx/
+ENV JADX "/opt/jadx/bin"
+ENV PATH "${JADX}:${PATH}"
+RUN export PATH=$PATH
+#RUN jadx --version
 #####################################
 # Installing apktool                #
 #####################################

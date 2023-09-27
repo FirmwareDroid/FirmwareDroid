@@ -10,7 +10,7 @@ class FirmwareFile(Document):
     firmware_id_reference = LazyReferenceField('AndroidFirmware', reverse_delete_rule=CASCADE)
     ssdeep_reference = LazyReferenceField('SsDeepHash', reverse_delete_rule=DO_NOTHING)
     tlsh_reference = LazyReferenceField('TlshHash', reverse_delete_rule=DO_NOTHING)
-    sdhash_reference = LazyReferenceField('SdhashHash', reverse_delete_rule=DO_NOTHING)
+    sdhash_reference = LazyReferenceField('SdHash', reverse_delete_rule=DO_NOTHING)
     #lzjd_reference = LazyReferenceField('LzdjHash', reverse_delete_rule=DO_NOTHING)
     android_app_reference = LazyReferenceField('AndroidApp', reverse_delete_rule=DO_NOTHING)
     name = StringField(required=True, max_length=1024, min_length=1)

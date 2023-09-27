@@ -1,7 +1,6 @@
 from mongoengine import DictField
-
 from model.ApkScannerResult import ApkScannerResult
 
 
-class ApkLeaksReport(ApkScannerResult):
+class ApkleaksReport(ApkScannerResult):
     results = DictField(required=True)

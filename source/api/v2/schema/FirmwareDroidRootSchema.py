@@ -1,5 +1,7 @@
 import graphene
 import graphql_jwt
+from graphene_mongo import MongoengineConnectionField
+from api.v2.schema.RqJobsSchema import RqJobMutation, RqQueueQuery
 from api.v2.schema.UserAccountSchema import UserAccountQuery
 from api.v2.schema.StoreSettingsSchema import StoreSettingsQuery
 from api.v2.schema.AndroidFirmwareSchema import AndroidFirmwareQuery
@@ -15,7 +17,18 @@ from api.v2.schema.JsonFileSchema import JsonFileQuery
 from api.v2.schema.ImageFileSchema import ImageFileQuery
 from api.v2.schema.ApplicationSettingSchema import ApplicationSettingQuery
 from api.v2.schema.StatisticsReportSchema import StatisticsReportQuery
-#from api.v2.schema.AppCertificateSchema import AppCertificateQuery
+from api.v2.schema.SuperStatisticsReportSchema import SuperStatisticsReportQuery
+from api.v2.schema.QuarkEngineStatisticsReportSchema import QuarkEngineStatisticsReportQuery
+from api.v2.schema.ExodusStatisticsReportSchema import ExodusStatisticsReportQuery
+from api.v2.schema.ApkleaksReportSchema import ApkleaksReportQuery
+from api.v2.schema.ApkleaksStatisticsReportSchema import ApkleaksStatisticsReportQuery
+from api.v2.schema.SuperReportSchema import SuperReportQuery
+from api.v2.schema.QuarkEngineReportSchema import QuarkEngineReportQuery
+from api.v2.schema.LzjdHashSchema import LzjdHashQuery
+from api.v2.schema.SdHashSchema import SdHashQuery
+from api.v2.schema.SsDeepClusterAnalysisSchema import SsDeepClusterAnalysisQuery
+from api.v2.schema.TlshHashSchema import TlshHashQuery
+from api.v2.schema.AppCertificateSchema import AppCertificateQuery, AppCertificateType
 
 
 class Query(ApplicationSettingQuery,
@@ -33,16 +46,33 @@ class Query(ApplicationSettingQuery,
             FirmwareFileQuery,
             JsonFileQuery,
             ImageFileQuery,
+            SuperStatisticsReportQuery,
+            QuarkEngineStatisticsReportQuery,
+            ExodusStatisticsReportQuery,
+            ApkleaksReportQuery,
+            ApkleaksStatisticsReportQuery,
+            SuperReportQuery,
+            QuarkEngineReportQuery,
+            LzjdHashQuery,
+            SdHashQuery,
+            SsDeepClusterAnalysisQuery,
+            TlshHashQuery,
+            AppCertificateQuery,
+            RqQueueQuery,
             graphene.ObjectType):
     token_auth = graphql_jwt.ObtainJSONWebToken.Field()
     verify_token = graphql_jwt.Verify.Field()
     refresh_token = graphql_jwt.Refresh.Field()
+    test_list = MongoengineConnectionField(AppCertificateType)
 
 
-class Mutation(graphene.ObjectType):
-    token_auth = graphql_jwt.ObtainJSONWebToken.Field()
-    verify_token = graphql_jwt.Verify.Field()
-    refresh_token = graphql_jwt.Refresh.Field()
+class Mutation(RqJobMutation, graphene.ObjectType):
+    """
+
+    """
+    #token_auth = graphql_jwt.ObtainJSONWebToken.Field()
+    #verify_token = graphql_jwt.Verify.Field()
+    #refresh_token = graphql_jwt.Refresh.Field()
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)

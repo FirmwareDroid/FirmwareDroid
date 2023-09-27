@@ -6,7 +6,7 @@ import os
 import tempfile
 import traceback
 
-from model import AndroidApp, ApkLeaksReport
+from model import AndroidApp, ApkleaksReport
 from database.query_document import get_filtered_list
 from context.context_creator import create_db_context
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
@@ -84,14 +84,14 @@ def get_apkleaks_analysis(apk_file_path, result_folder_path):
 
 def create_report(android_app, json_results):
     """
-    Create a class:'APKLeaksReport' and save the scan results in the database.
+    Create a class:'ApkleaksReport' and save the scan results in the database.
 
     :param android_app: class:'AndroidApp' - app that was scanned.
     :param json_results: str - scanning results in json format.
 
     """
     # TODO change static tool version to dynamic one
-    apkleaks_report = ApkLeaksReport(android_app_id_reference=android_app.id,
+    apkleaks_report = ApkleaksReport(android_app_id_reference=android_app.id,
                                      apkleaks_version="2.6.1",
                                      results=json_results).save()
     android_app.apkleaks_report_reference = apkleaks_report.id

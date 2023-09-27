@@ -2,9 +2,11 @@ import importlib
 from enum import Enum
 import graphene
 import django_rq
+from graphene import String
 from graphql_jwt.decorators import superuser_required
 
 from firmware_handler.firmware_importer import start_firmware_mass_import
+from webserver.settings import RQ_QUEUES
 
 APK_SCAN_FUNCTION_NAME = "start_scan"
 
@@ -21,6 +23,16 @@ class ModuleNames(Enum):
 
 class ClassNames(Enum):
     ANDROGUARD = "AndroGuardScanJob"
+
+
+class RqQueueQuery(graphene.ObjectType):
+    rq_queue_name_list = graphene.List(String,
+                                       name="rq_queue_name_list"
+                                       )
+
+    @superuser_required
+    def resolve_rq_queue_name_list(self, info):
+        return RQ_QUEUES.keys()
 
 
 def import_module_function(module_name, object_id_list):

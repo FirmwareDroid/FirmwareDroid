@@ -5,7 +5,7 @@ from model.StatisticsReport import StatisticsReport
 ATTRIBUTE_MAP = {"leaks": "leaks_count_dict"}
 
 
-class ApkLeaksStatisticsReport(StatisticsReport):
+class ApkleaksStatisticsReport(StatisticsReport):
     leaks_reference_dict = LazyReferenceField(JsonFile, reverse_delete_rule=CASCADE, required=False)
     leaks_count_dict = DictField(required=False)
 

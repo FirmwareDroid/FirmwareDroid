@@ -10,18 +10,11 @@ class ApkScannerResultType(MongoengineObjectType):
 
 
 class ApkScannerResultQuery(graphene.ObjectType):
-    document_list = graphene.List(ApkScannerResultType,
-                                  object_id_list=graphene.List(graphene.String),
-                                  name="apk_scanner_report_list"
-                                  )
+    apk_scanner_report_list = graphene.List(ApkScannerResultType,
+                                            object_id_list=graphene.List(graphene.String),
+                                            name="apk_scanner_report_list"
+                                            )
 
     @superuser_required
-    def resolve_document_list(self, info, object_id_list):
+    def resolve_apk_scanner_report_list(self, info, object_id_list):
         return ApkScannerResult.objects(pk__in=object_id_list)
-
-
-
-
-
-
-

@@ -1,5 +1,6 @@
 import graphene
 from graphene_mongo import MongoengineObjectType
+from graphene.relay import Node
 from graphql_jwt.decorators import superuser_required
 from model.ApplicationSetting import ApplicationSetting
 
@@ -7,6 +8,7 @@ from model.ApplicationSetting import ApplicationSetting
 class ApplicationSettingType(MongoengineObjectType):
     class Meta:
         model = ApplicationSetting
+        interface = (Node,)
 
 
 class ApplicationSettingQuery(graphene.ObjectType):
