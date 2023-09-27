@@ -16,6 +16,7 @@ def init_db(db_settings):
     :return: mongoengine database connection object.
 
     """
+
     alias = uuid.uuid4()
     db_con = open_db_connection(db_settings, alias)
     register_default_connection(db_settings)

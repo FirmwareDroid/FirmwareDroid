@@ -1,9 +1,7 @@
 import datetime
 from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, CASCADE, \
     ListField, Document
-#from api.v1.marshmallow_fields.LazyReference import LazyReferenceConverter
 from model import AndroidFirmware
-#from marshmallow import Schema, fields
 
 
 class AndroidApp(Document):
@@ -30,7 +28,7 @@ class AndroidApp(Document):
     apkleaks_report_reference = LazyReferenceField('ApkLeaksReport', reverse_delete_rule=DO_NOTHING)
     opt_firmware_file_reference_list = ListField(LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING))
     app_twins_reference_list = ListField(LazyReferenceField('AndroidApp', reverse_delete_rule=DO_NOTHING))
-
+    certificate_id_list = ListField(LazyReferenceField('AppCertificate', reverse_delete_rule=DO_NOTHING))
 
 # class AndroidAppSchema(Schema):
 #     id = fields.Str()

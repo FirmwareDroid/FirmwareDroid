@@ -1,11 +1,8 @@
-import datetime
-from mongoengine import DictField, StringField, DateTimeField, LazyReferenceField, CASCADE, Document
-from model import AndroidApp
+from mongoengine import DictField, StringField
+from model.ApkScannerResult import ApkScannerResult
 
 
-class VirusTotalReport(Document):
-    report_datetime = DateTimeField(default=datetime.datetime.now)
-    android_app_id_reference = LazyReferenceField(AndroidApp, reverse_delete_rule=CASCADE, required=True)
+class VirusTotalReport(ApkScannerResult):
     file_info = DictField(required=False)
     analysis_id = StringField(required=False)
     virus_total_analysis = StringField(required=False)

@@ -1,12 +1,11 @@
 import mongoengine
-from mongoengine import LazyReferenceField, DateTimeField, StringField, ListField, FileField, CASCADE, \
-    DictField, LongField, BooleanField, Document
-from model import AndroidApp
+from mongoengine import LazyReferenceField, DateTimeField, StringField, ListField, CASCADE, \
+    DictField, LongField, BooleanField, Document, FileField
 
 
 class AppCertificate(Document):
-    androguard_report_reference = LazyReferenceField('AndroGuardReport', reverse_delete_rule=CASCADE, required=False)
-    android_app_id_reference = LazyReferenceField(AndroidApp, reverse_delete_rule=CASCADE, required=True)
+    androguard_report_reference = LazyReferenceField("AndroGuardReport", reverse_delete_rule=CASCADE, required=False)
+    android_app_id_reference = LazyReferenceField("AndroidApp", reverse_delete_rule=CASCADE, required=True)
     sha1 = StringField(required=True)
     sha256 = StringField(required=True)
     issuer = StringField(required=True)

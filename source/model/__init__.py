@@ -1,8 +1,6 @@
 from .AndroidFirmware import AndroidFirmware
 from .AndroidApp import AndroidApp
-#from .UserAccount import User
 from .JsonFile import JsonFile
-from .ReferenceFile import ReferenceFile
 from .ImageFile import ImageFile
 from .StatisticsReport import StatisticsReport
 from .FirmwareStatisticsReport import FirmwareStatisticsReport
@@ -40,7 +38,6 @@ from .StoreSetting import StoreSetting
 from .QuarkEngineReport import QuarkEngineReport
 from .SuperReport import SuperReport
 from .ApkLeaksReport import ApkLeaksReport
-from .RevokedJwtToken import RevokedJwtToken
 from .ApkleaksStatisticsReport import ApkLeaksStatisticsReport
 from .ExodusStatisticsReport import ExodusStatisticsReport
 from .QuarkEngineStatisticsReport import QuarkEngineStatisticsReport

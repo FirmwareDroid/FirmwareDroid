@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 from database.connector import init_db
 
+
 env = environ.Env(
     # set casting, default value
     # DEBUG=(bool, False)
@@ -112,6 +113,7 @@ MASS_IMPORT_NUMBER_OF_THREADS = os.environ['MASS_IMPORT_NUMBER_OF_THREADS']
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "level": "DEBUG",
     "formatters": {
         "verbose": {
             "format": "{asctime} {name} {levelname} {module} {process:d} {thread:d} {funcName} {message}",

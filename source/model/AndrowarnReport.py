@@ -1,13 +1,9 @@
 import mongoengine
-from mongoengine import LazyReferenceField, DateTimeField, StringField, ListField, FileField, CASCADE, Document
-import datetime
-from model import AndroidApp
+from mongoengine import ListField, FileField
+from model.ApkScannerResult import ApkScannerResult
 
 
-class AndrowarnReport(Document):
-    report_date = DateTimeField(required=True, default=datetime.datetime.now)
-    androwarn_version = StringField(required=True, default="1.6.1")
-    android_app_id_reference = LazyReferenceField(AndroidApp, reverse_delete_rule=CASCADE, required=True)
+class AndrowarnReport(ApkScannerResult):
     report_file_json = FileField(required=True)
     telephony_identifiers_leakage = ListField(required=False)
     device_settings_harvesting = ListField(required=False)
