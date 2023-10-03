@@ -2,7 +2,7 @@ import logging
 import os
 from multiprocessing import Lock
 lock = Lock()
-from model import ApplicationSetting
+from model import WebclientSetting
 from model.StoreSetting import StoreSetting
 from webserver.settings import MAIN_FOLDER
 import uuid
@@ -77,11 +77,11 @@ def setup_application_setting():
     """
     Gets the application default settings.
 
-    :return: class:'ApplicationSetting'
+    :return: class:'WebclientSetting'
 
     """
     with lock:
-        application_setting = ApplicationSetting.objects.first()
+        application_setting = WebclientSetting.objects.first()
         if not application_setting:
             application_setting = create_application_setting()
     return application_setting
@@ -100,10 +100,10 @@ def get_active_store_path_dict():
 
 def create_application_setting():
     """
-    Creates a class:'ApplicationSetting' instance and saves it to the database.
+    Creates a class:'WebclientSetting' instance and saves it to the database.
 
-    :return: class:'ApplicationSetting'
+    :return: class:'WebclientSetting'
 
     """
-    return ApplicationSetting(is_signup_active=True,
-                              is_firmware_upload_active=True).save()
+    return WebclientSetting(is_signup_active=True,
+                            is_firmware_upload_active=True).save()

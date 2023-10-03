@@ -34,12 +34,23 @@ SECRET_KEY = "django-insecure-dem!i552^wlq1wkw^js7h(t)kdjy!j!&3gm=ut@j1ibsbpml1d
 
 # SECURITY WARNING: don't run with debug turned on in production!
 ALLOWED_HOSTS = ["firmwaredroid.cloudlab.zhaw.ch",
-                 "firmwaredroid-backend:5000", "https://firmwaredroid.cloudlab.zhaw.ch"]
+                 "firmwaredroid-backend:5000",
+                 "https://firmwaredroid.cloudlab.zhaw.ch"]
 
 # Security Settings
+#CSRF_HEADER_NAME = "X-CSRFToken"
+#CSRF_COOKIE_NAME = "csrftoken"
 CSRF_TRUSTED_ORIGINS = ["https://firmwaredroid.cloudlab.zhaw.ch"]
-
 CORS_ORIGIN_WHITELIST = ["firmwaredroid.cloudlab.zhaw.ch"]
+CORS_ALLOW_CREDENTIALS = True
+
+GRAPHQL_JWT = {
+    'JWT_COOKIE_NAME': 'jwt-session',
+    'JWT_COOKIE_SECURE': False,
+    'JWT_COOKIE_SAMESITE': "Lax"
+}
+
+
 
 DEBUG_LOCAL = False
 print(env('APP_ENV'))
@@ -48,6 +59,7 @@ if env('APP_ENV') == "development":
 elif env('APP_ENV') == "debug_local":
     DEBUG = True
     DEBUG_LOCAL = True
+    CORS_EXPOSE_HEADERS = True
 elif env('APP_ENV') == "production":
     DEBUG = False
 elif env('APP_ENV') == "testing":
@@ -134,6 +146,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'corsheaders',
     "graphene_django",
     "setup",
     "django_rq",
@@ -141,13 +154,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware"
 ]
 
 ROOT_URLCONF = "webserver.urls"
@@ -194,8 +207,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = "/static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+STATIC_URL = "/django_static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "django_static/")
 FORCE_SCRIPT_NAME = '/'
 USE_X_FORWARDED_HOST = True
 LOGIN_URL = '/admin/login/'
@@ -276,3 +289,6 @@ RQ_QUEUES = {
         'DEFAULT_TIMEOUT': 60 * 60,
     },
 }
+
+
+

@@ -20,10 +20,3 @@ for scanner_name in PYTHON_SCANNERS:
     subprocess.Popen([pip3_env_path, '-m', 'pip', 'install', '-r', '/var/www/requirements.txt'])
     subprocess.Popen([pip3_env_path, '-m',
                       'pip', 'install', '-r', f'/var/www/requirements/requirements_{scanner_name}.txt'])
-
-    #os.system(f"{pip3_env_path} -m pip install -r /var/www/requirements.txt")
-    #os.system(f"{pip3_env_path} -m pip install -r /var/www/requirements/requirements_{scanner_name}.txt")
-    #subprocess.check_call(f"{pip3_env_path} -m pip install -r /var/www/requirements.txt")
-    #subprocess.check_call(f"{pip3_env_path} -m pip install -r /var/www/requirements/requirements_{scanner_name}.txt")
-
-

@@ -35,6 +35,7 @@ services:
       - ./env/nginx:/etc/nginx/conf.d
       - ./env/certbot/conf:/etc/letsencrypt
       - ./env/certbot/www:/var/www/certbot
+      - ./firmware-droid-client/build:/usr/share/nginx/html
     ports:
       - "80:80"
       - "443:443"

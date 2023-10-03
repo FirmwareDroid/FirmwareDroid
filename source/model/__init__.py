@@ -21,7 +21,6 @@ from .AndroGuardClassAnalysis import AndroGuardClassAnalysis
 from .AndroGuardStringAnalysis import AndroGuardStringAnalysis
 from .StringMetaAnalysisStatisticsReport import StringMetaAnalysisStatisticsReport
 from .StringMetaAnalysis import StringMetaAnalysis
-
 from .AppCertificateStatisticsReport import AppCertificateStatisticsReport
 from .VirusTotalReport import VirusTotalReport
 from .FirmwareFile import FirmwareFile
@@ -34,7 +33,7 @@ from .TlshClusterAnalysis import TlshClusterAnalysis
 from .LzjdHash import LzjdHash
 from .TlshSimiliarityLookup import TlshSimiliarityLookup
 from .TlshEvaluation import TlshEvaluation
-from .ApplicationSetting import ApplicationSetting
+from .WebclientSetting import WebclientSetting
 from .StoreSetting import StoreSetting
 from .QuarkEngineReport import QuarkEngineReport
 from .SuperReport import SuperReport

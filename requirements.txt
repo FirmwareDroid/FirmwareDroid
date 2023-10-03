@@ -3,6 +3,7 @@
 Django~=4.2.4
 django-environ~=0.11.1
 django-rq~=2.8.1
+django-cors-headers~=4.2.0
 ##############################
 # GrahpQL Integration
 graphene-django~=3.1.5

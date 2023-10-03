@@ -1,13 +1,12 @@
 import datetime
-from mongoengine import Document, ListField
+from mongoengine import Document
 from mongoengine import DateTimeField, BooleanField, DictField
 
 
-class ApplicationSetting(Document):
+class WebclientSetting(Document):
     create_date = DateTimeField(default=datetime.datetime.now)
     is_signup_active = BooleanField(required=True, default=False)
     is_firmware_upload_active = BooleanField(required=True, default=True)
-    test = ListField()
     active_scanners_dict = DictField(required=True, default={
         "AndroGuard": True,
         "Androwarn": True,
@@ -21,7 +20,4 @@ class ApplicationSetting(Document):
     })
 
 
-# class ApplicationSettingSchema(Schema):
-#     is_signup_active = fields.Boolean()
-#     is_firmware_upload_active = fields.Boolean()
-#     active_scanners_dict = fields.Dict()
+

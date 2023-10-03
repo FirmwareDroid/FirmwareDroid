@@ -4,7 +4,7 @@
 
 import functools
 
-from model import ApplicationSetting
+from model import WebclientSetting
 
 
 def requires_signup_is_active(f):
@@ -17,7 +17,7 @@ def requires_signup_is_active(f):
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
-        app_setting = ApplicationSetting.objects.first()
+        app_setting = WebclientSetting.objects.first()
         if not app_setting.is_signup_active:
             return "", 400
         return f(*args, **kwargs)
@@ -34,7 +34,7 @@ def requires_firmware_upload_is_active(f):
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
-        app_setting = ApplicationSetting.objects.first()
+        app_setting = WebclientSetting.objects.first()
         if not app_setting.is_firmware_upload_active:
             return "", 400
         return f(*args, **kwargs)

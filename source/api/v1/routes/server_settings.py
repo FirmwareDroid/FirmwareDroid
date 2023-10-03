@@ -8,8 +8,8 @@ import logging
 from model.StoreSetting import FILE_STORE_NAME_LIST
 from config.app_settings import set_active_storage_folders
 from api.v1.decorators.jwt_auth_decorator import admin_jwt_required
-from model import ApplicationSetting, StoreSetting
-from model.ApplicationSetting import ApplicationSettingSchema
+from model import WebclientSetting, StoreSetting
+from model.WebclientSetting import ApplicationSettingSchema
 ns = Namespace('server_settings', description='Operations related to application settings.')
 
 
@@ -23,7 +23,7 @@ class GetApplicationSetting(Resource):
 
         """
         response = "", 400
-        app_setting = ApplicationSetting.objects.first()
+        app_setting = WebclientSetting.objects.first()
         if app_setting:
             response = ApplicationSettingSchema().dump(app_setting)
         return response

@@ -1,9 +1,5 @@
 FROM openjdk:8-jdk-slim-buster as apk_scanner-worker
 COPY --from=firmwaredroid-base / /
-#FROM firmwaredroid-base as apk_scanner-worker
-#ENV PYTHONPATH "/var/www/source/:$PYTHONPATH"
-
-
 
 #####################################
 # Installing apktool                #
@@ -27,20 +23,10 @@ RUN mv /tmp/jadx-temp/* /opt/jadx/
 ENV JADX "/opt/jadx/bin"
 ENV PATH "${JADX}:${PATH}"
 RUN export PATH=$PATH
-#RUN jadx --version
-#####################################
-# Installing apktool                #
-#####################################
-ENV PYTHONPATH "/var/www/source/:$PYTHONPATH"
-WORKDIR /var/www/source/
 
 ##################################################
 # Installing python-based static-analysis tools  #
 ##################################################
+ENV PYTHONPATH "/var/www/source/:$PYTHONPATH"
+WORKDIR /var/www/source/
 RUN python3 /var/www/docker/setup_apk_scanner.py
-
-#RUN --mount=type=cache,target=/var/www/tmp/.cache \
-#    pip install -r /var/www/requirements/requirements_apk_scanner
-
-
-
