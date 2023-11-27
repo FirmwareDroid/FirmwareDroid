@@ -8,5 +8,6 @@ urlpatterns = [
     path('', include('setup.urls')),
     path("admin/", admin.site.urls),
     path("graphql/", jwt_cookie(GraphQLView.as_view(graphiql=True))),
-    path("django-rq/", include('django_rq.urls'))
+    path("django-rq/", include('django_rq.urls')),
+    path("download/", include("file_download.urls")),
 ]

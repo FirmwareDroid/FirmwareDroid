@@ -1,0 +1,77 @@
+version: '3.7'
+services:
+  envoy:
+    platform: "linux/amd64"
+    image: envoyproxy/envoy:v1.27-latest
+    restart: unless-stopped
+    volumes:
+      - ./env/envoy/envoy.yaml:/etc/envoy/envoy.yaml
+      - ./env/envoy/fmd-aosp.init-lab.ch/:/etc/envoy/certs/
+    ports:
+      - "443:443"
+    networks:
+      - frontend
+
+  coturn:
+    platform: "linux/amd64"
+    image: coturn/coturn
+    restart: unless-stopped
+    volumes:
+      - ./env/coturn/turnserver.conf:/etc/coturn/turnserver.conf
+    network_mode: "host"
+
+  emulator:
+    platform: "linux/amd64"
+    container_name: android_emulator
+    restart: unless-stopped
+    image: us-docker.pkg.dev/android-emulator-268719/images/30-google-x64:30.1.2
+    ports:
+      - "8554:8554"
+      - "5555:5555"
+    devices: [/dev/kvm]
+    env_file:
+      - ./env/.env
+    networks:
+      - frontend
+
+  custom-emulator:
+    platform: "linux/amd64"
+    build:
+      context: .
+      dockerfile: emulator_build_service/Dockerfile
+    command: sleep infinity
+    devices: [/dev/kvm]
+    env_file:
+      - ./env/.env
+    volumes:
+      - /home/suth/aosp/:/android/aosp/
+    ports:
+      - "8554:8554"
+      - "5555:5555"
+    networks:
+      - frontend
+
+  custom-emulator12:
+    platform: "linux/amd64"
+    container_name: android_emulator
+    build:
+      context: .
+      dockerfile: emulator_build_service/Dockerfile
+    #command: bash -c "/android/emulator_start.sh"
+    #command: emulator -no-window -ports "5556,5557" -grpc "8556" -skip-adb-auth -no-snapshot-save -wipe-data -no-boot-anim -gpu swiftshader_indirect -turncfg "${TURN}" -qemu -append "panic=1"
+    command: sleep infinity
+    devices: [/dev/kvm]
+    env_file:
+      - ./env/.env
+    volumes:
+      - /home/suth/aosp_12/:/android/aosp/
+    ports:
+      - "8554:8554"
+      - "8556:8556"
+      - "5555:5555"
+    networks:
+      - frontend
+
+networks:
+  frontend:
+    driver: bridge

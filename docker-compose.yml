@@ -6,8 +6,8 @@ services:
     build:
       context: .
       dockerfile: docker/base/Dockerfile_backend
-    image: firmwaredroid-backend-worker
-    container_name: firmwaredroid-backend
+    image: backend-worker
+    container_name: backend-worker
     working_dir: /var/www/
     restart: unless-stopped
     env_file:
@@ -39,7 +39,7 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "5602:5602"
+      #- "5602:5602"
     networks:
       - frontend
 
@@ -105,34 +105,14 @@ services:
     env_file:
       - ./.env
     #command: sleep infinity
-    command: rqworker --name extractor-worker-high-1 --url redis://redis:6379/ high --path /var/www/ --path /var/www/source
+    #command: rqworker --name extractor-worker-high-1 --url redis://redis:6379/ high --path /var/www/ --path /var/www/source
+    command: rqworker --name extractor-worker-high-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
     networks:
       - backend
     # TODO Security enhancement / compatibility - replace/remove access right
     privileged: true
     #cap_add:
     #  - SYS_ADMIN
-
-#  fuzzyhash-worker-1:
-#    platform: "linux/amd64"
-#    build:
-#      context: .
-#      dockerfile: ./docker/base/Dockerfile_fuzzyhash
-#    container_name: fuzzyhash-worker-1
-#    restart: unless-stopped
-#    depends_on:
-#      - redis
-#      - extractor-worker-high-1
-#    volumes:
-#      - .:/var/www/
-#      - /var/run/docker.sock:/var/run/docker.sock
-#    env_file:
-#      - ./.env
-#    command: rqworker --name fuzzyhash-worker-1 --url redis://redis:6379/ fuzzyhash
-#    networks:
-#      - backend
-#    # TODO Security enhancement / compatibility - replace/remove access right
-#    privileged: true
 
   extractor-worker-default-1:
     platform: "linux/amd64"
@@ -149,7 +129,8 @@ services:
     env_file:
       - ./.env
     #command: sleep infinity
-    command: rqworker --name extractor-worker-default-1 --url redis://redis:6379/ default
+    #command: rqworker --name extractor-worker-default-1 --url redis://redis:6379/ default
+    command: rqworker --name extractor-worker-default-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     networks:
       - backend
 
@@ -171,6 +152,27 @@ services:
     command: rqworker --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
     networks:
       - backend
+
+#  fuzzyhash-worker-1:
+#    platform: "linux/amd64"
+#    build:
+#      context: .
+#      dockerfile: ./docker/base/Dockerfile_fuzzyhash
+#    container_name: fuzzyhash-worker-1
+#    restart: unless-stopped
+#    depends_on:
+#      - redis
+#      - extractor-worker-high-1
+#    volumes:
+#      - .:/var/www/
+#      - /var/run/docker.sock:/var/run/docker.sock
+#    env_file:
+#      - ./.env
+#    command: rqworker --name fuzzyhash-worker-1 --url redis://redis:6379/ fuzzyhash
+#    networks:
+#      - backend
+#    # TODO Security enhancement / compatibility - replace/remove access right
+#    privileged: true
 
   androguard-worker-1:
     platform: "linux/amd64"

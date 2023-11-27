@@ -1,13 +1,14 @@
 import logging
 import os
-from multiprocessing import Lock
-lock = Lock()
+import redis_lock
 from model import WebclientSetting
 from model.StoreSetting import StoreSetting
-from webserver.settings import MAIN_FOLDER
+from webserver.settings import MAIN_FOLDER, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT
 import uuid
+from redis import StrictRedis
 
-STORAGE_FOLDERS = ["00_file_storage", "01_file_storage"]
+redis_con = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD)
+DEFAULT_STORAGE_FOLDER = "00_file_storage"
 
 
 def create_file_store_setting(storage_folder):
@@ -56,31 +57,48 @@ def setup_storage_folders(paths_dict):
 
 def setup_file_store_setting():
     """
-    Setup the file store if no store exists.
+    Setup the default file store at startup of the application. Several stores can exist but only one is setup by
+    default.
 
     :return: class:'StoreSetting'
 
     """
-    with lock:
-        store_setting_list = StoreSetting.objects.all()
+    with redis_lock.Lock(redis_con, "fmd_app_setup"):
+        store_setting = None
+        store_setting_list = StoreSetting.objects.all().order_by('create_date')
+        setup_store_folders(store_setting_list)
+
         if len(store_setting_list) == 0:
-            for storage_folder in STORAGE_FOLDERS:
-                store_setting = create_file_store_setting(storage_folder)
-        for store_setting in store_setting_list:
-            for key in store_setting.store_options_dict.keys():
-                store_dict = store_setting.store_options_dict[key]
-                setup_storage_folders(store_dict["paths"])
+            store_setting = create_file_store_setting(DEFAULT_STORAGE_FOLDER)
+            setup_store_folders([store_setting])
+
+        if store_setting is None:
+            store_setting = store_setting_list[0]
+
     return store_setting
+
+
+def setup_store_folders(store_setting_list):
+    """
+    Creates the folder structure for a list of store settings.
+
+    :param store_setting_list: list(class:`StoreSetting`)
+
+    """
+    for store_setting in store_setting_list:
+        for key in store_setting.store_options_dict.keys():
+            store_dict = store_setting.store_options_dict[key]
+            setup_storage_folders(store_dict["paths"])
 
 
 def setup_application_setting():
     """
-    Gets the application default settings.
+    Save the default settings for webclients to the database.
 
     :return: class:'WebclientSetting'
 
     """
-    with lock:
+    with redis_lock.Lock(redis_con, "fmd_app_setup"):
         application_setting = WebclientSetting.objects.first()
         if not application_setting:
             application_setting = create_application_setting()

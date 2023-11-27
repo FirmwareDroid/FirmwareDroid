@@ -5,6 +5,7 @@ import django_rq
 from graphene import String
 from graphql_jwt.decorators import superuser_required
 
+from dynamic_analysis.emulator_preparation.app_file_build_creator import start_app_build_file_creator
 from firmware_handler.firmware_importer import start_firmware_mass_import
 from webserver.settings import RQ_QUEUES
 
@@ -47,6 +48,10 @@ def import_module_function(module_name, object_id_list):
 
 
 class CreateApkScanJob(graphene.Mutation):
+    """
+    Mutation to create a RQ job for modules that scan apk files. Only module names from the ModuleNames class
+    are accepted. Every module uses it's own python interpreter and the python interpreter is loaded during runtime.
+    """
     job_id = graphene.String()
 
     class Arguments:
@@ -73,6 +78,9 @@ class CreateApkScanJob(graphene.Mutation):
 
 
 class CreateFirmwareExtractorJob(graphene.Mutation):
+    """
+    Mutation to create a RQ job that starts the firmware extractor module.
+    """
     job_id = graphene.String()
 
     class Arguments:
@@ -88,6 +96,27 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
         return cls(job_id=job.id)
 
 
+class CreateAppBuildFileJob(graphene.Mutation):
+    """
+    Mutation to create a RQ job that starts the service to create app build files for the Android image creation.
+    """
+    job_id = graphene.String()
+
+    class Arguments:
+        queue_name = graphene.String(required=True)
+        format_name = graphene.String(required=True)
+        object_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
+
+    @classmethod
+    @superuser_required
+    def mutate(cls, root, info, queue_name, format_name, object_id_list):
+        queue = django_rq.get_queue(queue_name)
+        func_to_run = start_app_build_file_creator
+        job = queue.enqueue(func_to_run, format_name, object_id_list)
+        return cls(job_id=job.id)
+
+
 class RqJobMutation(graphene.ObjectType):
     create_apk_scan_job = CreateApkScanJob.Field()
     create_firmware_extractor_job = CreateFirmwareExtractorJob.Field()
+    create_app_build_file_job = CreateAppBuildFileJob.Field()

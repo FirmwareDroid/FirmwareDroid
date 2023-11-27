@@ -29,3 +29,4 @@ class AndroidApp(Document):
     opt_firmware_file_reference_list = ListField(LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING))
     app_twins_reference_list = ListField(LazyReferenceField('AndroidApp', reverse_delete_rule=DO_NOTHING))
     certificate_id_list = ListField(LazyReferenceField('AppCertificate', reverse_delete_rule=DO_NOTHING))
+    build_file_list = ListField(LazyReferenceField('GenericFile', reverse_delete_rule=DO_NOTHING))

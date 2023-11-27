@@ -41,7 +41,9 @@ ALLOWED_HOSTS = ["firmwaredroid.cloudlab.zhaw.ch",
 #CSRF_HEADER_NAME = "X-CSRFToken"
 #CSRF_COOKIE_NAME = "csrftoken"
 CSRF_TRUSTED_ORIGINS = ["https://firmwaredroid.cloudlab.zhaw.ch"]
-CORS_ORIGIN_WHITELIST = ["firmwaredroid.cloudlab.zhaw.ch"]
+CORS_ALLOWED_ORIGINS = ["https://firmwaredroid.cloudlab.zhaw.ch",
+                        "https://fmd-aosp.init-lab.ch"]
+CORS_ORIGIN_WHITELIST = ["firmwaredroid.cloudlab.zhaw.ch", "fmd-aosp.init-lab.ch"]
 CORS_ALLOW_CREDENTIALS = True
 
 GRAPHQL_JWT = {
@@ -150,6 +152,7 @@ INSTALLED_APPS = [
     "graphene_django",
     "setup",
     "django_rq",
+    "file_download"
 ]
 
 MIDDLEWARE = [
@@ -254,7 +257,7 @@ DEFAULT_ADMIN_USERNAME = os.environ['DEFAULT_ADMIN_USERNAME']
 AUTH_USER_MODEL = "setup.User"
 
 # Redis Config
-REDIS_HOST_PORT = os.environ['REDIS_HOST_PORT']
+REDIS_PORT = int(os.environ['REDIS_PORT'])
 REDIS_PASSWORD = os.environ['REDIS_PASSWORD']
 REDIS_HOST = "localhost" if DEBUG_LOCAL else "redis"
 

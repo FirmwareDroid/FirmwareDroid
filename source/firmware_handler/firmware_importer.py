@@ -76,6 +76,7 @@ def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes):
 
     :param create_fuzzy_hashes: bool - true if fuzzy hash index should be created.
     :param firmware_file_queue: The queue of files to import.
+
     :return: A dict of the errors and success messages for every file.
 
     """
