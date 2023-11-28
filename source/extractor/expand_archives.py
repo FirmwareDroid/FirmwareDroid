@@ -4,9 +4,6 @@
 import logging
 import os
 import re
-import shlex
-import subprocess
-
 from extractor.ext4_extractor import extract_dat_ext4
 from extractor.bin_extractor.bin_extractor import extract_bin
 from extractor.nb0_extractor import extract_nb0
@@ -27,34 +24,39 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
 
     """
     supported_file_types_regex = r'\.zip$|\.tar$|\.tar$\.md5$|\.lz4$|\.pac$|\.nb0$|\.bin$|\.br$|\.dat$'
-    # TODO enhance security! Make this function more secure - set maximal recursion depth! Check file format headers!
+    # TODO enhance security! Make this function more secure - set maximal recursion depth!
     try:
+        is_success = True
         if compressed_file_path.lower().endswith(".zip"):
             logging.info(f"Attempt to extract .zip file: {compressed_file_path}")
-            unzip_file(compressed_file_path, destination_dir)
+            is_success = unzip_file(compressed_file_path, destination_dir)
         elif compressed_file_path.lower().endswith(".tar") or compressed_file_path.endswith(".tar.md5"):
             logging.info(f"Attempt to extract .tar file: {compressed_file_path}")
-            extract_tar_file(compressed_file_path, destination_dir)
+            is_success = extract_tar_file(compressed_file_path, destination_dir)
         elif compressed_file_path.lower().endswith(".lz4"):
             logging.info(f"Attempt to extract lz4 file: {compressed_file_path}")
-            extract_lz4(compressed_file_path, destination_dir)
+            is_success = extract_lz4(compressed_file_path, destination_dir)
         elif compressed_file_path.lower().endswith(".pac"):
             logging.info(f"Attempt to extract pac file: {compressed_file_path}")
-            unpack_pac(compressed_file_path)
+            is_success = unpack_pac(compressed_file_path)
         elif compressed_file_path.lower().endswith(".nb0"):
             logging.info(f"Attempt to extract nb0 file: {compressed_file_path}")
-            extract_nb0(compressed_file_path)
+            is_success = extract_nb0(compressed_file_path)
         elif compressed_file_path.lower().endswith(".bin"):
             logging.info(f"Attempt to extract bin file: {compressed_file_path}")
-            extract_bin(compressed_file_path, destination_dir)
+            is_success = extract_bin(compressed_file_path, destination_dir)
         elif compressed_file_path.lower().endswith(".br"):
             logging.info(f"Attempt to extract brotli file: {compressed_file_path}")
-            extract_brotli(compressed_file_path, destination_dir)
+            is_success = extract_brotli(compressed_file_path, destination_dir)
         elif compressed_file_path.lower().endswith(".dat"):
             logging.info(f"Attempt to extract dat file: {compressed_file_path}")
-            extract_dat_ext4(compressed_file_path, destination_dir)
-        #else:
-        #    unblob_extract(compressed_file_path, destination_dir, False)
+            is_success = extract_dat_ext4(compressed_file_path, destination_dir)
+        else:
+            unblob_extract(compressed_file_path, destination_dir, False)
+
+        if not is_success:
+            logging.info(f"First extraction attempt failed. Try again using unblob now: {compressed_file_path}")
+            unblob_extract(compressed_file_path, destination_dir, False)
     except Exception as err:
         logging.warning(f"Skip file due to decompression error: {err}")
 

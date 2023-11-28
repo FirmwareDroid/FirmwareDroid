@@ -16,8 +16,8 @@ def extract_dat_ext4(dat_file_path, extract_destination_folder):
 
     :param dat_file_path: str - path to the .dat image
     :param extract_destination_folder: str - path to the folder where the data is extracted to.
-    :return: True - if extraction was successful, false if not.
 
+    :return: True - if extraction was successful, false if not.
     """
     logging.info("Attempt to extract ext with dat2img")
     ext4_image_path = None
@@ -34,13 +34,12 @@ def extract_simg_ext4(simg_ext4_file_path, extract_destination_folder):
 
     :param simg_ext4_file_path: str - path to the simg image
     :param extract_destination_folder: str - path to the folder where the data is extracted to.
-    :return: True - if extraction was successful, false if not.
 
+    :return: True - if extraction was successful, false if not.
     """
     logging.info("Attempt to extract ext with ext4extract and simg2img")
     could_extract_data = False
     try:
-
         temp_dir = tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"])
         ext4_image_path = simg2img_convert_ext4(simg_ext4_file_path, temp_dir.name)
         if extract_ext4(ext4_image_path, extract_destination_folder):

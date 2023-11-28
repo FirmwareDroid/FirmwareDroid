@@ -70,14 +70,18 @@ def unpack_pac(path):
 
     :param path: str - path to the *.pac file.
 
+    :return: boolean - True in case it was successfully extracted.
     """
+    is_success = True
     if os.path.isfile(path) and path.lower().endswith(".pac"):
         try:
             pac_header = create_pac_header(path)
             partition_header_list = create_partition_headers(path, pac_header)
             create_partition_files(path, partition_header_list)
         except Exception as err:
-            logging.error(str(err))
+            is_success = False
+            logging.warning(str(err))
+    return is_success
 
 
 def create_pac_header(path):

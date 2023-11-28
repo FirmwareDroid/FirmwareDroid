@@ -36,10 +36,9 @@ def extract_image_files(image_path, extract_dir_path):
     :param image_path: str - absolute path to the image file.
     :param extract_dir_path: str - path where the files will be extracted or mounted to.
 
-    """
-    #if unblob_extract(image_path, extract_dir_path, delete_compressed_file=False):
-    #    logging.info("Image extraction successful with unblob_extract")
+    :raise RuntimeError: In case none of the support methods can extract files from the image.
 
+    """
     if extract_simg_ext4(image_path, extract_dir_path):
         logging.info("Image extraction successful with simg_ext4extractor")
     elif extract_ext4(image_path, extract_dir_path):
@@ -47,7 +46,9 @@ def extract_image_files(image_path, extract_dir_path):
     elif mount_android_image(image_path, extract_dir_path):
         logging.info("Image mount successful")
     elif extract_ubi_image(image_path, extract_dir_path):
-        logging.info(" Image extraction successful with UBI")
+        logging.info("Image extraction successful with UBI")
+    elif unblob_extract(image_path, extract_dir_path, delete_compressed_file=False):
+        logging.info("Image extraction successful with unblob extraction suite")
     else:
         raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
 

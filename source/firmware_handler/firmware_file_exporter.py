@@ -73,21 +73,25 @@ def export_firmware_files_by_id(firmware_file_id_queue):
     :param firmware_file_id_queue: multiprocessing.queue - queue of id to process.
 
     """
+    # TODO fix this method to support file extraction again
+
     while not firmware_file_id_queue.empty():
         firmware_file_id = firmware_file_id_queue.get()
         firmware_file = FirmwareFile.objects.get(pk=firmware_file_id)
         firmware = firmware_file.firmware_id_reference.fetch()
         cache_temp_file_dir, cache_temp_mount_dir = create_temp_directories()
-        #   TODO fix this method
-        extract_image_files(firmware, cache_temp_file_dir.name, cache_temp_mount_dir.name)
-        logging.info(f"Export file: {firmware.name}")
-        try:
-            firmware_file = FirmwareFile.objects.get(pk=firmware_file_id)
-            export_firmware_file(firmware_file, cache_temp_mount_dir.name)
-        except FileExistsError:
-            pass
-        if is_path_mounted(cache_temp_mount_dir.name):
-            exec_umount(cache_temp_mount_dir.name)
+
+        raise NotImplemented("Refactoring necessary to work correctly")
+        # extract_all_nested(firmware.absolute_store_path, cache_temp_file_dir.name, False)
+        # extract_image_files(, cache_temp_mount_dir.name)
+        #
+        # try:
+        #     firmware_file = FirmwareFile.objects.get(pk=firmware_file_id)
+        #     export_firmware_file(firmware_file, cache_temp_mount_dir.name)
+        # except FileExistsError:
+        #     pass
+        # if is_path_mounted(cache_temp_mount_dir.name):
+        #     exec_umount(cache_temp_mount_dir.name)
 
 
 def export_firmware_file(firmware_file, mount_dir_path):

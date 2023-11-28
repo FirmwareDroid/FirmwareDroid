@@ -1,6 +1,7 @@
 """
 CODE SOURCE FROM https://github.com/cyxx/extract_android_ota_payload
 LICENCE UNKNOWN
+TODO: Refactor or remove at some point
 """
 # !/usr/bin/env python
 
