@@ -3,7 +3,6 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 import tempfile
-import traceback
 from extractor.dat2img_converter import convert_dat2img
 from firmware_handler.ext4_mount_util import simg2img_convert_ext4
 from setup.default_setup import get_active_file_store_paths
@@ -72,6 +71,5 @@ def extract_ext4(ext4_file_path, extract_destination_folder):
         ext4extractApp(args=argument_dict).run()
         could_extract_data = True
     except Exception as err:
-        logging.error(err)
-        traceback.print_exc()
+        logging.warning(err)
     return could_extract_data

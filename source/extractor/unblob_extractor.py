@@ -37,7 +37,7 @@ SKIP_MAGIC_ANDROID = ["Android", "Java", "Font"]
 SKIP_MAGIC_FIRMWAREDROID_STRING = ','.join(SKIP_MAGIC_DEFAULT + SKIP_MAGIC_ANDROID)
 
 
-def unblob_extract(compressed_file_path, destination_dir, delete_compressed_file=False):
+def unblob_extract(compressed_file_path, destination_dir):
     """
     Extract files with the unblob extraction suite.
 

@@ -47,7 +47,7 @@ def extract_image_files(image_path, extract_dir_path):
         logging.info("Image mount successful")
     elif extract_ubi_image(image_path, extract_dir_path):
         logging.info("Image extraction successful with UBI")
-    elif unblob_extract(image_path, extract_dir_path, delete_compressed_file=False):
+    elif unblob_extract(image_path, extract_dir_path):
         logging.info("Image extraction successful with unblob extraction suite")
     else:
         raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
