@@ -10,7 +10,9 @@ from firmware_handler.firmware_importer import start_firmware_mass_import
 from webserver.settings import RQ_QUEUES
 
 APK_SCAN_FUNCTION_NAME = "start_scan"
-
+ONE_WEEK_TIMEOUT = 60 * 60 * 24 * 7
+ONE_DAY_TIMEOUT = 60 * 60 * 24
+ONE_HOUR_TIMEOUT = 60 * 60 * 24
 
 class ModuleNames(Enum):
     ANDROGUARD = "static_analysis.AndroGuard.androguard_wrapper"
@@ -73,7 +75,7 @@ class CreateApkScanJob(graphene.Mutation):
         """
         queue = django_rq.get_queue(queue_name)
         func_to_run = import_module_function(module_name, object_id_list)
-        job = queue.enqueue(func_to_run)
+        job = queue.enqueue(func_to_run, job_timeout=ONE_WEEK_TIMEOUT)
         return cls(job_id=job.id)
 
 
@@ -92,7 +94,7 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
     def mutate(cls, root, info, queue_name, create_fuzzy_hashes):
         queue = django_rq.get_queue(queue_name)
         func_to_run = start_firmware_mass_import
-        job = queue.enqueue(func_to_run, create_fuzzy_hashes)
+        job = queue.enqueue(func_to_run, create_fuzzy_hashes, job_timeout=ONE_WEEK_TIMEOUT)
         return cls(job_id=job.id)
 
 
@@ -112,7 +114,7 @@ class CreateAppBuildFileJob(graphene.Mutation):
     def mutate(cls, root, info, queue_name, format_name, object_id_list):
         queue = django_rq.get_queue(queue_name)
         func_to_run = start_app_build_file_creator
-        job = queue.enqueue(func_to_run, format_name, object_id_list)
+        job = queue.enqueue(func_to_run, format_name, object_id_list, job_timeout=ONE_DAY_TIMEOUT)
         return cls(job_id=job.id)
 
 

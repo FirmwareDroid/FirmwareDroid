@@ -14,7 +14,6 @@ from setup.default_setup import get_active_file_store_paths
 STORE_PATHS = get_active_file_store_paths()
 
 
-
 def mount_android_image(android_ext4_path, mount_folder_path):
     """
     Attempts to mount the given android image (only *.img) to the file system. Uses different mounting strategies to
@@ -96,7 +95,6 @@ def attempt_ext4_mount(source, target, mount_options):
         is_mounted = True
     except Exception as err:
         logging.info(err)
-        # traceback.print_exc()
         if is_path_mounted(target):
             exec_umount(target)
     return is_mounted
@@ -175,7 +173,6 @@ def attempt_repair_and_mount(source, target, mount_options):
         is_mounted = True
     except Exception as err:
         logging.info(err)
-        # traceback.print_exc()
         if is_path_mounted(target):
             exec_umount(target)
     return is_mounted

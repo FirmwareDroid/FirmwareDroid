@@ -36,8 +36,8 @@ def start_firmware_mass_import(create_fuzzy_hashes):
     Imports all .zip files from the import folder.
 
     :param create_fuzzy_hashes: bool - true if fuzzy hash index should be created.
-    :return: list of string with the status (errors/success) of every file.
 
+    :return: list of string with the status (errors/success) of every file.
     """
     logging.info("FIRMWARE MASS IMPORT STARTED!")
     firmware_archives_queue = create_file_import_queue()
@@ -56,8 +56,7 @@ def create_file_import_queue():
     """
     Create a queue of firmware files from the import folder.
 
-    :return: A queue.
-
+    :return: multi threading queue object containing the paths to the firmware archives to import.
     """
     firmware_import_folder_path = STORE_PATHS["FIRMWARE_FOLDER_IMPORT"]
     filename_list = get_filenames(firmware_import_folder_path)
@@ -78,7 +77,7 @@ def allow_import(firmware_file_path, md5):
     """
     Checks if the pre-conditions for an import are met.
 
-    return (boolean, str) - True if pre-conditions are met. In case of false a string with the reason is returned.
+    :return: (boolean, str) - True if pre-conditions are met. In case of false a string with the reason is returned.
     """
     reason = ""
     is_allowed = True
@@ -243,9 +242,6 @@ def store_firmware_archive(firmware_archive_file_path, md5, version_detected):
 
     if firmware_archive_store_path.exists():
         firmware_store_path = Path(os.path.join(firmware_archive_store_path.absolute().as_posix(), store_filename))
-        logging.error(firmware_archive_store_path.absolute().as_posix(),
-                      firmware_archive_file_path,
-                      firmware_store_path.absolute().as_posix())
         shutil.copy(firmware_archive_file_path, firmware_store_path.absolute().as_posix())
         if firmware_store_path.exists():
             os.remove(firmware_archive_file_path)
@@ -330,8 +326,8 @@ def get_firmware_archive_content(cache_temp_file_dir_path):
     Creates an index of the files within the firmware.
 
     :param cache_temp_file_dir_path: str - dir path in which the extracted files are.
-    :return: list class:'FirmwareFile'
 
+    :return: list class:'FirmwareFile'
     """
     firmware_files = []
     top_level_firmware_files = create_firmware_file_list(cache_temp_file_dir_path, "/")
@@ -353,9 +349,9 @@ def create_partition_firmware_files(archive_firmware_file_list,
     :param extracted_archive_dir_path: str - path of the root folder where the firmware archive was extracted to.
     :param archive_firmware_file_list: list(class:'FirmwareFile') - list of top level firmware files from the archive.
     :raises: RuntimeError - in case the system partition cannot be accessed.
+
     :return: list(class:'FirmwareFile') - list of files found in the image. In case the image could not be processed the
     method returns an empty list.
-
     """
     firmware_file_list = []
     try:
@@ -371,7 +367,7 @@ def create_partition_firmware_files(archive_firmware_file_list,
     except (RuntimeError, ValueError) as err:
         if partition_name != "system":
             logging.warning(err)
-        else:  # Abort if we cannot import system partition.
+        else:  # Abort import if we cannot import system partition.
             raise
     return firmware_file_list
 
@@ -395,6 +391,7 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
     :param build_prop_file_id_list: list(class:'BuildPropFile')
     :param firmware_file_list: list(class:'FirmwareFile')
 
+    :return: class:'AndroidFirmware'
     """
     absolute_store_path = os.path.abspath(firmware_store_path)
     logging.info(f"firmware_store_path: {firmware_store_path} absolute_store_path: {absolute_store_path}")
@@ -438,8 +435,8 @@ def extract_build_prop(firmware_file_list, mount_path):
     :param mount_path: str - path where the firmware image is mounted to.
     :param firmware_file_list: list(class:'FirmwareFile') - list of firmware-files that contains a
     minimum of one build.prop file
-    :return: list(class:'BuildPropFile') - list of BuildPropFile documents.
 
+    :return: list(class:'BuildPropFile') - list of BuildPropFile documents.
     """
     build_prop_firmware_file_list = find_build_prop_file_paths(firmware_file_list)
     build_prop_file_list = []
@@ -459,8 +456,8 @@ def find_build_prop_file_paths(firmware_file_list):
     Returns a build.prop file if found within the given path.
 
     :param firmware_file_list: list(class:FirmwareFile)
-    :return: list(class:FirmwareFile) - list of build.prop firmware files.
 
+    :return: list(class:FirmwareFile) - list of build.prop firmware files.
     """
     build_prop_firmware_file_list = []
     for firmware_file in firmware_file_list:

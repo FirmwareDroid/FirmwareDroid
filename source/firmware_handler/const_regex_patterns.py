@@ -11,12 +11,22 @@ that incorrect files match the patterns.
 ##########################################################################################
 # Partitions that are in ext or sparse format.
 ##########################################################################################
-SYSTEM_IMG_PATTERN_LIST = ["system[.]img",
-                           ".*system[.]img$",
-                           "^system[.].*[.]img$",
-                           "^system[.]img[.].*",
-                           ".*system.*img_sparsechunk$",
-                           ".*system.*(img|rfs|img.ext4|ext4.img)$"]
+SYSTEM_IMG_PATTERN_LIST = [
+    # Default naming convention
+    "system[.]img",
+    ".*system[.]img$",
+    "^system[.].*[.]img$",
+    "^system[.]img[.].*",
+    ".*system.*img_sparsechunk$",
+    ".*system.*(img|rfs|img.ext4|ext4.img)$",
+    # Samsung specific naming
+    "super[.]img",
+    ".*super[.]img$",
+    "^super[.].*[.]img$",
+    "^super[.]img[.].*",
+    ".*super.*img_sparsechunk$",
+    ".*super.*(img|rfs|img.ext4|ext4.img)$"
+]
 
 SYSTEM_OTHER_IMG_PATTERN_LIST = ["system_other[.]img"]
 SYSTEM_EXT_IMG_PATTERN_LIST = ["system_ext[.]img"]
@@ -66,7 +76,6 @@ SYSTEM_EXT_DAT_PATCH_PATTERN_LIST = ["system_ext[.]patch[.]dat"]
 SYSTEM_OTHER_DAT_PATCH_PATTERN_LIST = ["system_other[.]patch[.]dat"]
 SYSTEM_DAT_PATCH_PATTERN_LIST = ["system[.]patch[.]dat"]
 
-
 ##########################################################################################
 # Build.prop properties
 # ONLY EXACT MATCHES - NO REGEX HERE
@@ -84,8 +93,3 @@ PRODUCT_MODEL_LIST = ["ro_product_model"]
 SYSTEM_BUILD_VERSION_RELEASE_LIST = ["ro_system_build_version_release"]
 SYSTEM_BUILD_TAGS_LIST = ["ro_system_build_tags"]
 SYSTEM_BUILD_FINGERPRINT_LIST = ["ro_system_build_fingerprint"]
-
-
-
-
-

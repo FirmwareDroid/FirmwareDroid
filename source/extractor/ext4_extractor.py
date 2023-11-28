@@ -44,7 +44,7 @@ def extract_simg_ext4(simg_ext4_file_path, extract_destination_folder):
         if extract_ext4(ext4_image_path, extract_destination_folder):
             could_extract_data = True
     except Exception as err:
-        logging.error(err)
+        logging.warning(err)
     return could_extract_data
 
 
@@ -55,11 +55,12 @@ def extract_ext4(ext4_file_path, extract_destination_folder):
     :param ext4_file_path: str - path to the ext image.
     :param extract_destination_folder: str - path where the data is extracted to.
 
+    :return boolean - True: if the data was extract successfully
     """
     from .ext_extraction.app_ext4_extract import Application as ext4extractApp
     logging.info(f"Attempt to extract ext with ext4extract application: {ext4_file_path} to "
                  f"{extract_destination_folder}")
-    could_extract_data = False
+    is_extracted = False
     try:
         argument_dict = {"filename": ext4_file_path,
                          "directory": extract_destination_folder,
@@ -69,7 +70,7 @@ def extract_ext4(ext4_file_path, extract_destination_folder):
                          "empty_symlinks": None,
                          "symlinks": None}
         ext4extractApp(args=argument_dict).run()
-        could_extract_data = True
+        is_extracted = True
     except Exception as err:
         logging.warning(err)
-    return could_extract_data
+    return is_extracted

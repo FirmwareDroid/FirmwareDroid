@@ -50,10 +50,10 @@ def unblob_extract(compressed_file_path, destination_dir):
         input_file = shlex.quote(compressed_file_path)
         output_dir = shlex.quote(destination_dir)
         logging.info(f"Unblob {input_file} to {output_dir}")
-        output_file = os.path.join(output_dir, "unblob_report.json")
+        #output_file = os.path.join(output_dir, "unblob_report.json")
         response = subprocess.run(
             ["unblob", "-e", output_dir,
-             "--report", output_file,
+             #"--report", output_file,
              "-d", "5",
              "--skip-magic", SKIP_MAGIC_FIRMWAREDROID_STRING,
              input_file],
@@ -63,5 +63,7 @@ def unblob_extract(compressed_file_path, destination_dir):
         if response and response.returncode > 1:
             logging.warning(err)
             is_success = False
+        else:
+            logging.warning(err)
 
     return is_success

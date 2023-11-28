@@ -17,6 +17,8 @@ def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
 
     :param image_filename_pattern_list: str - a list of regex pattern for searching the images filename.
     :param firmware_file_list: The files which will be checked for their names.
+    :raise ValueError: Exception raised when the file could not be found.
+
     :return: class:'FirmwareFile' object of the system.img or system.ext4.img file.
 
     """
@@ -26,7 +28,8 @@ def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
             if not firmware_file.isDirectory and re.search(pattern, filename) and not filename.startswith("._"):
                 logging.info("Found image file: " + str(firmware_file.name))
                 return firmware_file
-    raise ValueError("Could not find image file!")
+    raise ValueError(f"Continuing. Could not find any image file in the filelist based on the patterns: "
+                     f"{' '.join(image_filename_pattern_list)}")
 
 
 def extract_image_files(image_path, extract_dir_path):

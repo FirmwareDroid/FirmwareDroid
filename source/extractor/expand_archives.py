@@ -23,7 +23,7 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
     :param delete_compressed_file: boolean - if true, deletes the archive after it is extracted.
 
     """
-    supported_file_types_regex = r'\.zip$|\.tar$|\.tar$\.md5$|\.lz4$|\.pac$|\.nb0$|\.bin$|\.br$|\.dat$'
+    supported_file_types_regex = r'\.zip$|\.tar$|\.tar\.md5$|\.lz4$|\.pac$|\.nb0$|\.bin$|\.br$|\.dat$'
     # TODO enhance security! Make this function more secure - set maximal recursion depth!
     try:
         is_success = True
