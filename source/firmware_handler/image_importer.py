@@ -37,8 +37,8 @@ def extract_image_files(image_path, extract_dir_path):
     :param extract_dir_path: str - path where the files will be extracted or mounted to.
 
     """
-    if unblob_extract(image_path, extract_dir_path, delete_compressed_file=False):
-        logging.info("Image extraction successful with unblob_extract")
+    #if unblob_extract(image_path, extract_dir_path, delete_compressed_file=False):
+    #    logging.info("Image extraction successful with unblob_extract")
 
     if extract_simg_ext4(image_path, extract_dir_path):
         logging.info("Image extraction successful with simg_ext4extractor")

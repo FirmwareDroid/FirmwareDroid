@@ -11,7 +11,10 @@ from firmware_handler.ext4_mount_util import is_path_mounted, exec_umount
 from model import FirmwareFile
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
 from utils.file_utils.file_util import create_temp_directories
-from webserver.settings import FIRMWARE_FOLDER_FILE_EXTRACT
+
+from setup.default_setup import get_active_file_store_paths
+STORE_PATHS = get_active_file_store_paths()
+
 
 
 @create_db_context
@@ -129,7 +132,7 @@ def get_destination_folder(firmware_file):
     :return: str - absolute path of the output folder.
 
     """
-    destination_folder = os.path.join(FIRMWARE_FOLDER_FILE_EXTRACT,
+    destination_folder = os.path.join(STORE_PATHS["FIRMWARE_FOLDER_FILE_EXTRACT"],
                                       str(firmware_file.id),
                                       "." + firmware_file.relative_path)
     return os.path.abspath(destination_folder)

@@ -53,8 +53,8 @@ def extract_all_nested(compressed_file_path, destination_dir, delete_compressed_
         elif compressed_file_path.lower().endswith(".dat"):
             logging.info(f"Attempt to extract dat file: {compressed_file_path}")
             extract_dat_ext4(compressed_file_path, destination_dir)
-        else:
-            unblob_extract(compressed_file_path, destination_dir, False)
+        #else:
+        #    unblob_extract(compressed_file_path, destination_dir, False)
     except Exception as err:
         logging.warning(f"Skip file due to decompression error: {err}")
 

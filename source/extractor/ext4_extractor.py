@@ -6,7 +6,8 @@ import tempfile
 import traceback
 from extractor.dat2img_converter import convert_dat2img
 from firmware_handler.ext4_mount_util import simg2img_convert_ext4
-from webserver.settings import FIRMWARE_FOLDER_CACHE
+from setup.default_setup import get_active_file_store_paths
+STORE_PATHS = get_active_file_store_paths()
 
 
 def extract_dat_ext4(dat_file_path, extract_destination_folder):
@@ -40,7 +41,7 @@ def extract_simg_ext4(simg_ext4_file_path, extract_destination_folder):
     could_extract_data = False
     try:
 
-        temp_dir = tempfile.TemporaryDirectory(dir=FIRMWARE_FOLDER_CACHE)
+        temp_dir = tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"])
         ext4_image_path = simg2img_convert_ext4(simg_ext4_file_path, temp_dir.name)
         if extract_ext4(ext4_image_path, extract_destination_folder):
             could_extract_data = True

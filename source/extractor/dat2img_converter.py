@@ -96,6 +96,7 @@ def patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file
         patch_file_path = shlex.quote(str(patch_file_path))
         dat_file_path = shlex.quote(str(dat_file_path))
         img_file_path = shlex.quote(str(img_file_path))
+        # TODO Remove constant path and tool
         response = subprocess.run(["./tools/IMG_Patch_Tools_0.3/BlockImageUpdate",
                                    img_file_path,
                                    transfer_file_path,

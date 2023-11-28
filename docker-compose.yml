@@ -106,7 +106,7 @@ services:
       - ./.env
     #command: sleep infinity
     #command: rqworker --name extractor-worker-high-1 --url redis://redis:6379/ high --path /var/www/ --path /var/www/source
-    command: rqworker --name extractor-worker-high-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
+    command: rqworker --logging_level DEBUG --name extractor-worker-high-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
     networks:
       - backend
     # TODO Security enhancement / compatibility - replace/remove access right

@@ -105,14 +105,14 @@ def setup_application_setting():
     return application_setting
 
 
-def get_active_store_path_dict():
+def get_active_file_store_paths():
     """
-    Gets a dict of the current active file storage.
+    Gets a dict containing the paths of the current active file storage.
 
     :return: dict() - From class:'StoreSetting' paths object.
 
     """
-    store_setting = setup_file_store_setting()
+    store_setting = StoreSetting.objects(is_active=True).first()
     return store_setting.store_options_dict[store_setting.uuid]["paths"]
 
 

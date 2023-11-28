@@ -10,8 +10,9 @@ import time
 import traceback
 from firmware_handler.image_repair import attempt_repair, attempt_repair_and_resize
 import re
+from setup.default_setup import get_active_file_store_paths
+STORE_PATHS = get_active_file_store_paths()
 
-from webserver.settings import FIRMWARE_FOLDER_CACHE
 
 
 def mount_android_image(android_ext4_path, mount_folder_path):
@@ -137,7 +138,7 @@ def attempt_simg2img_mount(source, target, mount_options):
     logging.info(f"Attempt simg2img mount {source}")
     is_mounted = False
     try:
-        tempdir = tempfile.TemporaryDirectory(dir=FIRMWARE_FOLDER_CACHE)
+        tempdir = tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"])
         ext4_raw_image_path = simg2img_convert_ext4(source, tempdir.name)
         if ext4_raw_image_path:
             try:
@@ -168,7 +169,7 @@ def attempt_repair_and_mount(source, target, mount_options):
     logging.info(f"Attempt repair and mount {source}")
     is_mounted = False
     try:
-        temp_dir = tempfile.TemporaryDirectory(dir=FIRMWARE_FOLDER_CACHE)
+        temp_dir = tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"])
         repaired_source = attempt_repair(source, temp_dir.name)
         exec_mount(repaired_source, target, mount_options)
         is_mounted = True
@@ -193,7 +194,7 @@ def attempt_resize_and_mount(source, target, mount_options):
     logging.info(f"Attempt repair, resize and mount {source}")
     is_mounted = False
     try:
-        temp_dir = tempfile.TemporaryDirectory(dir=FIRMWARE_FOLDER_CACHE)
+        temp_dir = tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"])
         repaired_source = attempt_repair_and_resize(source, temp_dir.name)
         exec_mount(repaired_source, target, mount_options)
         is_mounted = True

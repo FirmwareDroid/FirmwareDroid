@@ -11,7 +11,9 @@ from model import JsonFile
 import tempfile
 import time
 from utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
-from webserver.settings import FIRMWARE_FOLDER_CACHE
+
+from setup.default_setup import get_active_file_store_paths
+STORE_PATHS = get_active_file_store_paths()
 
 
 def get_filenames(path):
@@ -99,7 +101,7 @@ def create_temporary_file_from_list(string_list):
     :return: class:'tempfile.NamedTemporaryFile'
 
     """
-    file_temp = tempfile.NamedTemporaryFile(delete=False, dir=FIRMWARE_FOLDER_CACHE)
+    file_temp = tempfile.NamedTemporaryFile(delete=False, dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"])
     with open(file_temp.name, 'ab+') as file:
         for string_element in string_list:
             file.write(bytes(str(string_element), encoding='utf-8'))
@@ -276,9 +278,8 @@ def create_temp_directories():
     :return: tempdir, tempdir
 
     """
-    app = flask.current_app
-    cache_temp_file_dir = tempfile.TemporaryDirectory(dir=app.config["FIRMWARE_FOLDER_CACHE"], suffix="_extract")
-    cache_temp_mount_dir = tempfile.TemporaryDirectory(dir=app.config["FIRMWARE_FOLDER_CACHE"], suffix="_mount")
+    cache_temp_file_dir = tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"], suffix="_extract")
+    cache_temp_mount_dir = tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"], suffix="_mount")
     time.sleep(5)
     return cache_temp_file_dir, cache_temp_mount_dir
 
@@ -291,8 +292,7 @@ def cleanup_directories(firmware_file_path, firmware_app_store):
     :param firmware_app_store: str - path to application directory for apps.
 
     """
-    app = flask.current_app
-    shutil.move(firmware_file_path, app.config["FIRMWARE_FOLDER_IMPORT_FAILED"])
+    shutil.move(firmware_file_path, STORE_PATHS["FIRMWARE_FOLDER_IMPORT_FAILED"])
     try:
         shutil.rmtree(firmware_app_store)
     except FileNotFoundError:
