@@ -14,6 +14,7 @@ ONE_WEEK_TIMEOUT = 60 * 60 * 24 * 7
 ONE_DAY_TIMEOUT = 60 * 60 * 24
 ONE_HOUR_TIMEOUT = 60 * 60 * 24
 
+
 class ModuleNames(Enum):
     ANDROGUARD = "static_analysis.AndroGuard.androguard_wrapper"
     QUARKENGINE = "static_analysis.QuarkEngine.quark_engine_wrapper"
@@ -53,6 +54,14 @@ class CreateApkScanJob(graphene.Mutation):
     """
     Mutation to create a RQ job for modules that scan apk files. Only module names from the ModuleNames class
     are accepted. Every module uses it's own python interpreter and the python interpreter is loaded during runtime.
+
+    Available modules are:
+        "ANDROGUARD",
+        "QUARKENGINE",
+        "APKLEAKS",
+        "APKID",
+        "EXODUS",
+        "VIRUSTOTAL",
     """
     job_id = graphene.String()
 
@@ -81,7 +90,8 @@ class CreateApkScanJob(graphene.Mutation):
 
 class CreateFirmwareExtractorJob(graphene.Mutation):
     """
-    Mutation to create a RQ job that starts the firmware extractor module.
+    Mutation to create an RQ job that starts the firmware extractor module. The extractor module is used to import
+    firmware from the "firmware_import" directory to the database. Only one instance of the importer is allowed to run.
     """
     job_id = graphene.String()
 
@@ -92,6 +102,14 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
     @classmethod
     @superuser_required
     def mutate(cls, root, info, queue_name, create_fuzzy_hashes):
+        """
+        Create a job to import firmware.
+
+        :param queue_name: str - name of the RQ to use.
+        :param create_fuzzy_hashes: boolean - True: will create fuzzy hashes for all files in the firmware found.
+
+        :return: str - job-id of the string
+        """
         queue = django_rq.get_queue(queue_name)
         func_to_run = start_firmware_mass_import
         job = queue.enqueue(func_to_run, create_fuzzy_hashes, job_timeout=ONE_WEEK_TIMEOUT)

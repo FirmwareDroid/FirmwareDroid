@@ -118,7 +118,7 @@ def create_firmware_file_list(scan_directory, partition_name):
             relative_dir_path = os.path.join(relative_dir_path, directory)
             firmware_file = create_firmware_file(name=directory,
                                                  parent_name=parent_name,
-                                                 isDirectory=True,
+                                                 is_directory=True,
                                                  relative_file_path=relative_dir_path,
                                                  partition_name=partition_name,
                                                  md5=None)
@@ -127,21 +127,24 @@ def create_firmware_file_list(scan_directory, partition_name):
             relative_file_path = root.replace(scan_directory, "")
             relative_file_path = os.path.join(relative_file_path, filename)
             filename_path = os.path.join(root, filename)
-            if os.path.isfile(filename_path):
-                md5_file = md5_from_file(filename_path)
-                file_size_bytes = os.path.getsize(filename_path)
-                firmware_file = create_firmware_file(name=filename,
-                                                     parent_name=parent_name,
-                                                     isDirectory=False,
-                                                     file_size_bytes=file_size_bytes,
-                                                     relative_file_path=relative_file_path,
-                                                     partition_name=partition_name,
-                                                     md5=md5_file)
-                result_firmware_file_list.append(firmware_file)
+            if os.path.isfile(filename_path) and os.path.exists(filename_path):
+                try:
+                    md5_file = md5_from_file(filename_path)
+                    file_size_bytes = os.path.getsize(filename_path)
+                    firmware_file = create_firmware_file(name=filename,
+                                                         parent_name=parent_name,
+                                                         is_directory=False,
+                                                         file_size_bytes=file_size_bytes,
+                                                         relative_file_path=relative_file_path,
+                                                         partition_name=partition_name,
+                                                         md5=md5_file)
+                    result_firmware_file_list.append(firmware_file)
+                except Exception as err:
+                    logging.warning(err)
     return result_firmware_file_list
 
 
-def create_firmware_file(name, parent_name, isDirectory, relative_file_path, partition_name, md5, file_size_bytes=None):
+def create_firmware_file(name, parent_name, is_directory, relative_file_path, partition_name, md5, file_size_bytes=None):
     """
     Creates a class:'FirmwareFile' document. Does not save the document to the database.
 
@@ -149,7 +152,7 @@ def create_firmware_file(name, parent_name, isDirectory, relative_file_path, par
     :param partition_name: str - name of the partition.
     :param name: str - name of file or directory
     :param parent_name: str - name of the parent directory
-    :param isDirectory: bool - true if it is a directory
+    :param is_directory: bool - true if it is a directory
     :param relative_file_path: str - relative path within the firmware
     :param md5: str - md5 digest of the file.
     :return: class:'FirmwareFile'
@@ -157,7 +160,7 @@ def create_firmware_file(name, parent_name, isDirectory, relative_file_path, par
     """
     return FirmwareFile(name=name,
                         parent_dir=parent_name,
-                        isDirectory=isDirectory,
+                        is_directory=is_directory,
                         file_size_bytes=file_size_bytes,
                         absolute_store_path=os.path.abspath(relative_file_path),
                         relative_path=relative_file_path,

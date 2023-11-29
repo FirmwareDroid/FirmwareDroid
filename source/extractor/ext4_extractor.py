@@ -9,7 +9,7 @@ from setup.default_setup import get_active_file_store_paths
 STORE_PATHS = get_active_file_store_paths()
 
 
-def extract_dat_ext4(dat_file_path, extract_destination_folder):
+def extract_dat(dat_file_path, extract_destination_folder):
     """
     Converts a .dat file to .img file and attempts to extract the data.
 

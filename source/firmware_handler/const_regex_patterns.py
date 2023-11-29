@@ -25,7 +25,7 @@ SYSTEM_IMG_PATTERN_LIST = [
     "^super[.].*[.]img$",
     "^super[.]img[.].*",
     ".*super.*img_sparsechunk$",
-    ".*super.*(img|rfs|img.ext4|ext4.img)$"
+    ".*super.*(img|rfs|img.ext4|ext4.img)$",
 ]
 
 SYSTEM_OTHER_IMG_PATTERN_LIST = ["system_other[.]img"]

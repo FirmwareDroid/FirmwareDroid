@@ -1,15 +1,15 @@
 import io
 import logging
 import os
-from pathlib import Path
 from struct import unpack
 
 
-def extract_nb0(source):
+def extract_nb0(source, destination_dir):
     """
     Extracts .nb0 files.
 
     :param source: str - path to the file to extract.
+    :param destination_dir: str - path where the file is extracted to.
 
     :return: boolean - True in case it was successfully extracted.
     """
@@ -29,8 +29,7 @@ def extract_nb0(source):
                     file_entry_dict[filename] = {'offset': offset, 'size': size}
 
             for filename, info in file_entry_dict.items():
-                source_parent = Path(source).parent
-                output_file_path = os.path.join(source_parent, filename)
+                output_file_path = os.path.join(destination_dir, filename)
                 logging.info(f'Extract to disk "{output_file_path}"')
                 with open(output_file_path, mode='xb') as output:
                     file.seek(data_offset + info['offset'], 0)

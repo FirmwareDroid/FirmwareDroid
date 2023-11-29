@@ -39,10 +39,12 @@ SKIP_MAGIC_FIRMWAREDROID_STRING = ','.join(SKIP_MAGIC_DEFAULT + SKIP_MAGIC_ANDRO
 
 def unblob_extract(compressed_file_path, destination_dir):
     """
-    Extract files with the unblob extraction suite.
+    Extract a file recursively with the unblob extraction suite.
+
+    :param destination_dir: str - path to the folder where the data is extracted to.
+    :param compressed_file_path: str - path to the file to extract.
 
     :return: boolean - True in case it was successfully extracted.
-
     """
     is_success = True
     response = None

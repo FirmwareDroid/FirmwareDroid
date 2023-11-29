@@ -6,7 +6,7 @@ import os
 import re
 import tempfile
 # import flask
-from extractor.unzipper import unzip_file
+from extractor.unzipper import extract_zip
 from firmware_handler.const_regex_patterns import ELF_BINARY_FORMATS_PATTERN_LIST
 from utils.file_utils.file_util import check_file_format
 from utils.string_utils.string_util import filter_mongodb_dict_chars
@@ -40,7 +40,7 @@ def hash_apk_file(firmware_file, fuzzy_hash_document, hash_from_file, hash_from_
 
     """
     temp_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"])
-    unzip_file(firmware_file.absolute_store_path, temp_dir.name)
+    extract_zip(firmware_file.absolute_store_path, temp_dir.name)
     for root, dirs, files in os.walk(temp_dir.name):
         for file in files:
             file_path = os.path.join(root, file)

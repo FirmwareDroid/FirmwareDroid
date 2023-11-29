@@ -116,7 +116,7 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
     :param destination_path: str - path to copy the file/folder to.
 
     """
-    if firmware_file.isDirectory:
+    if firmware_file.is_directory:
         dst_file_path = shutil.copytree(source_path, destination_path)
     else:
         os.makedirs(os.path.dirname(destination_path), exist_ok=True)

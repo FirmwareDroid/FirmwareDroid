@@ -19,9 +19,9 @@ from firmware_handler.const_regex_patterns import BUILD_PROP_PATTERN_LIST, EXT_I
 from firmware_handler.android_app_import import store_android_apps
 from firmware_handler.build_prop_parser import BuildPropParser
 from hashing.standard_hash_generator import md5_from_file, sha1_from_file, sha256_from_file
-from extractor.expand_archives import extract_all_nested
+from extractor.expand_archives import extract_archive_layer
 from setup.default_setup import get_active_file_store_paths
-from utils.file_utils.file_util import get_filenames, create_directories
+from utils.file_utils.file_util import get_filenames
 from firmware_handler.firmware_version_detect import detect_by_build_prop
 from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
 from bson import ObjectId
@@ -132,8 +132,7 @@ def open_firmware(firmware_archive_file_path, temp_extract_dir):
     :return: list(class:FirmwareFile)
 
     """
-    extract_all_nested(firmware_archive_file_path, temp_extract_dir, False)
-    # unblob_extract(firmware_archive_file_path, temp_extract_dir.name, False)
+    extract_archive_layer(firmware_archive_file_path, temp_extract_dir, False)
     archive_firmware_file_list = get_firmware_archive_content(temp_extract_dir)
     return archive_firmware_file_list
 

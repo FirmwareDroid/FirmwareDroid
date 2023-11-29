@@ -7,7 +7,7 @@ import tarfile
 import logging
 
 
-def unzip_file(zip_file_path, destination_dir):
+def extract_zip(zip_file_path, destination_dir):
     """
     Extract the file from a *.zip file.
 
@@ -27,7 +27,7 @@ def unzip_file(zip_file_path, destination_dir):
     return is_success
 
 
-def extract_tar_file(file_path, destination_dir):
+def extract_tar(file_path, destination_dir):
     """
     Extracts a tar file to the given folder.
 

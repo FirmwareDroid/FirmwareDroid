@@ -79,7 +79,7 @@ def fuzzy_hash_firmware_files(firmware_file_list, mount_path):
 
     """
     for firmware_file in firmware_file_list:
-        if not firmware_file.isDirectory: #and firmware_file.partition_name == "system":
+        if not firmware_file.is_directory: #and firmware_file.partition_name == "system":
             firmware_file.absolute_store_path = get_firmware_file_abs_path(firmware_file, mount_path)
             firmware_file.save()
             if os.path.exists(firmware_file.absolute_store_path):
