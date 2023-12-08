@@ -8,7 +8,7 @@ from model import AndroidApp
 class AndroidAppType(MongoengineObjectType):
     class Meta:
         model = AndroidApp
-        interfaces = (Node, )
+        interfaces = (Node,)
 
 
 class AndroidAppQuery(graphene.ObjectType):
@@ -19,3 +19,4 @@ class AndroidAppQuery(graphene.ObjectType):
     @superuser_required
     def resolve_android_app_list(self, info, object_id_list):
         return AndroidApp.objects(pk__in=object_id_list)
+

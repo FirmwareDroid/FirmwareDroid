@@ -3,29 +3,13 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 import os
-from database.query_document import get_filtered_list
+from Interfaces.ScanJob import ScanJob
 from model import ExodusReport, AndroidApp
 from context.context_creator import create_db_context
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
-EXODUS_VERSION = "1.3.8"
 
-
-@create_db_context
-def start_exodus_scan(android_app_id_list):
-    """
-    Analysis all apps from the given list with exodus-core.
-
-    :param android_app_id_list: list of class:'AndroidApp' object-ids.
-
-    """
-    android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "exodus_report_reference")
-    logging.info(f"Exodus after filter: {str(len(android_app_list))}")
-    if len(android_app_list) > 0:
-        start_python_interpreter(android_app_list, exodus_worker, os.cpu_count())
-
-
-def exodus_worker(android_app_id_queue):
+def exodus_worker_multiprocessing(android_app_id_queue):
     """
     Start the analysis with exodus on a multiprocessor queue.
 
@@ -93,8 +77,41 @@ def create_report(android_app, exodus_results):
     #from exodus_core import __version__
     exodus_report = ExodusReport(
         android_app_id_reference=android_app.id,
-        exodus_version=EXODUS_VERSION,
+        scanner_version="1.3.9",
+        scanner_name="Exodus",
         results=exodus_results
     ).save()
     android_app.exodus_report_reference = exodus_report.id
     android_app.save()
+
+
+class ExodusScanJob(ScanJob):
+    object_id_list = []
+    SOURCE_DIR = "/var/www/source"
+    MODULE_NAME = "static_analysis.Exodus.exodus_wrapper"
+    INTERPRETER_PATH = "/opt/firmwaredroid/python/exodus/bin/python"
+
+    def __init__(self, object_id_list):
+        self.object_id_list = object_id_list
+        os.chdir(self.SOURCE_DIR)
+
+    @create_db_context
+    def start_scan(self):
+        """
+        Starts multiple instances of the scanner to analyse a list of Android apps on multiple processors.
+        """
+        android_app_id_list = self.object_id_list
+        logging.info(f"Exodus analysis started! With {str(len(android_app_id_list))} apps.")
+        if len(android_app_id_list) > 0:
+            start_python_interpreter(item_list=android_app_id_list,
+                                     worker_function=exodus_worker_multiprocessing,
+                                     number_of_processes=os.cpu_count(),
+                                     use_id_list=True,
+                                     module_name=self.MODULE_NAME,
+                                     report_reference_name="exodus_report_reference",
+                                     interpreter_path=self.INTERPRETER_PATH)
+
+
+
+
+

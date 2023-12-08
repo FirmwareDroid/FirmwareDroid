@@ -1,8 +1,8 @@
 from mongoengine import DictField, StringField
-from model.ApkScannerResult import ApkScannerResult
+from model.ApkScannerReport import ApkScannerReport
 
 
-class VirusTotalReport(ApkScannerResult):
+class VirusTotalReport(ApkScannerReport):
     file_info = DictField(required=False)
     analysis_id = StringField(required=False)
     virus_total_analysis = StringField(required=False)

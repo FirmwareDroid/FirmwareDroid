@@ -1,6 +1,6 @@
 import mongoengine
 from mongoengine import LazyReferenceField, DateTimeField, StringField, ListField, CASCADE, \
-    DictField, LongField, BooleanField, Document
+    DictField, LongField, BooleanField, Document, FileField, DO_NOTHING
 
 
 class AppCertificate(Document):
@@ -39,9 +39,7 @@ class AppCertificate(Document):
     issuer_serial = StringField(required=False)
     key_identifier = StringField(required=False)
     serial_number = StringField(required=False)
-    # TODO FIGURE OUT WHY GRAPHENE CAN?T RESOLVE THIS TYPES
-    #certificate_DER_encoded = FileField(required=True, collection_name="fs.app_certificate_der")
-    #certificate_PEM_encoded = FileField(required=True, collection_name="fs.app_certificate_pem")
+    generic_file_list = ListField(LazyReferenceField('GenericFile', reverse_delete_rule=DO_NOTHING))
 
     @classmethod
     def pre_delete(cls, sender, document, **kwargs):

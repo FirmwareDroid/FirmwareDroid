@@ -1,9 +1,9 @@
 import mongoengine
 from mongoengine import LazyReferenceField, ListField, FileField, DO_NOTHING
-from model.ApkScannerResult import ApkScannerResult
+from model.ApkScannerReport import ApkScannerReport
 
 
-class QarkReport(ApkScannerResult):
+class QarkReport(ApkScannerReport):
     issue_list = ListField(LazyReferenceField('QarkIssue', reverse_delete_rule=DO_NOTHING), required=False)
     report_file_json = FileField(required=True)
 

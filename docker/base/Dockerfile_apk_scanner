@@ -2,6 +2,11 @@ FROM openjdk:8-jdk-slim-buster as apk_scanner-worker
 COPY --from=firmwaredroid-base / /
 
 #####################################
+# Installing exodus dependencies    #
+#####################################
+RUN apt-get install -y dexdump
+
+#####################################
 # Installing apktool                #
 #####################################
 RUN APKTOOL_VERSION=$(curl -s "https://api.github.com/repos/iBotPeaches/Apktool/releases/latest"  \
@@ -27,6 +32,12 @@ RUN export PATH=$PATH
 ##################################################
 # Installing python-based static-analysis tools  #
 ##################################################
+USER root
+RUN chown -R www:www /opt/firmwaredroid/python/
+
+USER www
+ENV PATH "$PATH:/home/www/.local/bin/"
 ENV PYTHONPATH "/var/www/source/:$PYTHONPATH"
 WORKDIR /var/www/source/
 RUN python3 /var/www/docker/setup_apk_scanner.py
+

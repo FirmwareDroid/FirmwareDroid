@@ -93,7 +93,7 @@ def is_apk_in_database(android_app):
 
 def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_list):
     """
-    Returns a list of class: files within the given path.
+    Returns a list of class:'AndroidApp' files within the given path.
 
     :param firmware_file_list: list(class:'FirmwareFile') - list of firmware file that contains the android apps and
     it's optimized files (.odex, .vdex, ...).

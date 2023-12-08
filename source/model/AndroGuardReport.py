@@ -1,10 +1,10 @@
 from mongoengine import LazyReferenceField, StringField, BooleanField, ListField, DictField, DO_NOTHING
-from model.ApkScannerResult import ApkScannerResult
+from model.ApkScannerReport import ApkScannerReport
 
 SCANNER_NAME = "AndroGuard"
 
 
-class AndroGuardReport(ApkScannerResult):
+class AndroGuardReport(ApkScannerReport):
     meta = {
         'indexes': ['packagename',  # '$packagename', '#packagename',
                     # 'app_name', '$app_name', '#app_name',

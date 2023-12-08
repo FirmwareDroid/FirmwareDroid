@@ -1,17 +1,13 @@
 #!/opt/firmwaredroid/python/androguard/bin/python
-
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
 import os
 import traceback
-
 from Interfaces.ScanJob import ScanJob
-from api.v2.schema.RqJobsSchema import ModuleNames
 from context.context_creator import create_db_context
-from model import AndroGuardReport
-from database.query_document import get_filtered_list
+from model import AndroGuardReport, GenericFile
 from model import AndroGuardMethodClassAnalysisReference
 from model import AndroGuardStringAnalysis, AndroGuardClassAnalysis, AndroGuardMethodAnalysis, \
     AndroGuardFieldAnalysis, AndroidApp
@@ -28,11 +24,7 @@ def add_report_crossreferences(report):
     :param report: class:'AndroGuardReport'
 
     """
-    for cert_id in report.certificate_id_list:
-        cert = AppCertificate.objects.get(pk=cert_id.pk)
-        cert.androguard_report_reference = report.id
-        cert.save()
-    #   TODO Implement class analysis
+    # TODO Add reference for class analysis
     # for class_id in report.class_analysis_id_list:
     #   class_analysis = AndroGuardClassAnalysis.objects.get(id=class_id)
     #   class_analysis.androguard_report_reference = report.id
@@ -123,6 +115,28 @@ def get_string_analysis(dx):
     return androguard_string_analysis_id_list
 
 
+def add_certificate_files(x509, cert):
+    """
+    Adds :class:'GenericFile' to an instance of :class:'AppCertificate' and stores the bytes in the database as file.
+
+    :param x509: :class:'asn1crypto.x509' - certificate to store in the database.
+    :param cert: :class:'AppCertificate' - the document to add the file references to.
+
+    """
+    from asn1crypto import pem
+    der_bytes = x509.dump()
+    pem_bytes = pem.armor('CERTIFICATE', der_bytes)
+    der_file = GenericFile(filename="certificate.der",
+                           file=der_bytes,
+                           document_reference=cert).save()
+
+    pem_file = GenericFile(filename="certificate.pem",
+                           file=pem_bytes,
+                           document_reference=cert).save()
+    cert.generic_file_list.extend([der_file, pem_file])
+    cert.save()
+
+
 def create_certificate_object_list(x509_cert_list, android_app):
     """
     Converts x509 certificates into a mongoEngine object list.
@@ -133,7 +147,7 @@ def create_certificate_object_list(x509_cert_list, android_app):
 
     """
     from androguard.util import get_certificate_name_string
-    from asn1crypto import pem
+
     certificate_list = []
     certificate_id_list = []
     for x509 in x509_cert_list:
@@ -159,7 +173,7 @@ def create_certificate_object_list(x509_cert_list, android_app):
             public_key_exponent = x509.public_key.native["public_key"]["public_exponent"]
         except Exception as err:
             logging.error(str(err))
-        der_bytes = x509.dump()
+
         cert = AppCertificate(
             android_app_id_reference=android_app.id,
             sha1=x509.sha1_fingerprint,
@@ -195,12 +209,12 @@ def create_certificate_object_list(x509_cert_list, android_app):
             is_valid_domain_ip=x509.is_valid_domain_ip,
             issuer_serial=str(x509.issuer_serial),
             serial_number=str(x509.serial_number),
-            certificate_DER_encoded=der_bytes,
-            certificate_PEM_encoded=pem.armor('CERTIFICATE', der_bytes)
         )
         certificate_list.append(cert)
         cert.save()
         certificate_id_list.append(cert.id)
+        add_certificate_files(x509, cert)
+
     return certificate_list, certificate_id_list
 
 
@@ -277,7 +291,6 @@ def analyse_single_apk(android_app):
                               target_sdk_version=str(a.get_target_sdk_version()),
                               effective_target_version=str(a.get_effective_target_sdk_version()),
                               manifest_xml=a.get_android_manifest_axml().get_xml(),
-                              certificate_id_list=certificate_id_list,
                               string_analysis_id_list=string_analysis_id_list,
                               is_signed_v1=a.is_signed_v1(),
                               is_signed_v2=a.is_signed_v2(),
@@ -285,6 +298,8 @@ def analyse_single_apk(android_app):
                               ).save()
     add_report_crossreferences(report)
     android_app.androguard_report_reference = report.id
+    android_app.packagename = report.packagename
+    android_app.certificate_id_list = certificate_id_list
     android_app.save()
     return report
 
@@ -308,7 +323,7 @@ def analyse_and_save(android_app):
 
 
 @create_db_context
-def androguard_worker_mulitprocessing(android_app_id_queue):
+def androguard_worker_multiprocessing(android_app_id_queue):
     """
     Worker process which will work on the given queue.
 
@@ -348,23 +363,26 @@ def androguard_worker_multithreading(android_app_queue):
 
 class AndroGuardScanJob(ScanJob):
     object_id_list = []
-    INTERPRETER = "/opt/firmwaredroid/python/androguard/bin/python"
+    SOURCE_DIR = "/var/www/source"
+    MODULE_NAME = "static_analysis.AndroGuard.androguard_wrapper"
+    INTERPRETER_PATH = "/opt/firmwaredroid/python/androguard/bin/python"
 
     def __init__(self, object_id_list):
         self.object_id_list = object_id_list
-        os.chdir("/var/www/source")
+        os.chdir(self.SOURCE_DIR)
 
     @create_db_context
     def start_scan(self):
         """
-        Starts multiple instances of AndroGuard to analyse the list of apps on multiple processors.
+        Starts multiple instances of AndroGuard to analyse a list of Android apps on multiple processors.
         """
         android_app_id_list = self.object_id_list
         logging.info(f"Androguard analysis started! With {str(len(android_app_id_list))} apps.")
         if len(android_app_id_list) > 0:
-            start_python_interpreter(android_app_id_list,
-                                     androguard_worker_mulitprocessing,
-                                     os.cpu_count(),
-                                     self.__name__,
-                                     ModuleNames.ANDROGUARD,
-                                     interpreter_path=self.INTERPRETER)
+            start_python_interpreter(item_list=android_app_id_list,
+                                     worker_function=androguard_worker_multiprocessing,
+                                     number_of_processes=os.cpu_count(),
+                                     use_id_list=True,
+                                     module_name=self.MODULE_NAME,
+                                     report_reference_name="androguard_report_reference",
+                                     interpreter_path=self.INTERPRETER_PATH)

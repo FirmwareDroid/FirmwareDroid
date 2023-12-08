@@ -1,7 +1,7 @@
 from mongoengine import DictField
-from model.ApkScannerResult import ApkScannerResult
+from model.ApkScannerReport import ApkScannerReport
 
 
-class QuarkEngineReport(ApkScannerResult):
+class QuarkEngineReport(ApkScannerReport):
     results = DictField(required=True)
 

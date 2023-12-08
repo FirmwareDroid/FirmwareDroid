@@ -11,7 +11,7 @@ class AndroidFirmwareType(MongoengineObjectType):
 
 class AndroidFirmwareQuery(graphene.ObjectType):
     android_firmware_list = graphene.List(AndroidFirmwareType,
-                                          object_id=graphene.List(graphene.String),
+                                          object_id_list=graphene.List(graphene.String),
                                           name="android_firmware_list"
                                           )
 

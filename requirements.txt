@@ -1,22 +1,25 @@
 ##############################
 # Webserver
-Django~=4.2.4
-django-environ~=0.11.1
-django-rq~=2.8.1
-django-cors-headers~=4.2.0
+Django~=4.2.7
+django-environ~=0.11.2
+django-rq~=2.9.0
+django-cors-headers~=4.3.1
 ##############################
-# GrahpQL Integration
+# GrahpQL API
 graphene-django~=3.1.5
-graphene-mongo~=0.2.15
+graphene-mongo~=0.4.0
 django-graphql-jwt~=0.4.0
+##############################
+# REST API
+djangorestframework~=3.14.0
 ##############################
 # Databases
 rq~=1.15.0
-pymongo~=4.5.0
+pymongo~=4.6.0
 mongoengine~=0.27.0
-blinker~=1.4
+blinker~=1.7
 ##############################
 # Misc
 # numpy~=1.25.2
-protobuf~=3.20.1 #Remove after unblob is integrated
+#protobuf~=3.20.1 #Remove after unblob is integrated
 

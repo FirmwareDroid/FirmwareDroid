@@ -35,15 +35,17 @@ SECRET_KEY = "django-insecure-dem!i552^wlq1wkw^js7h(t)kdjy!j!&3gm=ut@j1ibsbpml1d
 # SECURITY WARNING: don't run with debug turned on in production!
 ALLOWED_HOSTS = ["firmwaredroid.cloudlab.zhaw.ch",
                  "firmwaredroid-backend:5000",
-                 "https://firmwaredroid.cloudlab.zhaw.ch"]
+                 "https://firmwaredroid.cloudlab.zhaw.ch",
+                 "localhost"]
 
 # Security Settings
 #CSRF_HEADER_NAME = "X-CSRFToken"
 #CSRF_COOKIE_NAME = "csrftoken"
 CSRF_TRUSTED_ORIGINS = ["https://firmwaredroid.cloudlab.zhaw.ch"]
 CORS_ALLOWED_ORIGINS = ["https://firmwaredroid.cloudlab.zhaw.ch",
-                        "https://fmd-aosp.init-lab.ch"]
-CORS_ORIGIN_WHITELIST = ["firmwaredroid.cloudlab.zhaw.ch", "fmd-aosp.init-lab.ch"]
+                        "https://fmd-aosp.init-lab.ch",
+                        "https://localhost"]
+CORS_ORIGIN_WHITELIST = ["firmwaredroid.cloudlab.zhaw.ch", "fmd-aosp.init-lab.ch", "localhost"]
 CORS_ALLOW_CREDENTIALS = True
 
 GRAPHQL_JWT = {
@@ -69,7 +71,7 @@ elif env('APP_ENV') == "testing":
 
 
 # Folder Config
-MAIN_FOLDER = env('APP_DATA_FOLDER')
+MAIN_FOLDER = "../file_store/"
 FILE_STORAGE_FOLDER = ""
 FIRMWARE_FOLDER_IMPORT = ""
 FIRMWARE_FOLDER_IMPORT_FAILED = ""
@@ -152,7 +154,8 @@ INSTALLED_APPS = [
     "graphene_django",
     "setup",
     "django_rq",
-    "file_download"
+    'rest_framework',
+    "file_download.apps"
 ]
 
 MIDDLEWARE = [

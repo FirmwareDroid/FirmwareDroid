@@ -2,7 +2,6 @@ import graphene
 from graphql_jwt.decorators import superuser_required
 from setup.models import User
 from graphene_django import DjangoObjectType
-from graphene_django.debug import DjangoDebug
 
 
 class UserType(DjangoObjectType):
@@ -14,7 +13,6 @@ class UserType(DjangoObjectType):
 class UserAccountQuery(graphene.ObjectType):
     users = graphene.List(UserType)
     me = graphene.Field(UserType)
-    debug = graphene.Field(DjangoDebug, name='_debug')
 
     @superuser_required
     def resolve_users(self, info):

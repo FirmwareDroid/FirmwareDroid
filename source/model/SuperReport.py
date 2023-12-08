@@ -1,6 +1,6 @@
 from mongoengine import DictField
-from model.ApkScannerResult import ApkScannerResult
+from model.ApkScannerReport import ApkScannerReport
 
 
-class SuperReport(ApkScannerResult):
+class SuperReport(ApkScannerReport):
     results = DictField(required=True)

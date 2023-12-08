@@ -1,13 +1,13 @@
 import graphene
 import graphql_jwt
+from graphene_django.debug import DjangoDebug
 from graphene_mongo import MongoengineConnectionField
-
 from api.v2.schema.HealthCheckSchema import HealthCheckQuery
 from api.v2.schema.RqJobsSchema import RqJobMutation, RqQueueQuery
 from api.v2.schema.UserAccountSchema import UserAccountQuery
 from api.v2.schema.StoreSettingsSchema import StoreSettingsQuery
 from api.v2.schema.AndroidFirmwareSchema import AndroidFirmwareQuery
-from api.v2.schema.AndroidAppSchema import AndroidAppQuery
+from api.v2.schema.AndroidAppSchema import AndroidAppQuery, AndroidAppType
 from api.v2.schema.AndrowarnSchema import AndrowarnReportQuery
 from api.v2.schema.FirmwareFileSchema import FirmwareFileQuery
 from api.v2.schema.ApkidSchema import ApkidReportQuery
@@ -63,6 +63,7 @@ class Query(ApplicationSettingQuery,
             RqQueueQuery,
             HealthCheckQuery,
             graphene.ObjectType):
+    debug = graphene.Field(DjangoDebug, name='_debug')
     token_auth = graphql_jwt.ObtainJSONWebToken.Field()
     verify_token = graphql_jwt.Verify.Field()
     refresh_token = graphql_jwt.Refresh.Field()
@@ -70,6 +71,7 @@ class Query(ApplicationSettingQuery,
 
 
 class Mutation(RqJobMutation, graphene.ObjectType):
+    debug = graphene.Field(DjangoDebug, name='_debug')
     delete_token_cookie = graphql_jwt.DeleteJSONWebTokenCookie.Field()
     delete_refresh_token_cookie = graphql_jwt.DeleteRefreshTokenCookie.Field()
 

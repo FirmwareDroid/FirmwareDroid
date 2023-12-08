@@ -8,7 +8,6 @@ class GenericFile(Document):
     filename = StringField(required=True)
     file = FileField(required=True, collection_name="fs.generic")
     document_reference = GenericLazyReferenceField(required=True)
-    document_type = StringField(required=True)
 
     @classmethod
     def pre_file_delete(cls, sender, document, **kwargs):

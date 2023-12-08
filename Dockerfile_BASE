@@ -17,11 +17,6 @@ RUN apt-get --allow-releaseinfo-change update -y && \
     apt-get -y install tar gzip build-essential git unzip curl wget sudo
 
 ########################################################
-# Install Python dependencies                          #
-########################################################
-RUN python3 -m pip install --upgrade pip && pip install -r ./requirements.txt
-
-########################################################
 # User generation                                      #
 ########################################################
 ENV GROUP_ID=1000 \
@@ -32,7 +27,12 @@ RUN useradd -r -g $GROUP_ID -u $USER_ID www -s /bin/sh -m
 RUN chown $USER_ID:$GROUP_ID /var/www/
 RUN chown -R $USER_ID:$GROUP_ID /opt/firmwaredroid/
 
-USER $USER_ID:$GROUP_ID
+#USER $USER_ID:$GROUP_ID
+USER www
+ENV PATH "$PATH:/home/www/.local/bin/"
 
-
-
+########################################################
+# Install Python dependencies                          #
+########################################################
+RUN python3 -m pip install --upgrade pip && pip install -r ./requirements.txt
+RUN chown -R $USER_ID:$GROUP_ID /opt/firmwaredroid/

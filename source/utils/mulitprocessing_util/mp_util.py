@@ -100,12 +100,14 @@ def start_python_interpreter(item_list,
     Starts this script file in a new process with the given python interpreter. Executes the main function of this
     file and passes the given arguments to the new process.
 
+    :param module_name: str -
+    :param report_reference_name: str - Class:'AndroidApp' attribute name to store the result report.
     :param interpreter_path: string - Path to the python interpreter used for spawning the processes.
-    :param use_id_list: boolean - if true, object-id list instead of the item list is used for the queue.
-        Use this only if you provide an item list of documents with an id attribute.
+    :param use_id_list: boolean - if true: list of object-ids instead of object instances is used to create a queue
+    for processing. Set to false in case you provide an instance list of documents that have an id attribute.
     :param number_of_processes: int - number of processes to start.
-    :param worker_function: function - which will be executed by the pool.
-    :param item_list: list(object) - items to work on.
+    :param worker_function: function - which will be executed by the pool of worker processes.
+    :param item_list: list(documents or str) - list of object instances or list of object-id (strings) to process.
 
     """
     serialized_list_str = ",".join(map(str, item_list))
@@ -159,14 +161,12 @@ def main():
         sys.exit(-1)
     module_name = sys.argv[5]
     report_reference_name = sys.argv[6]
-
     item_list = get_filtered_list(id_list, AndroidApp, report_reference_name)
     worker_function_name = sys.argv[2]
-    my_module = importlib.import_module(module_name) # "static_analysis.AndroGuard.andro_guard_wrapper"
-    worker_function = getattr(my_module, worker_function_name)
+    scanner_module = importlib.import_module(module_name)
+    worker_function = getattr(scanner_module, worker_function_name)
     number_of_processes = int(sys.argv[3])
     use_id_list = bool(sys.argv[4])
-    logging.info(f"id_list: {id_list}")
     start_process_pool_new(item_list, worker_function, number_of_processes, use_id_list)
 
 

@@ -65,7 +65,7 @@ def create_file_import_queue():
                  f"\n\n{''.join(map(str, filename_list))}")
     if len(filename_list) == 0:
         logging.error(f"No files to import ({len(filename_list)} from {firmware_import_folder_path}")
-        raise ValueError("No files in import folder!")
+        raise ValueError(f"No files in import folder: {firmware_import_folder_path}")
     file_queue = create_multi_threading_queue(filename_list)
     logging.info(
         f"Approximate number of files to import ({len(filename_list)} {file_queue.qsize()}) "
@@ -210,7 +210,8 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5):
                                               md5,
                                               partition_name)
             try:
-                files_dict["firmware_app_list"].extend(store_android_apps(partition_temp_dir, firmware_app_store,
+                files_dict["firmware_app_list"].extend(store_android_apps(partition_temp_dir,
+                                                                          firmware_app_store,
                                                                           files_dict["firmware_file_list"]))
             except ValueError:
                 pass
@@ -275,7 +276,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
         try:
             sha1 = sha1_from_file(firmware_archive_file_path)
             sha256 = sha256_from_file(firmware_archive_file_path)
-            file_size = os.path.getsize(firmware_archive_file_path)
+            file_size = os.stat(firmware_archive_file_path).st_size
 
             archive_firmware_file_list = open_firmware(firmware_archive_file_path, temp_extract_dir)
             files_dict["archive_firmware_file_list"].extend(archive_firmware_file_list)
@@ -298,7 +299,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
                                   version_detected=version_detected,
                                   firmware_file_list=files_dict["firmware_file_list"],
                                   has_fuzzy_hash_index=create_fuzzy_hashes)
-            logging.info(f"Firmware Import success: {original_filename}")
+            logging.info(f"Firmware import success for file: {original_filename}")
         except Exception as error:
             logging.exception(f"Firmware Import failed: {original_filename} error: {str(error)}")
 

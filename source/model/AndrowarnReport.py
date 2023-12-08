@@ -1,9 +1,9 @@
 import mongoengine
 from mongoengine import ListField, FileField
-from model.ApkScannerResult import ApkScannerResult
+from model.ApkScannerReport import ApkScannerReport
 
 
-class AndrowarnReport(ApkScannerResult):
+class AndrowarnReport(ApkScannerReport):
     report_file_json = FileField(required=True)
     telephony_identifiers_leakage = ListField(required=False)
     device_settings_harvesting = ListField(required=False)

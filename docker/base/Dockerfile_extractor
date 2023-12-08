@@ -5,6 +5,9 @@
 FROM firmwaredroid-base as extractor-worker
 USER root
 
+#####################################
+# Installing apt dependencies       #
+#####################################
 RUN apt-get update
 RUN apt-get -y install pkgconf && \
     apt-get -y install simg2img && \
@@ -13,13 +16,21 @@ RUN apt-get -y install pkgconf && \
     apt-get -y install brotli && \
     apt-get -y install f2fs-tools           # Add support for f2fs filesystem format
 
-# Install dependencies for unblob
+#####################################
+# Installing unblob dependencies    #
+#####################################
 RUN apt-get -y install e2fsprogs p7zip-full unar zlib1g-dev liblzo2-dev lzop lziprecover img2simg zstd
 
+#####################################
+# Set access rights for mounting    #
+#####################################
 # TODO Problematic security rights for user www. Find alternative solution to mounting
 RUN echo "www ALL=(root) NOPASSWD: /bin/unmount" >> /etc/sudoers
 RUN echo "www ALL=(root) NOPASSWD: /bin/mount" >> /etc/sudoers
 
+#####################################
+# Install python dependencies       #
+#####################################
 USER www
 RUN --mount=type=cache,target=/var/www/tmp/.cache \
     pip install -r /var/www/requirements/requirements_extractor.txt

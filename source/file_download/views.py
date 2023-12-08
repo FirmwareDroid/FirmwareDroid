@@ -1,49 +1,57 @@
+import logging
 import os
 import tempfile
-from django.http import FileResponse, HttpResponse
-from django.views import View
+from django.http import FileResponse
+import uuid
+from rest_framework.viewsets import ViewSet
 from model import AndroidApp
 import shutil
+from rest_framework.decorators import action
 
 
-class DownloadAppBuild(View):
-    def get(self, request, *args, **kwargs):
+class DownloadAppBuildView(ViewSet):
+
+    @action(methods=['post'], detail=False, url_path='download', url_name='download')
+    def download(self, request, *args, **kwargs):
         """
-        Creates a zip file from all app build files and the apk of the Android app.
+        Bundles apk files together with AOSP build files (soong compatible)
+        and responses a zip archive of the files as download.
 
-        :param request: Django http request
-        :param object_id: Document id of an object of class:'AndroidApp'
+        :param request: Django http post requests. Allows to add the following
+        parameters in the body of the request in json format.
+          - object_id_list: list(str) - document ids for the class:'AndroidApp'
 
-        :return: Django class:'FileResponse'
-
+        :return: class:'FileResponse' - return a zip file containing the apk-,
+        build-, and meta-data files of the requested Android apps.
         """
-        response = HttpResponse(status=400)
-        object_id = request.GET.get('object_id', None)
-        if object_id is None:
-            return response
+        object_id_list = request.data['object_id_list']
 
-        android_app = AndroidApp.objects(id=object_id)
+        logging.error(f"Got object_id_list {object_id_list}")
+        android_app_list = AndroidApp.objects(id__in=object_id_list)
 
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            shutil.copy(android_app.absolute_store_path, tmpdirname.name)
+        with tempfile.TemporaryDirectory() as tmp_root_dir:
+            for android_app in android_app_list:
+                tmp_app_dir = os.path.join(tmp_root_dir, android_app.md5)
+                os.mkdir(tmp_app_dir)
+                shutil.copy(android_app.absolute_store_path, tmp_app_dir)
 
-            for generic_file_lazy in android_app.build_file_list:
-                generic_file = generic_file_lazy.fetch()
-                file_path = os.path.join(tmpdirname, generic_file.filename)
-                fp = open(file_path, 'w')
-                fp.write(generic_file.read())
-                fp.close()
+                for generic_file_lazy in android_app.generic_file_list:
+                    generic_file = generic_file_lazy.fetch()
+                    if generic_file.filename == "Android.mk" or generic_file.filename == "Android.bp":
+                        file_path = os.path.join(tmp_app_dir, generic_file.filename)
+                        fp = open(file_path, 'wb')
+                        fp.write(generic_file.file.read())
+                        fp.close()
 
-            try:
-                tmp = tempfile.NamedTemporaryFile(delete=False)
-                shutil.make_archive(tmp, 'zip', tmpdirname.name, tmp.name)
-                response = FileResponse(open(tmp.name, 'rb'),
+            with tempfile.TemporaryDirectory() as tmp_output_dir:
+                output_zip = os.path.join(tmp_output_dir, "test")
+                filename = shutil.make_archive(base_name=output_zip,
+                                               format='zip',
+                                               root_dir=tmp_root_dir)
+                logging.error(f"files: {os.listdir(path=tmp_root_dir)}, file: {filename}")
+
+                response = FileResponse(open(filename, 'rb'),
                                         as_attachment=True,
-                                        filename=f"{android_app.md5}.zip",
+                                        filename=f"{uuid.uuid4()}.zip",
                                         content_type="application/zip")
-                return response
-            finally:
-                os.remove(tmp.name)
-
-
-
+        return response
