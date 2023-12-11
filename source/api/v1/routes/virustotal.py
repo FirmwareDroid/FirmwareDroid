@@ -13,7 +13,7 @@ from api.v1.parser.request_util import check_app_mode
 #from hashing.tlsh.tlsh_malware_labeling import add_malware_labels_to_graph
 from model import UserAccount, VirusTotalReport
 from model.VirusTotalReport import VirusTotalReportSchema
-from static_analysis.Virustotal.virus_total_wrapper import start_virustotal_scan
+from static_analysis.VirusTotal.virus_total_wrapper import start_virustotal_scan
 
 api = Api()
 ns = api.namespace('virustotal',

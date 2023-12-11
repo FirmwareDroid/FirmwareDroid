@@ -4,30 +4,13 @@
 import logging
 import os
 import traceback
-from database.query_document import get_filtered_list
+from Interfaces.ScanJob import ScanJob
 from model import QuarkEngineReport, AndroidApp
 from context.context_creator import create_db_context
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
 
-@create_db_context
-def start_quark_engine_scan(android_app_id_list, use_parallel_mode=False):
-    """
-    Analysis all apps from the given list with quark-engine.
-    :param use_parallel_mode: boolean - use quark-engines built in parallel mode. Default: false
-    :param android_app_id_list: list of class:'AndroidApp' object-ids.
-    """
-    logging.info(f"Quark-Engine analysis started! With {str(len(android_app_id_list))} apps")
-    android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "quark_engine_report_reference")
-    logging.info(f"Quark-Engine after filter: {str(len(android_app_list))}")
-    if len(android_app_list) > 0:
-        if use_parallel_mode:
-            quark_engine_parallel_worker(android_app_list)
-        else:
-            start_python_interpreter(android_app_list, quark_engine_worker, os.cpu_count())
-
-
-def quark_engine_worker(android_app_id_queue):
+def quark_engine_worker_multiprocessing(android_app_id_queue):
     """
     Start the analysis with quark-engine on a multiprocessor queue.
     :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
@@ -53,7 +36,7 @@ def quark_engine_worker(android_app_id_queue):
                           f"error: {err}")
             traceback.print_exc()
         android_app_id_queue.task_done()
-    remove_logs()
+        remove_logs()
 
 
 def quark_engine_parallel_worker(android_app_list):
@@ -162,9 +145,37 @@ def create_quark_engine_report(android_app, scan_results):
     from quark import __version__
     report = QuarkEngineReport(
         android_app_id_reference=android_app.id,
-        quark_engine_version=__version__,
+        scanner_version=__version__,
+        scanner_name="QuarkEngine",
         scan_results=scan_results
     ).save()
     android_app.quark_engine_report_reference = report.id
     android_app.save()
     return report
+
+
+class QuarkEngineScanJob(ScanJob):
+    object_id_list = []
+    SOURCE_DIR = "/var/www/source"
+    MODULE_NAME = "static_analysis.QuarkEngine.quark_engine_wrapper"
+    INTERPRETER_PATH = "/opt/firmwaredroid/python/qark_engine/bin/python"
+
+    def __init__(self, object_id_list):
+        self.object_id_list = object_id_list
+        os.chdir(self.SOURCE_DIR)
+
+    @create_db_context
+    def start_scan(self):
+        """
+        Starts multiple instances of AndroGuard to analyse a list of Android apps on multiple processors.
+        """
+        android_app_id_list = self.object_id_list
+        logging.info(f"QuarkEngine analysis started! With {str(len(android_app_id_list))} apps.")
+        if len(android_app_id_list) > 0:
+            start_python_interpreter(item_list=android_app_id_list,
+                                     worker_function=quark_engine_worker_multiprocessing,
+                                     number_of_processes=os.cpu_count(),
+                                     use_id_list=True,
+                                     module_name=self.MODULE_NAME,
+                                     report_reference_name="quark_engine_report_reference",
+                                     interpreter_path=self.INTERPRETER_PATH)

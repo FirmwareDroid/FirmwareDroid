@@ -25,10 +25,12 @@ class ScannerModules(Enum):
     ANDROGUARD = {"AndroGuardScanJob": "static_analysis.AndroGuard.androguard_wrapper"}
     ANDROWARN = {"AndrowarnScanJob": "static_analysis.Androwarn.androwarn_wrapper"}
     APKID = {"APKiDScanJob": "static_analysis.APKiD.apkid_wrapper"}
-    QUARKENGINE = {"static_analysis.QuarkEngine.quark_engine_wrapper"}
     APKLEAKS = {"APKLeaksScanJob": "static_analysis.APKLeaks.apkleaks_wrapper"}
     EXODUS = {"ExodusScanJob": "static_analysis.Exodus.exodus_wrapper"}
-    VIRUSTOTAL = {"static_analysis.Virustotal.virus_total_wrapper"}
+    QUARKENGINE = {"QuarkEngineScanJob": "static_analysis.QuarkEngine.quark_engine_wrapper"}
+    QARK = {"QarkScanJob": "static_analysis.Qark.qark_wrapper"}
+    SUPER = {"SuperAndroidAnalyzerScanJob": "static_analysis.SuperAndroidAnalyzer.super_android_analyzer_wrapper"}
+    VIRUSTOTAL = {"VirusTotalScanJob": "static_analysis.Virustotal.virus_total_wrapper"}
 
 
 class RqQueueQuery(graphene.ObjectType):
@@ -61,14 +63,6 @@ class CreateApkScanJob(graphene.Mutation):
     """
     Create a RQ job for modules that scan apk files (static-analysis). Only module names from the class:'ModuleNames'
     are accepted. Every module uses an own python interpreter and the module is loaded during runtime.
-
-    Available modules are:
-        "ANDROGUARD",
-        "QUARKENGINE",
-        "APKLEAKS",
-        "APKID",
-        "EXODUS",
-        "VIRUSTOTAL",
     """
     job_id = graphene.String()
 
@@ -141,11 +135,6 @@ class CreateAppBuildFileJob(graphene.Mutation):
     @classmethod
     @superuser_required
     def mutate(cls, root, info, queue_name, format_name, object_id_list):
-        # TODO refactor this method
-        # queue = django_rq.get_queue(queue_name)
-        # func_to_run = start_app_build_file_creator
-        # job = queue.enqueue(func_to_run, format_name, object_id_list, job_timeout=ONE_DAY_TIMEOUT)
-        # return cls(job_id=job.id)
         try:
             start_app_build_file_creator(format_name, object_id_list)
         except Exception as err:

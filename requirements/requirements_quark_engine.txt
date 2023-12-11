@@ -1,1 +1,1 @@
-quark-engine==22.4.1
+quark-engine==23.9.1

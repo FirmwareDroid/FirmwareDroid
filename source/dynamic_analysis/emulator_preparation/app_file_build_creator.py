@@ -33,7 +33,8 @@ def start_app_build_file_creator(format_name, object_id_list):
     support mk and bp file formats.
 
     :param format_name: str - 'mk' or 'bp' file format.
-    :param object_id_list: list(ObjectID) - A list of object-ids that can be resolve to an instance of class:'AndroidApp'
+    :param object_id_list: list(ObjectID) - A list of object-ids that can be resolved to an instance
+    of class:'AndroidApp'.
 
     """
     android_app_list = AndroidApp.objects(id__in=object_id_list)

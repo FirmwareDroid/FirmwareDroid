@@ -6,6 +6,7 @@ import json
 import logging
 import os
 
+from Interfaces.ScanJob import ScanJob
 from database.query_document import get_filtered_list
 from model import UserAccount, AndroidApp
 from model import VirusTotalReport
@@ -112,3 +113,23 @@ def handle_virustotal_api_error(vs_error, android_app, api_key):
         raise ValueError(f"Unexpected VirusTotal error occurred! "
                          f"{android_app.filename} id: {str(android_app.id)}"
                          f"error: {str(vs_error)}")
+
+
+class VirusTotalScanJob(ScanJob):
+    object_id_list = []
+    SOURCE_DIR = "/var/www/source"
+    MODULE_NAME = "static_analysis.VirusTotal.virus_total_wrapper"
+    INTERPRETER_PATH = "/opt/firmwaredroid/python/qark/bin/python"
+
+    def __init__(self, object_id_list):
+        raise NotImplemented("Sorry, not yet refactored!")
+        self.object_id_list = object_id_list
+        os.chdir(self.SOURCE_DIR)
+
+    @create_db_context
+    def start_scan(self):
+        """
+        Starts multiple instances of AndroGuard to analyse a list of Android apps on multiple processors.
+        """
+        android_app_id_list = self.object_id_list
+        logging.info(f"VirusTotal analysis started! With {str(len(android_app_id_list))} apps.")
