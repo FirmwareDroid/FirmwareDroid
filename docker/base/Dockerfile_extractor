@@ -24,7 +24,7 @@ RUN apt-get -y install e2fsprogs p7zip-full unar zlib1g-dev liblzo2-dev lzop lzi
 #####################################
 # Set access rights for mounting    #
 #####################################
-# TODO Problematic security rights for user www. Find alternative solution to mounting
+# TODO Problematic security rights for the user www. Find alternative solution to mounting
 RUN echo "www ALL=(root) NOPASSWD: /bin/unmount" >> /etc/sudoers
 RUN echo "www ALL=(root) NOPASSWD: /bin/mount" >> /etc/sudoers
 

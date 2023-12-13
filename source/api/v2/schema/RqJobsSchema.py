@@ -9,6 +9,7 @@ from graphql_jwt.decorators import superuser_required
 
 from dynamic_analysis.emulator_preparation.app_file_build_creator import start_app_build_file_creator
 from firmware_handler.firmware_importer import start_firmware_mass_import
+from model import AndroidFirmware
 from webserver.settings import RQ_QUEUES
 
 APK_SCAN_FUNCTION_NAME = "start_scan"
@@ -125,18 +126,27 @@ class CreateAppBuildFileJob(graphene.Mutation):
     Starts the service to create app build files ("Android.mk" or "Android.bp") for specific apk files. These build
     files can be used in the Android Open Source Project to create custom firmware that includes the specific apk file.
     """
-    job_id = graphene.String()
+    #job_id = graphene.String()
+    object_id_list = graphene.List(graphene.String)
 
     class Arguments:
         queue_name = graphene.String(required=True)
         format_name = graphene.String(required=True)
-        object_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
+        object_id_list = graphene.List(graphene.NonNull(graphene.String), required=False)
+        all_firmware = graphene.Boolean(required=False)
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, queue_name, format_name, object_id_list):
+    def mutate(cls, root, info, queue_name, format_name, object_id_list, all_firmware):
         try:
+            if all_firmware:
+                object_id_list = []
+                for firmware in AndroidFirmware.objects():
+                    for android_app_lazy in firmware.android_app_id_list:
+                        object_id_list.append(android_app_lazy.pk)
+
             start_app_build_file_creator(format_name, object_id_list)
+            return cls(object_id_list=object_id_list)
         except Exception as err:
             logging.error(err)
             traceback.format_exc()

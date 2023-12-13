@@ -22,7 +22,7 @@ env = environ.Env(
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 # Source
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
+SOURCE_DIR = Path(__file__).resolve().parent.parent
 # Take environment variables from .env file
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
@@ -214,7 +214,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "/django_static/"
-STATIC_ROOT = os.path.join(BASE_DIR, "django_static/")
+STATIC_ROOT = os.path.join(SOURCE_DIR, "static/")
 FORCE_SCRIPT_NAME = '/'
 USE_X_FORWARDED_HOST = True
 LOGIN_URL = '/admin/login/'

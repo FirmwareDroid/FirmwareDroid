@@ -9,22 +9,18 @@ import logging
 from string import Template
 from model import AndroidApp, GenericFile
 
-ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)" \
-                      "\ninclude $$(CLEAR_VARS)" \
-                      "\nLOCAL_MODULE_TAGS := optional " \
-                      "\nLOCAL_MODULE := ${local_module}" \
-                      "\nLOCAL_CERTIFICATE := ${local_certificate}" \
-                      "\nLOCAL_SRC_FILES := ${local_src_files}" \
-                      "\nLOCAL_MODULE_CLASS := APPS" \
-                      "\nLOCAL_MODULE_SUFFIX := $$(COMMON_ANDROID_PACKAGE_SUFFIX)" \
-                      "\nLOCAL_OPTIONAL_USES_LIBRARIES := ${local_optional_uses_libraries}" \
-                      "\ninclude $$(BUILD_PREBUILT)"
+ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
+                      "\ninclude $$(CLEAR_VARS)\n" \
+                      "\nLOCAL_MODULE_TAGS := optional \n" \
+                      "\nLOCAL_MODULE := ib_${local_module}\n" \
+                      "\nLOCAL_CERTIFICATE := ${local_certificate}\n" \
+                      "\nLOCAL_SRC_FILES := ${local_src_files}\n" \
+                      "\nLOCAL_MODULE_CLASS := APPS\n" \
+                      "\nLOCAL_MODULE_SUFFIX := $$(COMMON_ANDROID_PACKAGE_SUFFIX)\n" \
+                      "\nLOCAL_OPTIONAL_USES_LIBRARIES := ${local_optional_uses_libraries}\n" \
+                      "\ninclude $$(BUILD_PREBUILT)\n"
 
 ANDROID_BP_TEMPLATE = ""
-
-META_FILE_TEMPLATE = "APP_CLASS: ${app_class}" \
-                     "\nAPK_PATH: ${relative_firmware_path}" \
-                     "\n"
 
 
 def start_app_build_file_creator(format_name, object_id_list):
@@ -38,12 +34,13 @@ def start_app_build_file_creator(format_name, object_id_list):
 
     """
     android_app_list = AndroidApp.objects(id__in=object_id_list)
-    logging.error(f"Got android apps {android_app_list}")
-    for android_app in android_app_list:
-        if format_name == "mk":
-            create_soong_build_files(android_app, "mk", ANDROID_MK_TEMPLATE)
-        else:
-            create_soong_build_files(android_app, "bp", ANDROID_BP_TEMPLATE)
+    if android_app_list and format_name:
+        for android_app in android_app_list:
+            try:
+                template = ANDROID_MK_TEMPLATE if format_name == "mk" else ANDROID_BP_TEMPLATE
+                create_soong_build_files(android_app, format_name, template)
+            except Exception as err:
+                logging.error(err)
 
 
 def create_soong_build_files(android_app, file_format, file_template):
@@ -59,11 +56,15 @@ def create_soong_build_files(android_app, file_format, file_template):
 
     """
     template_string = create_template_string(android_app, file_template)
-    logging.error(f"Template string complete:\n{template_string}")
 
-    for existing_generic_file in android_app.generic_file_list:
-        if existing_generic_file.filename == "Android." + file_format:
-            existing_generic_file.delete()
+    for existing_generic_file_reference in android_app.generic_file_list:
+        try:
+            existing_generic_file = existing_generic_file_reference.fetch()
+            if existing_generic_file.filename == "Android." + file_format:
+                existing_generic_file.delete()
+        except Exception as err:
+            logging.error(err)
+            android_app.generic_file_list.remove(existing_generic_file_reference)
 
     generic_file = GenericFile(filename=f"Android.{file_format}",
                                file=bytes(template_string, 'utf-8'),
@@ -92,38 +93,7 @@ def create_template_string(android_app, template_string):
                                                           local_src_files=local_src_files,
                                                           local_certificate=local_certificate,
                                                           local_optional_uses_libraries=local_optional_uses_libraries)
-    logging.error(f"Create template file:\nlocal_module:{local_module}\nlocal_src_files:{local_src_files}"
-                  f"\nlocal_optional_uses_libraries:{local_optional_uses_libraries}"
-                  f"\nlocal_certificate:{local_certificate}")
+    #logging.error(f"Create template file:\nlocal_module:{local_module}\nlocal_src_files:{local_src_files}"
+    #              f"\nlocal_optional_uses_libraries:{local_optional_uses_libraries}"
+    #              f"\nlocal_certificate:{local_certificate}")
     return final_template
-
-
-def create_testing_meta_file():
-    """
-
-    :return:
-    """
-
-
-    generic_file = GenericFile(filename=f"Android.{file_format}",
-                               file=bytes(template_string, 'utf-8'),
-                               document_reference=android_app)
-    generic_file.save()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

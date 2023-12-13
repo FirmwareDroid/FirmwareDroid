@@ -38,10 +38,10 @@ services:
       - ./env/certbot/conf:/etc/letsencrypt
       - ./env/certbot/www:/var/www/certbot
       - ./firmware-droid-client/build:/usr/share/nginx/html
+      - ./source/static:/usr/share/nginx/django_static
     ports:
       - "80:80"
       - "443:443"
-      #- "5602:5602"
     networks:
       - frontend
 
