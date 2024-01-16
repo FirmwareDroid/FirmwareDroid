@@ -5,7 +5,7 @@
 import logging
 import os
 import traceback
-from Interfaces.ScanJob import ScanJob
+from model.Interfaces.ScanJob import ScanJob
 from context.context_creator import create_db_context
 from model import AndroGuardReport, GenericFile
 from model import AndroGuardMethodClassAnalysisReference
@@ -13,7 +13,7 @@ from model import AndroGuardStringAnalysis, AndroGuardClassAnalysis, AndroGuardM
     AndroGuardFieldAnalysis, AndroidApp
 from model import AppCertificate
 from model.AndroGuardReport import SCANNER_NAME
-from utils.string_utils.string_util import filter_mongodb_dict_chars
+from database.mongodb_key_replacer import filter_mongodb_dict_chars
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
 

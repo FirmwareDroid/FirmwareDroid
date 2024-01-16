@@ -35,7 +35,6 @@ def group_references_by_firmware_version(json_file_id, add_meta_data=False):
                     sorted_dict[version] = [output_string]
         except Exception as err:
             logging.warning(str(err))
-            pass
     return sorted_dict
 
 

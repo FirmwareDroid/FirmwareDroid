@@ -9,43 +9,47 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+import logging
+import sys
 import environ
 import os
 from pathlib import Path
 from database.connector import init_db
 
-
 env = environ.Env(
     # set casting, default value
     # DEBUG=(bool, False)
 )
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-# Source
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SOURCE_DIR = Path(__file__).resolve().parent.parent
-# Take environment variables from .env file
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+APP_ENV = env('APP_ENV')
+if APP_ENV == "production":
+    DEBUG = False
+else:
+    DEBUG = True
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    root.addHandler(handler)
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-dem!i552^wlq1wkw^js7h(t)kdjy!j!&3gm=ut@j1ibsbpml1d"
-
-# SECURITY WARNING: don't run with debug turned on in production!
-ALLOWED_HOSTS = ["firmwaredroid.cloudlab.zhaw.ch",
-                 "firmwaredroid-backend:5000",
-                 "https://firmwaredroid.cloudlab.zhaw.ch",
-                 "localhost"]
+DOMAIN_NAME = os.environ['DOMAIN_NAME']
+HTTPS_DOMAIN_NAME = "https://" + DOMAIN_NAME
+SERVER_NAME = DOMAIN_NAME
+SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
+CORS_ADDITIONAL_HOST = os.environ['CORS_ADDITIONAL_HOST']
+if not CORS_ADDITIONAL_HOST.startswith("https://"):
+    CORS_ADDITIONAL_HOST = "https://" + CORS_ADDITIONAL_HOST
 
 # Security Settings
-#CSRF_HEADER_NAME = "X-CSRFToken"
-#CSRF_COOKIE_NAME = "csrftoken"
-CSRF_TRUSTED_ORIGINS = ["https://firmwaredroid.cloudlab.zhaw.ch"]
-CORS_ALLOWED_ORIGINS = ["https://firmwaredroid.cloudlab.zhaw.ch",
-                        "https://fmd-aosp.init-lab.ch",
-                        "https://localhost"]
-CORS_ORIGIN_WHITELIST = ["firmwaredroid.cloudlab.zhaw.ch", "fmd-aosp.init-lab.ch", "localhost"]
+ALLOWED_HOSTS = [DOMAIN_NAME, "firmwaredroid-backend:5000", HTTPS_DOMAIN_NAME, "localhost"]
+CSRF_TRUSTED_ORIGINS = [HTTPS_DOMAIN_NAME]
+CORS_ALLOWED_ORIGINS = [HTTPS_DOMAIN_NAME, CORS_ADDITIONAL_HOST, "https://localhost"]
+CORS_ORIGIN_WHITELIST = [DOMAIN_NAME, CORS_ADDITIONAL_HOST, "localhost"]
 CORS_ALLOW_CREDENTIALS = True
 
 GRAPHQL_JWT = {
@@ -53,22 +57,6 @@ GRAPHQL_JWT = {
     'JWT_COOKIE_SECURE': False,
     'JWT_COOKIE_SAMESITE': "Lax"
 }
-
-
-
-DEBUG_LOCAL = False
-print(env('APP_ENV'))
-if env('APP_ENV') == "development":
-    DEBUG = True
-elif env('APP_ENV') == "debug_local":
-    DEBUG = True
-    DEBUG_LOCAL = True
-    CORS_EXPOSE_HEADERS = True
-elif env('APP_ENV') == "production":
-    DEBUG = False
-elif env('APP_ENV') == "testing":
-    DEBUG = True
-
 
 # Folder Config
 MAIN_FOLDER = "../file_store/"
@@ -81,25 +69,21 @@ FIRMWARE_FOLDER_FILE_EXTRACT = ""
 FIRMWARE_FOLDER_CACHE = ""
 LIBS_FOLDER = ""
 
-# Webserver Config
-DOMAIN_NAME = os.environ['DOMAIN_NAME']
-SERVER_NAME = DOMAIN_NAME
-MAX_CONTENT_LENGTH = 7 * 1024 * 1024 * 1024  # MAX File upload size
-
-# DB Config
+# Database Config
 DB_REPLICA_SET = os.environ['MONGODB_REPLICA_SET']
 DB_HOST = os.environ['MONGODB_HOSTNAME']
 DB_HOST_PORT = int(os.environ['MONGODB_PORT'])
-DB_NAME = os.environ['MONGODB_DATABASE']
+DB_NAME = os.environ['MONGODB_DATABASE_NAME']
 DB_AUTH_SRC = os.environ['MONGODB_AUTH_SRC']
 DB_URI = 'mongodb://' + os.environ['MONGODB_USERNAME'] \
          + ':' + os.environ['MONGODB_PASSWORD'] \
          + '@' + os.environ['MONGODB_HOSTNAME'] \
          + ':' + str(DB_HOST_PORT) \
-         + '/' + os.environ['MONGODB_DATABASE'] \
+         + '/' + os.environ['MONGODB_DATABASE_NAME'] \
          + '?authSource=' + DB_AUTH_SRC
-# Settings side-loaded by mongo-engine
-MONGODB_DATABASES = {
+
+# Database - Settings side-loaded by mongo-engine
+MONGO_DATABASES = {
     "default": {
         "db": DB_NAME,
         "name": DB_NAME,
@@ -112,17 +96,17 @@ MONGODB_DATABASES = {
         "authMechanism": "SCRAM-SHA-256"
     },
 }
-#print(MONGODB_DATABASES)
-db = init_db(MONGODB_DATABASES["default"])
 
-# REST API Config
+db = init_db(MONGO_DATABASES["default"])
+
+# DJANGO REST API Config
 API_TITLE = os.environ['API_TITLE']
 API_VERSION = os.environ['API_VERSION']
 API_DESCRIPTION = os.environ['API_DESCRIPTION']
 API_PREFIX = os.environ['API_PREFIX']
 API_DOC_FOLDER = os.environ['API_DOC_FOLDER']
 
-# Firmware Mass Import Config
+# FMD - Firmware Mass Import Config
 MASS_IMPORT_NUMBER_OF_THREADS = os.environ['MASS_IMPORT_NUMBER_OF_THREADS']
 
 # Log configuration
@@ -189,30 +173,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "webserver.wsgi.application"
 
-# SQL-Lite Test Database of DJANGO - Keep it for the moment
+# SQL-Lite Test Database of DJANGO - Keep it for the user accounts
+DJANGO_SUPERUSER_PASSWORD = os.environ["DJANGO_SUPERUSER_PASSWORD"]
+DJANGO_SUPERUSER_USERNAME = os.environ["DJANGO_SUPERUSER_USERNAME"]
+DJANGO_SUPERUSER_EMAIL = os.environ["DJANGO_SUPERUSER_EMAIL"]
+DJANGO_SQLITE_DATABASE_PATH = os.environ['DJANGO_SQLITE_DATABASE_PATH']
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": DJANGO_SQLITE_DATABASE_PATH
     }
 }
 
-
-
-# Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
-
+# Internationalization - see https://docs.djangoproject.com/en/4.2/topics/i18n/
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
-
+# Static files (CSS, JavaScript, Images) - see https://docs.djangoproject.com/en/4.2/howto/static-files/
 STATIC_URL = "/django_static/"
 STATIC_ROOT = os.path.join(SOURCE_DIR, "static/")
 FORCE_SCRIPT_NAME = '/'
@@ -221,11 +200,10 @@ LOGIN_URL = '/admin/login/'
 LOGIN_REDIRECT_URL = '/admin/'
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-
+# Default primary key field type - see https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Graphql Graphene configuration
 GRAPHENE = {
     "SCHEMA": "api.v2.schema.FirmwareDroidRootSchema.schema",
     "MIDDLEWARE": [
@@ -254,15 +232,12 @@ AUTHENTICATION_BACKENDS = [
     "graphql_jwt.backends.JSONWebTokenBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
-DEFAULT_ADMIN_PW = os.environ['DEFAULT_ADMIN_PW']
-DEFAULT_ADMIN_MAIL = os.environ['DEFAULT_ADMIN_MAIL']
-DEFAULT_ADMIN_USERNAME = os.environ['DEFAULT_ADMIN_USERNAME']
 AUTH_USER_MODEL = "setup.User"
 
 # Redis Config
 REDIS_PORT = int(os.environ['REDIS_PORT'])
 REDIS_PASSWORD = os.environ['REDIS_PASSWORD']
-REDIS_HOST = "localhost" if DEBUG_LOCAL else "redis"
+REDIS_HOST = "redis"  # "localhost" if DEBUG else "redis"
 
 # RQ Config
 RQ_QUEUES = {
@@ -295,6 +270,3 @@ RQ_QUEUES = {
         'DEFAULT_TIMEOUT': 60 * 60,
     },
 }
-
-
-

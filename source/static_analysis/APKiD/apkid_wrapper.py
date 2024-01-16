@@ -6,7 +6,7 @@ import os
 import logging
 import tempfile
 
-from Interfaces.ScanJob import ScanJob
+from model.Interfaces.ScanJob import ScanJob
 from model import ApkidReport, AndroidApp
 from context.context_creator import create_db_context
 from utils.mulitprocessing_util.mp_util import start_python_interpreter

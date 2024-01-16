@@ -6,12 +6,15 @@ import json
 import logging
 import os
 
-from Interfaces.ScanJob import ScanJob
+from model.Interfaces.ScanJob import ScanJob
 from database.query_document import get_filtered_list
 from model import UserAccount, AndroidApp
 from model import VirusTotalReport
 from context.context_creator import create_db_context
-from utils.string_utils.string_util import filter_mongodb_dict_chars
+from database.mongodb_key_replacer import filter_mongodb_dict_chars
+
+
+# TODO REFACTOR THIS CLASS
 
 
 @create_db_context

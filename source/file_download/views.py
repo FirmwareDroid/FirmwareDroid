@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 import logging
 import os
 import tempfile
@@ -35,6 +38,7 @@ APP_BLACKLIST = ["BasicDreams.apk",
                  "framework-res.apk"]
 APP_ERROR = ["CtsShimPrivPrebuilt.apk",
              "CtsShimPrebuilt.apk",
+             "SystemUI.apk",
              "Turbo.apk"]
 
 
@@ -80,15 +84,17 @@ class DownloadAppBuildView(ViewSet):
                         except DoesNotExist as err:
                             logging.error(f"{generic_file_lazy.pk}: {err}")
 
-                    meta_file = os.path.join(tmp_root_dir, "meta.txt")
+                    meta_file = os.path.join(tmp_root_dir, "meta_build.txt")
                     fp = open(meta_file, 'a')
                     fp.write("    " + module_naming + " \\\n")
                     fp.close()
 
-                    apk_meta_file = os.path.join(tmp_root_dir, "apk_names.txt")
+                    report = android_app.androguard_report_reference.fetch()
+                    apk_meta_file = os.path.join(tmp_root_dir, "apk_meta.txt")
                     fp = open(apk_meta_file, 'a')
-                    fp.write(f"{android_app.filename}:{android_app.packagename}")
+                    fp.write(f"{android_app.filename}:{android_app.packagename}:{report.activities}\n")
                     fp.close()
+
                 else:
                     blacklisted_apps.append(android_app.filename)
 
@@ -103,5 +109,7 @@ class DownloadAppBuildView(ViewSet):
                                         as_attachment=True,
                                         filename=f"{uuid.uuid4()}.zip",
                                         content_type="application/zip")
+                #response.headers['Content-Disposition'] = 'attachment; filename={}'.format(filename)
+                #response.headers['Content-Type'] = 'application/zip'
         logging.error(f"Blacklisted apps: {blacklisted_apps}")
         return response

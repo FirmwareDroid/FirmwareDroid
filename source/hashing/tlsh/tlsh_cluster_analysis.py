@@ -13,7 +13,7 @@ from model import TlshHash, TlshClusterAnalysis, TlshSimiliarityLookup
 from hashing.tlsh.tlsh_hasher import tlsh_compare_hashs
 from context.context_creator import create_db_context
 from utils.file_utils.file_util import object_to_temporary_json_file, create_reference_file
-from utils.string_utils.string_util import filter_mongodb_dict_chars
+from database.mongodb_key_replacer import filter_mongodb_dict_chars
 
 # TODO FINISH WORK HERE
 @create_db_context

@@ -4,7 +4,16 @@
 import logging
 import uuid
 import mongoengine
-from mongoengine import connection
+from mongoengine import connection, Document
+
+
+def test_connection():
+    """
+
+    :return:
+    """
+    from model import WebclientSetting
+    application_setting = WebclientSetting.objects.first()
 
 
 def init_db(db_settings):
@@ -16,10 +25,10 @@ def init_db(db_settings):
     :return: mongoengine database connection object.
 
     """
-
     alias = uuid.uuid4()
     db_con = open_db_connection(db_settings, alias)
     register_default_connection(db_settings)
+    test_connection()
     return db_con
 
 
@@ -34,6 +43,7 @@ def open_db_connection(db_settings, alias):
 
     """
     db_name, host, port, username, password, authentication_source, auth_mechanism = get_connection_options(db_settings)
+    logging.debug((db_name, host, port, username, authentication_source, auth_mechanism))
     return mongoengine.connect(db=db_name,
                                alias=alias,
                                host=host,
@@ -61,17 +71,18 @@ def multiprocess_disconnect_all():
     See link: https://stackoverflow.com/questions/49390825/using-mongoengine-with-multiprocessing-how-do-you-close-mongoengine-connection
 
     """
-    from webserver.settings import MONGODB_DATABASES
+    from webserver.settings import MONGO_DATABASES
     mongoengine.disconnect_all()
     connection._connections = {}
     connection._connection_settings = {}
     connection._dbs = {}
-    db_settings = MONGODB_DATABASES["default"]
+    db_settings = MONGO_DATABASES["default"]
     register_default_connection(db_settings)
 
 
 def register_default_connection(db_settings):
     db_name, host, port, username, password, authentication_source, auth_mechanism = get_connection_options(db_settings)
+    logging.debug(("default", db_name, host, port, username, authentication_source, auth_mechanism))
     mongoengine.register_connection(alias='default',
                                     db=db_name,
                                     host=host,

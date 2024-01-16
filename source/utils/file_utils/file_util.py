@@ -11,7 +11,6 @@ from model import JsonFile
 import tempfile
 import time
 from utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
-
 from setup.default_setup import get_active_file_store_paths
 STORE_PATHS = get_active_file_store_paths()
 

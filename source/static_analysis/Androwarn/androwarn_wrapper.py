@@ -8,7 +8,7 @@ import sys
 import tempfile
 from multiprocessing import Lock
 
-from Interfaces.ScanJob import ScanJob
+from model.Interfaces.ScanJob import ScanJob
 from model import AndrowarnReport, AndroidApp
 from context.context_creator import create_db_context
 from utils.mulitprocessing_util.mp_util import start_python_interpreter

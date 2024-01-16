@@ -35,8 +35,7 @@ services:
       - web
     volumes:
       - ./env/nginx:/etc/nginx/conf.d
-      - ./env/certbot/conf:/etc/letsencrypt
-      - ./env/certbot/www:/var/www/certbot
+      - ./env/nginx/live/:/etc/letsencrypt/live/
       - ./firmware-droid-client/build:/usr/share/nginx/html
       - ./source/static:/usr/share/nginx/django_static
     ports:
@@ -57,7 +56,8 @@ services:
     volumes:
       - ./env/mongo/init/:/docker-entrypoint-initdb.d/
       - ./env/mongo/auth/cluster.key:/etc/mongodb/cluster.key
-
+      - ${LOCAL_MONGO_DB_PATH_NODE1}:/data/db
+    command: mongod --bind_ip_all --auth --port 27017 --replSet ${MONGODB_REPLICA_SET} --keyFile /etc/mongodb/cluster.key --dbpath /data/db
     networks:
       - backend
     healthcheck:
@@ -67,31 +67,15 @@ services:
       retries: 3
       start_period: 40s
 
-  mongo-init:
-    image: mongo:6.0.10
-    env_file:
-      - ./.env
-    links:
-      - mongo-db-1:mongo-db-1
-    depends_on:
-      - mongo-db-1
-    networks:
-      - backend
-    volumes:
-      - ./source/database/mongo_replica_set_setup.sh:/source/mongo_replica_set_setup.sh
-    restart: "no"
-    entrypoint: [ "bash", "./source/mongo_replica_set_setup.sh" ]
-
   redis:
     platform: "linux/amd64"
     image: redis:7.2.0
     container_name: redis
     command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
-      - ${REDIS_DB_PATH}:/var/lib/redis
       - ${REDIS_CONFIG_PATH}:/usr/local/etc/redis/redis.conf
     ports:
-      - "127.0.0.1:6379:6379"
+      - "6379:6379"
     networks:
       - backend
 
@@ -107,40 +91,15 @@ services:
       - redis
     volumes:
       - .:/var/www/
-      #- /var/run/docker.sock:/var/run/docker.sock
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
       - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
     env_file:
       - ./.env
-    #command: sleep infinity
-    #command: rqworker --name extractor-worker-high-1 --url redis://redis:6379/ high --path /var/www/ --path /var/www/source
     command: rqworker --logging_level DEBUG --name extractor-worker-high-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
     networks:
       - backend
     # TODO Security enhancement / compatibility - replace/remove access right
     privileged: true
-    #cap_add:
-    #  - SYS_ADMIN
-
-  extractor-worker-default-1:
-    platform: "linux/amd64"
-    user: www
-    build:
-      context: .
-      dockerfile: docker/base/Dockerfile_extractor
-    container_name: extractor-worker-default-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - .:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
-    env_file:
-      - ./.env
-    command: rqworker --name extractor-worker-default-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
-    networks:
-      - backend
 
   apk_scanner-worker-1:
     platform: "linux/amd64"
@@ -158,212 +117,9 @@ services:
       - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
     env_file:
       - ./.env
-    #command: sleep infinity
     command: rqworker --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     networks:
       - backend
-
-#  fuzzyhash-worker-1:
-#    platform: "linux/amd64"
-#    build:
-#      context: .
-#      dockerfile: ./docker/base/Dockerfile_fuzzyhash
-#    container_name: fuzzyhash-worker-1
-#    restart: unless-stopped
-#    depends_on:
-#      - redis
-#      - extractor-worker-high-1
-#    volumes:
-#      - .:/var/www/
-#      - /var/run/docker.sock:/var/run/docker.sock
-#    env_file:
-#      - ./.env
-#    command: rqworker --name fuzzyhash-worker-1 --url redis://redis:6379/ fuzzyhash
-#    networks:
-#      - backend
-#    # TODO Security enhancement / compatibility - replace/remove access right
-#    privileged: true
-
-  androguard-worker-1:
-    platform: "linux/amd64"
-    user: www
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_androguard
-    container_name: androguard-worker-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - .:/var/www/
-    env_file:
-      - ./.env
-    command: rqworker --name androguard-worker-1 --url redis://redis:6379/ androguard
-    networks:
-      - backend
-
-  androwarn-worker-1:
-    platform: "linux/amd64"
-    user: www
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_androwarn
-    container_name: androwarn-worker-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - .:/var/www/
-    env_file:
-      - ./.env
-    command: rqworker --name androwarn-worker-1 --url redis://redis:6379/ androwarn
-    networks:
-      - backend
-
-  apkid-worker-1:
-    platform: "linux/amd64"
-    user: www
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_apkid
-    container_name: apkid-worker-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - .:/var/www/
-    env_file:
-      - ./.env
-    command: rqworker --name apkid-worker-1 --url redis://redis:6379/ apkid
-    networks:
-      - backend
-
-  exodus-worker-1:
-    platform: "linux/amd64"
-    user: www
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_exodus
-    container_name: exodus-worker-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - .:/var/www/
-    env_file:
-      - ./.env
-    command: rqworker --name exodus-worker-1 --url redis://redis:6379/ exodus
-    networks:
-      - backend
-
-  frida-worker-1:
-    platform: "linux/amd64"
-    user: www
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_frida
-    container_name: frida-worker-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - .:/var/www/
-    env_file:
-      - ./.env
-    command: rqworker --name frida-worker-1 --url redis://redis:6379/ frida
-    networks:
-      - backend
-
-  qark-worker-1:
-    platform: "linux/amd64"
-    user: www
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_qark
-    container_name: qark-worker-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - .:/var/www/
-    env_file:
-      - ./.env
-    command: rqworker --name qark-worker-1 --url redis://redis:6379/ qark
-    networks:
-      - backend
-
-  quark_engine-worker-1:
-    platform: "linux/amd64"
-    user: www
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_quark_engine
-    container_name: quark_engine-worker-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - .:/var/www/
-    env_file:
-      - ./.env
-    command: rqworker --name quark_engine-worker-1 --url redis://redis:6379/ quark_engine
-    networks:
-      - backend
-
-  super-android-analyzer-worker-1:
-    platform: "linux/amd64"
-    user: www
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_super_android_analyzer
-    container_name: super_android_analyzer-worker-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - .:/var/www/
-    env_file:
-      - ./.env
-    command: rqworker --name super_android_analyzer-worker-1 --url redis://redis:6379/ super_android_analyzer
-    networks:
-      - backend
-
-  virustotal-worker-1:
-    platform: "linux/amd64"
-    user: www
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_virustotal
-    container_name: virustotal-worker-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - .:/var/www/
-    env_file:
-      - ./.env
-    command: rqworker --name virustotal-worker-1 --url redis://redis:6379/ virustotal
-    networks:
-      - backend
-
-  apkleaks-worker-1:
-    platform: "linux/amd64"
-    user: www
-    build:
-      context: .
-      dockerfile: ./docker/base/Dockerfile_apkleaks
-    container_name: apkleaks-worker-1
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - .:/var/www/
-    env_file:
-      - ./.env
-    command: rqworker --name apkleaks-worker-1 --url redis://redis:6379/ apkleaks
-    networks:
-      - backend
-
 
 networks:
   frontend:

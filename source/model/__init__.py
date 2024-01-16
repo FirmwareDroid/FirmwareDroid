@@ -43,4 +43,5 @@ from .ExodusStatisticsReport import ExodusStatisticsReport
 from .QuarkEngineStatisticsReport import QuarkEngineStatisticsReport
 from .SuperStatisticsReport import SuperStatisticsReport
 from .GenericFile import GenericFile
+from .AecsJob import AecsJob
 from . import *

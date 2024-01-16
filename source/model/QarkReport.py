@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 import mongoengine
 from mongoengine import LazyReferenceField, ListField, FileField, DO_NOTHING
 from model.ApkScannerReport import ApkScannerReport

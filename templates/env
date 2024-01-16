@@ -1,0 +1,45 @@
+##########################################################################################
+# Global Configuration
+##########################################################################################
+APP_ENV={{ app_env }} # Environments: production, development, testing
+APP_DEBUG={{ app_debug }}
+
+# Storage
+LOCAL_STORAGE_PATH={{ local_storage_path }}
+LOCAL_STORAGE_PATH_SECONDARY={{ local_storage_path_secondary }}
+LOCAL_MONGO_DB_PATH_NODE1={{ local_mongo_db_path_node1 }}
+
+# Redis-Database
+REDIS_CONFIG_PATH={{ redis_config_path }}
+REDIS_PASSWORD={{ redis_password }}
+REDIS_PORT={{ redis_port }}
+
+# Mongo-Database
+MONGODB_DATABASE_NAME={{ mongodb_database_name }}
+MONGODB_AUTH_SRC={{ mongodb_auth_src }}
+MONGODB_PORT={{ mongodb_port }}
+MONGODB_REPLICA_SET={{ mongo_db_replicat_set }}
+MONGO_INITDB_ROOT_USERNAME={{ mongodb_initdb_root_username }}
+MONGO_INITDB_ROOT_PASSWORD={{ mongodb_initdb_root_password }}
+MONGODB_USERNAME={{ mongodb_username }}
+MONGODB_PASSWORD={{ mongodb_password }}
+MONGODB_HOSTNAME={{ mongo_db_hostname }}
+
+# Web
+MASS_IMPORT_NUMBER_OF_THREADS={{ mass_import_number_of_threads }}
+DOMAIN_NAME={{ domain_name }}
+API_TITLE={{ api_title }}
+API_VERSION={{ api_version }}
+API_DESCRIPTION={{ api_description }}
+API_PREFIX={{ api_prefix }}
+API_DOC_FOLDER={{ api_doc_folder }}
+CORS_ADDITIONAL_HOST={{ cors_additional_host }}
+DJANGO_SECRET_KEY={{ django_secret_key }}
+DJANGO_SQLITE_DATABASE_PATH={{ django_sqlite_database_path }}
+DJANGO_SUPERUSER_PASSWORD={{ django_superuser_password }}
+DJANGO_SUPERUSER_USERNAME={{ django_superuser_username }}
+DJANGO_SUPERUSER_EMAIL={{ django_superuser_email }}
+
+# Container constants - DO NOT CHANGE
+APP_PORT=5000
+PYTHONPATH="/home/www/source/"

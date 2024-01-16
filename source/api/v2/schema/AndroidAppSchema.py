@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 import graphene
 from graphene.relay import Node
 from graphene_mongo import MongoengineObjectType
@@ -20,10 +23,14 @@ class AndroidAppQuery(graphene.ObjectType):
                                      name="android_app_list")
     android_app_id_list = graphene.List(graphene.String,
                                         object_id_list=graphene.List(graphene.String),
-                                        name="android_app_id_list")
+                                        name="android_app_id_list_by_firmware")
 
     @staticmethod
     def get_android_app_list(**kwargs):
+        """
+        Allows to fetch a list of class:`AndroidApp` object based on a given document type. This allows
+        to fetch AndroidApp documents based on a class:`AndroidFirmware` object-ids or a list of AndroidApp object-ids.
+        """
         object_id_list = kwargs.get('object_id_list')
         document_type = kwargs.get('document_type')
 

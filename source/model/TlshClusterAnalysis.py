@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 from mongoengine import LazyReferenceField, CASCADE, DictField, FileField, IntField, ListField, StringField, Document
 from model import JsonFile
 

@@ -6,7 +6,7 @@ import logging
 from model import ApkidReport, AndroidApp
 from model import ApkidStatisticsReport
 from context.context_creator import create_db_context
-from utils.string_utils.string_util import filter_mongodb_dict_chars
+from database.mongodb_key_replacer import filter_mongodb_dict_chars
 from statistics.statistics_common import count_attribute, add_attribute_reference, get_report_list
 from utils.file_utils.file_util import create_reference_file_from_dict, create_reference_file
 

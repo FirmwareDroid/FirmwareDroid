@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 import base64
 from struct import unpack
 from mongoengine import StringField, ListField, IntField, LazyReferenceField, CASCADE, signals, DictField, Document

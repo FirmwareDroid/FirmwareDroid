@@ -5,11 +5,10 @@ import logging
 import os
 import re
 import tempfile
-# import flask
 from extractor.unzipper import extract_zip
 from firmware_handler.const_regex_patterns import ELF_BINARY_FORMATS_PATTERN_LIST
 from utils.file_utils.file_util import check_file_format
-from utils.string_utils.string_util import filter_mongodb_dict_chars
+from database.mongodb_key_replacer import filter_mongodb_dict_chars
 
 
 def hash_sub_files(firmware_file, fuzzy_hash_document, hash_from_file, hash_from_buffer):

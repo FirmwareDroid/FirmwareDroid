@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 import graphene
 import graphql_jwt
 from graphene_django.debug import DjangoDebug
@@ -31,6 +34,7 @@ from api.v2.schema.SdHashSchema import SdHashQuery
 from api.v2.schema.SsDeepClusterAnalysisSchema import SsDeepClusterAnalysisQuery
 from api.v2.schema.TlshHashSchema import TlshHashQuery
 from api.v2.schema.AppCertificateSchema import AppCertificateQuery, AppCertificateType
+from api.v2.schema.AecsJobSchema import AecsJobMutation, AecsJobQuery
 
 
 class Query(ApplicationSettingQuery,
@@ -62,6 +66,7 @@ class Query(ApplicationSettingQuery,
             AppCertificateQuery,
             RqQueueQuery,
             HealthCheckQuery,
+            AecsJobQuery,
             graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name='_debug')
     token_auth = graphql_jwt.ObtainJSONWebToken.Field()
@@ -70,7 +75,9 @@ class Query(ApplicationSettingQuery,
     test_list = MongoengineConnectionField(AppCertificateType)
 
 
-class Mutation(RqJobMutation, graphene.ObjectType):
+class Mutation(RqJobMutation,
+               AecsJobMutation,
+               graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name='_debug')
     delete_token_cookie = graphql_jwt.DeleteJSONWebTokenCookie.Field()
     delete_refresh_token_cookie = graphql_jwt.DeleteRefreshTokenCookie.Field()

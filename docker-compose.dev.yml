@@ -1,8 +1,0 @@
-version: '3.7'
-services:
-  mongo-db-1:
-    environment:
-      - APP_ENV=development
-    volumes:
-      - ${LOCAL_MONGO_DB_PATH_NODE1}:/data/db
-    command: mongod --auth --port 27017 --replSet ${MONGODB_REPLICA_SET} --bind_ip_all --keyFile ${MONGODB_KEYFILE} --dbpath /data/db

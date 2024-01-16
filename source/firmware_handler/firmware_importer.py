@@ -8,7 +8,6 @@ import logging
 import os
 import shutil
 from pathlib import Path
-
 from model import AndroidFirmware, FirmwareFile, AndroidApp
 from threading import Thread
 from firmware_handler.image_importer import create_abs_image_file_path, find_image_firmware_file, extract_image_files

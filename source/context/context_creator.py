@@ -2,8 +2,6 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import functools
-import logging
-import sys
 
 
 def create_db_context(f):
@@ -16,17 +14,9 @@ def create_db_context(f):
     """
     @functools.wraps(f)
     def decorated(*args, **kwargs):
-        #sys.path.insert(0, '/var/www/source/')
         from database.connector import init_db
-        from webserver.settings import MONGODB_DATABASES
-        init_db(MONGODB_DATABASES["default"])
-
-        #from app import create_app
-        #app = create_app()
-        #app.logger.setLevel(logging.INFO)
-        #logging.getLogger().setLevel(logging.INFO)
-        #app.app_context().push()
-        #logging.info(*args, **kwargs)
+        from webserver.settings import MONGO_DATABASES
+        init_db(MONGO_DATABASES["default"])
         return f(*args, **kwargs)
     return decorated
 
