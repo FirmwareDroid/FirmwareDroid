@@ -43,7 +43,6 @@ def open_db_connection(db_settings, alias):
 
     """
     db_name, host, port, username, password, authentication_source, auth_mechanism = get_connection_options(db_settings)
-    logging.debug((db_name, host, port, username, authentication_source, auth_mechanism))
     return mongoengine.connect(db=db_name,
                                alias=alias,
                                host=host,
@@ -82,7 +81,6 @@ def multiprocess_disconnect_all():
 
 def register_default_connection(db_settings):
     db_name, host, port, username, password, authentication_source, auth_mechanism = get_connection_options(db_settings)
-    logging.debug(("default", db_name, host, port, username, authentication_source, auth_mechanism))
     mongoengine.register_connection(alias='default',
                                     db=db_name,
                                     host=host,
