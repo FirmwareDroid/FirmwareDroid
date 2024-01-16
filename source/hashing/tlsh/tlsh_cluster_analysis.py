@@ -11,12 +11,12 @@ from bson import ObjectId
 from graph.networkx_graph_wrapper import create_weighted_graph, graph_to_gexf_file
 from model import TlshHash, TlshClusterAnalysis, TlshSimiliarityLookup
 from hashing.tlsh.tlsh_hasher import tlsh_compare_hashs
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 from utils.file_utils.file_util import object_to_temporary_json_file, create_reference_file
-from utils.string_utils.string_util import filter_mongodb_dict_chars
+from database.mongodb_key_replacer import filter_mongodb_dict_chars
 
 # TODO FINISH WORK HERE
-@push_app_context
+@create_db_context
 def start_tlsh_clustering(compare_mode, regex_filter, firmware_id_list, distance_threshold,
                           tlsh_similiarity_lookup_id=None, description="", tlsh_hash_list=None):
     """

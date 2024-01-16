@@ -9,25 +9,13 @@ import shlex
 import subprocess
 import tempfile
 from pathlib import Path
+from model.Interfaces.ScanJob import ScanJob
 from model import AndroidApp, SuperReport
-from database.query_document import get_filtered_list
-from context.context_creator import push_app_context
-from utils.mulitprocessing_util.mp_util import start_process_pool
+from context.context_creator import create_db_context
+from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
 
-@push_app_context
-def start_super_android_analyzer_scan(android_app_id_list):
-    """
-    Analysis all apps from the given list with super android analyzer.
-    :param android_app_id_list: list of class:'AndroidApp' object-ids.
-    """
-    android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "super_report_reference")
-    logging.info(f"Super after filter: {str(len(android_app_list))}")
-    if len(android_app_list) > 0:
-        start_process_pool(android_app_list, super_android_analyzer_worker, os.cpu_count())
-
-
-def super_android_analyzer_worker(android_app_id_queue):
+def super_android_analyzer_multiprocessing(android_app_id_queue):
     """
     Start the analysis with super on a multiprocessor queue.
     :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
@@ -70,7 +58,7 @@ def get_super_android_analyzer_analysis(apk_file_path, result_folder_path):
             if file == "results.json":
                 result_file_path = os.path.join(root, file)
     if not result_file_path:
-        ValueError("Could not find scanning result json.")
+        raise ValueError("Could not find scanning result json.")
     return json.loads(open(result_file_path).read())
 
 
@@ -88,3 +76,30 @@ def create_report(android_app, super_json_results):
     android_app.super_report_reference = super_report.id
     android_app.save()
     return super_report
+
+
+class SuperAndroidAnalyzerScanJob(ScanJob):
+    object_id_list = []
+    SOURCE_DIR = "/var/www/source"
+    MODULE_NAME = "static_analysis.SuperAndroidAnalyzer.super_android_analyzer_wrapper"
+    INTERPRETER_PATH = "/opt/firmwaredroid/python/qark/bin/python"
+
+    def __init__(self, object_id_list):
+        self.object_id_list = object_id_list
+        os.chdir(self.SOURCE_DIR)
+
+    @create_db_context
+    def start_scan(self):
+        """
+        Starts multiple instances of AndroGuard to analyse a list of Android apps on multiple processors.
+        """
+        android_app_id_list = self.object_id_list
+        logging.info(f"Super Android Analyzer analysis started! With {str(len(android_app_id_list))} apps.")
+        if len(android_app_id_list) > 0:
+            start_python_interpreter(item_list=android_app_id_list,
+                                     worker_function=super_android_analyzer_multiprocessing,
+                                     number_of_processes=os.cpu_count(),
+                                     use_id_list=True,
+                                     module_name=self.MODULE_NAME,
+                                     report_reference_name="super_report_reference",
+                                     interpreter_path=self.INTERPRETER_PATH)

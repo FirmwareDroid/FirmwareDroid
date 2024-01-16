@@ -13,9 +13,11 @@ def extract_lz4(lz4_file_path, destination_dir):
     :param lz4_file_path: str - path to the *.lz4 file.
     :param destination_dir: str - path to extract the *.lz4 to.
 
+    :return: boolean - True in case it was successfully extracted.
     """
     import lz4framed
     from _lz4framed import Lz4FramedNoDataError
+    is_success = True
     try:
         with open(lz4_file_path, 'rb') as lz4_file_bytes:
             decoded = []
@@ -31,4 +33,6 @@ def extract_lz4(lz4_file_path, destination_dir):
                 output_file.write(chunk)
         logging.info("Extraction of lz4 file finished: " + output_file_path)
     except Exception as err:
-        logging.exception(str(err))
+        is_success = False
+        logging.warning(str(err))
+    return is_success

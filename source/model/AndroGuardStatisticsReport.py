@@ -1,4 +1,6 @@
-from marshmallow import Schema, fields
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 from mongoengine import DictField, LongField
 
 from model import StatisticsReport
@@ -125,7 +127,7 @@ class AndroGuardStatisticsReport(StatisticsReport):
     permissions_requested_third_party_count_dict = DictField(required=False)
 
 
-class AndroGuardStatisticsReportSchema(Schema):
-    id = fields.Str()
-    report_date = fields.DateTime()
+# class AndroGuardStatisticsReportSchema(Schema):
+#     id = fields.Str()
+#     report_date = fields.DateTime()
 

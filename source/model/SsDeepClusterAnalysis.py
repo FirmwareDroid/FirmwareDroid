@@ -1,6 +1,9 @@
-from mongoengine import FileField, ListField, DictField, LazyReferenceField, CASCADE, IntField
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
+from mongoengine import FileField, ListField, DictField, LazyReferenceField, CASCADE, IntField, Document
 from model import JsonFile
-from flask_mongoengine import Document
+
 
 class SsDeepClusterAnalysis(Document):
     ssdeep_hash_reference_file = LazyReferenceField(JsonFile, reverse_delete_rule=CASCADE, required=True)

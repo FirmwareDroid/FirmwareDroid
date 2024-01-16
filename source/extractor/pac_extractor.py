@@ -64,20 +64,25 @@ class PartitionHeader:
         self.someFileds2 = someFields2
 
 
-def unpack_pac(path):
+def extract_pac(source_file, destination_dir):
     """
     Decompresses a *.pac file.
 
-    :param path: str - path to the *.pac file.
+    :param source_file: str - path to the *.pac file.
+    :param destination_dir: str - path to folder where the data will be extracted to.
 
+    :return: boolean - True in case it was successfully extracted.
     """
-    if os.path.isfile(path) and path.lower().endswith(".pac"):
+    is_success = True
+    if os.path.isfile(source_file) and source_file.lower().endswith(".pac"):
         try:
-            pac_header = create_pac_header(path)
-            partition_header_list = create_partition_headers(path, pac_header)
-            create_partition_files(path, partition_header_list)
+            pac_header = create_pac_header(source_file)
+            partition_header_list = create_partition_headers(source_file, pac_header)
+            create_partition_files(source_file, destination_dir, partition_header_list)
         except Exception as err:
-            logging.error(str(err))
+            is_success = False
+            logging.warning(str(err))
+    return is_success
 
 
 def create_pac_header(path):
@@ -163,12 +168,13 @@ def create_partition_headers(path, pac_header):
     return partition_header_list
 
 
-def create_partition_files(path, partition_header_list):
+def create_partition_files(path, destination_dir, partition_header_list):
     """
     Extracts the partition files with the partition header information. Writes the extracted files to the disk.
 
+    :param destination_dir: str - path to folder where the data will be extracted to.
     :param path: str - path to the *.pac file.
-    :param partition_header_list: list of class'PartitionHeader'
+    :param partition_header_list: list of class:'PartitionHeader'
 
     """
     with open(path, "rb") as poc_file:
@@ -183,7 +189,7 @@ def create_partition_files(path, partition_header_list):
                 # print("partition_header.partitionAddrInPac: " + str(partition_header.partitionAddrInPac))
                 poc_file.seek(partition_header.partitionAddrInPac, 0)
 
-                partition_file_path = os.path.join(os.path.dirname(path), partition_header.fileName.replace('\x00', ""))
+                partition_file_path = os.path.join(destination_dir, partition_header.fileName.replace('\x00', ""))
                 # print("partition_file_path: " + str(partition_file_path))
                 partition_file = open(partition_file_path, "wb")
 

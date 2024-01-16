@@ -14,9 +14,10 @@ def extract_brotli(source_file_path, destination_dir):
 
     :param source_file_path: str - path to the .bin file.
     :param destination_dir: str - path where the file is extracted to.
-    :raise OSError: in case the file can't be decompressed.
 
+    :return: boolean - True in case it was successfully extracted.
     """
+    is_success = True
     try:
         source_file_path = shlex.quote(source_file_path)
         filename = Path(source_file_path)
@@ -31,5 +32,6 @@ def extract_brotli(source_file_path, destination_dir):
         else:
             raise FileNotFoundError(f"Could not decompress brotli: {source_file_path} - missing file: {output_file}")
     except subprocess.CalledProcessError as err:
-        logging.error(err)
-        raise OSError(err)
+        logging.warning(err)
+        is_success = False
+    return is_success

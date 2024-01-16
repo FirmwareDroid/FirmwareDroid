@@ -7,35 +7,45 @@ import tarfile
 import logging
 
 
-def unzip_file(zip_file_path, destination_dir):
+def extract_zip(zip_file_path, destination_dir):
     """
     Extract the file from a *.zip file.
 
     :param zip_file_path: str - path to the *.zip file to extract.
     :param destination_dir: str - path to extract to.
 
+    :return: boolean - True in case it was successfully extracted.
+
     """
+    is_success = True
     try:
         with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
             zip_ref.extractall(destination_dir)
     except Exception as e:
-        logging.exception(str(e))
+        is_success = False
+        logging.warning(str(e))
+    return is_success
 
 
-def extract_tar_file(file_path, destination_dir):
+def extract_tar(file_path, destination_dir):
     """
     Extracts a tar file to the given folder.
 
     :param file_path: str - path to the *.tar file to extract.
     :param destination_dir: str - path to extract to.
 
+    :return: boolean - True in case it was successfully extracted.
+
     """
+    is_success = True
     try:
         if os.path.isfile(file_path) and os.access(file_path, os.R_OK):
             tar_file = tarfile.open(file_path)
             tar_file.extractall(destination_dir)
             tar_file.close()
     except Exception as e:
-        logging.exception(str(e))
+        is_success = False
+        logging.warning(str(e))
+    return is_success
 
 

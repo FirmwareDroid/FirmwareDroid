@@ -29,7 +29,7 @@ def extract_ubi_image(img_file_path, output_path):
     :return bool - true if image was extracted, false if not.
 
     """
-    isExtracted = False
+    is_extracted = False
     logging.info(f"Attempt to extract image with ubi reader: {img_file_path}")
     args = {"log": False,
             "verbose": False,
@@ -44,13 +44,13 @@ def extract_ubi_image(img_file_path, output_path):
             "outpath": output_path}
     try:
         ubireader_extract_images(args, img_file_path)
-        isExtracted = True
+        is_extracted = True
     except SystemExit as err:
-        logging.error(f"UBI-Reader called SystemExit Code: {err}")
+        logging.warning(f"UBI-Reader called SystemExit Code: {err}")
     except Exception as err:
-        logging.error(err)
-    logging.info(f"Ubi reader finished")
-    return isExtracted
+        logging.warning(err)
+    logging.info("Ubi reader finished")
+    return is_extracted
 
 
 def ubireader_extract_images(args, img_file_path):

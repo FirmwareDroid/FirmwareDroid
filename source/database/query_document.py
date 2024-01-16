@@ -10,6 +10,7 @@ def get_all_document_ids(document_class):
     Gets a list of all document id's of the given document class.
 
     :param document_class: document - the type of the document to fetch.
+
     :return: list(str) - complete list of object-id's of the given document class from the db.
 
     """
@@ -21,23 +22,24 @@ def get_all_document_ids(document_class):
     return id_list
 
 
-def create_document_list_by_ids(document_id_list, document_class, only_attribute_list=None):
+def create_document_list_by_ids(document_id_list, document_class, attribute_filter_list=None):
     """
     Gets a list of document instances from the database.
 
-    :param only_attribute_list:
+    :param attribute_filter_list: list(str) - inclusion list of attributes name to fetch from the object.
     :param document_id_list: str - list of object-id's
     :param document_class: document - type of the document to fetch
+
     :return: list(document_instances)
 
     """
     document_instance_list = []
     for document_id in document_id_list:
         try:
-            if not only_attribute_list:
+            if not attribute_filter_list:
                 document_instance = document_class.objects.get(pk=document_id)
             else:
-                document_instance = document_class.objects.only(*only_attribute_list).get(pk=document_id)
+                document_instance = document_class.objects.only(*attribute_filter_list).get(pk=document_id)
             document_instance_list.append(document_instance)
         except DoesNotExist:
             logging.warning(f"ID does not exist {document_id} {document_class}")
@@ -46,10 +48,11 @@ def create_document_list_by_ids(document_id_list, document_class, only_attribute
 
 def filter_by_attribute_exists(document_list, reference_attribute_name):
     """
-    Filters the list if the given attribute exists in the database.
+    Filters the list if the given attribute exists in the database for the given document.
 
     :param document_list: list(document_instances)
     :param reference_attribute_name: str - name of the model attribute in the database.
+
     :return: list(document_instances) of document_instances which do not have the reference_attribute_name.
 
     """
@@ -66,6 +69,7 @@ def filter_duplicates(document_list):
     Filters duplicates from a list.
 
     :param document_list: list(document)
+
     :return: unique list(document) - removed all duplicates.
 
     """
@@ -80,6 +84,7 @@ def get_filtered_list(document_id_list, document_class, reference_attribute_name
     :param document_id_list: list(object-id) - document object-id list.
     :param document_class: document - type of the document
     :param reference_attribute_name: str - attribute name of the model to filter.
+
     :return: list(document_instance) - filtered list of document instances.
 
     """

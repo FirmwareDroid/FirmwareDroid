@@ -1,1 +1,1 @@
-qark==4.0.0
+qark==4.0.0  # In case of update -> please change hardcoded version value in qark_wrapper.py

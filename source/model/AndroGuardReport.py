@@ -1,26 +1,23 @@
-import datetime
-from flask_mongoengine import Document
-from mongoengine import LazyReferenceField, CASCADE, StringField, DateTimeField, BooleanField, ListField, \
-    DictField, DO_NOTHING
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
+from mongoengine import LazyReferenceField, StringField, BooleanField, ListField, DictField, DO_NOTHING
+from model.ApkScannerReport import ApkScannerReport
 
-from model import AndroidApp
+SCANNER_NAME = "AndroGuard"
 
 
-class AndroGuardReport(Document):
+class AndroGuardReport(ApkScannerReport):
     meta = {
-        'indexes': ['packagename', #'$packagename', '#packagename',
-                    #'app_name', '$app_name', '#app_name',
-                    #'permissions', '$permissions', '#permissions',
-                    #'permission_details', '$permission_details', '#permission_details',
-                    #'permissions_declared', '$permissions_declared', '#permissions_declared',
-                    #'permissions_requested_third_party', '$permissions_requested_third_party',
-                    #'#permissions_requested_third_party',
+        'indexes': ['packagename',  # '$packagename', '#packagename',
+                    # 'app_name', '$app_name', '#app_name',
+                    # 'permissions', '$permissions', '#permissions',
+                    # 'permission_details', '$permission_details', '#permission_details',
+                    # 'permissions_declared', '$permissions_declared', '#permissions_declared',
+                    # 'permissions_requested_third_party', '$permissions_requested_third_party',
+                    # '#permissions_requested_third_party',
                     ]
     }
-
-    android_app_id_reference = LazyReferenceField(AndroidApp, reverse_delete_rule=CASCADE, required=True)
-    androguard_version = StringField(required=True)
-    report_date = DateTimeField(required=True, default=datetime.datetime.now)
     packagename = StringField(required=True)
     app_name = StringField(required=False)
     is_multidex = BooleanField(required=False)
@@ -51,8 +48,6 @@ class AndroGuardReport(Document):
     manifest_libraries = ListField(required=False)
     manifest_features = ListField(required=False)
     signature_names = ListField(required=False)
-    certificate_id_list = ListField(LazyReferenceField('AppCertificate', reverse_delete_rule=DO_NOTHING),
-                                    required=False)
     class_analysis_id_list = ListField(LazyReferenceField('AndroGuardClassAnalysis', reverse_delete_rule=DO_NOTHING),
                                        required=False)
     string_analysis_id_list = ListField(LazyReferenceField('AndroGuardStringAnalysis', reverse_delete_rule=DO_NOTHING),

@@ -2,14 +2,11 @@ lief~=0.12.3
 ubi-reader~=0.8.5
 py-lz4framed~=0.14.0
 python-lzo~=1.12
-
 rq~=1.15.0
 numpy~=1.23.3
 pymongo~=4.1.1
 mongoengine~=0.24.2
-
-
-unblob~=23.4.17
+unblob~=23.10.31
 
 # Requirements for string analysis
 #Morfessor==2.0.6

@@ -1,5 +1,7 @@
-from mongoengine import LazyReferenceField, LongField, DO_NOTHING, IntField, DictField
-from flask_mongoengine import Document
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
+from mongoengine import LazyReferenceField, LongField, DO_NOTHING, IntField, DictField, Document
 from model import JsonFile
 
 

@@ -93,7 +93,7 @@ def is_apk_in_database(android_app):
 
 def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_list):
     """
-    Returns a list of class: files within the given path.
+    Returns a list of class:'AndroidApp' files within the given path.
 
     :param firmware_file_list: list(class:'FirmwareFile') - list of firmware file that contains the android apps and
     it's optimized files (.odex, .vdex, ...).
@@ -158,7 +158,7 @@ def add_optimized_firmware_files(android_app, optimized_firmware_file_list, firm
             logging.info(f"Exported file: {optimized_firmware_file.name}")
             firmware_file_id_list.append(optimized_firmware_file.id)
         else:
-            logging.error(f"FileNotFound: Could not export file: {opt_source_file_path}")
+            logging.warning(f"Could not export file, probably not readable: {opt_source_file_path}")
     android_app.opt_firmware_file_reference_list = firmware_file_id_list
     android_app.save()
 

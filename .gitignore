@@ -488,11 +488,13 @@ cython_debug/
 
 
 /.Rapp.history
-/00_file_storage/
+/blob_storage/
+/file_store/
 .idea/
 /firmware-droid-client/.idea/
 /mongodb_data/
 /static/react/
+/old/
 
 /env/
 __MACOSX/

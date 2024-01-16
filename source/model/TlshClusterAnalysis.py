@@ -1,6 +1,9 @@
-from mongoengine import LazyReferenceField, CASCADE, DictField, FileField, IntField, ListField, StringField
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
+from mongoengine import LazyReferenceField, CASCADE, DictField, FileField, IntField, ListField, StringField, Document
 from model import JsonFile
-from flask_mongoengine import Document
+
 
 class TlshClusterAnalysis(Document):
     description = StringField(required=True, min_length=0, max_length=2048)

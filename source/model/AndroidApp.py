@@ -1,10 +1,10 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 import datetime
-from flask_mongoengine import Document
 from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, CASCADE, \
-    ListField
-from api.v1.marshmallow_fields.LazyReference import LazyReferenceConverter
+    ListField, Document, GenericLazyReferenceField, GenericReferenceField, DictField
 from model import AndroidFirmware
-from marshmallow import Schema, fields
 
 
 class AndroidApp(Document):
@@ -19,7 +19,20 @@ class AndroidApp(Document):
     file_size_bytes = LongField(required=True)
     absolute_store_path = StringField(required=False, max_length=2048, min_length=1)
     relative_store_path = StringField(required=False, max_length=1024, min_length=1)
-    firmware_file_reference = LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING)
+    # apk_scanner_report_reference_list = ListField(GenericLazyReferenceField(
+    #     choices=['AndroGuardReport',
+    #              'VirusTotalReport',
+    #              'AndrowarnReport',
+    #              'QarkReport',
+    #              'ApkidReport',
+    #              'ExodusReport',
+    #              'QuarkEngineReport',
+    #              'SuperReport',
+    #              'ApkleaksReport'
+    #              ]))
+    #apk_scanner_report_reference_list = ListField(LazyReferenceField('ApkScannerReport',
+    #                                                                 reverse_delete_rule=DO_NOTHING))
+
     androguard_report_reference = LazyReferenceField('AndroGuardReport', reverse_delete_rule=DO_NOTHING)
     virus_total_report_reference = LazyReferenceField('VirusTotalReport', reverse_delete_rule=DO_NOTHING)
     androwarn_report_reference = LazyReferenceField('AndrowarnReport', reverse_delete_rule=DO_NOTHING)
@@ -28,32 +41,9 @@ class AndroidApp(Document):
     exodus_report_reference = LazyReferenceField('ExodusReport', reverse_delete_rule=DO_NOTHING)
     quark_engine_report_reference = LazyReferenceField('QuarkEngineReport', reverse_delete_rule=DO_NOTHING)
     super_report_reference = LazyReferenceField('SuperReport', reverse_delete_rule=DO_NOTHING)
-    apkleaks_report_reference = LazyReferenceField('ApkLeaksReport', reverse_delete_rule=DO_NOTHING)
+    apkleaks_report_reference = LazyReferenceField('ApkleaksReport', reverse_delete_rule=DO_NOTHING)
+    firmware_file_reference = LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING)
     opt_firmware_file_reference_list = ListField(LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING))
     app_twins_reference_list = ListField(LazyReferenceField('AndroidApp', reverse_delete_rule=DO_NOTHING))
-
-
-class AndroidAppSchema(Schema):
-    id = fields.Str()
-    firmware_id_reference = fields.Str()
-    indexed_date = fields.DateTime()
-    md5 = fields.Str()
-    sha256 = fields.Str()
-    sha1 = fields.Str()
-    ssdeep_digest = fields.Str()
-    filename = fields.Str()
-    relative_firmware_path = fields.Str()
-    file_size_bytes = fields.Float()
-    relative_store_path = fields.Str()
-    androguard_report_reference = LazyReferenceConverter()
-    virus_total_report_reference = LazyReferenceConverter()
-    androwarn_report_reference = LazyReferenceConverter()
-    qark_report_reference = LazyReferenceConverter()
-    apkid_report_reference = LazyReferenceConverter()
-    exodus_report_reference = LazyReferenceConverter()
-    quark_engine_report_reference = LazyReferenceConverter()
-    super_report_reference = LazyReferenceConverter()
-    apkleaks_report_reference = LazyReferenceConverter()
-
-    class Meta:
-        load_only = ('firmware_id_reference', 'relative_store_path')
+    certificate_id_list = ListField(LazyReferenceField('AppCertificate', reverse_delete_rule=DO_NOTHING))
+    generic_file_list = ListField(LazyReferenceField('GenericFile', reverse_delete_rule=DO_NOTHING))

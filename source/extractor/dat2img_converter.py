@@ -14,6 +14,10 @@ from firmware_handler.const_regex_patterns import SYSTEM_TRANSFER_PATTERN_LIST, 
 from firmware_handler.firmware_file_search import find_file_path_by_regex
 
 
+PATCH_TOOL_PATH_V03 = "./tools/imgpatchtool/IMG_Patch_Tools_0.3/BlockImageUpdate"
+PATCH_TOOL_PATH_2022 = "./tools/imgpatchtool/2022_16_06/BlockImageUpdate"
+
+
 def convert_dat2img(dat_file_path, destination_path):
     """
     Convert .dat file to an .img file and store it in the destination path.
@@ -37,7 +41,8 @@ def convert_dat2img(dat_file_path, destination_path):
             img_file_path = os.path.join(destination_path, out_filename)
             start_dat_conversion(dat_file_path, transfer_file_path, img_file_path)
             logging.info(f"Converted dat: {dat_file_path} to img: {img_file_path}")
-            patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file_path)
+            if patch_file_path is not None:
+                patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file_path)
         else:
             raise AssertionError("Could not find system.file.list")
     else:
@@ -83,11 +88,14 @@ def search_transfer_list(search_path, filename):
 
 def patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file_path):
     """
-    Patch an .img file from .dat image in place.
+    Patch an .img file from .dat image in place for OTA images.
+
     :param patch_file_path: str - file path of the *.patch.dat file.
     :param transfer_file_path: str - file path of the *.transfer.list file.
     :param img_file_path: str - file path of the .img file to modify inplace.
     :param dat_file_path: str - file path of the .dat file.
+
+
     """
     logging.info(f"Patch file {img_file_path} \nwith {dat_file_path} \nand {transfer_file_path} \nand "
                  f"{patch_file_path}")
@@ -96,7 +104,8 @@ def patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file
         patch_file_path = shlex.quote(str(patch_file_path))
         dat_file_path = shlex.quote(str(dat_file_path))
         img_file_path = shlex.quote(str(img_file_path))
-        response = subprocess.run(["./tools/IMG_Patch_Tools_0.3/BlockImageUpdate",
+        # TODO Remove constant path and tool
+        response = subprocess.run([PATCH_TOOL_PATH_2022,
                                    img_file_path,
                                    transfer_file_path,
                                    dat_file_path,
@@ -161,9 +170,12 @@ def parse_transfer_list_file(transfer_list_file_path):
 def start_dat_conversion(input_dat_file_path, system_transfer_list_file_path, output_img_file_path):
     """
     Converts .dat to .img file.
+
     :param input_dat_file_path: str - path to the .dat to convert.
     :param system_transfer_list_file_path: str - path to the transfer file list.
     :param output_img_file_path: str - path where the .img will be created.
+
+
     """
     block_size = 4096
     version, new_blocks, commands = parse_transfer_list_file(system_transfer_list_file_path)

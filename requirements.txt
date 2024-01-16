@@ -1,18 +1,21 @@
-Flask~=2.1.2
-werkzeug==2.1.2
-flask-mongoengine~=1.0.0
-Flask-PyMongo~=2.3.0
-
-
 ##############################
-flask-marshmallow~=0.14.0
-flask-bcrypt~=1.0.1
-flask-restx~=1.1.0
-protobuf~=3.20.1 #Remove after unblob is integrated
-blinker~=1.4
+# Webserver
+Django~=4.2.9
+django-environ~=0.11.2
+django-rq~=2.10.1
+django-cors-headers~=4.3.1
 ##############################
-
+# GrahpQL API
+graphene-django~=3.2.0
+graphene-mongo~=0.4.1
+django-graphql-jwt~=0.4.0
+##############################
+# REST API
+djangorestframework~=3.14.0
+##############################
+# Databases
 rq~=1.15.0
-numpy~=1.23.3
-pymongo~=4.1.1
-mongoengine~=0.24.2
+pymongo~=4.6.1
+mongoengine~=0.27.0
+blinker~=1.7
+##############################

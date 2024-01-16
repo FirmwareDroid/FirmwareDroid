@@ -8,9 +8,11 @@ import subprocess
 import tempfile
 import time
 import traceback
-import flask
 from firmware_handler.image_repair import attempt_repair, attempt_repair_and_resize
 import re
+from setup.default_setup import get_active_file_store_paths
+STORE_PATHS = get_active_file_store_paths()
+
 
 def mount_android_image(android_ext4_path, mount_folder_path):
     """
@@ -93,7 +95,6 @@ def attempt_ext4_mount(source, target, mount_options):
         is_mounted = True
     except Exception as err:
         logging.info(err)
-        # traceback.print_exc()
         if is_path_mounted(target):
             exec_umount(target)
     return is_mounted
@@ -135,7 +136,7 @@ def attempt_simg2img_mount(source, target, mount_options):
     logging.info(f"Attempt simg2img mount {source}")
     is_mounted = False
     try:
-        tempdir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"])
+        tempdir = tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"])
         ext4_raw_image_path = simg2img_convert_ext4(source, tempdir.name)
         if ext4_raw_image_path:
             try:
@@ -166,13 +167,12 @@ def attempt_repair_and_mount(source, target, mount_options):
     logging.info(f"Attempt repair and mount {source}")
     is_mounted = False
     try:
-        temp_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"])
+        temp_dir = tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"])
         repaired_source = attempt_repair(source, temp_dir.name)
         exec_mount(repaired_source, target, mount_options)
         is_mounted = True
     except Exception as err:
         logging.info(err)
-        # traceback.print_exc()
         if is_path_mounted(target):
             exec_umount(target)
     return is_mounted
@@ -191,7 +191,7 @@ def attempt_resize_and_mount(source, target, mount_options):
     logging.info(f"Attempt repair, resize and mount {source}")
     is_mounted = False
     try:
-        temp_dir = tempfile.TemporaryDirectory(dir=flask.current_app.config["FIRMWARE_FOLDER_CACHE"])
+        temp_dir = tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"])
         repaired_source = attempt_repair_and_resize(source, temp_dir.name)
         exec_mount(repaired_source, target, mount_options)
         is_mounted = True
@@ -235,7 +235,7 @@ def exec_mount(source, target, mount_options):
     try:
         source_path = shlex.quote(str(source))
         target_path = shlex.quote(str(target))
-        response = subprocess.run(["mount", "-o", mount_options, source_path, target_path], timeout=600)
+        response = subprocess.run(["sudo", "mount", "-o", mount_options, source_path, target_path], timeout=600)
         response.check_returncode()
     except subprocess.CalledProcessError as err:
         raise OSError(err)
@@ -267,7 +267,7 @@ def exec_mount_by_offset(source, target, mount_options):
     try:
         source_path = shlex.quote(str(source))
         target_path = shlex.quote(str(target))
-        response = subprocess.run(["mount", "-o", mount_options, source_path, target_path], timeout=600)
+        response = subprocess.run(["sudo", "mount", "-o", mount_options, source_path, target_path], timeout=600)
         response.check_returncode()
     except subprocess.CalledProcessError as err:
         raise OSError(err)
@@ -301,7 +301,7 @@ def exec_umount(mount_path):
     logging.info(f"Umount {mount_path}")
     try:
         mount_path = shlex.quote(str(mount_path))
-        response = subprocess.run(["umount", "-f", mount_path], timeout=600)
+        response = subprocess.run(["sudo", "umount", "-f", mount_path], timeout=600)
         response.check_returncode()
         time.sleep(10)  # Let the filesystem process the umount
     except Exception as err:

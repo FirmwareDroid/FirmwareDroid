@@ -7,30 +7,16 @@ import os
 import sys
 import tempfile
 from multiprocessing import Lock
-from database.query_document import get_filtered_list
+
+from model.Interfaces.ScanJob import ScanJob
 from model import AndrowarnReport, AndroidApp
-from context.context_creator import push_app_context
-from utils.mulitprocessing_util.mp_util import start_process_pool
+from context.context_creator import create_db_context
+from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
 lock = Lock()
 
 
-@push_app_context
-def start_androwarn_analysis(android_app_id_list):
-    """
-    Analysis all apps from the given list with androwarn.
-
-    :param android_app_id_list: list of class:'AndroidApp' object-ids
-
-    """
-    logging.info(f"Androwarn analysis started! With {str(len(android_app_id_list))} apps")
-    android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "androwarn_report_reference")
-    logging.info(f"Androwarn after filter: {str(len(android_app_list))}")
-    if len(android_app_list) > 0:
-        start_process_pool(android_app_list, androwarn_scan, os.cpu_count())
-
-
-def androwarn_scan(android_app_id_queue):
+def androwarn_worker_multiprocessing(android_app_id_queue):
     """
     Start the analysis with androwarn. Wrapper function taken and modified from androwarn.py.
 
@@ -80,7 +66,8 @@ def create_androwarn_report(report_file_path, android_app):
     analysis_result = parse_json_report(report_file_path)
     with open(report_file_path, 'rb') as report_file:
         androwarn_report = AndrowarnReport(report_file_json=report_file,
-                                           androwarn_version=androwarn.VERSION,
+                                           scanner_version=androwarn.VERSION,
+                                           scanner_name="Androwarn",
                                            android_app_id_reference=android_app.id,
                                            telephony_identifiers_leakage=analysis_result[0][1],
                                            device_settings_harvesting=analysis_result[1][1],
@@ -108,8 +95,35 @@ def parse_json_report(report_file_path):
         data = json.load(json_file)
         if data and len(data) > 0:
             analysis_result = data[1].get("analysis_results")
-            if not analysis_result and not len(analysis_result) == 9:
-                ValueError("Could not parse androwarn json: analysis_results empty or len not == 9.")
+            if not analysis_result and len(analysis_result) != 9:
+                raise ValueError("Could not parse androwarn json: analysis_results empty or len not == 9.")
         else:
-            ValueError("Could not parse androwarn json")
+            raise ValueError("Could not parse androwarn json")
     return analysis_result
+
+
+class AndrowarnScanJob(ScanJob):
+    object_id_list = []
+    SOURCE_DIR = "/var/www/source"
+    MODULE_NAME = "static_analysis.Androwarn.androwarn_wrapper"
+    INTERPRETER_PATH = "/opt/firmwaredroid/python/androwarn/bin/python"
+
+    def __init__(self, object_id_list):
+        self.object_id_list = object_id_list
+        os.chdir(self.SOURCE_DIR)
+
+    @create_db_context
+    def start_scan(self):
+        """
+        Starts multiple instances of the scanner to analyse a list of Android apps on multiple processors.
+        """
+        android_app_id_list = self.object_id_list
+        logging.info(f"Androwarn analysis started! With {str(len(android_app_id_list))} apps.")
+        if len(android_app_id_list) > 0:
+            start_python_interpreter(item_list=android_app_id_list,
+                                     worker_function=androwarn_worker_multiprocessing,
+                                     number_of_processes=os.cpu_count(),
+                                     use_id_list=True,
+                                     module_name=self.MODULE_NAME,
+                                     report_reference_name="androwarn_report_reference",
+                                     interpreter_path=self.INTERPRETER_PATH)

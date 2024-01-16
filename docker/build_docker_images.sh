@@ -25,15 +25,6 @@ if [ $retVal -ne 0 ]; then
     exit $retVal
 fi
 
-# Java Base
-echo "Building JAVA BASE IMAGE"
-docker build ./ -f ./Dockerfile_BASE_JAVA -t firmwaredroid-base-java --platform="linux/amd64"
-retVal=$?
-if [ $retVal -ne 0 ]; then
-    echo "Error"
-    exit $retVal
-fi
-
 # Build worker images
 workers=(./docker/base/Dockerfile_*)
 echo "Building worker images. This is gonna take some time..."

@@ -1,10 +1,13 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 import logging
 
 from model import AndroidFirmware
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 
 
-@push_app_context
+@create_db_context
 def set_firmware_by_filenames(os_vendor, filename_list):
     """
     Sets the os vendor name for each firmware.

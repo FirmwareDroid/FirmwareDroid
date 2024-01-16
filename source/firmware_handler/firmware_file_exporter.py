@@ -5,16 +5,19 @@ import logging
 import os
 import shutil
 import time
-import flask
 from firmware_handler.image_importer import extract_image_files
-from context.context_creator import push_app_context
+from context.context_creator import create_db_context
 from firmware_handler.ext4_mount_util import is_path_mounted, exec_umount
 from model import FirmwareFile
-from utils.mulitprocessing_util.mp_util import start_process_pool
+from utils.mulitprocessing_util.mp_util import start_python_interpreter
 from utils.file_utils.file_util import create_temp_directories
 
+from setup.default_setup import get_active_file_store_paths
+STORE_PATHS = get_active_file_store_paths()
 
-@push_app_context
+
+
+@create_db_context
 def start_file_export_by_regex(filename_regex, firmware_id_list):
     """
     Starts a firmware file export. Uses a regex and the given firmware to pre-filter firmware-files.
@@ -48,7 +51,7 @@ def get_filtered_firmware_file_list(filename_regex, firmware_id_list):
     return firmware_file_id_list
 
 
-@push_app_context
+@create_db_context
 def start_file_export_by_id(firmware_file_id_list):
     """
     Starts to export firmware files to the filesystem.
@@ -58,9 +61,9 @@ def start_file_export_by_id(firmware_file_id_list):
 
     """
     if len(firmware_file_id_list) > 0:
-        start_process_pool(firmware_file_id_list, export_firmware_files_by_id,
-                           number_of_processes=os.cpu_count(),
-                           use_id_list=False)
+        start_python_interpreter(firmware_file_id_list, export_firmware_files_by_id,
+                                 number_of_processes=os.cpu_count(),
+                                 use_id_list=False)
 
 
 def export_firmware_files_by_id(firmware_file_id_queue):
@@ -70,21 +73,25 @@ def export_firmware_files_by_id(firmware_file_id_queue):
     :param firmware_file_id_queue: multiprocessing.queue - queue of id to process.
 
     """
+    # TODO fix this method to support file extraction again
+
     while not firmware_file_id_queue.empty():
         firmware_file_id = firmware_file_id_queue.get()
         firmware_file = FirmwareFile.objects.get(pk=firmware_file_id)
         firmware = firmware_file.firmware_id_reference.fetch()
         cache_temp_file_dir, cache_temp_mount_dir = create_temp_directories()
-        #   TODO fix this method
-        extract_image_files(firmware, cache_temp_file_dir.name, cache_temp_mount_dir.name)
-        logging.info(f"Export file: {firmware.name}")
-        try:
-            firmware_file = FirmwareFile.objects.get(pk=firmware_file_id)
-            export_firmware_file(firmware_file, cache_temp_mount_dir.name)
-        except FileExistsError:
-            pass
-        if is_path_mounted(cache_temp_mount_dir.name):
-            exec_umount(cache_temp_mount_dir.name)
+
+        raise NotImplemented("Refactoring necessary to work correctly")
+        # extract_all_nested(firmware.absolute_store_path, cache_temp_file_dir.name, False)
+        # extract_image_files(, cache_temp_mount_dir.name)
+        #
+        # try:
+        #     firmware_file = FirmwareFile.objects.get(pk=firmware_file_id)
+        #     export_firmware_file(firmware_file, cache_temp_mount_dir.name)
+        # except FileExistsError:
+        #     pass
+        # if is_path_mounted(cache_temp_mount_dir.name):
+        #     exec_umount(cache_temp_mount_dir.name)
 
 
 def export_firmware_file(firmware_file, mount_dir_path):
@@ -109,7 +116,7 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
     :param destination_path: str - path to copy the file/folder to.
 
     """
-    if firmware_file.isDirectory:
+    if firmware_file.is_directory:
         dst_file_path = shutil.copytree(source_path, destination_path)
     else:
         os.makedirs(os.path.dirname(destination_path), exist_ok=True)
@@ -129,8 +136,7 @@ def get_destination_folder(firmware_file):
     :return: str - absolute path of the output folder.
 
     """
-    app = flask.current_app
-    destination_folder = os.path.join(app.config["FIRMWARE_FOLDER_FILE_EXTRACT"],
+    destination_folder = os.path.join(STORE_PATHS["FIRMWARE_FOLDER_FILE_EXTRACT"],
                                       str(firmware_file.id),
                                       "." + firmware_file.relative_path)
     return os.path.abspath(destination_folder)

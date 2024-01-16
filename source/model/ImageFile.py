@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 import datetime
-from mongoengine import FileField, StringField, DateTimeField
-from flask_mongoengine import Document
+from mongoengine import FileField, StringField, DateTimeField, Document
 
 
 class ImageFile(Document):

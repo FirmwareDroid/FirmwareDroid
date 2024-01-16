@@ -5,6 +5,7 @@ import logging
 import os
 import re
 from extractor.ext4_extractor import extract_simg_ext4, extract_ext4
+from extractor.unblob_extractor import unblob_extract
 from firmware_handler.firmware_file_search import get_firmware_file_by_regex_list
 from extractor.ubi_extractor import extract_ubi_image
 from firmware_handler.ext4_mount_util import mount_android_image
@@ -16,16 +17,19 @@ def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
 
     :param image_filename_pattern_list: str - a list of regex pattern for searching the images filename.
     :param firmware_file_list: The files which will be checked for their names.
+    :raise ValueError: Exception raised when the file could not be found.
+
     :return: class:'FirmwareFile' object of the system.img or system.ext4.img file.
 
     """
     for firmware_file in firmware_file_list:
         filename = firmware_file.name.lower()
         for pattern in image_filename_pattern_list:
-            if not firmware_file.isDirectory and re.search(pattern, filename) and not filename.startswith("._"):
+            if not firmware_file.is_directory and re.search(pattern, filename) and not filename.startswith("._"):
                 logging.info("Found image file: " + str(firmware_file.name))
                 return firmware_file
-    raise ValueError("Could not find image file!")
+    raise ValueError(f"Continuing. Could not find any image file in the filelist based on the patterns: "
+                     f"{' '.join(image_filename_pattern_list)}")
 
 
 def extract_image_files(image_path, extract_dir_path):
@@ -35,6 +39,8 @@ def extract_image_files(image_path, extract_dir_path):
     :param image_path: str - absolute path to the image file.
     :param extract_dir_path: str - path where the files will be extracted or mounted to.
 
+    :raise RuntimeError: In case none of the support methods can extract files from the image.
+
     """
     if extract_simg_ext4(image_path, extract_dir_path):
         logging.info("Image extraction successful with simg_ext4extractor")
@@ -43,7 +49,9 @@ def extract_image_files(image_path, extract_dir_path):
     elif mount_android_image(image_path, extract_dir_path):
         logging.info("Image mount successful")
     elif extract_ubi_image(image_path, extract_dir_path):
-        logging.info(" Image extraction successful with UBI")
+        logging.info("Image extraction successful with UBI")
+    elif unblob_extract(image_path, extract_dir_path):
+        logging.info("Image extraction successful with unblob extraction suite")
     else:
         raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
 

@@ -1,12 +1,12 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
 import datetime
 import logging
 import traceback
-
 import mongoengine
-from flask_mongoengine import Document
 from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, \
-    ListField, BooleanField, IntField
-from marshmallow import Schema, fields
+    ListField, BooleanField, IntField, Document
 
 
 class AndroidFirmware(Document):
@@ -48,22 +48,22 @@ class AndroidFirmware(Document):
 mongoengine.signals.pre_delete.connect(AndroidFirmware.pre_delete, sender=AndroidFirmware)
 
 
-class AndroidFirmwareSchema(Schema):
-    id = fields.Str()
-    indexed_date = fields.DateTime()
-    file_size_bytes = fields.Float()
-    relative_store_path = fields.Str()
-    absolute_store_path = fields.Str()
-    original_filename = fields.Str()
-    filename = fields.Str()
-    md5 = fields.Str()
-    sha256 = fields.Str()
-    sha1 = fields.Str()
-    ssdeep_digest = fields.Str()
-    hasFileIndex = fields.Str()
-    android_app_id_list = fields.List(fields.Str())
-    firmware_file_id_list = fields.List(fields.Str())
-
-    class Meta:
-        load_only = ('relative_store_path', 'id', 'absolute_store_path',
-                     'filename', 'android_app_id_list', 'firmware_file_id_list')
+# class AndroidFirmwareSchema(Schema):
+#     id = fields.Str()
+#     indexed_date = fields.DateTime()
+#     file_size_bytes = fields.Float()
+#     relative_store_path = fields.Str()
+#     absolute_store_path = fields.Str()
+#     original_filename = fields.Str()
+#     filename = fields.Str()
+#     md5 = fields.Str()
+#     sha256 = fields.Str()
+#     sha1 = fields.Str()
+#     ssdeep_digest = fields.Str()
+#     hasFileIndex = fields.Str()
+#     android_app_id_list = fields.List(fields.Str())
+#     firmware_file_id_list = fields.List(fields.Str())
+#
+#     class Meta:
+#         load_only = ('relative_store_path', 'id', 'absolute_store_path',
+#                      'filename', 'android_app_id_list', 'firmware_file_id_list')

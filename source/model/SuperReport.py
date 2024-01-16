@@ -1,11 +1,9 @@
-from mongoengine import LazyReferenceField, DateTimeField, CASCADE, DictField, StringField
-from model import AndroidApp
-import datetime
-from flask_mongoengine import Document
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
+from mongoengine import DictField
+from model.ApkScannerReport import ApkScannerReport
 
 
-class SuperReport(Document):
-    report_date = DateTimeField(required=True, default=datetime.datetime.now)
-    android_app_id_reference = LazyReferenceField(AndroidApp, reverse_delete_rule=CASCADE, required=True)
-    super_version = StringField(required=True)
+class SuperReport(ApkScannerReport):
     results = DictField(required=True)

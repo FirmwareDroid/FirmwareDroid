@@ -1,5 +1,7 @@
-from flask_mongoengine import Document
-from mongoengine import LazyReferenceField, StringField, CASCADE, DictField, ListField, DO_NOTHING
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
+from mongoengine import LazyReferenceField, StringField, CASCADE, DictField, ListField, DO_NOTHING, Document
 from model import AndroidApp
 
 

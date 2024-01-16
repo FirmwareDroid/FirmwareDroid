@@ -5,28 +5,13 @@ import logging
 import os
 import tempfile
 import traceback
-
-from model import AndroidApp, ApkLeaksReport
-from database.query_document import get_filtered_list
-from context.context_creator import push_app_context
-from utils.mulitprocessing_util.mp_util import start_process_pool
-
-
-@push_app_context
-def start_apkleaks_scan(android_app_id_list):
-    """
-    Analysis all apps from the given list with APKLeaks.
-
-    :param android_app_id_list: list of class:'AndroidApp' object-ids.
-
-    """
-    android_app_list = get_filtered_list(android_app_id_list, AndroidApp, "apkleaks_report_reference")
-    logging.info(f"APKLeaks after filter: {str(len(android_app_list))}")
-    if len(android_app_list) > 0:
-        start_process_pool(android_app_list, apkleaks_worker, int(os.cpu_count()/3))
+from Interfaces.ScanJob import ScanJob
+from model import AndroidApp, ApkleaksReport
+from context.context_creator import create_db_context
+from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
 
-def apkleaks_worker(android_app_id_queue):
+def apkleaks_worker_multiprocessing(android_app_id_queue):
     """
     Start the analysis on a multiprocessor queue.
 
@@ -84,15 +69,43 @@ def get_apkleaks_analysis(apk_file_path, result_folder_path):
 
 def create_report(android_app, json_results):
     """
-    Create a class:'APKLeaksReport' and save the scan results in the database.
+    Create a class:'ApkleaksReport' and save the scan results in the database.
 
     :param android_app: class:'AndroidApp' - app that was scanned.
     :param json_results: str - scanning results in json format.
 
     """
     # TODO change static tool version to dynamic one
-    apkleaks_report = ApkLeaksReport(android_app_id_reference=android_app.id,
-                                     apkleaks_version="2.6.1",
+    apkleaks_report = ApkleaksReport(android_app_id_reference=android_app.id,
+                                     scanner_version="2.6.1",
+                                     scanner_name="APKLeaks",
                                      results=json_results).save()
     android_app.apkleaks_report_reference = apkleaks_report.id
     android_app.save()
+
+
+class APKLeaksScanJob(ScanJob):
+    object_id_list = []
+    SOURCE_DIR = "/var/www/source"
+    MODULE_NAME = "static_analysis.APKLeaks.apkleaks_wrapper"
+    INTERPRETER_PATH = "/opt/firmwaredroid/python/apkleaks/bin/python"
+
+    def __init__(self, object_id_list):
+        self.object_id_list = object_id_list
+        os.chdir(self.SOURCE_DIR)
+
+    @create_db_context
+    def start_scan(self):
+        """
+        Starts multiple instances of the scanner to analyse a list of Android apps on multiple processors.
+        """
+        android_app_id_list = self.object_id_list
+        logging.info(f"APKLeaks analysis started! With {str(len(android_app_id_list))} apps.")
+        if len(android_app_id_list) > 0:
+            start_python_interpreter(item_list=android_app_id_list,
+                                     worker_function=apkleaks_worker_multiprocessing,
+                                     number_of_processes=os.cpu_count(),
+                                     use_id_list=True,
+                                     module_name=self.MODULE_NAME,
+                                     report_reference_name="apkleaks_report_reference",
+                                     interpreter_path=self.INTERPRETER_PATH)

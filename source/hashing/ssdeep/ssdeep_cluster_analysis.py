@@ -7,12 +7,12 @@ from graph.networkx_graph_wrapper import create_weighted_graph_file
 from hashing.fuzzy_hash_common import get_fuzzy_hash_documents_by_regex, filter_fuzzy_hash_documents_by_firmware
 from model import SsDeepClusterAnalysis, SsDeepHash
 from hashing.ssdeep.ssdeep_hasher import ssdeep_compare_hashs
-from context.context_creator import push_app_context
-from utils.string_utils.string_util import filter_mongodb_dict_chars
+from context.context_creator import create_db_context
+from database.mongodb_key_replacer import filter_mongodb_dict_chars
 from utils.file_utils.file_util import object_to_temporary_json_file, create_reference_file
 
 
-@push_app_context
+@create_db_context
 def start_ssdeep_clustering(regex_filter, firmware_id_list):
     """
     Create a cluster analysis of ssDeep hashes.
