@@ -1,5 +1,2 @@
-[submodule "firmware-droid-client"]
-	path = firmware-droid-client
-	url = git@github.com:FirmwareDroid/FirmwareDroid-Client.git
 [submodule "firmware-droid-client/"]
 	url = https://github.com/FirmwareDroid/FirmwareDroid-Client.git
