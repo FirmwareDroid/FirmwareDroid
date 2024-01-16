@@ -36,6 +36,7 @@ but is mainly an API and database that can be use for research studies. You can 
 * docker
 * docker-compose
 * python3
+* pip3
 
 
 ### Usage
@@ -49,7 +50,7 @@ cd FirmwareDroid
   ```
 2. Install python packages for the setup:
 ```
-pip install jinja2
+pip3 install jinja2
 ```
 3. Run the setup script:
 ```
@@ -57,18 +58,22 @@ python3 ./setup.py
 ```
 4. Build the docker base images (takes some time).
 ```
+chmod +x ./docker/build_docker_images.sh
 ./docker/build_docker_images.sh
 ```
-5. Start the application
+5. Set correct access rights for the blob storage and start the containers
 ```
+chown -R $(id -u):$(id -g) ./blob_storage
 docker-compose up
 ```
 The first start takes some time because the database will change the mode to a replica-set. 
 Wait until the logscreen stops moving (takes usually 2 to 5 minutes).
+
 6. Open the browser. By default, a self-signed certificates is used, and you will encounter a TLS warning.
 ```
 https://fmd.localhost
 ```
+
 7. Log-into the application. Password and username can be found in the `.env` file. 
 ```
 cat .env
@@ -77,6 +82,7 @@ DJANGO_SUPERUSER_USERNAME=XXXXX
 DJANGO_SUPERUSER_PASSWORD=XXXXX
 ...
 ```
+
 8. After log-in, you can explore the following routes:
 ```
 API: https://fmd.localhost/graphql
@@ -90,7 +96,7 @@ explore the API documentation and to build graphQL queries and mutations.
 
 ##### Importing firmware
 
-After setting up the application you might want to start exploring some Android firmware. By default, 
+After setting up the application, you might want to start exploring some Android firmware. By default, 
 FMD creates a folder `blob_storage`, where all the data (databases and blobs) will be stored. To import Android firmware 
 you need to copy the Android firmware archives (.zip, .tar) into the import folder: 
 `blob_storage/00_file_storage/<random_id>/firmware_import`
@@ -209,10 +215,9 @@ query GetAndroidAppIds {
 
 ##### Scanning Android apps
 
-Currently, FMD does not have a fully working user interface to select and scan via the UI, 
-but the graphql API is fully functioning to scan apps with various static-analysis tools in parallel. We are working 
+Currently, FMD does not have a user interface for all features. To scan we use the graphql API. We are working 
 on the FMD user-interface. However, since FMD is a research project our focus is currently mainly on enhancing the 
-backend.
+backend and not the frontend.
 
 To scan Android apps, you will need to have the object-ids of the Android apps you want to scan. You can get the
 object-ids directly from the database (collection: `android_app`) or via the graphql API.
@@ -227,7 +232,7 @@ As result, you will get a list of all the available Android app object-ids from 
 scan these Android apps with one of the static-analysers.
 
 2. In this example, we use AndroGuard. However, you could use any of the following static-analysers as well. Please,
-note that not every scanner was built for mass scanning and some of the might be slow in scanning speed.
+note that not every scanner was built for mass scanning and some of them might be slow in scanning speed.
 ```
   ANDROGUARD
   ANDROWARN
