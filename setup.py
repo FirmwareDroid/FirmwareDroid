@@ -9,6 +9,7 @@ import secrets
 from jinja2 import Environment, FileSystemLoader
 from secrets import token_bytes
 from base64 import b64encode
+import argparse
 
 TEMPLATE_FOLDER = "templates/"
 TEMPLATE_ENV = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER))
@@ -21,7 +22,11 @@ ENV_FILE_NAME = "env"
 REPLICA_SET_SCRIPT_NAME = "mongo_replica_set_setup.sh"
 BLOB_STORAGE_NAME = "blob_storage/"
 
+
 class FmdEnvironment:
+    """
+    Class that contains the env configuration for the FirmwareDroid service.
+    """
     script_file_path = os.path.dirname(os.path.realpath(__file__))
     blob_storage_name = BLOB_STORAGE_NAME
     blob_storage_path = os.path.join(script_file_path, blob_storage_name)
@@ -59,7 +64,6 @@ class FmdEnvironment:
 
     def __init__(self, use_defaults):
         self.use_defaults = use_defaults
-
 
     def _get_environment(self):
         print("Setting up environment...")
@@ -195,6 +199,11 @@ def setup_environment_variables(use_defaults):
 
 
 def setup_nginx(env_instance):
+    """
+    Uses an config template to create a valid runtime configuration for nginx.
+
+    :param env_instance: class:`FmdEnvironment` - with parameters set for the web domain.
+    """
     nginx_path = os.path.join(env_instance.script_file_path, NGINX_CONFIG_PATH)
     if not os.path.exists(nginx_path):
         os.makedirs("./env/nginx")
@@ -212,6 +221,12 @@ def setup_nginx(env_instance):
 
 
 def generate_certificate(env_instance):
+    """
+    Generates a self-signed x509 certificate for the nginx service. This certificate is used for the webserver as
+    default certificate.
+
+   :param env_instance: class:`FmdEnvironment` - with parameters set for the web domain.
+    """
     from cryptography import x509
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import serialization
@@ -273,6 +288,13 @@ def generate_certificate(env_instance):
 
 
 def setup_redis(env_instance):
+    """
+    Uses an config template to create a valid runtime configuration for redis. Writes the config file into the env
+    directory.
+
+    :param env_instance: class:`FmdEnvironment` - with parameters set for redis.
+
+    """
     redis_path = os.path.join(env_instance.script_file_path, REDIS_CONFIG_PATH)
     if not os.path.exists(redis_path):
         os.makedirs("./env/redis")
@@ -288,6 +310,12 @@ def setup_redis(env_instance):
 
 
 def setup_mongo_env(env_instance):
+    """
+    Uses an config template to create a valid runtime configuration for mongodb. Write several config files into the
+    mongo env directory.
+
+    :param env_instance: class:`FmdEnvironment` - with parameters set for mongodb.
+    """
     mongo_env_auth_path = "env/mongo/auth"
     mongo_env_init_path = "env/mongo/init"
     mongo_path = os.path.join(env_instance.script_file_path, MONGO_CONFIG_PATH)
@@ -307,6 +335,15 @@ def setup_mongo_env(env_instance):
 
 
 def main():
+    parser = argparse.ArgumentParser(prog='setup',
+                                     description="A cli tool to setup FirmwareDroid")
+    parser.add_argument("-d", "--fmd-domain-name",
+                        type=str,
+                        default="fmd.localhost",
+                        required=False,
+                        help="Specifies the domain name used to setup FirmwareDroid")
+    args = parser.parse_args()
+
     env_path = os.path.join("./.env")
     if os.path.exists(env_path):
         print(".env file already exists!")
