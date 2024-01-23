@@ -25,8 +25,7 @@ docker and includes several third party analysis tools for security analysis and
 
 In this repository you will find the code for the backend and documentation of the application. 
 The application has a minimal and very limited React frontend (see https://github.com/FirmwareDroid/FMD-WebClient) 
-but is mainly an API and database that can be use for research studies. You can find more information on our 
-[online documentation](https://firmwardroid.readthedocs.io/en/latest/).
+but is mainly an API and database that can be use for research studies. 
 
 ### Prerequisites
 * OS: 

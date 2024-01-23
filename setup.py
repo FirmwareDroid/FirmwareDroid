@@ -21,6 +21,38 @@ NGINX_CONFIG_PATH = "env/nginx/"
 ENV_FILE_NAME = "env"
 REPLICA_SET_SCRIPT_NAME = "mongo_replica_set_setup.sh"
 BLOB_STORAGE_NAME = "blob_storage/"
+FMD_WEB_CLIENT_ENV_FILE_NAME = "EnvConfig.js"
+FMD_WEB_CLIENT_ENV_PATH = "firmware-droid-client/src/"
+
+
+def is_valid_domain_name(domain_name):
+    """
+    Checks if the given domain name is valid.
+
+    :param domain_name: str - domain name
+
+    :return: bool - True if the domain name is valid, False otherwise
+    """
+    import re
+    if re.match(r"^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$", domain_name):
+        return True
+    else:
+        return False
+
+
+def _create_directory(path):
+    """
+    Creates a directory if it does not exist.
+    :param path: str - path to the directory
+    :return: bool - True if the directory exists or was created, False otherwise
+    """
+    if not os.path.exists(path):
+        try:
+            os.mkdir(path)
+        except Exception as err:
+            print(err)
+            return False
+    return True
 
 
 class FmdEnvironment:
@@ -66,6 +98,9 @@ class FmdEnvironment:
         self.use_defaults = use_defaults
 
     def _get_environment(self):
+        """
+        Asks the user for the environment configuration. If the user enters an invalid path, the user is asked again.
+        """
         print("Setting up environment...")
         while True:
             if self.use_defaults:
@@ -84,31 +119,53 @@ class FmdEnvironment:
                 print("Development mode enabled. Debugging logs active.")
                 break
 
+    def _get_blob_storage_path(self):
+        """
+        Asks the user for the blob storage path or uses the default path.
+        """
+        self.blob_storage_path = os.path.join(self.script_file_path, self.blob_storage_name)
+        if self.use_defaults:
+            return self.blob_storage_path
+        else:
+            return input(f"Where do you want to store blob data? "
+                         f"(default: '{self.blob_storage_path}'):") or self.blob_storage_path
+
+    def _get_mongo_db_path(self):
+        """
+        Asks the user for the mongodb data path or uses the default path.
+        """
+        self.local_mongo_db_path_node1 = os.path.join(self.blob_storage_path, "mongo_database")
+        if self.use_defaults:
+            return self.local_mongo_db_path_node1
+        else:
+            return input(f"Where do you want to store the mongodb data? "
+                         f"(default: '{self.local_mongo_db_path_node1}'):") or self.local_mongo_db_path_node1
+
     def _get_blob_storage(self):
+        """
+        Asks the user for the blob storage configuration. If the user enters an invalid path, the user is asked again.
+        """
         print("# Setting up blob storage...")
         while True:
             self.redis_config_path = os.path.join(self.script_file_path, REDIS_CONFIG_PATH, REDIS_CONFIG_NAME)
             self.redis_password = uuid.uuid4()
             self.redis_port = 6379
-            if self.use_defaults:
-                user_input = self.blob_storage_path
-            else:
-                user_input = input(f"Where do you want to store blob data? "
-                                   f"(default: '{self.blob_storage_path}'):") or self.blob_storage_path
-            if user_input:
-                self.blob_storage_path = user_input
 
-            if not os.path.exists(self.blob_storage_path):
-                try:
-                    os.mkdir(self.blob_storage_path)
-                except Exception as err:
-                    print(err)
-                    continue
+            self.blob_storage_path = self._get_blob_storage_path()
+            if not _create_directory(self.blob_storage_path):
+                continue
+
             self.local_storage_path = os.path.join(self.blob_storage_path, "00_file_storage")
             self.local_storage_path_secondary = os.path.join(self.blob_storage_path, "01_file_storage")
-            self.local_mongo_db_path_node1 = os.path.join(self.blob_storage_path, "mongo_database")
-            print(f"Set blob storage to: {user_input}")
+
+            self.local_mongo_db_path_node1 = self._get_mongo_db_path()
+            if not _create_directory(self.local_mongo_db_path_node1):
+                continue
+
             break
+
+        print(f"Set blob storage to: {self.blob_storage_path}")
+        print(f"Set mongo db path to: {self.local_mongo_db_path_node1}")
 
     def _get_mongodb_settings(self):
         print("Setting up database config...")
@@ -116,26 +173,40 @@ class FmdEnvironment:
         self.mongodb_auth_src = "admin"
         self.mongodb_port = 27017
         self.mongo_db_replicat_set = "mongo_cluster_1"
+        self.mongo_db_hostname = "mongo-db-1"
         self.mongodb_initdb_root_username = "mongodbroot"
         self.mongodb_initdb_root_password = uuid.uuid4()
         self.mongodb_username = "mongodbuser"
         self.mongodb_password = uuid.uuid4()
-        self.mongo_db_hostname = "mongo-db-1"
+
+    def _get_domain_name(self, default_domain_name):
+        """
+        Asks the user for a domain name. If the user enters an invalid domain name, the user is asked again.
+
+        :param default_domain_name: str - default domain name
+
+        :return: str - valid domain name
+        """
+        if self.use_defaults:
+            return default_domain_name
+        else:
+            domain_name = input(f"Please, enter a valid domain name "
+                                f"(default: '{default_domain_name}'):") or default_domain_name
+            while not is_valid_domain_name(domain_name):
+                print("Invalid domain name. Please try again.")
+                domain_name = input(f"Please, enter a valid domain name "
+                                    f"(default: '{default_domain_name}'):") or default_domain_name
+            return domain_name
 
     def _get_web_config(self):
+        """
+        Asks the user for the web configuration. If the user enters an invalid domain name, the user is asked again.
+        """
         print("Setting up web config...")
         self.mass_import_number_of_threads = 3
         default_domain_name = "fmd.localhost"
         default_companion_domain_name = "fmd-aosp.init-lab.ch"
-        if self.use_defaults:
-            user_input = default_domain_name
-        else:
-            user_input = input(f"Please, enter a valid domain name "
-                               f"(default: '{default_domain_name}'):") or default_domain_name
-        if user_input:
-            self.domain_name = user_input
-        else:
-            self.domain_name = default_domain_name
+        self.domain_name = self._get_domain_name(default_domain_name)
         self.api_title = "FirmwareDroid REST API"
         self.api_version = 1.0
         self.api_description = "REST API documentation for the FirmwareDroid service"
@@ -146,9 +217,12 @@ class FmdEnvironment:
         self.django_sqlite_database_path = os.path.join("/var/www/", BLOB_STORAGE_NAME, "django_database/db.sqlite3")
         self.django_superuser_username = "fmd-admin"
         self.django_superuser_password = uuid.uuid4()
-        self.django_superuser_email = "fmd-admin@fmd.localhost"
+        self.django_superuser_email = "fmd-admin@" + self.domain_name
 
     def create_env_file(self):
+        """
+        Creates the .env file for the FirmwareDroid service.
+        """
         self._get_environment()
         self._get_blob_storage()
         self._get_mongodb_settings()
@@ -225,7 +299,7 @@ def generate_certificate(env_instance):
     Generates a self-signed x509 certificate for the nginx service. This certificate is used for the webserver as
     default certificate.
 
-   :param env_instance: class:`FmdEnvironment` - with parameters set for the web domain.
+    :param env_instance: class:`FmdEnvironment` - with parameters set for the web domain.
     """
     from cryptography import x509
     from cryptography.hazmat.backends import default_backend
@@ -289,7 +363,7 @@ def generate_certificate(env_instance):
 
 def setup_redis(env_instance):
     """
-    Uses an config template to create a valid runtime configuration for redis. Writes the config file into the env
+    Uses a config template to create a valid runtime configuration for redis. Writes the config file into the env
     directory.
 
     :param env_instance: class:`FmdEnvironment` - with parameters set for redis.
@@ -311,7 +385,7 @@ def setup_redis(env_instance):
 
 def setup_mongo_env(env_instance):
     """
-    Uses an config template to create a valid runtime configuration for mongodb. Write several config files into the
+    Uses a config template to create a valid runtime configuration for mongodb. Write several config files into the
     mongo env directory.
 
     :param env_instance: class:`FmdEnvironment` - with parameters set for mongodb.
@@ -334,12 +408,30 @@ def setup_mongo_env(env_instance):
     shutil.copy(replica_setup_source_path, mongo_env_init_path)
 
 
+def setup_frontend_env(env_instance):
+    """
+    Uses a config template to create a valid runtime configuration for the frontend.
+    """
+    template = TEMPLATE_ENV.get_template(FMD_WEB_CLIENT_ENV_FILE_NAME)
+    content = template.render(
+        domain_name=env_instance.domain_name
+    )
+    output_file_path = os.path.join(env_instance.script_file_path, FMD_WEB_CLIENT_ENV_PATH,
+                                    FMD_WEB_CLIENT_ENV_FILE_NAME)
+    with open(output_file_path, 'w') as f:
+        f.write(content)
+    print("Completed frontend env setup.")
+
+
 def main():
+    """
+    Command-line interface for the setup script. Parses the arguments and calls the setup functions.
+    """
     parser = argparse.ArgumentParser(prog='setup',
                                      description="A cli tool to setup FirmwareDroid")
-    parser.add_argument("-d", "--fmd-domain-name",
-                        type=str,
-                        default="fmd.localhost",
+    parser.add_argument("-p", "--production-mode",
+                        action="store_true",
+                        default=False,
                         required=False,
                         help="Specifies the domain name used to setup FirmwareDroid")
     args = parser.parse_args()
@@ -348,10 +440,17 @@ def main():
     if os.path.exists(env_path):
         print(".env file already exists!")
         exit(1)
-    env_instance = setup_environment_variables(use_defaults=True)
+
+    if args.production_mode:
+        use_defaults = False
+    else:
+        use_defaults = True
+
+    env_instance = setup_environment_variables(use_defaults=use_defaults)
     setup_nginx(env_instance)
     setup_redis(env_instance)
     setup_mongo_env(env_instance)
+    setup_frontend_env(env_instance)
 
 
 if __name__ == "__main__":
