@@ -1,4 +1,5 @@
 FROM nginx:1.25.2-alpine
-#COPY --from=firmwaredroid-frontend /usr/src/app/build /usr/share/nginx/html
-#ADD ./source/static /usr/share/nginx/django_static
+# Copy latest build from frontend
+COPY --from=firmwaredroid-frontend /usr/src/app/build /usr/share/nginx/html
+
 CMD ["nginx", "-g", "daemon off;"]
