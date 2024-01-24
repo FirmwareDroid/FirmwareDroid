@@ -156,7 +156,11 @@ class FmdEnvironment:
                 continue
 
             self.local_storage_path = os.path.join(self.blob_storage_path, "00_file_storage")
+            if not _create_directory(self.local_storage_path):
+                continue
             self.local_storage_path_secondary = os.path.join(self.blob_storage_path, "01_file_storage")
+            if not _create_directory(self.local_storage_path_secondary):
+                continue
 
             self.local_mongo_db_path_node1 = self._get_mongo_db_path()
             if not _create_directory(self.local_mongo_db_path_node1):

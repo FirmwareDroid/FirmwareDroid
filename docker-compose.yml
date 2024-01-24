@@ -36,7 +36,7 @@ services:
     volumes:
       - ./env/nginx:/etc/nginx/conf.d
       - ./env/nginx/live/:/etc/letsencrypt/live/
-      - ./firmware-droid-client/build:/usr/share/nginx/html
+      #- ./firmware-droid-client/build:/usr/share/nginx/html
       - ./source/static:/usr/share/nginx/django_static
     ports:
       - "80:80"
@@ -120,6 +120,14 @@ services:
     command: rqworker --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     networks:
       - backend
+
+#  frontend:
+#    platform: "linux/amd64"
+#    build:
+#      context: ./
+#      dockerfile: ./firmware-droid-client/Dockerfile
+#    image: firmwaredroid-frontend
+#    command: sleep infinity
 
 networks:
   frontend:
