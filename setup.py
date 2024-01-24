@@ -403,7 +403,7 @@ def setup_mongo_env(env_instance):
         out_file.write(cluster_key)
         print("Created cluster key")
     os.chmod(key_file_path, 400)
-    print("Completed mongodb env setup. Ready for first startup!")
+    print("Completed mongodb env setup.")
     replica_setup_source_path = os.path.join(env_instance.script_file_path, TEMPLATE_FOLDER, REPLICA_SET_SCRIPT_NAME)
     shutil.copy(replica_setup_source_path, mongo_env_init_path)
 
@@ -451,6 +451,7 @@ def main():
     setup_redis(env_instance)
     setup_mongo_env(env_instance)
     setup_frontend_env(env_instance)
+    print("Ready for startup!")
 
 
 if __name__ == "__main__":

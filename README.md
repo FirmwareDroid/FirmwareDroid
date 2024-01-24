@@ -89,11 +89,11 @@ User-Management: https://fmd.localhost/admin
 RQ-Job Management: https://fmd.localhost/django-rq
 ```
 
-Note: To control FMD, the graphql API is used with an the interactive query builder, called GraphiQL. All
+Note: To control FMD, the graphql API is used with a interactive query builder (GraphiQL). All
 the examples in this doc use the graphql API available under https://fmd.localhost/graphql, which allows to
 explore the API documentation and to build graphQL queries and mutations.
 
-##### Importing firmware
+#### Importing firmware
 
 After setting up the application, you might want to start exploring some Android firmware. By default, 
 FMD creates a folder `blob_storage`, where all the data (databases and blobs) will be stored. To import Android firmware 
@@ -104,7 +104,8 @@ you need to copy the Android firmware archives (.zip, .tar) into the import fold
 ```
 `blob_storage/00_file_storage/<random_id>/firmware_import`
 ```
-2. Navigate to the graphql API (https://fmd.localhost/graphql) and start the mutation job: `createFirmwareExtractorJob`
+2. Navigate to the graphql API (https://fmd.localhost/graphql) and start the mutation job: `createFirmwareExtractorJob`.
+This will trigger the `extractor-worker-high-1` container to import the firmware from the `/firmware_import` folder.
 ```
 # First, log-in in case you haven't already
 query MyQuery {
@@ -124,9 +125,10 @@ mutation StartImport {
 ```
 Importing takes several minutes. Might be a good moment to get a coffee.
 
-3. You can monitor the status of the job on https://fmd.localhost/django-rq or alternative you can connect directly to
-the database to see if it was successfully imported. To connect to the database you need a MongoDb-client
-(e.g., Studio 3T). You will find the connection credentials for mongodb in the `.env` file:
+3. You can monitor the status of the `createFirmwareExtractorJob` on https://fmd.localhost/django-rq or 
+alternative you can connect directly to the database to see if it was successfully imported. 
+To connect to the database you need a MongoDb-client (e.g., Studio 3T). You will find the connection credentials 
+for mongodb in the `.env` file:
 ```
 cat .env
 ...
@@ -148,7 +150,8 @@ Firmware (failed): `blob_storage/00_file_storage/<random-id>/firmware_import_fai
 If for some reason the importer wasn't able to extract the firmware, the firmware will be moved to the 
 `firmware_import_failed` directory in the blob storage and you need to check the docker logs why it failed.
 
-You can also use the graphql API to fetch available firmware data with the following example queries:
+You can also use the graphql API to fetch all available firmware data with the following example queries
+in case the import was successful:
 ```
 # Gets a list of firmware object-ids
 query GetAndroidFirmwareIds {
@@ -156,8 +159,9 @@ query GetAndroidFirmwareIds {
 }
 ```
 
-Take the resulting firmware object-ids and use them for the following query to fetch some firmware meta-data.
-(Replace XXXX with the firmware id you want to fetch)
+Take the resulting firmware object-ids from the query above (`GetAndroidFirmwareIds`) and use them for the 
+following query `GetAndroidFirmwareIds`
+to fetch some firmware meta-data. (Replace XXXX with the firmware id you want to fetch in the query below)
 ```
 query GetAndroidFirmwareIds {
   android_firmware_list(objectIdList: ["XXXXX"]) {
@@ -212,7 +216,7 @@ query GetAndroidAppIds {
 ```
 
 
-##### Scanning Android apps
+#### Scanning Android apps
 
 Currently, FMD does not have a user interface for all features. To scan we use the graphql API. We are working 
 on the FMD user-interface. However, since FMD is a research project our focus is currently mainly on enhancing the 
