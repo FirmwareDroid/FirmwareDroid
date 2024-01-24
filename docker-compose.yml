@@ -18,6 +18,7 @@ services:
       - .:/var/www/
       - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage/
       - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage/
+      - ${DJANGO_SQLITE_DATABASE_MOUNT_PATH}:${DJANGO_SQLITE_DATABASE_PATH}
     depends_on:
       - mongo-db-1
       - redis

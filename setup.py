@@ -89,6 +89,7 @@ class FmdEnvironment:
     cors_additional_host = None
     django_secret_key = None
     django_sqlite_database_path = None
+    django_sqlite_database_mount_path = None
     use_defaults = False
     django_superuser_password = None
     django_superuser_username = None
@@ -141,6 +142,18 @@ class FmdEnvironment:
             return input(f"Where do you want to store the mongodb data? "
                          f"(default: '{self.local_mongo_db_path_node1}'):") or self.local_mongo_db_path_node1
 
+    def _get_django_sqlite_database_mount_path(self):
+        """
+        Asks the user for the django sqlite database path or uses the default path.
+        """
+        self.django_sqlite_database_mount_path = os.path.join(self.blob_storage_path, "django_database/")
+        if self.use_defaults:
+            return self.django_sqlite_database_mount_path
+        else:
+            return input(f"Where do you want to store the django sqlite database? "
+                         f"(default: '{self.django_sqlite_database_mount_path}'):") \
+                or self.django_sqlite_database_mount_path
+
     def _get_blob_storage(self):
         """
         Asks the user for the blob storage configuration. If the user enters an invalid path, the user is asked again.
@@ -164,6 +177,10 @@ class FmdEnvironment:
 
             self.local_mongo_db_path_node1 = self._get_mongo_db_path()
             if not _create_directory(self.local_mongo_db_path_node1):
+                continue
+
+            self.django_sqlite_database_mount_path = self._get_django_sqlite_database_mount_path()
+            if not _create_directory(os.path.dirname(self.django_sqlite_database_mount_path)):
                 continue
 
             break
@@ -218,7 +235,7 @@ class FmdEnvironment:
         self.api_doc_folder = "/docs"
         self.cors_additional_host = default_companion_domain_name
         self.django_secret_key = secrets.token_hex(100)
-        self.django_sqlite_database_path = os.path.join("/var/www/", BLOB_STORAGE_NAME, "django_database/db.sqlite3")
+        self.django_sqlite_database_path = os.path.join("/var/www/", BLOB_STORAGE_NAME, "django_database/")
         self.django_superuser_username = "fmd-admin"
         self.django_superuser_password = uuid.uuid4()
         self.django_superuser_email = "fmd-admin@" + self.domain_name
@@ -260,6 +277,7 @@ class FmdEnvironment:
             cors_additional_host=self.cors_additional_host,
             django_secret_key=self.django_secret_key,
             django_sqlite_database_path=self.django_sqlite_database_path,
+            django_sqlite_database_mount_path=self.django_sqlite_database_mount_path,
             django_superuser_password=self.django_superuser_password,
             django_superuser_username=self.django_superuser_username,
             django_superuser_email=self.django_superuser_email,
