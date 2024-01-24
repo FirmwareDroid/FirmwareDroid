@@ -181,7 +181,7 @@ DJANGO_SQLITE_DATABASE_PATH = os.environ['DJANGO_SQLITE_DATABASE_PATH']
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": DJANGO_SQLITE_DATABASE_PATH
+        "NAME": DJANGO_SQLITE_DATABASE_PATH + "db.sqlite3",
     }
 }
 
