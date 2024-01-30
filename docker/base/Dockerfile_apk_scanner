@@ -29,10 +29,10 @@ ENV JADX "/opt/jadx/bin"
 ENV PATH "${JADX}:${PATH}"
 RUN export PATH=$PATH
 
-
 #####################################
-# Installing Super Android Analyzer #
+# Installing RUST based tools       #
 #####################################
+# Install SUPER Android Analyzer
 RUN apt-get install -y default-jre-headless
 RUN wget -P /tmp/ https://github.com/SUPERAndroidAnalyzer/super/releases/download/0.5.1/super-analyzer_0.5.1_ubuntu_amd64.deb
 RUN dpkg -i /tmp/super-analyzer_0.5.1_ubuntu_amd64.deb
@@ -49,3 +49,19 @@ ENV PYTHONPATH "/var/www/source/:$PYTHONPATH"
 WORKDIR /var/www/source/
 RUN python3 /var/www/docker/setup_apk_scanner.py
 
+#####################################
+# Installing go                     #
+#####################################
+RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.6.linux-amd64.tar.gz
+RUN mkdir -p /opt/firmwaredroid/go/
+ENV PATH=$PATH:/usr/local/go/bin
+ENV GOPATH=/opt/firmwaredroid/go/
+
+#####################################
+# Installing go based tool          #
+#####################################
+# Install MORF
+RUN go get github.com/amrudesh1/morf
+WORKDIR $GOPATH/src/github.com/amrudesh1/morf
+RUN go build
+ENV DATABASE_URL="root@127.0.0.1:3306/Secrets?charset=utf8mb4&parseTime=True&loc=Local"

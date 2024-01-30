@@ -8,7 +8,6 @@ from webserver.settings import MAIN_FOLDER, REDIS_HOST, REDIS_PASSWORD, REDIS_PO
 import uuid
 from redis import StrictRedis
 
-
 logging.debug((REDIS_HOST, REDIS_PORT))
 redis_con = StrictRedis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD)
 redis_con.ping()
@@ -36,6 +35,10 @@ def create_file_store_setting(storage_folder):
                                                                      + "firmware_store/"
     store_options_dict[uuid_str]["paths"]["FIRMWARE_FOLDER_APP_EXTRACT"] = file_storage_folder \
                                                                            + "android_app_store/"
+    store_options_dict[uuid_str]["paths"]["ANDROID_APP_IMPORT"] = file_storage_folder \
+                                                                  + "android_app_import/"
+    store_options_dict[uuid_str]["paths"]["ANDROID_APP_IMPORT_FAILED"] = file_storage_folder \
+                                                                         + "android_app_import_failed/"
     store_options_dict[uuid_str]["paths"]["FIRMWARE_FOLDER_FILE_EXTRACT"] = file_storage_folder \
                                                                             + "firmware_file_store/"
     store_options_dict[uuid_str]["paths"]["FIRMWARE_FOLDER_CACHE"] = file_storage_folder + "cache/"
@@ -104,7 +107,7 @@ def setup_application_setting():
     """
     with redis_lock.Lock(redis_con, "fmd_app_setup"):
         application_setting = WebclientSetting.objects.first()
-        #create_default_django_superuser()
+        # create_default_django_superuser()
         if not application_setting:
             logging.info("First application start detected.")
             application_setting = create_application_setting()

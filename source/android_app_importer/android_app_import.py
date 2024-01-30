@@ -10,7 +10,7 @@ from hashing.standard_hash_generator import sha256_from_file, md5_from_file, sha
 from model import AndroidApp
 
 
-def store_android_apps(search_path, firmware_app_store, firmware_file_list):
+def store_android_apps_from_firmware(search_path, firmware_app_store, firmware_file_list):
     """
     Finds and stores android .apk files.
 
@@ -102,7 +102,7 @@ def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_l
     :return: List of object class:'AndroidApp'.
 
     """
-    firmware_apps = []
+    firmware_app_list = []
     #
     for root, dirs, files in os.walk(firmware_mount_path):
         for filename in files:
@@ -113,10 +113,10 @@ def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_l
                     android_app = create_android_app(filename, relative_firmware_path, firmware_mount_path)
                     copy_apk_file(android_app, firmware_app_store, firmware_mount_path)
                 except Exception:
-                    for android_app in firmware_apps:
+                    for android_app in firmware_app_list:
                         android_app.delete()
                     raise
-                firmware_apps.append(android_app)
+                firmware_app_list.append(android_app)
                 app_base_path = Path(app_abs_path).parent.absolute()
                 optimized_firmware_file_list = find_optimized_android_apps(app_base_path,
                                                                            filename,
@@ -125,11 +125,11 @@ def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_l
                                              optimized_firmware_file_list,
                                              firmware_app_store,
                                              firmware_mount_path)
-    logging.info(f"Found .apk files in partition: {len(firmware_apps)}")
+    logging.info(f"Found .apk files in partition: {len(firmware_app_list)}")
 
-    if len(firmware_apps) < 1:
+    if len(firmware_app_list) < 1:
         raise ValueError(f"Could not find any .apk files in {firmware_mount_path}!")
-    return firmware_apps
+    return firmware_app_list
 
 
 def add_optimized_firmware_files(android_app, optimized_firmware_file_list, firmware_app_store, firmware_mount_path):
@@ -182,7 +182,7 @@ def create_android_app(filename, relative_firmware_path, firmware_mount_path):
         sha1 = sha1_from_file(apk_abs_path)
         file_size_bytes = os.path.getsize(apk_abs_path)
     else:
-        raise ValueError(f"Could not extract Android app: {filename} from {relative_firmware_path}.")
+        raise ValueError(f"Could not create Android app: {filename} from {relative_firmware_path}.")
 
     return AndroidApp(filename=filename,
                       relative_firmware_path=relative_firmware_path,

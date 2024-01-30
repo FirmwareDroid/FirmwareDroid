@@ -8,25 +8,25 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from model import AndroidFirmware, FirmwareFile, AndroidApp
+from model import AndroidFirmware, FirmwareFile, AndroidApp, StoreSetting
 from threading import Thread
 from firmware_handler.image_importer import create_abs_image_file_path, find_image_firmware_file, extract_image_files
 from hashing.fuzzy_hash_creator import fuzzy_hash_firmware_files
 from context.context_creator import create_db_context
 from firmware_handler.firmware_file_indexer import create_firmware_file_list, add_firmware_file_references
 from firmware_handler.const_regex_patterns import BUILD_PROP_PATTERN_LIST, EXT_IMAGE_PATTERNS_DICT
-from firmware_handler.android_app_import import store_android_apps
+from android_app_importer.android_app_import import store_android_apps_from_firmware
 from firmware_handler.build_prop_parser import BuildPropParser
 from hashing.standard_hash_generator import md5_from_file, sha1_from_file, sha256_from_file
 from extractor.expand_archives import extract_archive_layer
-from setup.default_setup import get_active_file_store_paths
 from utils.file_utils.file_util import get_filenames
 from firmware_handler.firmware_version_detect import detect_by_build_prop
 from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
 from bson import ObjectId
 
 ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar"]
-STORE_PATHS = get_active_file_store_paths()
+STORE_SETTING = StoreSetting.objects(is_active=True).first()
+STORE_PATHS = STORE_SETTING.store_options_dict[STORE_SETTING.uuid]["paths"]
 lock = threading.Lock()
 
 
@@ -209,9 +209,9 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5):
                                               md5,
                                               partition_name)
             try:
-                files_dict["firmware_app_list"].extend(store_android_apps(partition_temp_dir,
-                                                                          firmware_app_store,
-                                                                          files_dict["firmware_file_list"]))
+                files_dict["firmware_app_list"].extend(store_android_apps_from_firmware(partition_temp_dir,
+                                                                                        firmware_app_store,
+                                                                                        files_dict["firmware_file_list"]))
             except ValueError:
                 pass
             files_dict["build_prop_file_list"].extend(
