@@ -61,7 +61,7 @@ def setup_application_setting():
     """
     with redis_lock.Lock(redis_con, "fmd_app_setup"):
         application_setting = WebclientSetting.objects.first()
-        # create_default_django_superuser()
+        #create_default_django_superuser()
         if not application_setting:
             logging.info("First application start detected.")
             application_setting = create_application_setting()

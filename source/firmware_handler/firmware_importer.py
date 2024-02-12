@@ -24,40 +24,44 @@ from firmware_handler.firmware_version_detect import detect_by_build_prop
 from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
 from bson import ObjectId
 
-ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar"]
-STORE_SETTING = StoreSetting.objects(is_active=True).first()
-STORE_PATHS = STORE_SETTING.store_options_dict[STORE_SETTING.uuid]["paths"]
+ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar", ".tar.gz", ".tar.bz2", "tar.md5", "zip.md5"]
 lock = threading.Lock()
 
 
-def start_firmware_mass_import(create_fuzzy_hashes):
+def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0):
     """
     Imports all .zip files from the import folder.
 
+    :param storage_index: int - the index of the StoreSetting to use.
     :param create_fuzzy_hashes: bool - true if fuzzy hash index should be created.
 
     :return: list of string with the status (errors/success) of every file.
     """
     logging.info("FIRMWARE MASS IMPORT STARTED!")
-    firmware_archives_queue = create_file_import_queue()
-    num_threads = 5
+    store_setting = StoreSetting.objects(is_active=True, storage_root=f"{storage_index}_file_store").first()
+    if store_setting is None:
+        raise ValueError(f"No active store setting found for index {storage_index}")
+    store_path = store_setting.store_options_dict[store_setting.uuid]["paths"]
+    firmware_archives_queue = create_file_import_queue(store_path)
+    num_threads = 10
     worker_list = []
+
     for i in range(num_threads):
         logging.info(f"Start importer thread {i}")
-        worker = Thread(target=prepare_firmware_import, args=(firmware_archives_queue, create_fuzzy_hashes))
+        worker = Thread(target=prepare_firmware_import, args=(firmware_archives_queue, create_fuzzy_hashes, store_path))
         worker.setDaemon(True)
         worker.start()
         worker_list.append(worker)
     firmware_archives_queue.join()
 
 
-def create_file_import_queue():
+def create_file_import_queue(store_path):
     """
     Create a queue of firmware files from the import folder.
 
     :return: multi threading queue object containing the paths to the firmware archives to import.
     """
-    firmware_import_folder_path = STORE_PATHS["FIRMWARE_FOLDER_IMPORT"]
+    firmware_import_folder_path = store_path["FIRMWARE_FOLDER_IMPORT"]
     filename_list = get_filenames(firmware_import_folder_path)
     filename_list = list(filter(lambda x: x.endswith(".zip") or x.endswith(".tar"), filename_list))
     logging.info(f"{len(filename_list)} files to import from {firmware_import_folder_path}:"
@@ -94,11 +98,12 @@ def allow_import(firmware_file_path, md5):
 
 
 @create_db_context
-def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes):
+def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes, store_path):
     """
     An multi-threaded import script that extracts meta information of a firmware file from the system.img.
     Stores a firmware into the database if it is not already stored.
 
+    :param store_path: dict(str, str) - paths of the store setting.
     :param create_fuzzy_hashes: bool - true if fuzzy hash index should be created.
     :param firmware_file_queue: The queue of files to import.
 
@@ -109,11 +114,11 @@ def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes):
         filename = firmware_file_queue.get()
         logging.info(f"Attempt to import: {str(filename)}")
         try:
-            firmware_file_path = os.path.join(STORE_PATHS["FIRMWARE_FOLDER_IMPORT"], filename)
+            firmware_file_path = os.path.join(store_path["FIRMWARE_FOLDER_IMPORT"], filename)
             md5 = md5_from_file(firmware_file_path)
             is_allowed, reason = allow_import(firmware_file_path, md5)
             if is_allowed:
-                import_firmware(filename, md5, firmware_file_path, create_fuzzy_hashes)
+                import_firmware(filename, md5, firmware_file_path, create_fuzzy_hashes, store_path)
             else:
                 raise ValueError(reason)
         except Exception as err:
@@ -184,11 +189,12 @@ def create_partition_file_index(partition_name, file_pattern_list, archive_firmw
     return partition_firmware_file_list
 
 
-def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5):
+def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, store_path):
     """
     Creates for every readable partition an index of all files. Special files (apk, build_properties, etc.)
     are indexed in a separated lists for further processing.
 
+    :param store_path: dict(str, str) - paths of the store setting.
     :param temp_extract_dir: str - path to the directory where the files have been extracted.
     :param files_dict: dict - containing the different file lists.
     :param create_fuzzy_hashes: boolean - create fuzzy hashes index.
@@ -197,7 +203,7 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5):
     :return: dict - extentions of the original dict with all newly found files.
     """
     for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
-        with tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"],
+        with tempfile.TemporaryDirectory(dir=store_path["FIRMWARE_FOLDER_CACHE"],
                                          suffix=f"_mount_{partition_name}") as partition_temp_dir:
             partition_firmware_file_list = create_partition_file_index(partition_name,
                                                                        file_pattern_list,
@@ -205,7 +211,7 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5):
                                                                        temp_extract_dir,
                                                                        partition_temp_dir)
             files_dict["firmware_file_list"].extend(partition_firmware_file_list)
-            firmware_app_store = os.path.join(STORE_PATHS["FIRMWARE_FOLDER_APP_EXTRACT"],
+            firmware_app_store = os.path.join(store_path["FIRMWARE_FOLDER_APP_EXTRACT"],
                                               md5,
                                               partition_name)
             try:
@@ -221,10 +227,11 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5):
     return files_dict
 
 
-def store_firmware_archive(firmware_archive_file_path, md5, version_detected):
+def store_firmware_archive(firmware_archive_file_path, md5, version_detected, store_path):
     """
     Renames and moves the firmware archive to the permanent storage.
 
+    :param store_path: dict(str, str) - paths of the store setting.
     :param firmware_archive_file_path: str - path to the firmware archive.
     :param md5: str - md5 hash of the firmware archive.
     :param version_detected: str - version of the firmware if known.
@@ -233,7 +240,7 @@ def store_firmware_archive(firmware_archive_file_path, md5, version_detected):
     """
     _, file_extension = os.path.splitext(firmware_archive_file_path)
     store_filename = md5 + file_extension
-    firmware_archive_store_path = Path(os.path.join(STORE_PATHS["FIRMWARE_FOLDER_STORE"],
+    firmware_archive_store_path = Path(os.path.join(store_path["FIRMWARE_FOLDER_STORE"],
                                                     version_detected,
                                                     md5))
     if not firmware_archive_store_path.exists():
@@ -254,17 +261,18 @@ def store_firmware_archive(firmware_archive_file_path, md5, version_detected):
     return store_filename, firmware_store_path.absolute().as_posix()
 
 
-def import_firmware(original_filename, md5, firmware_archive_file_path, create_fuzzy_hashes):
+def import_firmware(original_filename, md5, firmware_archive_file_path, create_fuzzy_hashes, store_path):
     """
     Attempts to store a firmware archive into the database.
 
+    :param store_path: dict(str, str) - paths of the store setting.
     :param create_fuzzy_hashes: boolean - create a fuzzy hash index for all files in the firmware.
     :param original_filename: str - name of the file to import.
     :param md5: md5 - checksum of the file to check.
     :param firmware_archive_file_path: str - path of the firmware archive.
 
     """
-    with tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"],
+    with tempfile.TemporaryDirectory(dir=store_path["FIRMWARE_FOLDER_CACHE"],
                                      suffix="_extract") as temp_extract_dir:
         files_dict = {
             "firmware_app_list": [],
@@ -280,11 +288,11 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
             archive_firmware_file_list = open_firmware(firmware_archive_file_path, temp_extract_dir)
             files_dict["archive_firmware_file_list"].extend(archive_firmware_file_list)
             files_dict["firmware_file_list"].extend(archive_firmware_file_list)
-            files_dict = index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5)
+            files_dict = index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, store_path)
 
             version_detected = detect_by_build_prop(files_dict["build_prop_file_list"])
             store_filename, firmware_store_path = store_firmware_archive(firmware_archive_file_path, md5,
-                                                                         version_detected)
+                                                                         version_detected, store_path)
 
             store_firmware_object(store_filename=store_filename,
                                   original_filename=original_filename,
@@ -316,7 +324,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
                 AndroidApp.objects(pk__in=android_app_id_object_list).delete()
                 logging.info("Cleanup: Removed android apps from DB")
 
-            shutil.move(firmware_archive_file_path, STORE_PATHS["FIRMWARE_FOLDER_IMPORT_FAILED"])
+            shutil.move(firmware_archive_file_path, store_path["FIRMWARE_FOLDER_IMPORT_FAILED"])
             logging.info(f"Cleanup: Firmware file moved to failed folder: {original_filename}")
 
 

@@ -12,6 +12,7 @@ class StoreSetting(Document):
     store_options_dict = DictField(required=True)
     is_active = BooleanField(required=True, default=False)
     uuid = StringField(required=True, unique=True)
+    storage_root = StringField(required=True, unique=True)
 
 
 def setup_storage_folders(paths_dict):
@@ -63,7 +64,10 @@ def create_file_store_setting(docker_root_folder, storage_folder, is_active):
     store_options_dict[uuid_str]["paths"]["LIBS_FOLDER"] = file_storage_folder + "libs/"
     setup_storage_folders(store_options_dict[uuid_str]["paths"])
 
-    return StoreSetting(store_options_dict=store_options_dict, uuid=uuid_str, is_active=is_active).save()
+    return StoreSetting(store_options_dict=store_options_dict,
+                        uuid=uuid_str,
+                        is_active=is_active,
+                        storage_root=storage_folder).save()
 
 
 

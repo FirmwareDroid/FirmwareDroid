@@ -72,7 +72,7 @@ class CreateApkScanJob(graphene.Mutation):
     job_id = graphene.String()
 
     class Arguments:
-        queue_name = graphene.String(required=True)
+        queue_name = graphene.String(required=True, default_value="default-python")
         module_name = graphene.String(required=True)
         object_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
 
@@ -105,12 +105,13 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
     job_id = graphene.String()
 
     class Arguments:
-        queue_name = graphene.String(required=True)
+        queue_name = graphene.String(required=True, default_value="high-python")
         create_fuzzy_hashes = graphene.Boolean(required=True)
+        storage_index = graphene.Int(required=True, default_value=0)
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, queue_name, create_fuzzy_hashes):
+    def mutate(cls, root, info, queue_name, create_fuzzy_hashes, storage_index):
         """
         Create a job to import firmware.
 
@@ -121,7 +122,7 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
         """
         queue = django_rq.get_queue(queue_name)
         func_to_run = start_firmware_mass_import
-        job = queue.enqueue(func_to_run, create_fuzzy_hashes, job_timeout=ONE_WEEK_TIMEOUT)
+        job = queue.enqueue(func_to_run, create_fuzzy_hashes, storage_index, job_timeout=ONE_WEEK_TIMEOUT)
         return cls(job_id=job.id)
 
 
@@ -134,7 +135,7 @@ class CreateAppBuildFileJob(graphene.Mutation):
     object_id_list = graphene.List(graphene.String)
 
     class Arguments:
-        queue_name = graphene.String(required=True)
+        queue_name = graphene.String(required=True, default_value="default-python")
         format_name = graphene.String(required=True)
         object_id_list = graphene.List(graphene.NonNull(graphene.String), required=False)
         all_firmware = graphene.Boolean(required=False)

@@ -17,10 +17,6 @@ echo "Apply database migrations"
 python3 ./source/manage.py makemigrations
 python3 ./source/manage.py migrate --noinput
 
-
-DJANGO_SUPERUSER_PASSWORD=73805a28-0111-406c-8e2c-9b3447a03605
-DJANGO_SUPERUSER_USERNAME=fmd-admin
-DJANGO_SUPERUSER_EMAIL=fmd-admin@fmd.localhost
 # Create default superuser
 echo "Create default user"
 cat <<EOF | python3 ./source/manage.py shell
@@ -31,8 +27,6 @@ User = get_user_model()
 User.objects.filter(username="${DJANGO_SUPERUSER_USERNAME}").exists() or \
     User.objects.create_superuser("${DJANGO_SUPERUSER_USERNAME}", "${DJANGO_SUPERUSER_EMAIL}", "${DJANGO_SUPERUSER_PASSWORD}")
 EOF
-#python3 ./source/manage.py createsuperuser --noinput
-
 
 # Start server
 /home/www/.local/bin/gunicorn -w 17 --bind 0.0.0.0:5000 --worker-tmp-dir /dev/shm --chdir /var/www/source/ --timeout 300 --worker-class gevent --threads 12 --log-level debug webserver.wsgi:app
