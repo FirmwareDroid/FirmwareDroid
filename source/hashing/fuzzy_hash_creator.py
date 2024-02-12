@@ -6,7 +6,7 @@ import os
 import traceback
 from firmware_handler.ext4_mount_util import is_path_mounted, exec_umount
 from model import AndroidFirmware
-from firmware_handler.firmware_file_exporter import get_firmware_file_abs_path, extract_image_files
+from firmware_handler.firmware_file_exporter import get_firmware_file_abs_path
 from hashing.ssdeep.ssdeep_hasher import start_ssdeep_hashing
 from hashing.tlsh.tlsh_hasher import start_tlsh_hashing
 from context.context_creator import create_db_context
@@ -44,7 +44,7 @@ def hash_firmware_files_parallel(firmware_id_queue):
             if not firmware.hasFuzzyHashIndex:
                 logging.info(f"Starting fuzzy hashing index creation: {firmware_id}")
                 # TODO FIX THIS
-                extract_image_files(firmware, cache_temp_file_dir.name, cache_temp_mount_dir.name)
+                #extract_image_files(firmware, cache_temp_file_dir.name, cache_temp_mount_dir.name)
                 fuzzy_hash_firmware(firmware, cache_temp_mount_dir.name)
             else:
                 logging.info(f"Firmware has index already: {firmware_id}")

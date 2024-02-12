@@ -2,8 +2,7 @@ import logging
 import redis_lock
 from model import WebclientSetting
 from model.StoreSetting import StoreSetting, create_file_store_setting, setup_storage_folders
-from webserver.settings import MAIN_FOLDER, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT, DJANGO_SUPERUSER_PASSWORD, \
-    DJANGO_SUPERUSER_USERNAME, DJANGO_SUPERUSER_EMAIL
+from webserver.settings import MAIN_FOLDER, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT
 from redis import StrictRedis
 
 logging.debug((REDIS_HOST, REDIS_PORT))
@@ -61,22 +60,10 @@ def setup_application_setting():
     """
     with redis_lock.Lock(redis_con, "fmd_app_setup"):
         application_setting = WebclientSetting.objects.first()
-        #create_default_django_superuser()
         if not application_setting:
             logging.info("First application start detected.")
             application_setting = create_application_setting()
     return application_setting
-
-
-def get_active_file_store_paths():
-    """
-    Gets a dict containing the paths of the current active file storage.
-
-    :return: dict() - From class:'StoreSetting' paths object.
-
-    """
-    store_setting = StoreSetting.objects(is_active=True).first()
-    return store_setting.store_options_dict[store_setting.uuid]["paths"]
 
 
 def create_application_setting():
@@ -88,16 +75,3 @@ def create_application_setting():
     """
     return WebclientSetting(is_signup_active=True,
                             is_firmware_upload_active=True).save()
-
-
-def create_default_django_superuser():
-    """
-    Create the default superuser for the django webserver.
-
-    """
-    from setup.models import User
-    if not User.objects.filter(username=DJANGO_SUPERUSER_USERNAME).exists():
-        user = User.objects.create_superuser(username=DJANGO_SUPERUSER_USERNAME,
-                                             email=DJANGO_SUPERUSER_EMAIL,
-                                             password=DJANGO_SUPERUSER_PASSWORD)
-        user.save()

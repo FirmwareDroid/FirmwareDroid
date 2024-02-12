@@ -5,8 +5,6 @@ import logging
 import tempfile
 from extractor.dat2img_converter import convert_dat2img
 from firmware_handler.ext4_mount_util import simg2img_convert_ext4
-from setup.default_setup import get_active_file_store_paths
-STORE_PATHS = get_active_file_store_paths()
 
 
 def extract_dat(dat_file_path, extract_destination_folder):
@@ -27,10 +25,11 @@ def extract_dat(dat_file_path, extract_destination_folder):
     return ext4_image_path
 
 
-def extract_simg_ext4(simg_ext4_file_path, extract_destination_folder):
+def extract_simg_ext4(simg_ext4_file_path, extract_destination_folder, store_paths):
     """
     Converts a simg to ext4 and attempts to extract the data from the ext4.
 
+    :param store_paths: dict(str, str) - paths to the file storage.
     :param simg_ext4_file_path: str - path to the simg image
     :param extract_destination_folder: str - path to the folder where the data is extracted to.
 
@@ -39,7 +38,7 @@ def extract_simg_ext4(simg_ext4_file_path, extract_destination_folder):
     logging.info("Attempt to extract ext with ext4extract and simg2img")
     could_extract_data = False
     try:
-        temp_dir = tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"])
+        temp_dir = tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"])
         ext4_image_path = simg2img_convert_ext4(simg_ext4_file_path, temp_dir.name)
         if extract_ext4(ext4_image_path, extract_destination_folder):
             could_extract_data = True

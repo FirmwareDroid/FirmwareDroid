@@ -32,21 +32,22 @@ def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
                      f"{' '.join(image_filename_pattern_list)}")
 
 
-def extract_image_files(image_path, extract_dir_path):
+def extract_image_files(image_path, extract_dir_path, store_paths):
     """
     Expands all files from the firmware and mounts the system.img.
 
+    :param store_paths: dict(str, stry) - paths to the file storage.
     :param image_path: str - absolute path to the image file.
     :param extract_dir_path: str - path where the files will be extracted or mounted to.
 
     :raise RuntimeError: In case none of the support methods can extract files from the image.
 
     """
-    if extract_simg_ext4(image_path, extract_dir_path):
+    if extract_simg_ext4(image_path, extract_dir_path, store_paths):
         logging.info("Image extraction successful with simg_ext4extractor")
     elif extract_ext4(image_path, extract_dir_path):
         logging.info("Image extraction successful with ext4extractor")
-    elif mount_android_image(image_path, extract_dir_path):
+    elif mount_android_image(image_path, extract_dir_path, store_paths):
         logging.info("Image mount successful")
     elif extract_ubi_image(image_path, extract_dir_path):
         logging.info("Image extraction successful with UBI")
