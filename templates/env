@@ -5,8 +5,16 @@ APP_ENV={{ app_env }} # Environments: production, development, testing
 APP_DEBUG={{ app_debug }}
 
 # Storage
-LOCAL_STORAGE_PATH={{ local_storage_path }}
-LOCAL_STORAGE_PATH_SECONDARY={{ local_storage_path_secondary }}
+LOCAL_STORAGE_PATH_00={{ local_storage_path_00 }}
+LOCAL_STORAGE_PATH_01={{ local_storage_path_01 }}
+LOCAL_STORAGE_PATH_02={{ local_storage_path_02 }}
+LOCAL_STORAGE_PATH_03={{ local_storage_path_03 }}
+LOCAL_STORAGE_PATH_04={{ local_storage_path_04 }}
+LOCAL_STORAGE_PATH_05={{ local_storage_path_05 }}
+LOCAL_STORAGE_PATH_06={{ local_storage_path_06 }}
+LOCAL_STORAGE_PATH_07={{ local_storage_path_07 }}
+LOCAL_STORAGE_PATH_08={{ local_storage_path_08 }}
+LOCAL_STORAGE_PATH_09={{ local_storage_path_09 }}
 LOCAL_MONGO_DB_PATH_NODE1={{ local_mongo_db_path_node1 }}
 
 # Redis-Database

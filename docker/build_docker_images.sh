@@ -4,7 +4,6 @@
 #####################################
 #Frontend                           #
 #####################################
-#NGINX Base
 docker build ./firmware-droid-client/ -f ./firmware-droid-client/Dockerfile -t firmwaredroid-frontend --platform="linux/amd64"
 retVal=$?
 if [ $retVal -ne 0 ]; then
@@ -15,7 +14,6 @@ fi
 #####################################
 #Backend                            #
 #####################################
-
 # Worker base
 printf "Building FirmwareDroid BASE IMAGE"
 docker build ./ -f ./Dockerfile_BASE -t firmwaredroid-base --platform="linux/amd64"
