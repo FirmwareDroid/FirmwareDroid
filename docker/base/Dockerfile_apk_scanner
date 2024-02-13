@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-slim-buster as apk_scanner-worker
+FROM openjdk:8-jdk-slim-bullseye as apk_scanner-worker
 COPY --from=firmwaredroid-base / /
 
 #####################################

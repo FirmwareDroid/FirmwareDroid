@@ -114,7 +114,7 @@ def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_l
     logging.info(f"Found .apk files in partition: {len(firmware_app_list)}")
 
     if len(firmware_app_list) < 1:
-        raise ValueError(f"Could not find any .apk files in {firmware_mount_path}!")
+        logging.warning("Could not find any .apk files in {firmware_mount_path}!")
     return firmware_app_list
 
 

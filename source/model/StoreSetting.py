@@ -25,8 +25,7 @@ def setup_storage_folders(paths_dict):
             if not os.path.exists(path):
                 os.makedirs(path)
         except OSError as exception:
-            message = f"Could not create folder: {path} - Exception: {exception}"
-            logging.warning(message)
+            logging.debug(f"Could not create folder: {path} - Exception: {exception}")
 
 
 def create_file_store_setting(docker_root_folder, storage_folder, is_active):

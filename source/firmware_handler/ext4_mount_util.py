@@ -139,12 +139,9 @@ def attempt_simg2img_mount(source, target, mount_options, store_paths):
         ext4_raw_image_path = simg2img_convert_ext4(source, tempdir.name)
         if ext4_raw_image_path:
             try:
-                exec_fuse_mount(ext4_raw_image_path, target, mount_options)
+                exec_mount(ext4_raw_image_path, target, mount_options)
             except OSError:
-                try:
-                    exec_mount(ext4_raw_image_path, target, mount_options)
-                except OSError:
-                    exec_mount_by_offset(ext4_raw_image_path, target, mount_options)
+                exec_mount_by_offset(ext4_raw_image_path, target, mount_options)
             is_mounted = True
     except Exception as err:
         logging.debug(err)
@@ -265,31 +262,7 @@ def exec_mount_by_offset(source, target, mount_options):
         raise OSError(err)
 
     logging.debug(f"Found image offset: {offset}")
-    try:
-        source_path = shlex.quote(str(source))
-        target_path = shlex.quote(str(target))
-        response = subprocess.run(["sudo", "mount", "-o", mount_options, source_path, target_path], timeout=600)
-        response.check_returncode()
-    except subprocess.CalledProcessError as err:
-        raise OSError(err)
-
-
-def exec_fuse_mount(source, target, mount_options):
-    """
-    Mount read-only with fuseext2.
-
-    :param source: the file-path to be mounted.
-    :param mount_options: str - mount options flags.
-    :param target: the destination path where the file will be mounted to.
-
-    """
-    try:
-        source_path = shlex.quote(str(source))
-        target_path = shlex.quote(str(target))
-        response = subprocess.run(["fuseext2", source_path, target_path, "-o", mount_options], timeout=600)
-        response.check_returncode()
-    except subprocess.CalledProcessError as err:
-        raise OSError(err)
+    exec_mount(source, target, mount_options)
 
 
 def exec_umount(mount_path):
