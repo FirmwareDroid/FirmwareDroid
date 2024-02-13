@@ -171,7 +171,7 @@ def get_partition_firmware_files(archive_firmware_file_list,
                                                                               partition_temp_dir,
                                                                               store_paths)
     firmware_file_list.extend(partition_firmware_file_list)
-    return firmware_file_list
+    return firmware_file_list, is_successful
 
 
 def create_partition_file_index(partition_name, file_pattern_list, archive_firmware_file_list,

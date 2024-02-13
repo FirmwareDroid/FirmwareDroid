@@ -1,17 +1,9 @@
-lief~=0.12.3
+lief~=0.12.3        # Upgrade as soon unblob supports it
 ubi-reader~=0.8.5
 py-lz4framed~=0.14.0
-python-lzo~=1.12
+python-lzo~=1.15
 rq~=1.15.0
-numpy~=1.23.3
-pymongo~=4.1.1
-mongoengine~=0.24.2
-unblob~=23.10.31
-
-# Requirements for string analysis
-#Morfessor==2.0.6
-#cchardet==2.1.7
-#polyglot==16.7.4
-#pyicu==2.6.0
-# TODO Remove Dependency Temporarly
-# pycld2==0.41
+numpy~=1.26.4
+pymongo~=4.6.1
+mongoengine~=0.27.0
+unblob~=24.1.22

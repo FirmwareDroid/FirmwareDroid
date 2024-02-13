@@ -36,7 +36,6 @@ def mount_android_image(android_ext4_path, mount_folder_path, store_paths):
             break
         if attempt_simg2img_mount(android_ext4_path, mount_folder_path, mount_option, store_paths) \
                 or attempt_ext4_mount(android_ext4_path, mount_folder_path, mount_option) \
-                or attempt_fuse_ext4_mount(android_ext4_path, mount_folder_path, mount_option) \
                 or attempt_repair_and_mount(android_ext4_path, mount_folder_path, mount_option, store_paths) \
                 or attempt_resize_and_mount(android_ext4_path, mount_folder_path, mount_option, store_paths):
             if not has_files_in_folder(mount_folder_path):
@@ -93,29 +92,6 @@ def attempt_ext4_mount(source, target, mount_options):
         is_mounted = True
     except Exception as err:
         logging.debug(err)
-        if is_path_mounted(target):
-            exec_umount(target)
-    return is_mounted
-
-
-def attempt_fuse_ext4_mount(source, target, mount_options):
-    """
-    Mount image with fuse kernel extension
-
-    :param source: str - the file-path to be mounted.
-    :param target: str - the destination path where the file will be mounted to.
-    :param mount_options: str - mount options flags.
-    :return: bool - true if mount was successful.
-
-    """
-    logging.debug(f"Attempt fuse ext4 mount {source}")
-    is_mounted = False
-    try:
-        exec_fuse_mount(source, target, mount_options)
-        is_mounted = True
-    except Exception as err:
-        logging.debug(err)
-        # traceback.print_exc()
         if is_path_mounted(target):
             exec_umount(target)
     return is_mounted
@@ -195,7 +171,6 @@ def attempt_resize_and_mount(source, target, mount_options, store_paths):
         is_mounted = True
     except Exception as err:
         logging.debug(err)
-        # traceback.print_exc()
         if is_path_mounted(target):
             exec_umount(target)
     return is_mounted
