@@ -36,8 +36,8 @@ PRODUCT_IMG_PATTERN_LIST = ["product[.]img", "product[.]*(img|rfs|bin|img.ext4|e
 PVMFW_IMG_PATTERN_LIST = ["pvmfw[.]img", "pvmfw[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 
 EXT_IMAGE_PATTERNS_DICT = {"system": SYSTEM_IMG_PATTERN_LIST,
-                           "system_other:": SYSTEM_OTHER_IMG_PATTERN_LIST,
-                           "system_ext:": SYSTEM_EXT_IMG_PATTERN_LIST,
+                           "system_other": SYSTEM_OTHER_IMG_PATTERN_LIST,
+                           "system_ext": SYSTEM_EXT_IMG_PATTERN_LIST,
                            "vendor": VENDOR_IMG_PATTERN_LIST,
                            "oem": OEM_IMG_PATTERN_LIST,
                            "odm": ODM_IMG_PATTERN_LIST,

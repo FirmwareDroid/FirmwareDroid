@@ -117,10 +117,10 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
         os.makedirs(os.path.dirname(destination_path), exist_ok=True)
         time.sleep(5)
         dst_file_path = shutil.copy(source_path, destination_path)
-        logging.info(f"File copy successful: {destination_path}")
+        logging.debug(f"File copy successful: {destination_path}")
     time.sleep(5)
     if not os.path.exists(dst_file_path):
-        OSError(f"Could not copy firmware file {firmware_file.id} to {destination_path}")
+        raise OSError(f"Could not copy firmware file {firmware_file.id} to {destination_path}")
 
 
 def get_destination_folder(firmware_file, store_paths):

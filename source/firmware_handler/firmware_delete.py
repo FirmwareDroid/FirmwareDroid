@@ -26,7 +26,7 @@ def delete_firmware_by_id(firmware_id_list):
         try:
             firmware.delete()
             firmware.save()
-            logging.info(f"Firmware {firmware_id} successful removed!")
+            logging.debug(f"Firmware {firmware_id} successful removed!")
         except Exception as err:
             logging.error(err)
             traceback.print_exc()

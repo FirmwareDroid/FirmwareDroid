@@ -3,6 +3,7 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 import os
+import re
 from pathlib import Path
 from shutil import copyfile
 from firmware_handler.firmware_file_search import get_firmware_file_list_by_md5
@@ -41,39 +42,142 @@ def add_firmware_file_reference(android_app, firmware_file_list):
     firmware_file.save()
 
 
-def copy_apk_file(android_app, destination_folder, firmware_mount_path):
+# def copy_apk_file(android_app, destination_folder, firmware_mount_path, apk_abs_path=None, has_relative_path=True):
+#     """
+#     Copies apps to the filesystem and saves the Android app in the database.
+#
+#     :param apk_abs_path: str - absolute path of the apk file.
+#     :param android_app: class:'AndroidApp'
+#     :param destination_folder: str - The root-folder the apps will be copied to.
+#     :param firmware_mount_path: str - the source path in which the firmware is mounted.
+#
+#     """
+#     if not apk_abs_path:
+#         apk_abs_path = os.path.join(firmware_mount_path,
+#                                     "." + android_app.relative_firmware_path,
+#                                     android_app.filename)
+#     if has_relative_path:
+#         app_root_folder = destination_folder + android_app.relative_firmware_path + "/"
+#     else:
+#         app_root_folder = destination_folder + "/"
+#     Path(app_root_folder).mkdir(parents=True, exist_ok=True)
+#     android_app_destination_filepath = os.path.join(app_root_folder, android_app.filename)
+#     existing_android_app = is_apk_in_database(android_app)
+#     if existing_android_app is None:
+#         copyfile(apk_abs_path, android_app_destination_filepath)
+#         if not os.path.isfile(android_app_destination_filepath):
+#             raise OSError(f"Could not copy Android app: from {apk_abs_path} "
+#                           f"to {android_app_destination_filepath}")
+#         android_app.relative_store_path = android_app_destination_filepath
+#         android_app.absolute_store_path = os.path.abspath(android_app_destination_filepath)
+#         android_app.save()
+#         logging.info(f"Exported Android app: {android_app.filename}")
+#     else:
+#         android_app.relative_store_path = existing_android_app.relative_store_path
+#         android_app.absolute_store_path = existing_android_app.absolute_store_path
+#         android_app.app_twins_reference_list.append(existing_android_app.pk)
+#         android_app.save()
+#         existing_android_app.app_twins_reference_list.append(android_app.pk)
+#         existing_android_app.save()
+#         logging.info(f"Found twin app: {android_app.filename} / {existing_android_app.filename}")
+
+
+def copy_apk_file(android_app, destination_folder, firmware_mount_path, apk_abs_path=None, has_relative_path=True):
     """
     Copies apps to the filesystem and saves the Android app in the database.
 
+    :param has_relative_path: bool - If the app has a relative path.
+    :param apk_abs_path: str - absolute path of the apk file.
     :param android_app: class:'AndroidApp'
     :param destination_folder: str - The root-folder the apps will be copied to.
     :param firmware_mount_path: str - the source path in which the firmware is mounted.
 
     """
-    apk_source_path = os.path.join(firmware_mount_path,
-                                   "." + android_app.relative_firmware_path,
-                                   android_app.filename)
-    app_root_folder = destination_folder + android_app.relative_firmware_path + "/"
-    Path(app_root_folder).mkdir(parents=True, exist_ok=True)
+    apk_abs_path = get_apk_abs_path(apk_abs_path, firmware_mount_path, android_app)
+    app_root_folder = get_app_root_folder(destination_folder, android_app, has_relative_path)
     android_app_destination_filepath = os.path.join(app_root_folder, android_app.filename)
     existing_android_app = is_apk_in_database(android_app)
     if existing_android_app is None:
-        copyfile(apk_source_path, android_app_destination_filepath)
-        if not os.path.isfile(android_app_destination_filepath):
-            raise OSError(f"Could not copy Android app: from {apk_source_path} "
-                          f"to {android_app_destination_filepath}. Is path available?")
-        android_app.relative_store_path = android_app_destination_filepath
-        android_app.absolute_store_path = os.path.abspath(android_app_destination_filepath)
-        android_app.save()
-        logging.info(f"Exported Android app: {android_app.filename}")
+        copy_and_save_new_android_app(apk_abs_path, android_app_destination_filepath, android_app, has_relative_path)
     else:
-        android_app.relative_store_path = existing_android_app.relative_store_path
-        android_app.absolute_store_path = existing_android_app.absolute_store_path
-        android_app.app_twins_reference_list.append(existing_android_app.pk)
-        android_app.save()
-        existing_android_app.app_twins_reference_list.append(android_app.pk)
-        existing_android_app.save()
-        logging.info(f"Found twin app: {android_app.filename} / {existing_android_app.filename}")
+        update_existing_android_app(android_app, existing_android_app)
+
+
+def get_apk_abs_path(apk_abs_path, firmware_mount_path, android_app):
+    """
+    Returns the absolute path of the apk file.
+
+    :param apk_abs_path: str - absolute path of the apk file.
+    :param firmware_mount_path: str - the source path in which the firmware is mounted.
+    :param android_app: class:'AndroidApp'
+
+    :return: str - absolute path of the apk file.
+    """
+    if not apk_abs_path:
+        apk_abs_path = os.path.join(firmware_mount_path,
+                                    "." + android_app.relative_firmware_path,
+                                    android_app.filename)
+    return apk_abs_path
+
+
+def get_app_root_folder(destination_folder, android_app, has_relative_path):
+    """
+    Returns the root folder of the app.
+
+    :param destination_folder: str - The root-folder the apps will be copied to.
+    :param android_app: Class:'AndroidApp' - The Android app instance.
+    :param has_relative_path: bool - If the app has a relative path.
+
+    :return: str - The root folder of the app.
+    """
+    if has_relative_path:
+        app_root_folder = destination_folder + android_app.relative_firmware_path + "/"
+    else:
+        app_root_folder = destination_folder + "/"
+    Path(app_root_folder).mkdir(parents=True, exist_ok=True)
+    return app_root_folder
+
+
+def copy_and_save_new_android_app(apk_abs_path, android_app_destination_filepath, android_app, has_relative_path):
+    """
+    Copies the apk file to the destination folder and saves the Android app in the database.
+
+    :param apk_abs_path: str - absolute path of the apk file.
+    :param android_app_destination_filepath: str - The destination path of the apk file.
+    :param android_app: class:'AndroidApp' - The Android app instance.
+
+    """
+    copyfile(apk_abs_path, android_app_destination_filepath)
+    if not os.path.isfile(android_app_destination_filepath):
+        raise OSError(f"Could not copy Android app: from {apk_abs_path} "
+                      f"to {android_app_destination_filepath}")
+    if has_relative_path:
+        android_app.relative_store_path = android_app_destination_filepath
+    else:
+        logging.info("Replacing active store path with relative path")
+        new_relative_path = android_app_destination_filepath.replace("/var/www/", "../")
+        new_relative_path = re.sub('/+', '/', new_relative_path)
+        android_app.relative_store_path = new_relative_path
+
+    android_app.absolute_store_path = os.path.abspath(android_app_destination_filepath)
+    android_app.save()
+    logging.info(f"Exported Android app: {android_app.filename}")
+
+
+def update_existing_android_app(android_app, existing_android_app):
+    """
+    Updates the existing Android app with the new Android app.
+
+    :param android_app: Class:'AndroidApp' - The new Android app instance.
+    :param existing_android_app: Class:'AndroidApp' - The existing Android app instance.
+    """
+    android_app.relative_store_path = existing_android_app.relative_store_path
+    android_app.absolute_store_path = existing_android_app.absolute_store_path
+    android_app.app_twins_reference_list.append(existing_android_app.pk)
+    android_app.save()
+    existing_android_app.app_twins_reference_list.append(android_app.pk)
+    existing_android_app.save()
+    logging.info(f"Found twin app: {android_app.filename} / {existing_android_app.filename}")
 
 
 def is_apk_in_database(android_app):
@@ -191,10 +295,16 @@ def add_optimized_firmware_files(android_app, optimized_firmware_file_list, firm
     android_app.save()
 
 
-def create_android_app(filename, relative_firmware_path, firmware_mount_path):
+def create_android_app(filename,
+                       relative_firmware_path,
+                       firmware_mount_path,
+                       original_filename=None,
+                       apk_abs_path=None):
     """
     Creates a class:'AndroidApp' with minimal attributes. Does not save the app in the database.
 
+    :param apk_abs_path: str - absolute path of the apk file.
+    :param original_filename: str - original filename of the apk file before renaming.
     :param filename: str - name of the apk file.
     :param relative_firmware_path: str - relative path of the apk file within the firmware partition.
     :param firmware_mount_path: The source path in which the firmware is mounted.
@@ -202,18 +312,23 @@ def create_android_app(filename, relative_firmware_path, firmware_mount_path):
     :return: class:'AndroidApp'
 
     """
-    apk_abs_path = os.path.join(firmware_mount_path,
-                                "." + relative_firmware_path,
-                                filename)
-    if os.path.isfile(apk_abs_path) and os.access(apk_abs_path, os.R_OK):
+    if not apk_abs_path:
+        apk_abs_path = os.path.join(firmware_mount_path, "." + relative_firmware_path, filename)
+
+    is_file = os.path.isfile(apk_abs_path)
+    has_access = os.access(apk_abs_path, os.R_OK)
+    if is_file and has_access:
         sha256 = sha256_from_file(apk_abs_path)
         md5 = md5_from_file(apk_abs_path)
         sha1 = sha1_from_file(apk_abs_path)
         file_size_bytes = os.path.getsize(apk_abs_path)
     else:
-        raise ValueError(f"Could not create Android app: {filename} from {relative_firmware_path}.")
+        raise ValueError(f"Could not create Android app: {filename} from {apk_abs_path}. "
+                         f"is_file: {is_file}, "
+                         f"has_access: {has_access}")
 
     return AndroidApp(filename=filename,
+                      original_filename=original_filename,
                       relative_firmware_path=relative_firmware_path,
                       sha256=sha256,
                       md5=md5,

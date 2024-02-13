@@ -142,7 +142,7 @@ def add_firmware_file_references(firmware, firmware_file_list):
 
     """
     if len(firmware_file_list) > 0:
-        logging.info(f"Add file references for: {firmware.id}")
+        logging.debug(f"Add file references for: {firmware.id}")
         firmware_file_ids = []
         for firmware_file in firmware_file_list:
             firmware_file.firmware_id_reference = firmware.id
@@ -151,6 +151,6 @@ def add_firmware_file_references(firmware, firmware_file_list):
         firmware.firmware_file_id_list = firmware_file_ids
         firmware.hasFileIndex = True
         firmware.save()
-        logging.info(f"Successfully added firmware file references: {firmware.id} {len(firmware_file_list)}")
+        logging.debug(f"Successfully added firmware file references: {firmware.id} {len(firmware_file_list)}")
     else:
         raise ValueError(f"No firmware file references added: firmware-id {firmware.id} {len(firmware_file_list)}")

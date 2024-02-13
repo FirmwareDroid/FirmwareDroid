@@ -8,7 +8,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from model import AndroidFirmware, FirmwareFile, AndroidApp, StoreSetting
+from model import AndroidFirmware, FirmwareFile, AndroidApp
 from threading import Thread
 from firmware_handler.image_importer import create_abs_image_file_path, find_image_firmware_file, extract_image_files
 from hashing.fuzzy_hash_creator import fuzzy_hash_firmware_files
@@ -19,6 +19,7 @@ from android_app_importer.android_app_import import store_android_apps_from_firm
 from firmware_handler.build_prop_parser import BuildPropParser
 from hashing.standard_hash_generator import md5_from_file, sha1_from_file, sha256_from_file
 from extractor.expand_archives import extract_archive_layer
+from model.StoreSetting import get_active_store_by_index
 from utils.file_utils.file_util import get_filenames
 from firmware_handler.firmware_version_detect import detect_by_build_prop
 from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
@@ -38,10 +39,8 @@ def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0):
 
     :return: list of string with the status (errors/success) of every file.
     """
-    logging.info("FIRMWARE MASS IMPORT STARTED!")
-    store_setting = StoreSetting.objects(is_active=True, storage_root=f"0{storage_index}_file_storage").first()
-    if store_setting is None:
-        raise ValueError(f"No active store setting found for index {storage_index}")
+    logging.info("Firmware extractor starting...")
+    store_setting = get_active_store_by_index(storage_index)
     store_path = store_setting.store_options_dict[store_setting.uuid]["paths"]
     firmware_archives_queue = create_file_import_queue(store_path)
     if firmware_archives_queue.qsize() <= 10:
@@ -51,7 +50,7 @@ def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0):
     worker_list = []
 
     for i in range(num_threads):
-        logging.info(f"Start importer thread {i}")
+        logging.debug(f"Start importer thread {i}")
         worker = Thread(target=prepare_firmware_import, args=(firmware_archives_queue, create_fuzzy_hashes, store_path))
         worker.setDaemon(True)
         worker.start()
@@ -223,24 +222,27 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
                                                                                       partition_temp_dir,
                                                                                       store_paths)
             if is_successful:
+                firmware_app_list = []
+                build_prop_list = []
                 files_dict["firmware_file_list"].extend(partition_firmware_file_list)
-                firmware_app_store = os.path.join(store_paths["FIRMWARE_FOLDER_APP_EXTRACT"],
-                                                  md5,
-                                                  partition_name)
-                files_dict["firmware_app_list"].extend(store_android_apps_from_firmware(partition_temp_dir,
-                                                                                        firmware_app_store,
-                                                                                        files_dict[
-                                                                                            "firmware_file_list"]))
-                files_dict["build_prop_file_list"].extend(
-                    extract_build_prop(partition_firmware_file_list, partition_temp_dir))
 
+                if len(partition_firmware_file_list) > 0:
+                    firmware_app_store = os.path.join(store_paths["FIRMWARE_FOLDER_APP_EXTRACT"],
+                                                      md5,
+                                                      partition_name)
+                    firmware_app_list = store_android_apps_from_firmware(partition_temp_dir,
+                                                                         firmware_app_store,
+                                                                         files_dict["firmware_file_list"])
+                    files_dict["firmware_app_list"].extend(firmware_app_list)
+                    build_prop_list = extract_build_prop(partition_firmware_file_list, partition_temp_dir)
+                    files_dict["build_prop_file_list"].extend(build_prop_list)
                 if create_fuzzy_hashes:
                     fuzzy_hash_firmware_files(partition_firmware_file_list, partition_temp_dir)
 
             partition_info_dict[partition_name] = {"is_import_success": is_successful,
-                                                   "file_count": len(partition_firmware_file_list),
-                                                   "app_count": len(files_dict["firmware_app_list"]),
-                                                   "build_prop_count": len(files_dict["build_prop_file_list"])}
+                                                   "firmware_file_count": len(partition_firmware_file_list),
+                                                   "android_app_count": len(firmware_app_list),
+                                                   "build_prop_count": len(build_prop_list)}
     return files_dict, partition_info_dict
 
 
@@ -421,7 +423,7 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
     :return: class:'AndroidFirmware'
     """
     absolute_store_path = os.path.abspath(firmware_store_path)
-    logging.info(f"firmware_store_path: {firmware_store_path} absolute_store_path: {absolute_store_path}")
+    logging.debug(f"firmware_store_path: {firmware_store_path} absolute_store_path: {absolute_store_path}")
     firmware = AndroidFirmware(filename=store_filename,
                                original_filename=original_filename,
                                relative_store_path=firmware_store_path,
@@ -437,7 +439,7 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
                                build_prop_file_id_list=build_prop_file_id_list,
                                partition_info_dict=partition_info_dict)
     firmware.save()
-    logging.info(f"Stored firmware with id {str(firmware.id)} in database.")
+    logging.debug(f"Stored firmware with id {str(firmware.id)} in database.")
     add_firmware_file_references(firmware, firmware_file_list)
     add_app_firmware_references(firmware, android_app_list)
     return firmware

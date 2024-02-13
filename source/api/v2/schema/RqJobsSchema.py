@@ -10,6 +10,7 @@ import django_rq
 from graphene import String
 from graphql_jwt.decorators import superuser_required
 
+from android_app_importer.standalone_importer import start_android_app_standalone_importer
 from dynamic_analysis.emulator_preparation.app_file_build_creator import start_app_build_file_creator
 from firmware_handler.firmware_importer import start_firmware_mass_import
 from model import AndroidFirmware
@@ -157,7 +158,32 @@ class CreateAppBuildFileJob(graphene.Mutation):
             traceback.format_exc()
 
 
+class CreateAppImportJob(graphene.Mutation):
+    job_id = graphene.String()
+
+    class Arguments:
+        queue_name = graphene.String(required=True, default_value="high-python")
+        storage_index = graphene.Int(required=True, default_value=0)
+
+    @classmethod
+    @superuser_required
+    def mutate(cls, root, info, queue_name, storage_index):
+        """
+        Create a job to import android apps without a firmware.
+
+        :param queue_name: str - The queue name to use.
+        :param storage_index: int - The storage index to use.
+
+        :return: Returns the job id of the job.
+        """
+        queue = django_rq.get_queue(queue_name)
+        func_to_run = start_android_app_standalone_importer
+        job = queue.enqueue(func_to_run, storage_index, job_timeout=ONE_WEEK_TIMEOUT)
+        return cls(job_id=job.id)
+
+
 class RqJobMutation(graphene.ObjectType):
     create_apk_scan_job = CreateApkScanJob.Field()
     create_firmware_extractor_job = CreateFirmwareExtractorJob.Field()
     create_app_build_file_job = CreateAppBuildFileJob.Field()
+    create_app_import_job = CreateAppImportJob.Field()

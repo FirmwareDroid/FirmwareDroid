@@ -26,7 +26,7 @@ def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
         filename = firmware_file.name.lower()
         for pattern in image_filename_pattern_list:
             if not firmware_file.is_directory and re.search(pattern, filename) and not filename.startswith("._"):
-                logging.info("Found image file: " + str(firmware_file.name))
+                logging.debug("Found image file: " + str(firmware_file.name))
                 return firmware_file
     raise ValueError(f"Continuing. Could not find any image file in the filelist based on the patterns: "
                      f"{' '.join(image_filename_pattern_list)}")
@@ -44,15 +44,15 @@ def extract_image_files(image_path, extract_dir_path, store_paths):
 
     """
     if extract_simg_ext4(image_path, extract_dir_path, store_paths):
-        logging.info("Image extraction successful with simg_ext4extractor")
+        logging.debug("Image extraction successful with simg_ext4extractor")
     elif extract_ext4(image_path, extract_dir_path):
-        logging.info("Image extraction successful with ext4extractor")
+        logging.debug("Image extraction successful with ext4extractor")
     elif mount_android_image(image_path, extract_dir_path, store_paths):
-        logging.info("Image mount successful")
+        logging.debug("Image mount successful")
     elif extract_ubi_image(image_path, extract_dir_path):
-        logging.info("Image extraction successful with UBI")
+        logging.debug("Image extraction successful with UBI")
     elif unblob_extract(image_path, extract_dir_path):
-        logging.info("Image extraction successful with unblob extraction suite")
+        logging.debug("Image extraction successful with unblob extraction suite")
     else:
         raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
 

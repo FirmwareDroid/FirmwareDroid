@@ -69,4 +69,20 @@ def create_file_store_setting(docker_root_folder, storage_folder, is_active):
                         storage_root=storage_folder).save()
 
 
+def get_active_store_by_index(storage_index):
+    """
+    Returns the store setting by the index.
+
+    :raises: ValueError: If no active store setting found for the index.
+
+    :return: class:'StoreSetting' - A store document that holds the storage options.
+    """
+    store_setting = StoreSetting.objects(is_active=True, storage_root=f"0{storage_index}_file_storage").first()
+    if store_setting is None:
+        raise ValueError(f"No active store setting found for index {storage_index}")
+
+    return store_setting
+
+
+
 
