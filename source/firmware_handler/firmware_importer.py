@@ -7,6 +7,7 @@ import threading
 import logging
 import os
 import shutil
+from queue import Empty
 from pathlib import Path
 from model import AndroidFirmware, FirmwareFile, AndroidApp
 from threading import Thread
@@ -112,7 +113,12 @@ def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes, store_path
 
     """
     while True:
-        filename = firmware_file_queue.get(block=False, timeout=300)
+        try:
+            filename = firmware_file_queue.get(block=False, timeout=300)
+        except Empty:
+            logging.info("No more files to import. Exiting.")
+            break
+
         logging.info(f"Attempt to import: {str(filename)}")
         try:
             firmware_file_path = os.path.join(store_path["FIRMWARE_FOLDER_IMPORT"], filename)
