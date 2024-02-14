@@ -209,9 +209,9 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
     :return: dict - extentions of the original dict with all newly found files.
     """
     partition_info_dict = {}
-    firmware_app_list = []
-    build_prop_list = []
     for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
+        firmware_app_list = []
+        build_prop_list = []
         with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"],
                                          suffix=f"_mount_{partition_name}") as partition_temp_dir:
             partition_firmware_file_list, is_successful = create_partition_file_index(partition_name,
