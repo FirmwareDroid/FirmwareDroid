@@ -211,6 +211,8 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
     :return: dict - extentions of the original dict with all newly found files.
     """
     partition_info_dict = {}
+    firmware_app_list = []
+    build_prop_list = []
     for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
         with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"],
                                          suffix=f"_mount_{partition_name}") as partition_temp_dir:
@@ -222,8 +224,6 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
                                                                                       partition_temp_dir,
                                                                                       store_paths)
             if is_successful:
-                firmware_app_list = []
-                build_prop_list = []
                 files_dict["firmware_file_list"].extend(partition_firmware_file_list)
 
                 if len(partition_firmware_file_list) > 0:
