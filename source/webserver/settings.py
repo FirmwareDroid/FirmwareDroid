@@ -255,18 +255,4 @@ RQ_QUEUES = {
         'PASSWORD': REDIS_PASSWORD,
         'DEFAULT_TIMEOUT': 60 * 60,
     },
-    'low-python': {
-        'HOST': REDIS_HOST,
-        'PORT': 6379,
-        'DB': 0,
-        'PASSWORD': REDIS_PASSWORD,
-        'DEFAULT_TIMEOUT': 60 * 60,
-    },
-    'default-java': {
-        'HOST': REDIS_HOST,
-        'PORT': 6379,
-        'DB': 0,
-        'PASSWORD': REDIS_PASSWORD,
-        'DEFAULT_TIMEOUT': 60 * 60,
-    },
 }

@@ -6,7 +6,7 @@ import logging
 import traceback
 import mongoengine
 from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, \
-    ListField, BooleanField, IntField, Document
+    ListField, BooleanField, IntField, Document, DictField
 
 
 class AndroidFirmware(Document):
@@ -29,6 +29,7 @@ class AndroidFirmware(Document):
                                       required=False)
     version_detected = IntField(required=False, default=0)
     os_vendor = StringField(max_length=512, required=True, default="Unknown")
+    partition_info_dict = DictField(required=False, default={})
 
     @classmethod
     def pre_delete(cls, sender, document, **kwargs):

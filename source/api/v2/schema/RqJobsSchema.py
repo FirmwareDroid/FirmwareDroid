@@ -10,6 +10,7 @@ import django_rq
 from graphene import String
 from graphql_jwt.decorators import superuser_required
 
+from android_app_importer.standalone_importer import start_android_app_standalone_importer
 from dynamic_analysis.emulator_preparation.app_file_build_creator import start_app_build_file_creator
 from firmware_handler.firmware_importer import start_firmware_mass_import
 from model import AndroidFirmware
@@ -34,6 +35,7 @@ class ScannerModules(Enum):
     QUARKENGINE = {"QuarkEngineScanJob": "static_analysis.QuarkEngine.quark_engine_wrapper"}
     QARK = {"QarkScanJob": "static_analysis.Qark.qark_wrapper"}
     SUPER = {"SuperAndroidAnalyzerScanJob": "static_analysis.SuperAndroidAnalyzer.super_android_analyzer_wrapper"}
+    MORF = {"MORFScanJob": "static_analysis.MORF.morf_wrapper"}
     VIRUSTOTAL = {"VirusTotalScanJob": "static_analysis.Virustotal.virus_total_wrapper"}
 
 
@@ -71,7 +73,7 @@ class CreateApkScanJob(graphene.Mutation):
     job_id = graphene.String()
 
     class Arguments:
-        queue_name = graphene.String(required=True)
+        queue_name = graphene.String(required=True, default_value="default-python")
         module_name = graphene.String(required=True)
         object_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
 
@@ -104,12 +106,13 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
     job_id = graphene.String()
 
     class Arguments:
-        queue_name = graphene.String(required=True)
+        queue_name = graphene.String(required=True, default_value="high-python")
         create_fuzzy_hashes = graphene.Boolean(required=True)
+        storage_index = graphene.Int(required=True, default_value=0)
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, queue_name, create_fuzzy_hashes):
+    def mutate(cls, root, info, queue_name, create_fuzzy_hashes, storage_index):
         """
         Create a job to import firmware.
 
@@ -120,7 +123,7 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
         """
         queue = django_rq.get_queue(queue_name)
         func_to_run = start_firmware_mass_import
-        job = queue.enqueue(func_to_run, create_fuzzy_hashes, job_timeout=ONE_WEEK_TIMEOUT)
+        job = queue.enqueue(func_to_run, create_fuzzy_hashes, storage_index, job_timeout=ONE_WEEK_TIMEOUT)
         return cls(job_id=job.id)
 
 
@@ -133,7 +136,7 @@ class CreateAppBuildFileJob(graphene.Mutation):
     object_id_list = graphene.List(graphene.String)
 
     class Arguments:
-        queue_name = graphene.String(required=True)
+        queue_name = graphene.String(required=True, default_value="default-python")
         format_name = graphene.String(required=True)
         object_id_list = graphene.List(graphene.NonNull(graphene.String), required=False)
         all_firmware = graphene.Boolean(required=False)
@@ -155,7 +158,32 @@ class CreateAppBuildFileJob(graphene.Mutation):
             traceback.format_exc()
 
 
+class CreateAppImportJob(graphene.Mutation):
+    job_id = graphene.String()
+
+    class Arguments:
+        queue_name = graphene.String(required=True, default_value="high-python")
+        storage_index = graphene.Int(required=True, default_value=0)
+
+    @classmethod
+    @superuser_required
+    def mutate(cls, root, info, queue_name, storage_index):
+        """
+        Create a job to import android apps without a firmware.
+
+        :param queue_name: str - The queue name to use.
+        :param storage_index: int - The storage index to use.
+
+        :return: Returns the job id of the job.
+        """
+        queue = django_rq.get_queue(queue_name)
+        func_to_run = start_android_app_standalone_importer
+        job = queue.enqueue(func_to_run, storage_index, job_timeout=ONE_WEEK_TIMEOUT)
+        return cls(job_id=job.id)
+
+
 class RqJobMutation(graphene.ObjectType):
     create_apk_scan_job = CreateApkScanJob.Field()
     create_firmware_extractor_job = CreateFirmwareExtractorJob.Field()
     create_app_build_file_job = CreateAppBuildFileJob.Field()
+    create_app_import_job = CreateAppImportJob.Field()

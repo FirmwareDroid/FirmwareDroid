@@ -11,8 +11,6 @@ from model import JsonFile
 import tempfile
 import time
 from utils.encoder.JsonDefaultEncoder import DefaultJsonEncoder
-from setup.default_setup import get_active_file_store_paths
-STORE_PATHS = get_active_file_store_paths()
 
 
 def get_filenames(path):
@@ -90,23 +88,6 @@ def delete_file(path):
     os.unlink(path)
     if os.path.exists(path):
         raise OSError(f"Could not delete file: {path}")
-
-
-def create_temporary_file_from_list(string_list):
-    """
-    Creates a temporary files and writes all the given strings to the file.
-
-    :param string_list: list(str)
-    :return: class:'tempfile.NamedTemporaryFile'
-
-    """
-    file_temp = tempfile.NamedTemporaryFile(delete=False, dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"])
-    with open(file_temp.name, 'ab+') as file:
-        for string_element in string_list:
-            file.write(bytes(str(string_element), encoding='utf-8'))
-            file.write(b'\n')
-    delete_file(file_temp.name)
-    return file_temp
 
 
 def create_reference_file(string_list):

@@ -26,5 +26,5 @@ def detect_by_build_prop(build_prop_file_list):
                     main_version = int(main_version)
                     break
         except ValueError:
-            logging.info(f"Could not find build version in {build_prop_file}")
+            logging.debug(f"Could not find build version in {build_prop_file}")
     return str(main_version)

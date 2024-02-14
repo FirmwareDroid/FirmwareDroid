@@ -1,4 +1,4 @@
-FROM openjdk:8-jdk-slim-buster as apk_scanner-worker
+FROM openjdk:8-jdk-slim-bullseye as apk_scanner-worker
 COPY --from=firmwaredroid-base / /
 
 #####################################
@@ -29,10 +29,10 @@ ENV JADX "/opt/jadx/bin"
 ENV PATH "${JADX}:${PATH}"
 RUN export PATH=$PATH
 
-
 #####################################
-# Installing Super Android Analyzer #
+# Installing RUST based tools       #
 #####################################
+# Install SUPER Android Analyzer
 RUN apt-get install -y default-jre-headless
 RUN wget -P /tmp/ https://github.com/SUPERAndroidAnalyzer/super/releases/download/0.5.1/super-analyzer_0.5.1_ubuntu_amd64.deb
 RUN dpkg -i /tmp/super-analyzer_0.5.1_ubuntu_amd64.deb
@@ -48,4 +48,3 @@ ENV PATH "$PATH:/home/www/.local/bin/"
 ENV PYTHONPATH "/var/www/source/:$PYTHONPATH"
 WORKDIR /var/www/source/
 RUN python3 /var/www/docker/setup_apk_scanner.py
-

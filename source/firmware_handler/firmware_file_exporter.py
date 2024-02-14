@@ -5,16 +5,10 @@ import logging
 import os
 import shutil
 import time
-from firmware_handler.image_importer import extract_image_files
 from context.context_creator import create_db_context
-from firmware_handler.ext4_mount_util import is_path_mounted, exec_umount
 from model import FirmwareFile
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
 from utils.file_utils.file_util import create_temp_directories
-
-from setup.default_setup import get_active_file_store_paths
-STORE_PATHS = get_active_file_store_paths()
-
 
 
 @create_db_context
@@ -94,16 +88,17 @@ def export_firmware_files_by_id(firmware_file_id_queue):
         #     exec_umount(cache_temp_mount_dir.name)
 
 
-def export_firmware_file(firmware_file, mount_dir_path):
+def export_firmware_file(firmware_file, mount_dir_path, store_paths):
     """
     Exports a file from the firmware to the file extract folder.
 
+    :param store_paths: dict(str, str) - paths to the file storage.
     :param firmware_file: class:'FirmwareFile'
     :param mount_dir_path: str - path to the expanded firmware.
 
     """
     firmware_file_abs_path = get_firmware_file_abs_path(firmware_file, mount_dir_path)
-    destination_folder = get_destination_folder(firmware_file)
+    destination_folder = get_destination_folder(firmware_file, store_paths)
     copy_firmware_file(firmware_file, firmware_file_abs_path, destination_folder)
 
 
@@ -122,21 +117,22 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
         os.makedirs(os.path.dirname(destination_path), exist_ok=True)
         time.sleep(5)
         dst_file_path = shutil.copy(source_path, destination_path)
-        logging.info(f"File copy successful: {destination_path}")
+        logging.debug(f"File copy successful: {destination_path}")
     time.sleep(5)
     if not os.path.exists(dst_file_path):
-        OSError(f"Could not copy firmware file {firmware_file.id} to {destination_path}")
+        raise OSError(f"Could not copy firmware file {firmware_file.id} to {destination_path}")
 
 
-def get_destination_folder(firmware_file):
+def get_destination_folder(firmware_file, store_paths):
     """
     Creates a unique destination folder for a firmware file.
 
+    :param store_paths: dict(str, str) - paths to the file storage.
     :param firmware_file: class:'FirmwareFile'
     :return: str - absolute path of the output folder.
 
     """
-    destination_folder = os.path.join(STORE_PATHS["FIRMWARE_FOLDER_FILE_EXTRACT"],
+    destination_folder = os.path.join(store_paths["FIRMWARE_FOLDER_FILE_EXTRACT"],
                                       str(firmware_file.id),
                                       "." + firmware_file.relative_path)
     return os.path.abspath(destination_folder)

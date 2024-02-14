@@ -14,6 +14,7 @@ RUN apt-get -y install pkgconf && \
     apt-get -y install liblzo2-dev && \
     apt-get -y install fuse && \
     apt-get -y install brotli && \
+    apt-get -y install libmagic1 && \
     apt-get -y install f2fs-tools           # Add support for f2fs filesystem format
 
 #####################################

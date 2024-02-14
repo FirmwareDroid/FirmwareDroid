@@ -16,8 +16,16 @@ services:
       - 5000
     volumes:
       - .:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage/
-      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage/
+      - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
+      - ${LOCAL_STORAGE_PATH_03}:/var/www/file_store/03_file_storage
+      - ${LOCAL_STORAGE_PATH_04}:/var/www/file_store/04_file_storage
+      - ${LOCAL_STORAGE_PATH_05}:/var/www/file_store/05_file_storage
+      - ${LOCAL_STORAGE_PATH_06}:/var/www/file_store/06_file_storage
+      - ${LOCAL_STORAGE_PATH_07}:/var/www/file_store/07_file_storage
+      - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
+      - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
       - ${DJANGO_SQLITE_DATABASE_MOUNT_PATH}:${DJANGO_SQLITE_DATABASE_PATH}
     depends_on:
       - mongo-db-1
@@ -92,8 +100,16 @@ services:
       - redis
     volumes:
       - .:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
+      - ${LOCAL_STORAGE_PATH_03}:/var/www/file_store/03_file_storage
+      - ${LOCAL_STORAGE_PATH_04}:/var/www/file_store/04_file_storage
+      - ${LOCAL_STORAGE_PATH_05}:/var/www/file_store/05_file_storage
+      - ${LOCAL_STORAGE_PATH_06}:/var/www/file_store/06_file_storage
+      - ${LOCAL_STORAGE_PATH_07}:/var/www/file_store/07_file_storage
+      - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
+      - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
     env_file:
       - ./.env
     command: rqworker --logging_level DEBUG --name extractor-worker-high-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
@@ -114,11 +130,19 @@ services:
       - redis
     volumes:
       - .:/var/www/
-      - ${LOCAL_STORAGE_PATH}:/var/www/file_store/00_file_storage
-      - ${LOCAL_STORAGE_PATH_SECONDARY}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
+      - ${LOCAL_STORAGE_PATH_03}:/var/www/file_store/03_file_storage
+      - ${LOCAL_STORAGE_PATH_04}:/var/www/file_store/04_file_storage
+      - ${LOCAL_STORAGE_PATH_05}:/var/www/file_store/05_file_storage
+      - ${LOCAL_STORAGE_PATH_06}:/var/www/file_store/06_file_storage
+      - ${LOCAL_STORAGE_PATH_07}:/var/www/file_store/07_file_storage
+      - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
+      - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
     env_file:
       - ./.env
-    command: rqworker --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
+    command: rqworker --logging_level DEBUG --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     networks:
       - backend
 

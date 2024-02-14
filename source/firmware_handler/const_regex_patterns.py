@@ -12,37 +12,39 @@ that incorrect files match the patterns.
 # Partitions that are in ext or sparse format.
 ##########################################################################################
 SYSTEM_IMG_PATTERN_LIST = [
-    # Default naming convention
     "system[.]img",
     ".*system[.]img$",
     "^system[.].*[.]img$",
     "^system[.]img[.].*",
     ".*system.*img_sparsechunk$",
     ".*system.*(img|rfs|img.ext4|ext4.img)$",
-    # Samsung specific naming
-    "super[.]img",
-    ".*super[.]img$",
-    "^super[.].*[.]img$",
-    "^super[.]img[.].*",
-    ".*super.*img_sparsechunk$",
-    ".*super.*(img|rfs|img.ext4|ext4.img)$",
 ]
-
-SYSTEM_OTHER_IMG_PATTERN_LIST = ["system_other[.]img"]
-SYSTEM_EXT_IMG_PATTERN_LIST = ["system_ext[.]img"]
+SUPER_IMG_PATTERN_LIST = ["super[.]img",
+                          ".*super[.]img$",
+                          "^super[.].*[.]img$",
+                          "^super[.]img[.].*",
+                          ".*super.*img_sparsechunk$",
+                          "super[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
+SUPER_EMPTY_PATTERN_LIST = ["super_empty[.]img"]
+SYSTEM_OTHER_IMG_PATTERN_LIST = ["system_other[.]img", "system_other[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
+SYSTEM_EXT_IMG_PATTERN_LIST = ["system_ext[.]img", "system_ext[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 VENDOR_IMG_PATTERN_LIST = ["vendor[.]img", "vendor[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 OEM_IMG_PATTERN_LIST = ["oem[.]img", "oem[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 ODM_IMG_PATTERN_LIST = ["odm[.]img", "odm[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 USERDATA_IMG_PATTERN_LIST = ["userdata[.]img", "userdata[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 PRODUCT_IMG_PATTERN_LIST = ["product[.]img", "product[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
+PVMFW_IMG_PATTERN_LIST = ["pvmfw[.]img", "pvmfw[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 
 EXT_IMAGE_PATTERNS_DICT = {"system": SYSTEM_IMG_PATTERN_LIST,
-                           "system_other:": SYSTEM_OTHER_IMG_PATTERN_LIST,
-                           "system_ext:": SYSTEM_EXT_IMG_PATTERN_LIST,
+                           "system_other": SYSTEM_OTHER_IMG_PATTERN_LIST,
+                           "system_ext": SYSTEM_EXT_IMG_PATTERN_LIST,
                            "vendor": VENDOR_IMG_PATTERN_LIST,
                            "oem": OEM_IMG_PATTERN_LIST,
                            "odm": ODM_IMG_PATTERN_LIST,
                            "userdata": USERDATA_IMG_PATTERN_LIST,
+                           "super": SUPER_IMG_PATTERN_LIST,
+                           "super_empty": SUPER_EMPTY_PATTERN_LIST,
+                           "pvmfw": PVMFW_IMG_PATTERN_LIST,
                            "product": PRODUCT_IMG_PATTERN_LIST}
 
 ##########################################################################################

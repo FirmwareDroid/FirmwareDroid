@@ -1,17 +1,14 @@
 # Security Policy
+Welcome to the Security Policy for FirmwareDroid.
 
-FirmwareDroid is mainly a research project and not a finished product. Therefore it has some known security problems due to the lack of ressources we have-- sorry for that. Nevertheless, we welcome any reports on vulnerabilites and bugs. 
+FirmwareDroid, primarily a research endeavor rather than a finalized product, acknowledges the existence of certain security vulnerabilities attributable to resource constraints. We apologize for any inconvenience this may cause. Nonetheless, we earnestly encourage the reporting of vulnerabilities and bugs to enhance the project's integrity and security.
 
-## Supported Versions
+### Supported Versions
+Given our research-oriented nature, we prioritize the application of security patches exclusively to the latest version (master-branch) and do not extend support to older iterations.
 
-Since we are a research project we apply security patches only for the latest version (master-branch) and not for older versions. 
+### Reporting a Vulnerability
+To report security bugs, kindly utilize one of the following channels:
 
-## Reporting a Vulnerability
-You can either create a GitHub issue for reporting any security bugs or via email (thomas (dot) sutter1 (at) zhaw (dot) ch).
-
-
-
-
-Thanks for your support! I really appreciate it.
-
-
+GitHub: Create a new issue detailing the security concern.
+Email: Reach out via (suth at zhaw dot ch)
+Your cooperation is invaluable to us. Thank you for your support and understanding.

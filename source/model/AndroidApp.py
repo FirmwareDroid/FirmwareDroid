@@ -14,6 +14,7 @@ class AndroidApp(Document):
     sha256 = StringField(required=True, max_length=256, min_length=1)
     sha1 = StringField(required=True, max_length=160, min_length=1)
     filename = StringField(required=True, max_length=1024, min_length=1)
+    original_filename = StringField(required=False, max_length=1024, min_length=1)
     packagename = StringField(required=False, max_length=1024, min_length=1)
     relative_firmware_path = StringField(required=True, max_length=1024, min_length=1)
     file_size_bytes = LongField(required=True)
@@ -32,7 +33,6 @@ class AndroidApp(Document):
     #              ]))
     #apk_scanner_report_reference_list = ListField(LazyReferenceField('ApkScannerReport',
     #                                                                 reverse_delete_rule=DO_NOTHING))
-
     androguard_report_reference = LazyReferenceField('AndroGuardReport', reverse_delete_rule=DO_NOTHING)
     virus_total_report_reference = LazyReferenceField('VirusTotalReport', reverse_delete_rule=DO_NOTHING)
     androwarn_report_reference = LazyReferenceField('AndrowarnReport', reverse_delete_rule=DO_NOTHING)

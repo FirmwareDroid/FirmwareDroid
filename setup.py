@@ -64,8 +64,7 @@ class FmdEnvironment:
     blob_storage_path = os.path.join(script_file_path, blob_storage_name)
     app_env = None
     app_debug = None
-    local_storage_path = None
-    local_storage_path_secondary = None
+    local_storage_path_list = []
     local_mongo_db_path_node1 = None
     redis_config_path = None
     redis_password = None
@@ -168,12 +167,10 @@ class FmdEnvironment:
             if not _create_directory(self.blob_storage_path):
                 continue
 
-            self.local_storage_path = os.path.join(self.blob_storage_path, "00_file_storage")
-            if not _create_directory(self.local_storage_path):
-                continue
-            self.local_storage_path_secondary = os.path.join(self.blob_storage_path, "01_file_storage")
-            if not _create_directory(self.local_storage_path_secondary):
-                continue
+            for x in range(0, 10):
+                self.local_storage_path_list.append(os.path.join(self.blob_storage_path, f"0{x}_file_storage"))
+                if not _create_directory(self.local_storage_path_list[x]):
+                    continue
 
             self.local_mongo_db_path_node1 = self._get_mongo_db_path()
             if not _create_directory(self.local_mongo_db_path_node1):
@@ -252,8 +249,16 @@ class FmdEnvironment:
         content = template.render(
             app_env=self.app_env,
             app_debug=self.app_debug,
-            local_storage_path=self.local_storage_path,
-            local_storage_path_secondary=self.local_storage_path_secondary,
+            local_storage_path_00=self.local_storage_path_list[0],
+            local_storage_path_01=self.local_storage_path_list[1],
+            local_storage_path_02=self.local_storage_path_list[2],
+            local_storage_path_03=self.local_storage_path_list[3],
+            local_storage_path_04=self.local_storage_path_list[4],
+            local_storage_path_05=self.local_storage_path_list[5],
+            local_storage_path_06=self.local_storage_path_list[6],
+            local_storage_path_07=self.local_storage_path_list[7],
+            local_storage_path_08=self.local_storage_path_list[8],
+            local_storage_path_09=self.local_storage_path_list[9],
             local_mongo_db_path_node1=self.local_mongo_db_path_node1,
             redis_config_path=self.redis_config_path,
             redis_password=self.redis_password,

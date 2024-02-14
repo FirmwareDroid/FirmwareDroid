@@ -18,6 +18,11 @@ jadx/*
 mongodb_data/*
 
 # files
+**/blob_storage
+/blob_storage
+blob_storage/*
+file_store/*
+file_store/
 00_file_storage/app_extract/*
 00_file_storage/import_failed/*
 00_file_storage/import/*
