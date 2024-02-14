@@ -70,7 +70,8 @@ services:
     networks:
       - backend
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongo mongo-db-1:27017/test --quiet
+      # echo 'db.runCommand("ping").ok' | mongo mongo-db-1:27017/FirmwareDroid --quiet
+      test: curl --connect-timeout 10 --silent --show-error 127.0.0.1:27017
       interval: 1m30s
       timeout: 10s
       retries: 3
