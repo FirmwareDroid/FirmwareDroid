@@ -47,14 +47,12 @@ def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0):
         num_threads = firmware_archives_queue.qsize()
     else:
         num_threads = 10
-    worker_list = []
 
     for i in range(num_threads):
-        logging.debug(f"Start importer thread {i}")
+        logging.debug(f"Start importer thread {i} of {num_threads}")
         worker = Thread(target=prepare_firmware_import, args=(firmware_archives_queue, create_fuzzy_hashes, store_path))
         worker.setDaemon(True)
         worker.start()
-        worker_list.append(worker)
     firmware_archives_queue.join()
 
 
@@ -66,7 +64,7 @@ def create_file_import_queue(store_path):
     """
     firmware_import_folder_path = store_path["FIRMWARE_FOLDER_IMPORT"]
     filename_list = get_filenames(firmware_import_folder_path)
-    filename_list = list(filter(lambda x: x.endswith(".zip") or x.endswith(".tar"), filename_list))
+    filename_list = list(filter(lambda x: any(x.endswith(ext) for ext in ALLOWED_ARCHIVE_FILE_EXTENSIONS), filename_list))
     logging.info(f"{len(filename_list)} files to import from {firmware_import_folder_path}:"
                  f"\n\n{''.join(map(str, filename_list))}")
     if len(filename_list) == 0:
@@ -114,7 +112,7 @@ def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes, store_path
 
     """
     while True:
-        filename = firmware_file_queue.get()
+        filename = firmware_file_queue.get(block=False, timeout=300)
         logging.info(f"Attempt to import: {str(filename)}")
         try:
             firmware_file_path = os.path.join(store_path["FIRMWARE_FOLDER_IMPORT"], filename)

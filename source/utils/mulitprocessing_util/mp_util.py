@@ -7,7 +7,6 @@ sys.path.append("/var/www/source/")
 from database.query_document import get_filtered_list
 from model import AndroidApp
 import importlib
-import multiprocessing
 import os
 import queue
 import subprocess
