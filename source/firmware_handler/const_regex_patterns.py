@@ -80,18 +80,18 @@ SYSTEM_DAT_PATCH_PATTERN_LIST = ["system[.]patch[.]dat"]
 
 ##########################################################################################
 # Build.prop properties
-# ONLY EXACT MATCHES - NO REGEX HERE
+# ONLY EXACT MATCHES - NO REGEX MATCHING HERE
 ##########################################################################################
-BUILD_PRODUCT_LIST = ["ro_build_product"]
-BUILD_VERSION_RELEASE_LIST = ["ro_build_version_release"]
-BUILD_VERSION_SECURITY_PATCH_LIST = ["ro_build_version_security_patch"]
+BUILD_PRODUCT_LIST = ["ro_build_product", "ro_odm_build_product"]
+BUILD_VERSION_RELEASE_LIST = ["ro_build_version_release", "ro_odm_build_version_release"]
+BUILD_VERSION_SECURITY_PATCH_LIST = ["ro_build_version_security_patch", "ro_odm_build_version_security_patch"]
 
-PRODUCT_MANUFACTURER_LIST = ["ro_product_manufacturer"]
-PRODUCT_BRAND_LIST = ["ro_product_brand"]
-PRODUCT_LOCALE_LIST = ["ro_product_locale"]
-PRODUCT_LOCAL_REGION_LIST = ["ro_product_locale_region"]
-PRODUCT_MODEL_LIST = ["ro_product_model"]
+PRODUCT_MANUFACTURER_LIST = ["ro_product_manufacturer", "ro_product_odm_manufacturer"]
+PRODUCT_BRAND_LIST = ["ro_product_brand", "ro_product_odm_brand"]
+PRODUCT_LOCALE_LIST = ["ro_product_locale", "ro_product_odm_locale"]
+PRODUCT_LOCAL_REGION_LIST = ["ro_product_locale_region", "ro_product_locale_region"]
+PRODUCT_MODEL_LIST = ["ro_product_model", "ro_product_odm_model"]
 
-SYSTEM_BUILD_VERSION_RELEASE_LIST = ["ro_system_build_version_release"]
-SYSTEM_BUILD_TAGS_LIST = ["ro_system_build_tags"]
-SYSTEM_BUILD_FINGERPRINT_LIST = ["ro_system_build_fingerprint"]
+SYSTEM_BUILD_VERSION_RELEASE_LIST = ["ro_system_build_version_release", "ro_odm_build_version_release"]
+SYSTEM_BUILD_TAGS_LIST = ["ro_system_build_tags", "ro_odm_build_tags"]
+SYSTEM_BUILD_FINGERPRINT_LIST = ["ro_system_build_fingerprint", "ro_odm_build_fingerprint"]
