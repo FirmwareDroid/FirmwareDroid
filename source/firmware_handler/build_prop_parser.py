@@ -41,7 +41,7 @@ class BuildPropParser:
 
         """
         build_prop_file = open(self.build_prop_file_path, "rb")
-        if self.properties is {}:
+        if self.properties == {}:
             self.properties["error"] = "could not parse build.prop properties"
         build_prop = BuildPropFile(build_prop_file=build_prop_file.read(),
                                    firmware_file_id_reference=self.firmware_file.id,
