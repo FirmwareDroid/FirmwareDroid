@@ -261,8 +261,8 @@ def store_firmware_archive(firmware_archive_file_path, md5, version_detected, st
 
     :return: str, str - name of the firmware within the permanent storage and path to the storage.
     """
-    _, file_extension = os.path.splitext(firmware_archive_file_path)
-    store_filename = md5 + file_extension
+    #_, file_extension = os.path.splitext(firmware_archive_file_path)
+    store_filename = md5
     firmware_archive_store_path = Path(os.path.join(store_path["FIRMWARE_FOLDER_STORE"],
                                                     version_detected,
                                                     md5))
@@ -282,6 +282,18 @@ def store_firmware_archive(firmware_archive_file_path, md5, version_detected, st
                       f"{firmware_archive_store_path.absolute().as_posix()}")
 
     return store_filename, firmware_store_path.absolute().as_posix()
+
+
+def check_if_successful_import(partition_info_dict):
+    """
+    Checks if one partition was successfully imported.
+    :param partition_info_dict:
+    :return: bool - true if at least one partition was successfully imported.
+    """
+    for partition_name, partition_info in partition_info_dict.items():
+        if partition_info["is_import_success"]:
+            return True
+    return False
 
 
 def import_firmware(original_filename, md5, firmware_archive_file_path, create_fuzzy_hashes, store_paths):
@@ -316,6 +328,8 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
             version_detected = detect_by_build_prop(files_dict["build_prop_file_list"])
             store_filename, firmware_store_path = store_firmware_archive(firmware_archive_file_path, md5,
                                                                          version_detected, store_paths)
+            if check_if_successful_import(partition_info_dict):
+                raise ValueError("No partition was successfully imported.")
 
             store_firmware_object(store_filename=store_filename,
                                   original_filename=original_filename,
