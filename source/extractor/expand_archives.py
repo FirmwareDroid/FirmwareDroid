@@ -53,7 +53,7 @@ def extract_archive_layer(compressed_file_path, destination_dir, delete_compress
     :param delete_compressed_file: boolean - if true, deletes the archive after it is extracted.
 
     """
-    supported_file_types_regex = r".(zip|tar|tar\.md5|lz4|pac|nb0|bin|br|dat)$"
+    supported_file_types_regex = r".(zip|tar|md5|lz4|pac|nb0|bin|br|dat)$"
     extract_function_dict = {
         ".zip": extract_zip,
         ".tar": extract_tar,
