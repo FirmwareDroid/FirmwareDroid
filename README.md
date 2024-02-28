@@ -341,26 +341,7 @@ The updated interface boasts improved performance and stability, albeit with the
 previous versions of FMD. While MongoDB, with MongoEngine, remains the chosen database engine, some modifications 
 have been made to the database models.
 
-
-### Documentation (deprecated -> under revision)
-See our [online documentation](https://firmwardroid.readthedocs.io/en/latest/) for further information:
-* [Installation guide](https://firmwardroid.readthedocs.io/en/latest/01_installation.html)
-* [API documentation](https://firmwardroid.readthedocs.io/en/latest/06_code-documentation.html)
-
-#### Building the docs
-All Sphinx docs can be found within this repository in the 
-[docs](https://github.com/FirmwareDroid/FirmwareDroid/tree/main/docs) folder.
-The docs can be build with Sphinx as follows:
-```
-pip install -r requirements.txt
-pip install -r requirements_docs.txt
-cd /docs
-make html
-```
-The docs should then be available as html under the `/docs/build/` folder. If something is missing in the docs please
-open an issue or better a pull request.
-
-
+  
 ### License:
 FirmwareDroid is a non-profit research project licenced under the GNU General Public License v3.0
 (see our [licence](https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md)). 
