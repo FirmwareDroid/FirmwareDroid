@@ -1,6 +1,0 @@
-Development Guide
-=================
-
-Getting started
----------------
-
