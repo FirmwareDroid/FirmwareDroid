@@ -26,7 +26,7 @@ from firmware_handler.firmware_version_detect import detect_by_build_prop
 from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
 from bson import ObjectId
 
-ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar", ".tar.gz", ".tar.bz2", "tar.md5", "zip.md5"]
+ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar", ".tar.gz", ".tar.bz2", "tar.md5", "zip.md5", ".md5"]
 lock = threading.Lock()
 
 
