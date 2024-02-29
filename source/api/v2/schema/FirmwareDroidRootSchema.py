@@ -4,13 +4,12 @@
 import graphene
 import graphql_jwt
 from graphene_django.debug import DjangoDebug
-from graphene_mongo import MongoengineConnectionField
 from api.v2.schema.HealthCheckSchema import HealthCheckQuery
 from api.v2.schema.RqJobsSchema import RqJobMutation, RqQueueQuery
 from api.v2.schema.UserAccountSchema import UserAccountQuery
 from api.v2.schema.StoreSettingsSchema import StoreSettingsQuery
 from api.v2.schema.AndroidFirmwareSchema import AndroidFirmwareQuery
-from api.v2.schema.AndroidAppSchema import AndroidAppQuery, AndroidAppType
+from api.v2.schema.AndroidAppSchema import AndroidAppQuery
 from api.v2.schema.AndrowarnSchema import AndrowarnReportQuery
 from api.v2.schema.FirmwareFileSchema import FirmwareFileQuery
 from api.v2.schema.ApkidSchema import ApkidReportQuery
@@ -33,7 +32,7 @@ from api.v2.schema.LzjdHashSchema import LzjdHashQuery
 from api.v2.schema.SdHashSchema import SdHashQuery
 from api.v2.schema.SsDeepClusterAnalysisSchema import SsDeepClusterAnalysisQuery
 from api.v2.schema.TlshHashSchema import TlshHashQuery
-from api.v2.schema.AppCertificateSchema import AppCertificateQuery, AppCertificateType
+from api.v2.schema.AppCertificateSchema import AppCertificateQuery
 from api.v2.schema.AecsJobSchema import AecsJobMutation, AecsJobQuery
 
 
@@ -72,7 +71,6 @@ class Query(ApplicationSettingQuery,
     token_auth = graphql_jwt.ObtainJSONWebToken.Field()
     verify_token = graphql_jwt.Verify.Field()
     refresh_token = graphql_jwt.Refresh.Field()
-    test_list = MongoengineConnectionField(AppCertificateType)
 
 
 class Mutation(RqJobMutation,
