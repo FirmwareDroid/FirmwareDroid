@@ -241,18 +241,21 @@ REDIS_HOST = "redis"  # "localhost" if DEBUG else "redis"
 
 # RQ Config
 RQ_QUEUES = {
+
     'high-python': {
         'HOST': REDIS_HOST,
         'PORT': 6379,
         'DB': 0,
         'PASSWORD': REDIS_PASSWORD,
-        'DEFAULT_TIMEOUT': 60 * 60,
+        'DEFAULT_TIMEOUT': 60 * 60 * 24 * 14,
+        'DEFAULT_RESULT_TTL': 60 * 60 * 24 * 3,
     },
     'default-python': {
         'HOST': REDIS_HOST,
         'PORT': 6379,
         'DB': 0,
         'PASSWORD': REDIS_PASSWORD,
-        'DEFAULT_TIMEOUT': 60 * 60,
+        'DEFAULT_TIMEOUT': 60 * 60 * 24 * 14,
+        'DEFAULT_RESULT_TTL': 60 * 60 * 24 * 3,
     },
 }

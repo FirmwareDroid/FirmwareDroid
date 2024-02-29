@@ -34,6 +34,8 @@ ODM_IMG_PATTERN_LIST = ["odm[.]img", "odm[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 USERDATA_IMG_PATTERN_LIST = ["userdata[.]img", "userdata[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 PRODUCT_IMG_PATTERN_LIST = ["product[.]img", "product[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 PVMFW_IMG_PATTERN_LIST = ["pvmfw[.]img", "pvmfw[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
+VBMETA__IMG_PATTERN_LIST = ["vbmeta[.]img", "vbmeta[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
+VBMETA_SYSTEM_IMG_PATTERN_LIST = ["vbmeta_system[.]img", "vbmeta_system[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 
 EXT_IMAGE_PATTERNS_DICT = {"system": SYSTEM_IMG_PATTERN_LIST,
                            "system_other": SYSTEM_OTHER_IMG_PATTERN_LIST,
