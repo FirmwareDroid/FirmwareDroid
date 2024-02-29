@@ -8,7 +8,7 @@ from graphql_jwt.decorators import superuser_required
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from model.AndroidFirmware import AndroidFirmware
 
-AndroidFirmwareFilter = generate_filter(AndroidFirmware)
+ModelFilter = generate_filter(AndroidFirmware)
 
 
 class AndroidFirmwareType(MongoengineObjectType):
@@ -20,19 +20,19 @@ class AndroidFirmwareType(MongoengineObjectType):
 class AndroidFirmwareQuery(graphene.ObjectType):
     android_firmware_list = graphene.List(AndroidFirmwareType,
                                           object_id_list=graphene.List(graphene.String),
-                                          filter=graphene.Argument(AndroidFirmwareFilter),
+                                          field_filter=graphene.Argument(ModelFilter),
                                           name="android_firmware_list"
                                           )
     android_firmware_id_list = graphene.List(graphene.String,
                                              name="android_firmware_id_list",
-                                             filter=graphene.Argument(AndroidFirmwareFilter),
+                                             field_filter=graphene.Argument(ModelFilter),
                                              )
 
     @superuser_required
-    def resolve_android_firmware_list(self, info, object_id_list, filter=None):
-        return get_filtered_queryset(AndroidFirmware, object_id_list, filter)
+    def resolve_android_firmware_list(self, info, object_id_list, field_filter=None):
+        return get_filtered_queryset(AndroidFirmware, object_id_list, field_filter)
 
     @superuser_required
-    def resolve_android_firmware_id_list(self, info, filter=None):
-        queryset = get_filtered_queryset(model=AndroidFirmware, filter=filter, object_id_list=None)
+    def resolve_android_firmware_id_list(self, info, field_filter=None):
+        queryset = get_filtered_queryset(model=AndroidFirmware, filter=field_filter, object_id_list=None)
         return [document.pk for document in queryset]

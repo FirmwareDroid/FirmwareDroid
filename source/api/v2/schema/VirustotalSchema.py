@@ -4,7 +4,10 @@
 import graphene
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
+from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
 from model.VirusTotalReport import VirusTotalReport
+
+ModelFilter = generate_filter(VirusTotalReport)
 
 
 class VirustotalReportType(MongoengineObjectType):
@@ -15,8 +18,9 @@ class VirustotalReportType(MongoengineObjectType):
 class VirustotalReportQuery(graphene.ObjectType):
     virustotal_report_list = graphene.List(VirustotalReportType,
                                            object_id_list=graphene.List(graphene.String),
+                                           field_filter=graphene.Argument(ModelFilter),
                                            name="virustotal_report_list")
 
     @superuser_required
-    def resolve_virustotal_report_list(self, info, object_id_list):
-        return VirusTotalReport.objects.get(pk__in=object_id_list)
+    def resolve_virustotal_report_list(self, info, object_id_list=None, field_filter=None):
+        return get_filtered_queryset(VirusTotalReport, object_id_list, field_filter)

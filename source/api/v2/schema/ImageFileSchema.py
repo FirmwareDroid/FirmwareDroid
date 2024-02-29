@@ -4,7 +4,10 @@
 import graphene
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
+from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
 from model.ImageFile import ImageFile
+
+ModelFilter = generate_filter(ImageFile)
 
 
 class ImageFileType(MongoengineObjectType):
@@ -15,8 +18,9 @@ class ImageFileType(MongoengineObjectType):
 class ImageFileQuery(graphene.ObjectType):
     image_file_list = graphene.List(ImageFileType,
                                     object_id_list=graphene.List(graphene.String),
+                                    field_filter=graphene.Argument(ModelFilter),
                                     name="image_file_list")
 
     @superuser_required
-    def resolve_image_file_list(self, info, object_id_list):
-        return ImageFile.objects(pk__in=object_id_list)
+    def resolve_image_file_list(self, info, object_id_list=None, field_filter=None):
+        return get_filtered_queryset(ImageFile, object_id_list, field_filter)
