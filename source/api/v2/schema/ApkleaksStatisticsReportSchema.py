@@ -4,7 +4,10 @@
 import graphene
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
+from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
 from model.ApkleaksStatisticsReport import ApkleaksStatisticsReport
+
+ModelFilter = generate_filter(ApkleaksStatisticsReport)
 
 
 class ApkleaksStatisticsReportType(MongoengineObjectType):
@@ -15,9 +18,10 @@ class ApkleaksStatisticsReportType(MongoengineObjectType):
 class ApkleaksStatisticsReportQuery(graphene.ObjectType):
     apkleaks_statistics_report_list = graphene.List(ApkleaksStatisticsReportType,
                                                     object_id=graphene.List(graphene.String),
+                                                    field_filter=graphene.Argument(ModelFilter),
                                                     name="apkleaks_statistics_report_list"
                                                     )
 
     @superuser_required
-    def resolve_apkleaks_statistics_report_list(self, info, object_id_list):
-        return ApkleaksStatisticsReport.objects(pk__in=object_id_list)
+    def resolve_apkleaks_statistics_report_list(self, info, object_id_list=None, field_filter=None):
+        return get_filtered_queryset(ApkleaksStatisticsReport, object_id_list, field_filter)

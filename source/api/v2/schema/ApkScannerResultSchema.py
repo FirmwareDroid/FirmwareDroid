@@ -4,7 +4,10 @@
 import graphene
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
+from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from model.ApkScannerReport import ApkScannerReport
+
+ModelFilter = generate_filter(ApkScannerReport)
 
 
 class ApkScannerReportType(MongoengineObjectType):
@@ -15,9 +18,10 @@ class ApkScannerReportType(MongoengineObjectType):
 class ApkScannerReportQuery(graphene.ObjectType):
     apk_scanner_report_list = graphene.List(ApkScannerReportType,
                                             object_id_list=graphene.List(graphene.String),
+                                            field_filter=graphene.Argument(ModelFilter),
                                             name="apk_scanner_report_list"
                                             )
 
     @superuser_required
-    def resolve_apk_scanner_report_list(self, info, object_id_list):
-        return ApkScannerReport.objects(pk__in=object_id_list)
+    def resolve_apk_scanner_report_list(self, info, object_id_list=None, field_filter=None):
+        return get_filtered_queryset(ApkScannerReport, object_id_list, field_filter)

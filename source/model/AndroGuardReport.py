@@ -48,6 +48,8 @@ class AndroGuardReport(ApkScannerReport):
     manifest_libraries = ListField(required=False)
     manifest_features = ListField(required=False)
     signature_names = ListField(required=False)
+    dex_names = ListField(required=False)
+    intent_filters_dict = DictField(required=False)
     class_analysis_id_list = ListField(LazyReferenceField('AndroGuardClassAnalysis', reverse_delete_rule=DO_NOTHING),
                                        required=False)
     string_analysis_id_list = ListField(LazyReferenceField('AndroGuardStringAnalysis', reverse_delete_rule=DO_NOTHING),
