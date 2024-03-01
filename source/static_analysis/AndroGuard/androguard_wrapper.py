@@ -24,11 +24,6 @@ def add_report_crossreferences(report):
     :param report: class:'AndroGuardReport'
 
     """
-    # TODO Add reference for class analysis
-    # for class_id in report.class_analysis_id_list:
-    #   class_analysis = AndroGuardClassAnalysis.objects.get(id=class_id)
-    #   class_analysis.androguard_report_reference = report.id
-    #   class_analysis.save()
     for string_id in report.string_analysis_id_list:
         string_analysis = AndroGuardStringAnalysis.objects.get(pk=string_id.pk)
         string_analysis.androguard_report_reference = report.id
@@ -242,6 +237,21 @@ def get_class_analysis(dx):
     return class_analysis_id_list
 
 
+def search_intent_filters(androguard_apk, components_dict):
+    """
+    Creates a dictionary of intent filters for the given components.
+
+    :param androguard_apk: AndroGuard analysis object.
+    :param components_dict: dict - A dictionary of components.
+
+    :return: dict - A dictionary of intent filters.
+    """
+    intent_filter_dict = {component_type: {component: androguard_apk.get_intent_filters(component_type, component)
+                                           for component in component_list}
+                          for component_type, component_list in components_dict.items()}
+    return intent_filter_dict
+
+
 def analyse_single_apk(android_app):
     """
     Start AndroGuard Analysis and creates a db object from the result.
@@ -252,49 +262,56 @@ def analyse_single_apk(android_app):
     """
     from androguard import __version__
     from androguard.misc import AnalyzeAPK
-    a, d, dx = AnalyzeAPK(android_app.absolute_store_path)
-    certificate_list, certificate_id_list = create_certificate_object_list(a.get_certificates(), android_app)
-    permission_details = filter_mongodb_dict_chars(a.get_details_permissions())
-    permissions_declared_details = filter_mongodb_dict_chars(a.get_declared_permissions_details())
+    apk, _, dx = AnalyzeAPK(android_app.absolute_store_path)
+    _, certificate_id_list = create_certificate_object_list(apk.get_certificates(), android_app)
+    permission_details = filter_mongodb_dict_chars(apk.get_details_permissions())
+    permissions_declared_details = filter_mongodb_dict_chars(apk.get_declared_permissions_details())
     string_analysis_id_list = get_string_analysis(dx)
-    # class_analysis_id_list = get_class_analysis(dx)    #  TODO IMPLEMENT CLASS ANALYSIS ROUTE
+
+    comoponents_dict = {"activity": apk.get_activities(),
+                        "provider": apk.get_providers(),
+                        "service": apk.get_services(),
+                        "receiver": apk.get_receivers()}
+
     report = AndroGuardReport(android_app_id_reference=android_app.id,
                               scanner_version=__version__,
                               scanner_name=SCANNER_NAME,
-                              packagename=a.get_package(),
-                              is_valid_APK=a.is_valid_APK(),
-                              is_androidtv=a.is_androidtv(),
-                              is_leanback=a.is_leanback(),
-                              is_wearable=a.is_wearable(),
-                              file_name_list=a.get_files(),
-                              is_multidex=a.is_multidex(),
-                              main_activity=a.get_main_activity(),
-                              main_activity_list=a.get_main_activities(),
-                              permissions=a.get_permissions(),
+                              packagename=apk.get_package(),
+                              is_valid_APK=apk.is_valid_APK(),
+                              is_androidtv=apk.is_androidtv(),
+                              is_leanback=apk.is_leanback(),
+                              is_wearable=apk.is_wearable(),
+                              file_name_list=apk.get_files(),
+                              is_multidex=apk.is_multidex(),
+                              main_activity=apk.get_main_activity(),
+                              main_activity_list=apk.get_main_activities(),
+                              permissions=apk.get_permissions(),
                               permission_details=permission_details,
-                              permissions_implied=a.get_uses_implied_permission_list(),
-                              permissions_declared=a.get_declared_permissions(),
+                              permissions_implied=apk.get_uses_implied_permission_list(),
+                              permissions_declared=apk.get_declared_permissions(),
                               permissions_declared_details=permissions_declared_details,
-                              permissions_requested_third_party=a.get_requested_third_party_permissions(),
-                              activities=a.get_activities(),
-                              providers=a.get_providers(),
-                              services=a.get_services(),
-                              receivers=a.get_receivers(),
-                              manifest_libraries=a.get_libraries(),
-                              manifest_features=a.get_features(),
-                              signature_names=a.get_signature_names(),
-                              app_name=a.get_app_name(),
-                              android_version_code=a.get_androidversion_code(),
-                              android_version_name=a.get_androidversion_name(),
-                              min_sdk_version=str(a.get_min_sdk_version()),
-                              max_sdk_version=str(a.get_max_sdk_version()),
-                              target_sdk_version=str(a.get_target_sdk_version()),
-                              effective_target_version=str(a.get_effective_target_sdk_version()),
-                              manifest_xml=a.get_android_manifest_axml().get_xml(),
+                              permissions_requested_third_party=apk.get_requested_third_party_permissions(),
+                              activities=apk.get_activities(),
+                              providers=apk.get_providers(),
+                              services=apk.get_services(),
+                              receivers=apk.get_receivers(),
+                              manifest_libraries=apk.get_libraries(),
+                              manifest_features=apk.get_features(),
+                              dex_names=apk.get_dex_names(),
+                              signature_names=apk.get_signature_names(),
+                              app_name=apk.get_app_name(),
+                              intent_filters_dict=search_intent_filters(apk, comoponents_dict),
+                              android_version_code=apk.get_androidversion_code(),
+                              android_version_name=apk.get_androidversion_name(),
+                              min_sdk_version=str(apk.get_min_sdk_version()),
+                              max_sdk_version=str(apk.get_max_sdk_version()),
+                              target_sdk_version=str(apk.get_target_sdk_version()),
+                              effective_target_version=str(apk.get_effective_target_sdk_version()),
+                              manifest_xml=apk.get_android_manifest_axml().get_xml(),
                               string_analysis_id_list=string_analysis_id_list,
-                              is_signed_v1=a.is_signed_v1(),
-                              is_signed_v2=a.is_signed_v2(),
-                              is_signed_v3=a.is_signed_v3()
+                              is_signed_v1=apk.is_signed_v1(),
+                              is_signed_v2=apk.is_signed_v2(),
+                              is_signed_v3=apk.is_signed_v3()
                               ).save()
     add_report_crossreferences(report)
     android_app.androguard_report_reference = report.id

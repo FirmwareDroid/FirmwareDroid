@@ -1,1 +1,1 @@
-androguard==3.3.5
+androguard==4.1.0
