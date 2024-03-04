@@ -4,7 +4,7 @@
 import datetime
 import logging
 import os
-import traceback
+import mongoengine
 from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, CASCADE, \
     ListField, Document
 from model import AndroidFirmware
@@ -62,5 +62,7 @@ class AndroidApp(Document):
         try:
             os.remove(document.absolute_store_path)
         except Exception as err:
-            logging.error(err)
-            traceback.print_exc()
+            logging.warning(err)
+
+
+mongoengine.signals.pre_delete.connect(AndroidApp.pre_delete, sender=AndroidApp)

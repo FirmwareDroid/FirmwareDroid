@@ -30,7 +30,8 @@ class AecsJobQuery(graphene.ObjectType):
 class ModifyAecsJob(graphene.Mutation):
     """
     Create or update the aecs-job. There can only be one aecs-job in the database. In case a new
-    job is create the old will be overwritten by the new.
+    job is created the old will be overwritten by the new. The aecs-job is used to store the
+    firmware_id_list for further processing by the aecs-service.
     """
     is_success = graphene.Boolean()
 

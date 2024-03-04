@@ -11,7 +11,6 @@ from hashing.ssdeep.ssdeep_hasher import start_ssdeep_hashing
 from hashing.tlsh.tlsh_hasher import start_tlsh_hashing
 from context.context_creator import create_db_context
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
-from utils.file_utils.file_util import create_temp_directories
 
 
 @create_db_context

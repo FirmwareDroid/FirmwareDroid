@@ -51,3 +51,7 @@ class DeleteAndroidFirmwareMutation(graphene.Mutation):
         queryset = get_filtered_queryset(model=AndroidFirmware, filter=None, object_id_list=object_id_list)
         is_successful = delete_queryset(queryset)
         return cls(is_successful=is_successful)
+
+
+class AndroidFirmwareMutation(graphene.ObjectType):
+    delete_android_firmware = DeleteAndroidFirmwareMutation.Field()

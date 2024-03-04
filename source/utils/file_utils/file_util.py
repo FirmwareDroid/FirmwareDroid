@@ -250,30 +250,3 @@ def stream_to_json_file(file):
     json_file.save()
     return json_file
 
-
-def create_temp_directories():
-    """
-    Creates temporary directories.
-
-    :return: tempdir, tempdir
-
-    """
-    cache_temp_file_dir = tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"], suffix="_extract")
-    cache_temp_mount_dir = tempfile.TemporaryDirectory(dir=STORE_PATHS["FIRMWARE_FOLDER_CACHE"], suffix="_mount")
-    time.sleep(5)
-    return cache_temp_file_dir, cache_temp_mount_dir
-
-
-def cleanup_directories(firmware_file_path, firmware_app_store):
-    """
-    Moves failed files to the import failed folder. Removes intermediate files.
-
-    :param firmware_file_path: str - path to the firmware file.
-    :param firmware_app_store: str - path to application directory for apps.
-
-    """
-    shutil.move(firmware_file_path, STORE_PATHS["FIRMWARE_FOLDER_IMPORT_FAILED"])
-    try:
-        shutil.rmtree(firmware_app_store)
-    except FileNotFoundError:
-        pass

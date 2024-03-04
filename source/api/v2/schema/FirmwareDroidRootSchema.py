@@ -8,7 +8,7 @@ from api.v2.schema.HealthCheckSchema import HealthCheckQuery
 from api.v2.schema.RqJobsSchema import RqJobMutation, RqQueueQuery
 from api.v2.schema.UserAccountSchema import UserAccountQuery
 from api.v2.schema.StoreSettingsSchema import StoreSettingsQuery
-from api.v2.schema.AndroidFirmwareSchema import AndroidFirmwareQuery, DeleteAndroidFirmwareMutation
+from api.v2.schema.AndroidFirmwareSchema import AndroidFirmwareQuery, AndroidFirmwareMutation
 from api.v2.schema.AndroidAppSchema import AndroidAppQuery
 from api.v2.schema.AndrowarnSchema import AndrowarnReportQuery
 from api.v2.schema.FirmwareFileSchema import FirmwareFileQuery
@@ -75,7 +75,7 @@ class Query(ApplicationSettingQuery,
 
 class Mutation(RqJobMutation,
                AecsJobMutation,
-               DeleteAndroidFirmwareMutation,
+               AndroidFirmwareMutation,
                graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name='_debug')
     delete_token_cookie = graphql_jwt.DeleteJSONWebTokenCookie.Field()
