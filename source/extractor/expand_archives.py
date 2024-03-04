@@ -9,7 +9,7 @@ from extractor.bin_extractor.bin_extractor import extract_bin
 from extractor.nb0_extractor import extract_nb0
 from extractor.pac_extractor import extract_pac
 from extractor.unblob_extractor import unblob_extract
-from extractor.unzipper import extract_tar, extract_zip
+from extractor.unzipper import extract_tar, extract_zip, extract_gz
 from extractor.lz4_extractor import extract_lz4
 from extractor.brotli_extractor import extract_brotli
 
@@ -57,6 +57,8 @@ def extract_archive_layer(compressed_file_path, destination_dir, delete_compress
     extract_function_dict = {
         ".zip": extract_zip,
         ".tar": extract_tar,
+        ".tgz": extract_tar,
+        ".gz": extract_gz,
         ".md5": extract_tar,
         ".lz4": extract_lz4,
         ".pac": extract_pac,
