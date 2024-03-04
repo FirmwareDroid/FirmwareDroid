@@ -30,8 +30,9 @@ class AndroidFirmware(Document):
     build_prop_file_id_list = ListField(LazyReferenceField('BuildPropFile', reverse_delete_rule=DO_NOTHING),
                                         required=False)
     android_app_id_list = ListField(LazyReferenceField('AndroidApp', reverse_delete_rule=DO_NOTHING), required=False)
-    hasFileIndex = BooleanField(required=False, default=False)
-    hasFuzzyHashIndex = BooleanField(required=False, default=False)
+    has_file_index = BooleanField(required=False, default=False)
+    has_fuzzy_hash_index = BooleanField(required=False, default=False)
+    has_AECS_build_files = BooleanField(required=False, default=False)
     firmware_file_id_list = ListField(LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING),
                                       required=False)
     version_detected = IntField(required=False, default=0)

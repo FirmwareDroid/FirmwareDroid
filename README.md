@@ -168,8 +168,8 @@ query GetAndroidFirmwareIds {
     absoluteStorePath
     fileSizeBytes
     filename
-    hasFileIndex
-    hasFuzzyHashIndex
+    has_file_index
+    has_fuzzy_hash_index
     id
     indexedDate
     md5

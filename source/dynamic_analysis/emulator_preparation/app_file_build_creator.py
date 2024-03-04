@@ -23,24 +23,72 @@ ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
 ANDROID_BP_TEMPLATE = ""
 
 
-def start_app_build_file_creator(format_name, object_id_list):
+def start_app_build_file_creator(format_name, firmware_list):
     """
     Creates for every given Android app a AOSP compatible module build file and stores it to the database. The process
     support mk and bp file formats.
 
     :param format_name: str - 'mk' or 'bp' file format.
-    :param object_id_list: list(ObjectID) - A list of object-ids that can be resolved to an instance
-    of class:'AndroidApp'.
+    :param firmware_list: list(class:'AndroidFirmware') - A list of class:'AndroidFirmware'
 
+    :return: list - A list of failed firmware that could not be processed.
     """
-    android_app_list = AndroidApp.objects(id__in=object_id_list)
-    if android_app_list and format_name:
-        for android_app in android_app_list:
-            try:
-                template = ANDROID_MK_TEMPLATE if format_name == "mk" else ANDROID_BP_TEMPLATE
-                create_soong_build_files(android_app, format_name, template)
-            except Exception as err:
-                logging.error(err)
+    failed_firmware_list = []
+    for firmware in firmware_list:
+        is_successfully_created = create_build_files_for_firmware(firmware, format_name)
+        failed_firmware_list.append(firmware) if not is_successfully_created else None
+    return failed_firmware_list
+
+
+def create_build_files_for_firmware(firmware, format_name):
+    """
+    Creates build files for a given firmware.
+
+    :param firmware: class:'AndroidFirmware' - An instance of AndroidFirmware.
+    :param format_name: str - 'mk' or 'bp' file format.
+
+    :return: bool - True if build files were successfully created for all apps, False otherwise.
+    """
+    is_successfully_created = False
+    if format_name:
+        is_successfully_created = create_build_files_for_apps(firmware.android_app_lazy_list, format_name)
+        if is_successfully_created:
+            firmware.has_AECS_build_files = True
+            firmware.save()
+    return is_successfully_created
+
+
+def create_build_files_for_apps(android_app_lazy_list, format_name):
+    """
+    Creates build files for a list of Android apps.
+
+    :param android_app_lazy_list: list - A list of AndroidApp instances.
+    :param format_name: str - 'mk' or 'bp' file format.
+    :return: bool - True if build files were successfully created for all apps, False otherwise.
+    """
+    is_successfully_created = True
+    for android_app_lazy in android_app_lazy_list:
+        android_app = android_app_lazy.fetch()
+        if not create_build_file_for_app(android_app, format_name):
+            is_successfully_created = False
+    return is_successfully_created
+
+
+def create_build_file_for_app(android_app, format_name):
+    """
+    Creates a build file for a given Android app.
+
+    :param android_app: class:'AndroidApp' - An instance of AndroidApp.
+    :param format_name: str - 'mk' or 'bp' file format.
+    :return: bool - True if the build file was successfully created, False otherwise.
+    """
+    try:
+        template = ANDROID_MK_TEMPLATE if format_name.lower() == "mk" else ANDROID_BP_TEMPLATE
+        create_soong_build_files(android_app, format_name, template)
+        return True
+    except Exception as err:
+        logging.error(err)
+        return False
 
 
 def create_soong_build_files(android_app, file_format, file_template):

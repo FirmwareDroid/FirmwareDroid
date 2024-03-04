@@ -457,8 +457,8 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
                                android_app_id_list=map(lambda x: x.id, android_app_list),
                                file_size_bytes=file_size,
                                version_detected=version_detected,
-                               hasFileIndex=True,
-                               hasFuzzyHashIndex=has_fuzzy_hash_index,
+                               has_file_index=True,
+                               has_fuzzy_hash_index=has_fuzzy_hash_index,
                                build_prop_file_id_list=build_prop_file_id_list,
                                partition_info_dict=partition_info_dict)
     firmware.save()
