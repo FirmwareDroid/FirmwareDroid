@@ -329,7 +329,7 @@ enhancements.
 
 ### Security
 
-FMD has only a minimal set of security features and is not a production ready software. Use at you own risk.
+FMD has only a minimal set of security features and is not a production ready software. Use at your own risk.
 
 
 ### Changelog
