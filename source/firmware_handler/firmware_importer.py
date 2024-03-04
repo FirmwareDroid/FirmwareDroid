@@ -94,7 +94,7 @@ def allow_import(firmware_file_path, md5):
 
     if AndroidFirmware.objects(md5=md5) or (AndroidFirmware.objects(md5=md5) is None):
         is_allowed = False
-        reason = "Skipped file - Already in database. {str(filename)}"
+        reason = f"Skipped file - Already in database. MD5: {md5}"
 
     return is_allowed, reason
 
@@ -127,6 +127,7 @@ def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes, store_path
             if is_allowed:
                 import_firmware(filename, md5, firmware_file_path, create_fuzzy_hashes, store_path)
             else:
+                shutil.move(firmware_file_path, store_path["FIRMWARE_FOLDER_IMPORT_FAILED"])
                 raise ValueError(reason)
         except Exception as err:
             logging.error(str(err))
