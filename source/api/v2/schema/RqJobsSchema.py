@@ -20,7 +20,7 @@ APK_SCAN_FUNCTION_NAME = "start_scan"
 ONE_WEEK_TIMEOUT = 60 * 60 * 24 * 7
 ONE_DAY_TIMEOUT = 60 * 60 * 24
 ONE_HOUR_TIMEOUT = 60 * 60 * 24
-
+MAX_OBJECT_ID_LIST_SIZE = 10000
 
 # TODO ADD INPUT VALIDATION FOR ALL QUERIES AND MUTATIONS
 #  See (https://gist.githubusercontent.com/Yankzy/e6470a51690a29a5c900fdbfe4b95318/raw/b718dab9273cfdab807828c15544137c19944028/scalars.py)
@@ -70,7 +70,7 @@ class CreateApkScanJob(graphene.Mutation):
     Create a RQ job for modules that scan apk files (static-analysis). Only module names from the class:'ModuleNames'
     are accepted. Every module uses an own python interpreter and the module is loaded during runtime.
     """
-    job_id = graphene.String()
+    job_id_list = graphene.List(graphene.String)
 
     class Arguments:
         queue_name = graphene.String(required=True, default_value="default-python")
@@ -81,21 +81,24 @@ class CreateApkScanJob(graphene.Mutation):
     @superuser_required
     def mutate(cls, root, info, queue_name, module_name, object_id_list):
         """
-        Enqueue a RQ job to start one of the scanners for apk files.
+        Enqueue a RQ job to start one of the scanners for apk files. In case the object_id_list is too large, the list
+        will be split into smaller chunks and each chunk will be processed in a separate RQ job.
 
         :param queue_name: str - Name of the rq queue to use. For instance, "high-python".
         :param module_name: str - Name of the module to use. For instance, "ANDROGUARD".
         :param object_id_list: list(str) - List of objectId to scan.
 
-        :return: unique id of the RQ job.
+        :return: list of unique ids of the RQ jobs.
         """
         queue = django_rq.get_queue(queue_name)
-        func_to_run = import_module_function(module_name, object_id_list)
-        #logging.error(f"Object-id-list: {object_id_list}")
-        #test_instance = AndroGuardScanJob(object_id_list)
-        #func_to_run = test_instance.start_scan
-        job = queue.enqueue(func_to_run, job_timeout=ONE_WEEK_TIMEOUT)
-        return cls(job_id=job.id)
+        object_id_chunks = [object_id_list[i:i + MAX_OBJECT_ID_LIST_SIZE] for i in range(0, len(object_id_list),
+                                                                                         MAX_OBJECT_ID_LIST_SIZE)]
+        job_ids = []
+        for object_id_chunk in object_id_chunks:
+            func_to_run = import_module_function(module_name, object_id_chunk)
+            job = queue.enqueue(func_to_run, job_timeout=ONE_WEEK_TIMEOUT)
+            job_ids.append(job.id)
+        return cls(job_id=job_ids)
 
 
 class CreateFirmwareExtractorJob(graphene.Mutation):

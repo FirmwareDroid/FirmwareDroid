@@ -73,8 +73,8 @@ def create_report(android_app, exodus_results):
     :param exodus_results: dict - results of the exodus scan.
 
     """
-    #TODO add dynamic usage for version
-    #from exodus_core import __version__
+    # TODO add dynamic usage for version
+    # from exodus_core import __version__
     exodus_report = ExodusReport(
         android_app_id_reference=android_app.id,
         scanner_version="1.3.9",
@@ -103,15 +103,11 @@ class ExodusScanJob(ScanJob):
         android_app_id_list = self.object_id_list
         logging.info(f"Exodus analysis started! With {str(len(android_app_id_list))} apps.")
         if len(android_app_id_list) > 0:
-            start_python_interpreter(item_list=android_app_id_list,
-                                     worker_function=exodus_worker_multiprocessing,
-                                     number_of_processes=os.cpu_count(),
-                                     use_id_list=True,
-                                     module_name=self.MODULE_NAME,
-                                     report_reference_name="exodus_report_reference",
-                                     interpreter_path=self.INTERPRETER_PATH)
-
-
-
-
-
+            python_process = start_python_interpreter(item_list=android_app_id_list,
+                                                      worker_function=exodus_worker_multiprocessing,
+                                                      number_of_processes=os.cpu_count(),
+                                                      use_id_list=True,
+                                                      module_name=self.MODULE_NAME,
+                                                      report_reference_name="exodus_report_reference",
+                                                      interpreter_path=self.INTERPRETER_PATH)
+            python_process.wait()

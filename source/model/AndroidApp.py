@@ -2,8 +2,11 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import datetime
+import logging
+import os
+import mongoengine
 from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, CASCADE, \
-    ListField, Document, GenericLazyReferenceField, GenericReferenceField, DictField
+    ListField, Document
 from model import AndroidFirmware
 
 
@@ -11,8 +14,7 @@ class AndroidApp(Document):
     meta = {
         'indexes': ['packagename',
                     'original_filename',
-                    'filename',
-
+                    'filename'
                     ]
     }
     firmware_id_reference = LazyReferenceField(AndroidFirmware, reverse_delete_rule=CASCADE, required=False)
@@ -54,3 +56,13 @@ class AndroidApp(Document):
     app_twins_reference_list = ListField(LazyReferenceField('AndroidApp', reverse_delete_rule=DO_NOTHING))
     certificate_id_list = ListField(LazyReferenceField('AppCertificate', reverse_delete_rule=DO_NOTHING))
     generic_file_list = ListField(LazyReferenceField('GenericFile', reverse_delete_rule=DO_NOTHING))
+
+    @classmethod
+    def pre_delete(cls, sender, document, **kwargs):
+        try:
+            os.remove(document.absolute_store_path)
+        except Exception as err:
+            logging.warning(err)
+
+
+mongoengine.signals.pre_delete.connect(AndroidApp.pre_delete, sender=AndroidApp)

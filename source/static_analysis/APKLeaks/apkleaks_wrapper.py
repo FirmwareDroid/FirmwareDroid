@@ -53,6 +53,7 @@ def get_apkleaks_analysis(apk_file_path, result_folder_path):
             self.output = output_file_path
             self.args = jadx_args
             self.pattern = None
+
     apkleaks_args = ApkleakArguments(True, apk_file_path, result_file.name, "--deobf")
     apkleaks_scanner = APKLeaks(apkleaks_args)
     try:
@@ -102,10 +103,11 @@ class APKLeaksScanJob(ScanJob):
         android_app_id_list = self.object_id_list
         logging.info(f"APKLeaks analysis started! With {str(len(android_app_id_list))} apps.")
         if len(android_app_id_list) > 0:
-            start_python_interpreter(item_list=android_app_id_list,
-                                     worker_function=apkleaks_worker_multiprocessing,
-                                     number_of_processes=os.cpu_count(),
-                                     use_id_list=True,
-                                     module_name=self.MODULE_NAME,
-                                     report_reference_name="apkleaks_report_reference",
-                                     interpreter_path=self.INTERPRETER_PATH)
+            python_process = start_python_interpreter(item_list=android_app_id_list,
+                                                      worker_function=apkleaks_worker_multiprocessing,
+                                                      number_of_processes=os.cpu_count(),
+                                                      use_id_list=True,
+                                                      module_name=self.MODULE_NAME,
+                                                      report_reference_name="apkleaks_report_reference",
+                                                      interpreter_path=self.INTERPRETER_PATH)
+            python_process.wait()

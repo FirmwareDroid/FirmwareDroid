@@ -3,7 +3,7 @@
 # See the file 'LICENSE' for copying permission.
 import mongoengine
 from mongoengine import LazyReferenceField, DateTimeField, StringField, ListField, CASCADE, \
-    DictField, LongField, BooleanField, Document, FileField, DO_NOTHING
+    DictField, LongField, BooleanField, Document, DO_NOTHING
 
 
 class AppCertificate(Document):
@@ -46,7 +46,8 @@ class AppCertificate(Document):
 
     @classmethod
     def pre_delete(cls, sender, document, **kwargs):
-        document.certificate_DER_encoded.delete()
+        for generic_file in document.generic_file_list:
+            generic_file.fetch().delete()
 
 
 mongoengine.signals.pre_delete.connect(AppCertificate.pre_delete, sender=AppCertificate)

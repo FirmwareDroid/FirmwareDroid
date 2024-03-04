@@ -8,7 +8,6 @@ import time
 from context.context_creator import create_db_context
 from model import FirmwareFile
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
-from utils.file_utils.file_util import create_temp_directories
 
 
 @create_db_context

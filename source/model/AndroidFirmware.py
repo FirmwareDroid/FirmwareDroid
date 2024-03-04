@@ -3,7 +3,9 @@
 # See the file 'LICENSE' for copying permission.
 import datetime
 import logging
-import traceback
+import os
+import shutil
+
 import mongoengine
 from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, \
     ListField, BooleanField, IntField, Document, DictField
@@ -37,39 +39,33 @@ class AndroidFirmware(Document):
     partition_info_dict = DictField(required=False, default={})
 
     @classmethod
+    def _delete_firmware_file(cls, android_firmware):
+        try:
+            if android_firmware.absolute_store_path and os.path.exists(android_firmware.absolute_store_path):
+                os.remove(android_firmware.absolute_store_path)
+        except Exception as e:
+            logging.error(f"Error deleting firmware file: {str(e)}")
+
+    @classmethod
+    def _delete_file_index(cls, android_firmware):
+        from .StoreSetting import StoreSetting
+        try:
+            store_setting_list = StoreSetting.objects()
+            for store_setting in store_setting_list:
+                if store_setting.uuid and store_setting.uuid in android_firmware.absolute_store_path:
+                    app_store_path = store_setting.store_options_dict[store_setting.uuid]["paths"][
+                        "FIRMWARE_FOLDER_APP_EXTRACT"]
+                    app_store_path = os.path.join(app_store_path, android_firmware.md5)
+                    if os.path.exists(app_store_path):
+                        shutil.rmtree(app_store_path)
+                    break
+        except Exception as e:
+            logging.error(f"Error deleting file index: {str(e)}")
+
+    @classmethod
     def pre_delete(cls, sender, document, **kwargs):
-        from model import BuildPropFile
-        for build_prop_lazy in document.build_prop_file_id_list:
-            logging.info(f"Delete build prop file: {build_prop_lazy.pk}")
-            try:
-                build_prop_file = BuildPropFile.objects.get(id=build_prop_lazy.pk)
-                build_prop_file.delete()
-                build_prop_file.save()
-            except Exception as err:
-                logging.error(err)
-                traceback.print_exc()
-        document.save()
+        cls._delete_firmware_file(android_firmware=document)
+        cls._delete_file_index(document)
 
 
 mongoengine.signals.pre_delete.connect(AndroidFirmware.pre_delete, sender=AndroidFirmware)
-
-
-# class AndroidFirmwareSchema(Schema):
-#     id = fields.Str()
-#     indexed_date = fields.DateTime()
-#     file_size_bytes = fields.Float()
-#     relative_store_path = fields.Str()
-#     absolute_store_path = fields.Str()
-#     original_filename = fields.Str()
-#     filename = fields.Str()
-#     md5 = fields.Str()
-#     sha256 = fields.Str()
-#     sha1 = fields.Str()
-#     ssdeep_digest = fields.Str()
-#     hasFileIndex = fields.Str()
-#     android_app_id_list = fields.List(fields.Str())
-#     firmware_file_id_list = fields.List(fields.Str())
-#
-#     class Meta:
-#         load_only = ('relative_store_path', 'id', 'absolute_store_path',
-#                      'filename', 'android_app_id_list', 'firmware_file_id_list')

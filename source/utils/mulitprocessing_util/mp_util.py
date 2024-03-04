@@ -3,6 +3,7 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 import sys
+
 sys.path.append("/var/www/source/")
 from database.query_document import get_filtered_list
 from model import AndroidApp
@@ -111,16 +112,16 @@ def start_python_interpreter(item_list,
     """
     serialized_list_str = ",".join(map(str, item_list))
     current_file = os.path.abspath(__file__)
-    subprocess.Popen([interpreter_path,
-                      current_file,
-                      serialized_list_str,
-                      worker_function.__name__,
-                      str(os.cpu_count()),
-                      str(use_id_list),
-                      module_name,
-                      report_reference_name
-                      ],
-                     cwd="/var/www/source/")
+    return subprocess.Popen([interpreter_path,
+                             current_file,
+                             serialized_list_str,
+                             worker_function.__name__,
+                             str(os.cpu_count()),
+                             str(use_id_list),
+                             module_name,
+                             report_reference_name
+                             ],
+                            cwd="/var/www/source/")
 
 
 def start_process_pool_new(item_list, worker_function, number_of_processes=os.cpu_count(), use_id_list=True):
