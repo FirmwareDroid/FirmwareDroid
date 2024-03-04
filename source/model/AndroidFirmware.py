@@ -10,6 +10,11 @@ from mongoengine import LazyReferenceField, DateTimeField, StringField, LongFiel
 
 
 class AndroidFirmware(Document):
+    meta = {
+        'indexes': ['version_detected',
+                    'os_vendor',
+                    ]
+    }
     indexed_date = DateTimeField(default=datetime.datetime.now)
     file_size_bytes = LongField(required=True)
     tag = StringField(required=False, max_length=1024)

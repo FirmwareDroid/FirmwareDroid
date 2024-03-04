@@ -8,6 +8,13 @@ from model import AndroidFirmware
 
 
 class AndroidApp(Document):
+    meta = {
+        'indexes': ['packagename',
+                    'original_filename',
+                    'filename',
+
+                    ]
+    }
     firmware_id_reference = LazyReferenceField(AndroidFirmware, reverse_delete_rule=CASCADE, required=False)
     indexed_date = DateTimeField(default=datetime.datetime.now)
     md5 = StringField(required=True, max_length=128, min_length=1)
