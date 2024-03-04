@@ -10,3 +10,4 @@ class BuildPropFile(Document):
     firmware_file_id_reference = LazyReferenceField(FirmwareFile, reverse_delete_rule=CASCADE, required=True)
     build_prop_file = FileField(required=True, collection_name="fs.build_prop")
     properties = DictField(required=True)
+

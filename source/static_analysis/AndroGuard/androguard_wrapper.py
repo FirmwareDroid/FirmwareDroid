@@ -396,10 +396,11 @@ class AndroGuardScanJob(ScanJob):
         android_app_id_list = self.object_id_list
         logging.info(f"Androguard analysis started! With {str(len(android_app_id_list))} apps.")
         if len(android_app_id_list) > 0:
-            start_python_interpreter(item_list=android_app_id_list,
-                                     worker_function=androguard_worker_multiprocessing,
-                                     number_of_processes=os.cpu_count(),
-                                     use_id_list=True,
-                                     module_name=self.MODULE_NAME,
-                                     report_reference_name="androguard_report_reference",
-                                     interpreter_path=self.INTERPRETER_PATH)
+            python_process = start_python_interpreter(item_list=android_app_id_list,
+                                                      worker_function=androguard_worker_multiprocessing,
+                                                      number_of_processes=os.cpu_count(),
+                                                      use_id_list=True,
+                                                      module_name=self.MODULE_NAME,
+                                                      report_reference_name="androguard_report_reference",
+                                                      interpreter_path=self.INTERPRETER_PATH)
+            python_process.wait()
