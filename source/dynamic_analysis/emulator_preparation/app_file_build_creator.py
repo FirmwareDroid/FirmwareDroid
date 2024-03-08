@@ -135,13 +135,11 @@ def create_template_string(android_app, template_string):
     """
     local_module = f"{android_app.md5}"
     local_src_files = android_app.filename
-    local_optional_uses_libraries = "androidx.window.extensions androidx.window.sidecar"
+    # TODO Fetch correct libraries
+    local_optional_uses_libraries = ""
     local_certificate = "platform"
     final_template = Template(template_string).substitute(local_module=local_module,
                                                           local_src_files=local_src_files,
                                                           local_certificate=local_certificate,
                                                           local_optional_uses_libraries=local_optional_uses_libraries)
-    #logging.error(f"Create template file:\nlocal_module:{local_module}\nlocal_src_files:{local_src_files}"
-    #              f"\nlocal_optional_uses_libraries:{local_optional_uses_libraries}"
-    #              f"\nlocal_certificate:{local_certificate}")
     return final_template
