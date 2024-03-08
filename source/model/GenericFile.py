@@ -2,7 +2,7 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import datetime
-from mongoengine import FileField, DateTimeField, signals, Document, StringField, \
+from mongoengine import FileField, DateTimeField, signals, Document, StringField, CASCADE, \
     GenericLazyReferenceField
 
 
@@ -10,7 +10,7 @@ class GenericFile(Document):
     create_datetime = DateTimeField(default=datetime.datetime.now, required=True)
     filename = StringField(required=True)
     file = FileField(required=True, collection_name="fs.generic")
-    document_reference = GenericLazyReferenceField(required=True)
+    document_reference = GenericLazyReferenceField(required=True, reverse_delete_rule=CASCADE)
 
     @classmethod
     def pre_file_delete(cls, sender, document, **kwargs):

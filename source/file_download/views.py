@@ -2,47 +2,33 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
+import mimetypes
 import os
 import tempfile
-from django.http import FileResponse
 import uuid
+import shutil
+from django.http import FileResponse, StreamingHttpResponse
+from wsgiref.util import FileWrapper
 from mongoengine import DoesNotExist
 from rest_framework.viewsets import ViewSet
 from model import AndroidApp
-import shutil
 from rest_framework.decorators import action
-
-# APP_BLACKLIST = ["BasicDreams.apk",
-#                  "Bluetooth.apk",
-#                  "BluetoothMidiService.apk",
-#                  "BookmarkProvider.apk",
-#                  "CameraExtensionsProxy.apk",
-#                  "CaptivePortalLogin.apk",
-#                  "CarrierDefaultApp.apk",
-#                  "CertInstaller.apk",
-#                  "CompanionDeviceManager.apk",
-#                  "EasterEgg.apk",
-#                  "ExtShared.apk",
-#                  "HTMLViewer.apk",
-#                  "KeyChain.apk",
-#                  "LiveWallpapersPicker.apk",
-#                  "NfcNci.apk",
-#                  "PacProcessor.apk",
-#                  "PartnerBookmarksProvider.apk",
-#                  "PrintRecommendationService.apk",
-#                  "PrintSpooler.apk",
-#                  "SecureElement.apk",
-#                  "SimAppDialog.apk",
-#                  "Stk.apk",
-#                  "WallpaperBackup.apk",
-#                  "framework-res.apk"]
-# APP_ERROR = ["CtsShimPrivPrebuilt.apk",
-#              "CtsShimPrebuilt.apk",
-#              "SystemUI.apk",
-#              "Turbo.apk"]
 
 
 class DownloadAppBuildView(ViewSet):
+
+    def get_download_file_response(self, request, file_path, filename):
+        chunk_size = 8192
+        response = StreamingHttpResponse(
+            FileWrapper(
+                open(file_path, "rb"),
+                chunk_size,
+            ),
+            content_type=mimetypes.guess_type(file_path)[0],
+        )
+        response["Content-Length"] = os.path.getsize(file_path)
+        response["Content-Disposition"] = f"attachment; filename={filename}"
+        return response
 
     @action(methods=['post'], detail=False, url_path='download', url_name='download')
     def download(self, request, *args, **kwargs):
@@ -61,20 +47,27 @@ class DownloadAppBuildView(ViewSet):
 
         logging.info(f"Got object_id_list {object_id_list}")
         android_app_list = AndroidApp.objects(id__in=object_id_list)
-        blacklisted_apps = []
+        if len(android_app_list) == 0:
+            logging.error("No Android app found for the given object_id_list.")
+            return FileResponse(status=404)
 
         with tempfile.TemporaryDirectory() as tmp_root_dir:
             for android_app in android_app_list:
-                logging.error(android_app.filename)
+                logging.info(android_app.filename)
                 module_naming = f"ib_{android_app.md5}"
                 tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
                 os.mkdir(tmp_app_dir)
-                shutil.copy(android_app.absolute_store_path, tmp_app_dir)
+                try:
+                    shutil.copy(android_app.absolute_store_path, tmp_app_dir)
+                except FileNotFoundError as err:
+                    logging.error(f"{android_app.filename}: {err}")
+                    continue
 
                 for generic_file_lazy in android_app.generic_file_list:
                     try:
                         generic_file = generic_file_lazy.fetch()
                         if generic_file.filename == "Android.mk" or generic_file.filename == "Android.bp":
+                            logging.info(f"Found build file {generic_file.filename} for {android_app.filename}")
                             file_path = os.path.join(tmp_app_dir, generic_file.filename)
                             fp = open(file_path, 'wb')
                             fp.write(generic_file.file.read())
@@ -89,14 +82,9 @@ class DownloadAppBuildView(ViewSet):
 
             with tempfile.TemporaryDirectory() as tmp_output_dir:
                 output_zip = os.path.join(tmp_output_dir, "test")
-                filename = shutil.make_archive(base_name=output_zip,
-                                               format='zip',
-                                               root_dir=tmp_root_dir)
-                logging.info(f"files: {os.listdir(path=tmp_root_dir)}, file: {filename}")
-
-                response = FileResponse(open(filename, 'rb'),
-                                        as_attachment=True,
-                                        filename=f"{uuid.uuid4()}.zip",
-                                        content_type="application/zip")
-        logging.error(f"Blacklisted apps: {blacklisted_apps}")
+                zip_file_path = shutil.make_archive(base_name=output_zip,
+                                                    format='zip',
+                                                    root_dir=tmp_root_dir)
+                logging.info(f"files: {os.listdir(path=tmp_root_dir)}, file: {zip_file_path}")
+                response = self.get_download_file_response(request, zip_file_path, f"{uuid.uuid4()}.zip")
         return response
