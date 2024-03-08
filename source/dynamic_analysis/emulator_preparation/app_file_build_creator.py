@@ -48,27 +48,32 @@ def create_build_files_for_firmware(firmware, format_name):
     :param format_name: str - 'mk' or 'bp' file format.
 
     :return: bool - True if build files were successfully created for all apps, False otherwise.
+
     """
     is_successfully_created = False
     if format_name:
-        is_successfully_created = create_build_files_for_apps(firmware.android_app_lazy_list, format_name)
+        logging.info(f"Creating build files for firmware {firmware.md5}...")
+        is_successfully_created = create_build_files_for_apps(firmware.android_app_id_list, format_name)
         if is_successfully_created:
             firmware.has_AECS_build_files = True
             firmware.save()
     return is_successfully_created
 
 
-def create_build_files_for_apps(android_app_lazy_list, format_name):
+def create_build_files_for_apps(android_app_id_list, format_name):
     """
     Creates build files for a list of Android apps.
 
-    :param android_app_lazy_list: list - A list of AndroidApp instances.
+    :param android_app_id_list: list - A list of ObjectIDs for class:'AndroidApp'.
     :param format_name: str - 'mk' or 'bp' file format.
+
     :return: bool - True if build files were successfully created for all apps, False otherwise.
+
     """
     is_successfully_created = True
-    for android_app_lazy in android_app_lazy_list:
+    for android_app_lazy in android_app_id_list:
         android_app = android_app_lazy.fetch()
+        logging.info(f"Creating build files for app {android_app.filename}...")
         if not create_build_file_for_app(android_app, format_name):
             is_successfully_created = False
     return is_successfully_created
@@ -80,9 +85,12 @@ def create_build_file_for_app(android_app, format_name):
 
     :param android_app: class:'AndroidApp' - An instance of AndroidApp.
     :param format_name: str - 'mk' or 'bp' file format.
+
     :return: bool - True if the build file was successfully created, False otherwise.
+
     """
     try:
+        logging.info(f"Creating build file for app {android_app.filename}...")
         template = ANDROID_MK_TEMPLATE if format_name.lower() == "mk" else ANDROID_BP_TEMPLATE
         create_soong_build_files(android_app, format_name, template)
         return True
@@ -109,6 +117,7 @@ def create_soong_build_files(android_app, file_format, file_template):
         try:
             existing_generic_file = existing_generic_file_reference.fetch()
             if existing_generic_file.filename == "Android." + file_format:
+                logging.info(f"Deleting existing {file_format} file for app {android_app.filename}...")
                 existing_generic_file.delete()
         except Exception as err:
             logging.error(err)
@@ -118,6 +127,7 @@ def create_soong_build_files(android_app, file_format, file_template):
                                file=bytes(template_string, 'utf-8'),
                                document_reference=android_app)
     generic_file.save()
+    logging.info(f"Created {file_format} file for app {android_app.filename}...")
     android_app.generic_file_list.append(generic_file)
     android_app.save()
 
@@ -142,4 +152,5 @@ def create_template_string(android_app, template_string):
                                                           local_src_files=local_src_files,
                                                           local_certificate=local_certificate,
                                                           local_optional_uses_libraries=local_optional_uses_libraries)
+    logging.info(f"Created template string")
     return final_template

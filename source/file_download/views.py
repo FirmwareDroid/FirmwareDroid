@@ -61,11 +61,14 @@ class DownloadAppBuildView(ViewSet):
 
         logging.info(f"Got object_id_list {object_id_list}")
         android_app_list = AndroidApp.objects(id__in=object_id_list)
+        if len(android_app_list) == 0:
+            logging.error("No Android app found for the given object_id_list.")
+            return FileResponse(status=404)
         blacklisted_apps = []
 
         with tempfile.TemporaryDirectory() as tmp_root_dir:
             for android_app in android_app_list:
-                logging.error(android_app.filename)
+                logging.info(android_app.filename)
                 module_naming = f"ib_{android_app.md5}"
                 tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
                 os.mkdir(tmp_app_dir)
@@ -75,6 +78,7 @@ class DownloadAppBuildView(ViewSet):
                     try:
                         generic_file = generic_file_lazy.fetch()
                         if generic_file.filename == "Android.mk" or generic_file.filename == "Android.bp":
+                            logging.info(f"Found build file {generic_file.filename} for {android_app.filename}")
                             file_path = os.path.join(tmp_app_dir, generic_file.filename)
                             fp = open(file_path, 'wb')
                             fp.write(generic_file.file.read())

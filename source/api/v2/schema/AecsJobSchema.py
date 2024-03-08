@@ -99,7 +99,9 @@ class CreateAECSBuildFilesJob(graphene.Mutation):
     @superuser_required
     def mutate(cls, root, info, format_name, firmware_id_list):
         try:
+            # TODO assign this to a background worker docker container
             firmware_list = AndroidFirmware.objects(pk__in=firmware_id_list, has_AECS_build_files=False)
+            logging.info(f"Starting to create build files for {len(firmware_list)} firmwares...")
             failed_firmware_list = start_app_build_file_creator(format_name, firmware_list)
             return cls(failed_firmware_list=failed_firmware_list)
         except Exception as err:
