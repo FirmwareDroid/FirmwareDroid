@@ -23,6 +23,8 @@ class AecsJobQuery(graphene.ObjectType):
     @superuser_required
     def resolve_aecs_firmware_id_list(self, info):
         aecs_job = AecsJob.objects.first()
+        if not aecs_job:
+            return []
         id_list = []
         for firmware_lazy in aecs_job.firmware_id_list:
             id_list.append(firmware_lazy.id)

@@ -6,7 +6,7 @@ import logging
 import os
 import mongoengine
 from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, CASCADE, \
-    ListField, Document
+    ListField, Document, BooleanField
 from model import AndroidFirmware
 
 
@@ -60,7 +60,16 @@ class AndroidApp(Document):
     @classmethod
     def pre_delete(cls, sender, document, **kwargs):
         try:
-            os.remove(document.absolute_store_path)
+            if len(document.app_twins_reference_list) > 0:
+                for app_twin_lazy in document.app_twins_reference_list:
+                    try:
+                        app_twin = app_twin_lazy.fetch()
+                        app_twin.app_twins_reference_list.remove(document.pk)
+                        app_twin.save()
+                    except Exception as err:
+                        logging.warning(err)
+            else:
+                os.remove(document.absolute_store_path)
         except Exception as err:
             logging.warning(err)
 

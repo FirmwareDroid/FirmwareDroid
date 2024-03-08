@@ -6,7 +6,7 @@ from graphene.relay import Node
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
-from model import AndroidApp, AndroidFirmware
+from model import AndroidApp
 
 ModelFilter = generate_filter(AndroidApp)
 
