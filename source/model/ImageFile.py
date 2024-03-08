@@ -2,7 +2,7 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import datetime
-from mongoengine import FileField, StringField, DateTimeField, Document
+from mongoengine import FileField, StringField, DateTimeField, Document, signals
 
 
 class ImageFile(Document):
@@ -15,3 +15,6 @@ class ImageFile(Document):
     def pre_delete(cls, sender, document, **kwargs):
         document.file.delete()
         document.save()
+
+
+signals.pre_delete.connect(ImageFile.pre_delete, sender=ImageFile)

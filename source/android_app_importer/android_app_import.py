@@ -247,6 +247,8 @@ def add_optimized_firmware_files(android_app, optimized_firmware_file_list, firm
                                             optimized_firmware_file.name)
         if os.path.exists(opt_source_file_path):
             copyfile(opt_source_file_path, opt_store_path)
+            optimized_firmware_file.is_on_disk = True
+            optimized_firmware_file.save()
             logging.info(f"Exported file: {optimized_firmware_file.name}")
             firmware_file_id_list.append(optimized_firmware_file.id)
         else:

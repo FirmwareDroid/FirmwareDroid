@@ -24,8 +24,8 @@ def add_report_crossreferences(report):
     :param report: class:'AndroGuardReport'
 
     """
-    for string_id in report.string_analysis_id_list:
-        string_analysis = AndroGuardStringAnalysis.objects.get(pk=string_id.pk)
+    for string_analysis_lazy in report.string_analysis_id_list:
+        string_analysis = string_analysis_lazy.fetch()
         string_analysis.androguard_report_reference = report.id
         string_analysis.android_app_id_reference = report.android_app_id_reference
         string_analysis.save()
@@ -103,8 +103,10 @@ def get_string_analysis(dx):
         xref_method_dict_list = []
         for class_obj, method_obj in string_analysis.get_xref_from():
             xref_method_dict_list.append({method_obj.class_name: method_obj.name})
-        androguard_string_analysis = AndroGuardStringAnalysis(string_value=string_text,
-                                                              xref_method_dict_list=xref_method_dict_list)
+        androguard_string_analysis = AndroGuardStringAnalysis(
+
+            string_value=string_text,
+            xref_method_dict_list=xref_method_dict_list)
         androguard_string_analysis.save()
         androguard_string_analysis_id_list.append(androguard_string_analysis.id)
     return androguard_string_analysis_id_list
