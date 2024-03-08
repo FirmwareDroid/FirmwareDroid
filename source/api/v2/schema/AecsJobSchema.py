@@ -5,7 +5,6 @@ import logging
 import traceback
 import graphene
 from dynamic_analysis.emulator_preparation.app_file_build_creator import start_app_build_file_creator
-from model import AndroidFirmware
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from model import AndroidFirmware
@@ -33,8 +32,8 @@ class AecsJobQuery(graphene.ObjectType):
 class ModifyAecsJob(graphene.Mutation):
     """
     Create or update the aecs-job. There can only be one aecs-job in the database. In case a new
-    job is created the old will be overwritten by the new. The aecs-job is used to store the
-    firmware_id_list for further processing by the aecs-service.
+    job is created the old will be overwritten by the new. The aecs-job is used to store a
+    list of firmware ids for further processing by the aecs-service.
     """
     is_success = graphene.Boolean()
 
@@ -46,10 +45,11 @@ class ModifyAecsJob(graphene.Mutation):
     def mutate(cls, root, info, object_id_list):
         try:
             object_id_list = set(object_id_list)
-            firmware_list = AndroidFirmware.objects(pk__in=object_id_list).only("id")
+            firmware_list = AndroidFirmware.objects(pk__in=object_id_list, has_AECS_build_files=True).only("id")
             firmware_id_list = []
             for firmware in firmware_list:
                 firmware_id_list.append(firmware.id)
+
             aecs_job = AecsJob.objects().first()
             if aecs_job:
                 aecs_job.firmware_id_list = firmware_id_list
