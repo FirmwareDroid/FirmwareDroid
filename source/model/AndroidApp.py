@@ -58,7 +58,10 @@ class AndroidApp(Document):
     generic_file_list = ListField(LazyReferenceField('GenericFile', reverse_delete_rule=DO_NOTHING))
 
     @classmethod
-    def pre_delete(cls, sender, document, **kwargs):
+    def _clean_app_twin(cls, document):
+        """
+        Deletes the app twin associated with the Android app.
+        """
         try:
             if len(document.app_twins_reference_list) > 0:
                 for app_twin_lazy in document.app_twins_reference_list:
@@ -72,6 +75,30 @@ class AndroidApp(Document):
                 os.remove(document.absolute_store_path)
         except Exception as err:
             logging.warning(err)
+
+    @classmethod
+    def _clean_generic_files(cls, document):
+        """
+        Deletes the generic files associated with the Android app.
+        """
+        try:
+            if len(document.generic_file_list) > 0:
+                for generic_file_lazy in document.generic_file_list:
+                    try:
+                        generic_file = generic_file_lazy.fetch()
+                        generic_file.delete()
+                    except Exception as err:
+                        logging.warning(err)
+        except Exception as err:
+            logging.warning(err)
+
+
+    @classmethod
+    def pre_delete(cls, sender, document, **kwargs):
+        cls._clean_app_twin(document)
+        cls._clean_generic_files(document)
+
+
 
 
 mongoengine.signals.pre_delete.connect(AndroidApp.pre_delete, sender=AndroidApp)
