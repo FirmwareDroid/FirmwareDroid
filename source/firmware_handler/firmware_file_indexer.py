@@ -149,7 +149,7 @@ def add_firmware_file_references(firmware, firmware_file_list):
             firmware_file.save()
             firmware_file_ids.append(firmware_file.id)
         firmware.firmware_file_id_list = firmware_file_ids
-        firmware.hasFileIndex = True
+        firmware.has_file_index = True
         firmware.save()
         logging.debug(f"Successfully added firmware file references: {firmware.id} {len(firmware_file_list)}")
     else:

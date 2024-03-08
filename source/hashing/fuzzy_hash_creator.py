@@ -40,7 +40,7 @@ def hash_firmware_files_parallel(firmware_id_queue):
         cache_temp_file_dir, cache_temp_mount_dir = create_temp_directories()
         try:
             firmware = AndroidFirmware.objects.get(pk=firmware_id)
-            if not firmware.hasFuzzyHashIndex:
+            if not firmware.has_fuzzy_hash_index:
                 logging.info(f"Starting fuzzy hashing index creation: {firmware_id}")
                 # TODO FIX THIS
                 #extract_image_files(firmware, cache_temp_file_dir.name, cache_temp_mount_dir.name)
