@@ -123,6 +123,8 @@ def package_build_files_for_firmware(firmware):
                 try:
                     generic_file = generic_file_lazy.fetch()
                     if generic_file.filename == "Android.mk" or generic_file.filename == "Android.bp":
+                        if not generic_file.file:
+                            raise DoesNotExist(f"File {generic_file.filename} does not exist: {generic_file.pk}")
                         logging.debug(f"Found build file {generic_file.filename} for {android_app.filename}")
                         file_path = os.path.join(tmp_app_dir, generic_file.filename)
                         fp = open(file_path, 'wb')

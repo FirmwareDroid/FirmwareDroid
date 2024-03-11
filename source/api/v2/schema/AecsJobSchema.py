@@ -85,6 +85,8 @@ class ModifyAecsJob(graphene.Mutation):
                 is_success = True
             except Exception as err:
                 logging.error(f"Error updating or creating AecsJob: {err}")
+        else:
+            logging.error(f"No firmware ids found: {firmware_id_list}")
         return is_success
 
     @classmethod
