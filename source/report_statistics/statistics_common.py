@@ -13,7 +13,7 @@ from model import AndroidApp
 from context.context_creator import create_db_context
 from database.connector import multiprocess_disconnect_all
 from database.mongodb_key_replacer import filter_mongodb_dict_chars
-from utils.mulitprocessing_util.mp_util import create_managed_queue, multiprocess_initializer
+from utils.mulitprocessing_util.mp_util import create_managed_mp_queue, multiprocess_initializer
 from utils.file_utils.file_util import create_reference_file_from_dict, object_to_temporary_json_file, \
     store_json_file, create_reference_file
 import numpy as np
@@ -199,7 +199,7 @@ def set_statistics_attribute(attribute_name, statistics_report, report_list, att
     """
     multiprocess_disconnect_all(flask.current_app)
     with Manager() as manager:
-        report_queue = create_managed_queue(report_list, manager)
+        report_queue = create_managed_mp_queue(report_list, manager)
         count_dict = manager.dict()
         references_dict = manager.dict()
         with get_context("fork").Pool(processes=os.cpu_count(),

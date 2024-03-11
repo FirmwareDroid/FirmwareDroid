@@ -20,7 +20,7 @@ from database.connector import multiprocess_disconnect_all
 from context.context_creator import create_app_context
 
 
-def create_managed_queue(document_obj_list, manager):
+def create_managed_mp_queue(document_obj_list, manager):
     """
     Creates a closed managed multiprocessing queue.
 
@@ -36,7 +36,7 @@ def create_managed_queue(document_obj_list, manager):
     return queue_docs
 
 
-def create_id_queue(document_list, manager):
+def create_id_mp_queue(document_list, manager):
     """
     Creates a multiprocessor-queue from the given list to a queue.
 
@@ -124,11 +124,16 @@ def start_python_interpreter(item_list,
                             cwd="/var/www/source/")
 
 
-def start_process_pool_new(item_list, worker_function, number_of_processes=os.cpu_count(), use_id_list=True):
+def start_process_pool(item_list,
+                       worker_function,
+                       number_of_processes=os.cpu_count(),
+                       create_id_list=True,
+                       worker_args_dict=None):
     """
     Creates a multiprocessor pool and starts the given function in parallel.
 
-    :param use_id_list: boolean - if true, object-id list instead of the item list is used for the queue.
+    :param worker_args_dict: dict - dictionary of arguments to pass to the worker function.
+    :param create_id_list: boolean - if true, object-id list instead of the item list is used for the queue.
         Use this only if you provide an item list of documents with an id attribute.
     :param number_of_processes: int - number of processes to start.
     :param worker_function: function - which will be executed by the pool.
@@ -137,17 +142,21 @@ def start_process_pool_new(item_list, worker_function, number_of_processes=os.cp
     """
     multiprocess_disconnect_all()
     with Manager() as manager:
-        if use_id_list:
-            item_id_queue = create_id_queue(item_list, manager)
+        if create_id_list:
+            item_id_queue = create_id_mp_queue(item_list, manager)
         else:
-            item_id_queue = create_managed_queue(item_list, manager)
+            item_id_queue = create_managed_mp_queue(item_list, manager)
         with get_context("fork").Pool(processes=number_of_processes,
                                       maxtasksperchild=3,
                                       initializer=multiprocess_initializer) as pool:
-
-            pool.starmap_async(worker_function, [(item_id_queue,)])
-            pool.close()
-            pool.join()
+            if not worker_args_dict:
+                pool.starmap_async(worker_function, [(item_id_queue,)])
+                pool.close()
+                pool.join()
+            else:
+                pool.starmap_async(worker_function, [(item_id_queue, *worker_args_dict)])
+                pool.close()
+                pool.join()
 
 
 def multiprocess_initializer():
@@ -167,7 +176,7 @@ def main():
     worker_function = getattr(scanner_module, worker_function_name)
     number_of_processes = int(sys.argv[3])
     use_id_list = bool(sys.argv[4])
-    start_process_pool_new(item_list, worker_function, number_of_processes, use_id_list)
+    start_process_pool(item_list, worker_function, number_of_processes, use_id_list)
 
 
 if __name__ == "__main__":

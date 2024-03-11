@@ -69,6 +69,31 @@ def create_file_store_setting(docker_root_folder, storage_folder, is_active):
                         storage_root=storage_folder).save()
 
 
+def get_active_store_by_uuid(uuid):
+    """
+    Returns the store setting by the uuid.
+
+    :raises: ValueError: If no active store setting found for the index.
+
+    :return: class:'StoreSetting' - A store document that holds the storage options.
+    """
+    store_setting = StoreSetting.objects(is_active=True, uuid=uuid).first()
+    if store_setting is None:
+        raise ValueError(f"No active store setting found for index {uuid}")
+
+    return store_setting
+
+
+def get_active_store_paths_by_uuid(uuid):
+    store_setting = get_active_store_by_uuid(uuid)
+    return store_setting.store_options_dict[store_setting.uuid]["paths"]
+
+
+def get_active_store_paths_by_index(storage_index):
+    store_setting = get_active_store_by_index(storage_index)
+    return store_setting.store_options_dict[store_setting.uuid]["paths"]
+
+
 def get_active_store_by_index(storage_index):
     """
     Returns the store setting by the index.

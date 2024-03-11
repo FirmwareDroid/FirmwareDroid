@@ -3,7 +3,11 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 import traceback
+
+import django_rq
 import graphene
+
+from api.v2.schema.RqJobsSchema import ONE_WEEK_TIMEOUT
 from dynamic_analysis.emulator_preparation.app_file_build_creator import start_app_build_file_creator
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
@@ -40,28 +44,54 @@ class ModifyAecsJob(graphene.Mutation):
     is_success = graphene.Boolean()
 
     class Arguments:
-        object_id_list = graphene.List(graphene.String)
+        firmware_id_list = graphene.List(graphene.String)
+
+    @classmethod
+    def get_firmware_list(cls, firmware_id_list):
+        """
+        Returns a list of firmware ids that have AECS build files.
+
+        :param firmware_id_list: list(str) - list of firmware ids.
+
+        :return: list(str) - list of firmware ids that have AECS build files.
+        """
+        try:
+            firmware_id_list = set(firmware_id_list)
+            firmware_list = AndroidFirmware.objects(pk__in=firmware_id_list, aecs_build_file_path__exists=True).only("id")
+            firmware_id_list = [firmware.id for firmware in firmware_list]
+            return firmware_id_list
+        except Exception as err:
+            logging.error(f"Error getting firmware list: {err}")
+            return []
+
+    @classmethod
+    def update_or_create_aecs_job(cls, firmware_id_list):
+        """
+        Updates or creates the aecs-job in the database.
+
+        :param firmware_id_list: list(str) - list of firmware ids.
+
+        :return: bool - True if successful, False otherwise.
+        """
+        is_success = False
+        if firmware_id_list and len(firmware_id_list) > 0:
+            try:
+                aecs_job = AecsJob.objects().first()
+                if aecs_job:
+                    aecs_job.firmware_id_list = firmware_id_list
+                    aecs_job.save()
+                else:
+                    AecsJob(firmware_id_list=firmware_id_list).save()
+                is_success = True
+            except Exception as err:
+                logging.error(f"Error updating or creating AecsJob: {err}")
+        return is_success
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, object_id_list):
-        try:
-            object_id_list = set(object_id_list)
-            firmware_list = AndroidFirmware.objects(pk__in=object_id_list, has_AECS_build_files=True).only("id")
-            firmware_id_list = []
-            for firmware in firmware_list:
-                firmware_id_list.append(firmware.id)
-
-            aecs_job = AecsJob.objects().first()
-            if aecs_job:
-                aecs_job.firmware_id_list = firmware_id_list
-                aecs_job.save()
-            else:
-                AecsJob(firmware_id_list=firmware_id_list).save()
-            is_success = True
-        except Exception as err:
-            logging.error(err)
-            is_success = False
+    def mutate(cls, root, info, firmware_id_list):
+        firmware_id_list = cls.get_firmware_list(firmware_id_list)
+        is_success = cls.update_or_create_aecs_job(firmware_id_list)
         return cls(is_success=is_success)
 
 
@@ -88,27 +118,22 @@ class DeleteAecsJob(graphene.Mutation):
 class CreateAECSBuildFilesJob(graphene.Mutation):
     """
     Starts the service to create app build files ("Android.mk" or "Android.bp") for specific firmware. These build
-    files can be used in the Android Open Source Project to create custom firmware that includes the specific apk file.
+    files can be used in the Android Open Source Project to create custom firmware that includes the specific apk files.
 
     """
-    failed_firmware_list = graphene.List(graphene.String)
+    job_id = graphene.String()
 
     class Arguments:
         format_name = graphene.String(required=True)
         firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=False)
+        queue_name = graphene.String(required=True, default_value="default-python")
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, format_name, firmware_id_list):
-        try:
-            # TODO assign this to a background worker docker container
-            firmware_list = AndroidFirmware.objects(pk__in=firmware_id_list, has_AECS_build_files=False)
-            logging.info(f"Starting to create build files for {len(firmware_list)} firmwares...")
-            failed_firmware_list = start_app_build_file_creator(format_name, firmware_list)
-            return cls(failed_firmware_list=failed_firmware_list)
-        except Exception as err:
-            logging.error(err)
-            traceback.format_exc()
+    def mutate(cls, root, info, format_name, firmware_id_list, queue_name="default-python"):
+        queue = django_rq.get_queue(queue_name)
+        job = queue.enqueue(start_app_build_file_creator, format_name, firmware_id_list, job_timeout=ONE_WEEK_TIMEOUT)
+        return cls(job_id=job.id)
 
 
 class AecsJobMutation(graphene.ObjectType):
