@@ -349,9 +349,6 @@ def androguard_worker_multiprocessing(android_app_id_queue):
     :param android_app_id_queue: str - object-id's of class:'AndroidApp'.
 
     """
-    import sys
-    logging.info("Interpreter: " + sys.executable)
-    print(sys.executable)
     while True:
         android_app_id = android_app_id_queue.get(timeout=.5)
         android_app = AndroidApp.objects.get(pk=android_app_id)
