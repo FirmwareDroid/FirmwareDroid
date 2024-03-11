@@ -103,59 +103,92 @@ def package_build_files_for_firmware(firmware):
     """
     Packages the build files for a given firmware into a zip file.
     :param firmware: class:'AndroidFirmware' - An instance of AndroidFirmware.
-
     """
     logging.debug(f"Packaging build files for firmware {firmware.md5}...")
     with tempfile.TemporaryDirectory() as tmp_root_dir:
-        for android_app_lazy in firmware.android_app_id_list:
-            android_app = android_app_lazy.fetch()
-            logging.debug(android_app.filename)
-            module_naming = f"ib_{android_app.md5}"
-            tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
-            os.mkdir(tmp_app_dir)
-            try:
-                shutil.copy(android_app.absolute_store_path, tmp_app_dir)
-            except FileNotFoundError as err:
-                logging.error(f"{android_app.filename}: {err}")
-                continue
+        process_android_apps(firmware, tmp_root_dir)
+        package_files(firmware, tmp_root_dir)
 
-            for generic_file_lazy in android_app.generic_file_list:
-                try:
-                    generic_file = generic_file_lazy.fetch()
-                    if generic_file.filename == "Android.mk" or generic_file.filename == "Android.bp":
-                        if not generic_file.file:
-                            raise DoesNotExist(f"File {generic_file.filename} does not exist: {generic_file.pk}")
-                        logging.debug(f"Found build file {generic_file.filename} for {android_app.filename}")
-                        file_path = os.path.join(tmp_app_dir, generic_file.filename)
-                        fp = open(file_path, 'wb')
-                        fp.write(generic_file.file.read())
-                        fp.close()
-                except DoesNotExist as err:
-                    logging.error(f"{generic_file_lazy.pk}: {err}")
 
-            meta_file = os.path.join(tmp_root_dir, "meta_build.txt")
-            fp = open(meta_file, 'a')
-            fp.write("    " + module_naming + " \\\n")
-            fp.close()
+def process_android_apps(firmware, tmp_root_dir):
+    """
+    Processes the Android apps of a given firmware and creates build files for them.
 
-        with tempfile.TemporaryDirectory() as tmp_output_dir:
-            package_filename = f"{uuid.uuid4()}"
-            output_zip = os.path.join(tmp_output_dir, package_filename)
-            zip_file_path = shutil.make_archive(base_name=output_zip,
-                                                format='zip',
-                                                root_dir=tmp_root_dir)
-            try:
-                storage_uuid = firmware.absolute_store_path.split("/")[5]
-                store_paths = get_active_store_paths_by_uuid(storage_uuid)
-                aecs_output_dir = os.path.join(store_paths["FIRMWARE_FOLDER_FILE_EXTRACT"], "aecs_build_files")
-                if not os.path.exists(aecs_output_dir):
-                    os.mkdir(aecs_output_dir)
-                shutil.move(zip_file_path, aecs_output_dir)
-            except FileNotFoundError as err:
-                raise RuntimeError(f"Could not move zip file to {aecs_output_dir}: {err}")
+    :param firmware: class:'AndroidFirmware' - An instance of AndroidFirmware.
+    :param tmp_root_dir: tempfile.TemporaryDirectory - A temporary directory to store the build files.
 
-        firmware.aecs_build_file_path = os.path.abspath(os.path.join(aecs_output_dir, package_filename + ".zip"))
-        firmware.save()
+    """
+    for android_app_lazy in firmware.android_app_id_list:
+        android_app = android_app_lazy.fetch()
+        logging.debug(android_app.filename)
+        module_naming = f"ib_{android_app.md5}"
+        tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
+        os.mkdir(tmp_app_dir)
+        try:
+            shutil.copy(android_app.absolute_store_path, tmp_app_dir)
+        except FileNotFoundError as err:
+            logging.error(f"{android_app.filename}: {err}")
+            continue
+
+        process_generic_files(android_app, tmp_app_dir, module_naming)
+
+
+def process_generic_files(android_app, tmp_app_dir, module_naming):
+    """
+    Processes the generic files of a given Android app and creates build files for them. The build files will be stored
+    in the tmp_app_dir.
+
+    :param android_app: class:'AndroidApp' - An instance of AndroidApp.
+    :param tmp_app_dir: tempfile.TemporaryDirectory - A temporary directory to store the build files.
+    :param module_naming: str - A string to name the module in the build file.
+
+    """
+    for generic_file_lazy in android_app.generic_file_list:
+        try:
+            generic_file = generic_file_lazy.fetch()
+            if generic_file.filename == "Android.mk" or generic_file.filename == "Android.bp":
+                if not generic_file.file:
+                    raise DoesNotExist(f"Filename: {generic_file.filename} has zero size. Skipping... "
+                                       f"generic file id:{generic_file.pk}")
+                logging.debug(f"Found build file {generic_file.filename} for {android_app.filename}")
+                file_path = os.path.join(tmp_app_dir, generic_file.filename)
+                with open(file_path, 'wb') as fp:
+                    fp.write(generic_file.file.read())
+        except DoesNotExist as err:
+            logging.error(f"{generic_file_lazy.pk}: {err}")
+
+    meta_file = os.path.join(tmp_app_dir, "meta_build.txt")
+    with open(meta_file, 'a') as fp:
+        fp.write("    " + module_naming + " \\\n")
+
+
+def package_files(firmware, tmp_root_dir):
+    """
+    Packages the build files for a given firmware into a zip file and stores it in the aecs_build_file_path of the
+    firmware.
+
+    :param firmware: class:'AndroidFirmware' - An instance of AndroidFirmware.
+    :param tmp_root_dir: tempfile.TemporaryDirectory - A temporary directory to store the build files.
+
+    """
+    with tempfile.TemporaryDirectory() as tmp_output_dir:
+        package_filename = f"{uuid.uuid4()}"
+        output_zip = os.path.join(tmp_output_dir, package_filename)
+        zip_file_path = shutil.make_archive(base_name=output_zip,
+                                            format='zip',
+                                            root_dir=tmp_root_dir)
+        try:
+            storage_uuid = firmware.absolute_store_path.split("/")[5]
+            store_paths = get_active_store_paths_by_uuid(storage_uuid)
+            aecs_output_dir = os.path.join(store_paths["FIRMWARE_FOLDER_FILE_EXTRACT"], "aecs_build_files")
+            if not os.path.exists(aecs_output_dir):
+                os.mkdir(aecs_output_dir)
+            shutil.move(zip_file_path, aecs_output_dir)
+        except FileNotFoundError as err:
+            raise RuntimeError(f"Could not move zip file to {aecs_output_dir}: {err}")
+
+    firmware.aecs_build_file_path = os.path.abspath(os.path.join(aecs_output_dir, package_filename + ".zip"))
+    firmware.save()
 
 
 def create_build_files_for_apps(android_app_id_list, format_name):
@@ -193,7 +226,7 @@ def create_build_file_for_app(android_app, format_name):
         create_soong_build_files(android_app, format_name, template)
         return True
     except Exception as err:
-        logging.error(err)
+        logging.error(f"Error with app {android_app.pk}; {err}")
         return False
 
 
@@ -210,17 +243,39 @@ def create_soong_build_files(android_app, file_format, file_template):
 
     """
     template_string = create_template_string(android_app, file_template)
+    remove_existing_build_files(android_app, file_format)
+    create_and_save_generic_file(android_app, file_format, template_string)
 
+
+def remove_existing_build_files(android_app, file_format):
+    """
+    Removes an existing Android.mk or Android.bp file for the given Android app.
+
+    :param android_app: class:'AndroidApp' - App where the reference for the newly create file will be written to. If
+    :param file_format: str - mk or bp format.
+
+    """
     for existing_generic_file_reference in android_app.generic_file_list:
         try:
             existing_generic_file = existing_generic_file_reference.fetch()
             if existing_generic_file.filename == "Android." + file_format:
                 logging.debug(f"Deleting existing {file_format} file for app {android_app.filename}...")
                 existing_generic_file.delete()
+                android_app.generic_file_list.remove(existing_generic_file_reference)
         except Exception as err:
             logging.error(err)
             android_app.generic_file_list.remove(existing_generic_file_reference)
 
+
+def create_and_save_generic_file(android_app, file_format, template_string):
+    """
+    Creates a generic file and saves it to the database. The reference to the generic file will be added to the
+
+    :param android_app: class:'AndroidApp' - App where the reference for the newly create file will be written to. If
+    :param file_format: str - mk or bp format.
+    :param template_string: str - template string for an Android.mk or Android.bp file.
+
+    """
     generic_file = GenericFile(filename=f"Android.{file_format}",
                                file=bytes(template_string, 'utf-8'),
                                document_reference=android_app)
