@@ -41,11 +41,10 @@ class DownloadAppBuildView(ViewSet):
         build-, and meta-data files of the requested Android apps.
         """
         object_id_list = request.data['object_id_list']
-        logging.info(f"Got object_id_list {object_id_list}")
+        logging.debug(f"Got object_id_list: {object_id_list}")
         firmware_list = AndroidFirmware.objects(id__in=object_id_list, aecs_build_file_path__exists=True)
         if len(firmware_list) == 0:
-            logging.error("No Android app found for the given object_id_list.")
-            return FileResponse(status=404)
+            return FileResponse(status=400)
         firmware = firmware_list[0]
         response = self.get_download_file_response(request, firmware.aecs_build_file_path, f"{uuid.uuid4()}.zip")
         return response

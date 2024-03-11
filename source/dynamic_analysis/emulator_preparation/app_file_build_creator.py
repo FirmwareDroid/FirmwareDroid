@@ -12,9 +12,7 @@ import logging
 import traceback
 import uuid
 from string import Template
-
 from mongoengine import DoesNotExist
-
 from context.context_creator import create_db_context
 from model import GenericFile, AndroidFirmware
 from model.StoreSetting import get_active_store_paths_by_uuid
@@ -153,7 +151,8 @@ def package_build_files_for_firmware(firmware):
                 shutil.move(zip_file_path, aecs_output_dir)
             except FileNotFoundError as err:
                 raise RuntimeError(f"Could not move zip file to {aecs_output_dir}: {err}")
-        firmware.aecs_build_file_path = os.path.join(aecs_output_dir, package_filename + ".zip")
+
+        firmware.aecs_build_file_path = os.path.abspath(os.path.join(aecs_output_dir, package_filename + ".zip"))
         firmware.save()
 
 

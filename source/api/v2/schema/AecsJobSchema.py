@@ -73,17 +73,19 @@ class ModifyAecsJob(graphene.Mutation):
 
         :return: bool - True if successful, False otherwise.
         """
-        try:
-            aecs_job = AecsJob.objects().first()
-            if aecs_job:
-                aecs_job.firmware_id_list = firmware_id_list
-                aecs_job.save()
-            else:
-                AecsJob(firmware_id_list=firmware_id_list).save()
-            return True
-        except Exception as err:
-            logging.error(f"Error updating or creating AecsJob: {err}")
-            return False
+        is_success = False
+        if firmware_id_list and len(firmware_id_list) > 0:
+            try:
+                aecs_job = AecsJob.objects().first()
+                if aecs_job:
+                    aecs_job.firmware_id_list = firmware_id_list
+                    aecs_job.save()
+                else:
+                    AecsJob(firmware_id_list=firmware_id_list).save()
+                is_success = True
+            except Exception as err:
+                logging.error(f"Error updating or creating AecsJob: {err}")
+        return is_success
 
     @classmethod
     @superuser_required
@@ -125,18 +127,6 @@ class CreateAECSBuildFilesJob(graphene.Mutation):
         format_name = graphene.String(required=True)
         firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=False)
         queue_name = graphene.String(required=True, default_value="default-python")
-
-    # @classmethod
-    # @superuser_required
-    # def mutate(cls, root, info, format_name, firmware_id_list):
-    #     try:
-    #         firmware_list = AndroidFirmware.objects(pk__in=firmware_id_list, aecs_build_file_path__exists=False)
-    #         logging.info(f"Starting to create build files for {len(firmware_list)} firmwares...")
-    #         failed_firmware_list = start_app_build_file_creator(format_name, firmware_list)
-    #         return cls(failed_firmware_list=failed_firmware_list)
-    #     except Exception as err:
-    #         logging.error(err)
-    #         traceback.format_exc()
 
     @classmethod
     @superuser_required
