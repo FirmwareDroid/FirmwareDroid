@@ -133,14 +133,15 @@ def process_android_apps(firmware, tmp_root_dir):
             logging.error(f"{android_app.filename}: {err}")
             continue
 
-        process_generic_files(android_app, tmp_app_dir, module_naming)
+        process_generic_files(android_app, tmp_app_dir, tmp_root_dir, module_naming)
 
 
-def process_generic_files(android_app, tmp_app_dir, module_naming):
+def process_generic_files(android_app, tmp_app_dir, tmp_root_dir, module_naming):
     """
     Processes the generic files of a given Android app and creates build files for them. The build files will be stored
     in the tmp_app_dir.
 
+    :param tmp_root_dir: str - A temporary directory to store the build files.
     :param android_app: class:'AndroidApp' - An instance of AndroidApp.
     :param tmp_app_dir: tempfile.TemporaryDirectory - A temporary directory to store the build files.
     :param module_naming: str - A string to name the module in the build file.
@@ -149,7 +150,7 @@ def process_generic_files(android_app, tmp_app_dir, module_naming):
     for generic_file_lazy in android_app.generic_file_list:
         process_generic_file(generic_file_lazy, android_app, tmp_app_dir)
 
-    write_to_meta_file(android_app, tmp_app_dir, module_naming)
+    write_to_meta_file(android_app, tmp_root_dir, module_naming)
 
 
 def process_generic_file(generic_file_lazy, android_app, tmp_app_dir):
@@ -175,12 +176,12 @@ def process_generic_file(generic_file_lazy, android_app, tmp_app_dir):
         logging.error(f"{generic_file_lazy.pk}: {err}")
 
 
-def write_to_meta_file(android_app, tmp_app_dir, module_naming):
+def write_to_meta_file(android_app, tmp_root_dir, module_naming):
     """
     Writes the module naming to a meta file for the given Android app.
 
     :param android_app: class:'AndroidApp' - An instance of AndroidApp.
-    :param tmp_app_dir: str - A temporary directory to store the build files.
+    :param tmp_root_dir: str - A temporary directory to store the build files.
     :param module_naming: str - A string to name the module in the build file.
 
     :return:
@@ -188,11 +189,11 @@ def write_to_meta_file(android_app, tmp_app_dir, module_naming):
     partition_name = android_app.absolute_store_path.split("/")[8]
     logging.info(f"Partition name: {partition_name} for app {android_app.id}")
     if partition_name.lower() == "vendor":
-        meta_file = os.path.join(tmp_app_dir, META_BUILD_FILENAME_VENDOR)
+        meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_VENDOR)
     elif partition_name.lower() == "product":
-        meta_file = os.path.join(tmp_app_dir, META_BUILD_FILENAME_PRODUCT)
+        meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_PRODUCT)
     else:
-        meta_file = os.path.join(tmp_app_dir, META_BUILD_FILENAME_SYSTEM)
+        meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_SYSTEM)
 
     with open(meta_file, 'a') as fp:
         fp.write("    " + module_naming + " \\\n")
