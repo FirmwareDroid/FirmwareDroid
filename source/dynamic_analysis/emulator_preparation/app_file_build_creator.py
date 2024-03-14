@@ -18,6 +18,9 @@ from model import GenericFile, AndroidFirmware
 from model.StoreSetting import get_active_store_paths_by_uuid
 from utils.mulitprocessing_util.mp_util import start_process_pool
 
+META_BUILD_FILENAME_SYSTEM = "meta_build_system.txt"
+META_BUILD_FILENAME_VENDOR = "meta_build_vendor.txt"
+META_BUILD_FILENAME_PRODUCT = "meta_build_product.txt"
 ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
                       "\ninclude $$(CLEAR_VARS)\n" \
                       "\nLOCAL_MODULE_TAGS := optional \n" \
@@ -144,20 +147,53 @@ def process_generic_files(android_app, tmp_app_dir, module_naming):
 
     """
     for generic_file_lazy in android_app.generic_file_list:
-        try:
-            generic_file = generic_file_lazy.fetch()
-            if generic_file.filename == "Android.mk" or generic_file.filename == "Android.bp":
-                if not generic_file.file:
-                    raise DoesNotExist(f"Filename: {generic_file.filename} has zero size. Skipping... "
-                                       f"generic file id:{generic_file.pk}")
-                logging.debug(f"Found build file {generic_file.filename} for {android_app.filename}")
-                file_path = os.path.join(tmp_app_dir, generic_file.filename)
-                with open(file_path, 'wb') as fp:
-                    fp.write(generic_file.file.read())
-        except DoesNotExist as err:
-            logging.error(f"{generic_file_lazy.pk}: {err}")
+        process_generic_file(generic_file_lazy, android_app, tmp_app_dir)
 
-    meta_file = os.path.join(tmp_app_dir, "meta_build.txt")
+    write_to_meta_file(android_app, tmp_app_dir, module_naming)
+
+
+def process_generic_file(generic_file_lazy, android_app, tmp_app_dir):
+    """
+    Processes a generic file of a given Android app and creates a build file for it. The build file will be stored in
+
+    :param generic_file_lazy: class:'GenericFile' - An instance of GenericFile.
+    :param android_app: class:'AndroidApp' - An instance of AndroidApp.
+    :param tmp_app_dir: str - A temporary directory to store the build files.
+
+    """
+    try:
+        generic_file = generic_file_lazy.fetch()
+        if generic_file.filename == "Android.mk" or generic_file.filename == "Android.bp":
+            if not generic_file.file:
+                raise DoesNotExist(f"Filename: {generic_file.filename} has zero size. Skipping... "
+                                   f"generic file id:{generic_file.pk}")
+            logging.debug(f"Found build file {generic_file.filename} for {android_app.filename}")
+            file_path = os.path.join(tmp_app_dir, generic_file.filename)
+            with open(file_path, 'wb') as fp:
+                fp.write(generic_file.file.read())
+    except DoesNotExist as err:
+        logging.error(f"{generic_file_lazy.pk}: {err}")
+
+
+def write_to_meta_file(android_app, tmp_app_dir, module_naming):
+    """
+    Writes the module naming to a meta file for the given Android app.
+
+    :param android_app: class:'AndroidApp' - An instance of AndroidApp.
+    :param tmp_app_dir: str - A temporary directory to store the build files.
+    :param module_naming: str - A string to name the module in the build file.
+
+    :return:
+    """
+    partition_name = android_app.absolute_store_path.split("/")[8]
+    logging.info(f"Partition name: {partition_name} for app {android_app.id}")
+    if partition_name.lower() == "vendor":
+        meta_file = os.path.join(tmp_app_dir, META_BUILD_FILENAME_VENDOR)
+    elif partition_name.lower() == "product":
+        meta_file = os.path.join(tmp_app_dir, META_BUILD_FILENAME_PRODUCT)
+    else:
+        meta_file = os.path.join(tmp_app_dir, META_BUILD_FILENAME_SYSTEM)
+
     with open(meta_file, 'a') as fp:
         fp.write("    " + module_naming + " \\\n")
 
