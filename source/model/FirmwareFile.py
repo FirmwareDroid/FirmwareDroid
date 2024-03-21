@@ -24,12 +24,3 @@ class FirmwareFile(Document):
     md5 = StringField(required=False, unique=False, max_length=128)
     partition_name = StringField(required=False)
     file_size_bytes = LongField(required=False)
-
-
-    @classmethod
-    def pre_file_delete(cls, sender, document, **kwargs):
-        document.file.delete()
-        document.save()
-
-
-signals.pre_delete.connect(FirmwareFile.pre_file_delete, sender=FirmwareFile)

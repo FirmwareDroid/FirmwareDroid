@@ -148,9 +148,24 @@ def process_generic_files(android_app, tmp_app_dir, tmp_root_dir, module_naming)
 
     """
     for generic_file_lazy in android_app.generic_file_list:
+        check_generic_file(android_app, generic_file_lazy)
         process_generic_file(generic_file_lazy, android_app, tmp_app_dir)
 
     write_to_meta_file(android_app, tmp_root_dir, module_naming)
+
+
+def check_generic_file(android_app, generic_file_lazy):
+    """
+    Checks if a generic file is valid. If not, it will be removed from the Android app.
+    :param android_app: class:'AndroidApp' - An instance of AndroidApp.
+    :param generic_file_lazy: class:'GenericFile' - An instance of GenericFile.
+    """
+    try:
+        generic_file = generic_file_lazy.fetch()
+    except Exception as err:
+        android_app.generic_file_list.remove(generic_file_lazy)
+        android_app.save()
+        logging.debug(f"Removed dead reference{generic_file_lazy.pk} from {android_app.id}: {err}")
 
 
 def process_generic_file(generic_file_lazy, android_app, tmp_app_dir):
@@ -166,13 +181,13 @@ def process_generic_file(generic_file_lazy, android_app, tmp_app_dir):
         generic_file = generic_file_lazy.fetch()
         if generic_file.filename == "Android.mk" or generic_file.filename == "Android.bp":
             if not generic_file.file:
-                raise DoesNotExist(f"Filename: {generic_file.filename} has zero size. Skipping... "
+                raise DoesNotExist(f"Filename: {generic_file.filename} has zero size. Deleting... "
                                    f"generic file id:{generic_file.pk}")
             logging.debug(f"Found build file {generic_file.filename} for {android_app.filename}")
             file_path = os.path.join(tmp_app_dir, generic_file.filename)
             with open(file_path, 'wb') as fp:
                 fp.write(generic_file.file.read())
-    except DoesNotExist as err:
+    except Exception as err:
         logging.error(f"{generic_file_lazy.pk}: {err}")
 
 
