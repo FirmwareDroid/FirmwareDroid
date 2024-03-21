@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
+import django_rq
 import graphene
 from graphene import relay
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
-from api.v2.types.GenericDeletion import delete_queryset
+from api.v2.schema.RqJobsSchema import ONE_DAY_TIMEOUT
+from api.v2.types.GenericDeletion import delete_queryset_background
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from model.AndroidFirmware import AndroidFirmware
 
@@ -40,17 +42,19 @@ class AndroidFirmwareQuery(graphene.ObjectType):
 
 
 class DeleteAndroidFirmwareMutation(graphene.Mutation):
-    is_successful = graphene.Boolean(name="is_successful")
+    job_id = graphene.String()
 
     class Arguments:
         object_id_list = graphene.List(graphene.NonNull(graphene.String), required=False)
+        queue_name = graphene.String(required=True, default_value="default-python")
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, object_id_list):
-        queryset = get_filtered_queryset(model=AndroidFirmware, filter=None, object_id_list=object_id_list)
-        is_successful = delete_queryset(queryset)
-        return cls(is_successful=is_successful)
+    def mutate(cls, root, info, object_id_list, queue_name):
+        func_to_run = delete_queryset_background
+        queue = django_rq.get_queue(queue_name)
+        job = queue.enqueue(func_to_run, object_id_list, job_timeout=ONE_DAY_TIMEOUT)
+        return cls(job_id=job.id)
 
 
 class AndroidFirmwareMutation(graphene.ObjectType):
