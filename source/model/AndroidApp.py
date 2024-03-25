@@ -67,7 +67,8 @@ class AndroidApp(Document):
                 for app_twin_lazy in document.app_twins_reference_list:
                     try:
                         app_twin = app_twin_lazy.fetch()
-                        app_twin.app_twins_reference_list.remove(document.pk)
+                        if document.pk in app_twin.app_twins_reference_list:
+                            app_twin.app_twins_reference_list.remove(document.pk)
                         app_twin.save()
                     except Exception as err:
                         logging.warning(err)
