@@ -126,6 +126,13 @@ class CreateAECSBuildFilesJob(graphene.Mutation):
     job_id = graphene.String()
 
     class Arguments:
+        """
+        Arguments for the mutation.
+
+        format_name: str - name of the format to create the build files for. Example, "mk" or "bp".
+        firmware_id_list: list(str) - list of firmware ids to create the build files for.
+        queue_name: str - name of the queue to use for the job.
+        """
         format_name = graphene.String(required=True)
         firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=False)
         queue_name = graphene.String(required=True, default_value="default-python")
