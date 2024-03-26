@@ -350,7 +350,7 @@ def create_template_string(android_app, template_string):
 
     """
     local_module = f"ib_{android_app.md5}"
-    if "/system/priv-app/" in android_app.absolute_store_path:
+    if "/priv-app/" in android_app.absolute_store_path:
         local_module_path = f"$(TARGET_OUT)/priv-app/{android_app.md5}"
     elif "/vendor/" in android_app.absolute_store_path:
         local_module_path = f"$(TARGET_OUT)/odm/app/{android_app.md5}"
