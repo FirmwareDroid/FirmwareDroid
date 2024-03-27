@@ -262,7 +262,6 @@ def store_firmware_archive(firmware_archive_file_path, md5, version_detected, st
 
     :return: str, str - name of the firmware within the permanent storage and path to the storage.
     """
-    #_, file_extension = os.path.splitext(firmware_archive_file_path)
     store_filename = md5
     firmware_archive_store_path = Path(os.path.join(store_path["FIRMWARE_FOLDER_STORE"],
                                                     version_detected,

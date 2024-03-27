@@ -24,7 +24,8 @@ META_BUILD_FILENAME_PRODUCT = "meta_build_product.txt"
 ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
                       "\ninclude $$(CLEAR_VARS)\n" \
                       "\nLOCAL_MODULE_TAGS := optional \n" \
-                      "\nLOCAL_MODULE := ib_${local_module}\n" \
+                      "\nLOCAL_MODULE := ${local_module}\n" \
+                      "\nLOCAL_MODULE_PATH := ${local_module_path}\n" \
                       "\nLOCAL_CERTIFICATE := ${local_certificate}\n" \
                       "\nLOCAL_SRC_FILES := ${local_src_files}\n" \
                       "\nLOCAL_MODULE_CLASS := APPS\n" \
@@ -348,12 +349,18 @@ def create_template_string(android_app, template_string):
     and should be valid for the AOSP build process.
 
     """
-    local_module = f"{android_app.md5}"
+    local_module = f"ib_{android_app.md5}"
+    if "/priv-app/" in android_app.absolute_store_path:
+        local_module_path = f"$(TARGET_OUT)/priv-app/{android_app.md5}"
+    elif "/vendor/" in android_app.absolute_store_path:
+        local_module_path = f"$(TARGET_OUT)/odm/app/{android_app.md5}"
+    else:
+        local_module_path = f"$(TARGET_OUT)/app/{android_app.md5}"
     local_src_files = android_app.filename
-    # TODO Fetch correct libraries
     local_optional_uses_libraries = ""
     local_certificate = "platform"
     final_template = Template(template_string).substitute(local_module=local_module,
+                                                          local_module_path=local_module_path,
                                                           local_src_files=local_src_files,
                                                           local_certificate=local_certificate,
                                                           local_optional_uses_libraries=local_optional_uses_libraries)
