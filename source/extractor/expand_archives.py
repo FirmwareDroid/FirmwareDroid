@@ -82,7 +82,6 @@ def extract_archive_layer(compressed_file_path, destination_dir, delete_compress
 
     if file_extension in extract_function_dict:
         extraction_function = extract_function_dict[file_extension]
-
         logging.info(f"Attempt to extract: {compressed_file_path}")
         is_success = extraction_function(compressed_file_path, destination_dir)
     else:
