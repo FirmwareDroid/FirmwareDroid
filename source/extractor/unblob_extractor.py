@@ -26,15 +26,18 @@ def unblob_extract(compressed_file_path, destination_dir):
         input_file = shlex.quote(compressed_file_path)
         output_dir = shlex.quote(destination_dir)
         logging.info(f"Unblob {input_file} to {output_dir}")
-        response = subprocess.run(
-            ["unblob",
-             "-e", output_dir,
-             "-d", "5",     # Recursion depth
-             "-p", "50",    # Number of workers
-             "-v",          # Verbose
-             "--skip-extension", ','.join(SKIP_EXTENSION_DEFAULT),
-             input_file],
-            timeout=60 * 180)
+
+        command_array = ["unblob",
+                         "-e", output_dir,
+                         "-d", "5",  # Recursion depth
+                         "-p", "50",  # Number of workers
+                         "-v",  # Verbose
+                         ]
+        for extension in SKIP_EXTENSION_DEFAULT:
+            command_array.append("--skip-extension")
+            command_array.append(extension)
+        command_array.append(input_file)
+        response = subprocess.run(command_array, timeout=60 * 180)
         response.check_returncode()
     except subprocess.CalledProcessError as err:
         if response and response.returncode > 1:
