@@ -13,6 +13,8 @@ from extractor.unzipper import extract_tar, extract_zip, extract_gz
 from extractor.lz4_extractor import extract_lz4
 from extractor.brotli_extractor import extract_brotli
 
+EXTRACTION_SIZE_THRESHOLD_MB = 100
+
 
 def normalize_file_path(file_path):
     if not os.path.exists(file_path) and not file_path.startswith("/") and not file_path.startswith("./"):
@@ -44,6 +46,12 @@ def delete_file_safely(file_path):
         pass
 
 
+def get_file_size_mb(file_path):
+    size_in_bytes = os.path.getsize(file_path)
+    size_in_mb = size_in_bytes / (1024 * 1024)
+    return size_in_mb
+
+
 def extract_archive_layer(compressed_file_path, destination_dir, delete_compressed_file):
     """
     Decompress supported archive file type and its contents recursively, including nested archives files.
@@ -73,8 +81,10 @@ def extract_archive_layer(compressed_file_path, destination_dir, delete_compress
 
     if file_extension in extract_function_dict:
         extraction_function = extract_function_dict[file_extension]
-        logging.info(f"Attempt to extract: {compressed_file_path}")
-        is_success = extraction_function(compressed_file_path, destination_dir)
+        file_size_mb = get_file_size_mb(compressed_file_path)
+        if file_size_mb > EXTRACTION_SIZE_THRESHOLD_MB:
+            logging.info(f"Attempt to extract: {compressed_file_path}")
+            is_success = extraction_function(compressed_file_path, destination_dir)
     else:
         logging.info(f"Skip file: {compressed_file_path}")
 
