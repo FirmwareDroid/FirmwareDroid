@@ -9,11 +9,11 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
-import logging
-import sys
 import environ
 import os
 from pathlib import Path
+
+from context.context_creator import setup_logging
 from database.connector import init_db
 
 env = environ.Env(
@@ -29,13 +29,7 @@ if APP_ENV == "production":
     DEBUG = False
 else:
     DEBUG = True
-    root = logging.getLogger()
-    root.setLevel(logging.DEBUG)
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    root.addHandler(handler)
+    setup_logging()
 
 DOMAIN_NAME = os.environ['DOMAIN_NAME']
 HTTPS_DOMAIN_NAME = "https://" + DOMAIN_NAME
