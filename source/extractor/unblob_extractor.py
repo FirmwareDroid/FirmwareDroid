@@ -22,8 +22,11 @@ def unblob_extract(compressed_file_path, destination_dir):
         output_dir = shlex.quote(destination_dir)
         logging.info(f"Unblob {input_file} to {output_dir}")
         response = subprocess.run(
-            ["unblob", "-e", output_dir,
-             "-d", "5",
+            ["unblob",
+             "-e", output_dir,
+             "-d", "5",     # Recursion depth
+             "-p", "50",    # Number of workers
+             "-v",          # Verbose
              "--skip-extension", ','.join(SKIP_EXTENSION_DEFAULT),
              input_file],
             timeout=60 * 180)
