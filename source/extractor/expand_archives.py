@@ -55,6 +55,7 @@ def get_file_size_mb(file_path):
 def extract_archive_layer(compressed_file_path, destination_dir, delete_compressed_file):
     """
     Decompress supported archive file type and its contents recursively, including nested archives files.
+    Files smaller than EXTRACTION_SIZE_THRESHOLD_MB are not extracted.
 
     :param compressed_file_path: str - path to the compressed file.
     :param destination_dir: str - path to extract to.
@@ -81,16 +82,17 @@ def extract_archive_layer(compressed_file_path, destination_dir, delete_compress
 
     if file_extension in extract_function_dict:
         extraction_function = extract_function_dict[file_extension]
-        file_size_mb = get_file_size_mb(compressed_file_path)
-        if file_size_mb > EXTRACTION_SIZE_THRESHOLD_MB:
-            logging.info(f"Attempt to extract: {compressed_file_path}")
-            is_success = extraction_function(compressed_file_path, destination_dir)
+
+        logging.info(f"Attempt to extract: {compressed_file_path}")
+        is_success = extraction_function(compressed_file_path, destination_dir)
     else:
         logging.info(f"Skip file: {compressed_file_path}")
 
     if not is_success:
-        logging.warning(f"Changing to unblob, got an error extracting: {compressed_file_path}")
-        unblob_extract(compressed_file_path, destination_dir)
+        file_size_mb = get_file_size_mb(compressed_file_path)
+        if file_size_mb > EXTRACTION_SIZE_THRESHOLD_MB:
+            logging.info(f"Changing to unblob to extract: {compressed_file_path}")
+            unblob_extract(compressed_file_path, destination_dir)
 
     if delete_compressed_file:
         delete_file_safely(compressed_file_path)
