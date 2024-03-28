@@ -30,7 +30,7 @@ def process_file(root, filename, supported_file_types_regex):
         if os.path.exists(nested_file_path):
             extract_archive_layer(nested_file_path, root, True)
         else:
-            logging.info(f"Skipped file {nested_file_path}")
+            logging.debug(f"Skipped file cause it no longer exists on disk: {nested_file_path}")
 
 
 def process_directory(destination_dir, supported_file_types_regex):
@@ -85,13 +85,15 @@ def extract_archive_layer(compressed_file_path, destination_dir, delete_compress
         logging.info(f"Attempt to extract: {compressed_file_path}")
         is_success = extraction_function(compressed_file_path, destination_dir)
     else:
-        logging.info(f"Skip file: {compressed_file_path}")
+        logging.info(f"Skip file due file extension: {compressed_file_path}")
 
     if not is_success:
         file_size_mb = get_file_size_mb(compressed_file_path)
         if file_size_mb > EXTRACTION_SIZE_THRESHOLD_MB:
             logging.info(f"Changing to unblob to extract: {compressed_file_path}")
             unblob_extract(compressed_file_path, destination_dir)
+        else:
+            logging.info(f"Skip file due small size: {compressed_file_path}")
 
     if delete_compressed_file:
         delete_file_safely(compressed_file_path)

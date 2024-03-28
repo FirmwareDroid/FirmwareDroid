@@ -2,16 +2,12 @@ import logging
 import shlex
 import subprocess
 
-SKIP_EXTENSION_DEFAULT = ["apk", "dex", "odex", "oat", "so", "jar", "class", "java",
-                          "png", "jpg", "jpeg", "gif", "webp", "bmp", "tiff", "tif",
-                          "wav", "mp3", "ogg", "mp4", "3gp", "webm", "mkv", "flac",
-                          "aac", "m4a", "flv", "avi", "mov", "wmv", "mpg", "mpeg",
-                          "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt",
-                          "xml", "json", "html", "htm", "css", "js", "ts", "tsx",
-                          "svg", "ttf", "otf", "woff", "woff2", "eot", "doc", "docx",
-                          "xls", "xlsx", "ppt", "pptx", "pdf", "txt", "md", "log",
-                          "odt", "ods", "odp", "odg", "odf", "odb", "odc", "odm",
-                          ]
+SKIP_EXTENSION_DEFAULT = [".apk", ".dex", ".odex", ".oat", ".so", ".jar", ".class", ".java", ".png", ".jpg", ".jpeg",
+                          ".gif", "w.ebp", ".bmp", ".tiff", ".tif", ".wav", ".mp3", ".ogg", ".mp4", ".3gp", ".webm",
+                          ".mkv", ".flac", ".aac", ".m4a", ".flv", ".avi", ".mov", ".wmv", ".mpg", ".mpeg", ".pdf",
+                          ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", "txt", ".xml", ".json", ".html", ".htm",
+                          ".css", ".js", ".ts", ".tsx", ".svg", ".ttf", ".otf", "w.off", ".woff2", ".eot", ".md",
+                          ".log", ".odt", ".ods", ".odp", ".odg", ".odf", ".odb", ".odc", ".odm", ".pak"]
 SKIP_MAGIC_ANDROID = ["Android", "Java", "Font"]
 
 
