@@ -13,7 +13,7 @@ import traceback
 import uuid
 from string import Template
 from mongoengine import DoesNotExist
-from context.context_creator import create_db_context
+from context.context_creator import create_db_context, create_log_context
 from model import GenericFile, AndroidFirmware
 from model.StoreSetting import get_active_store_paths_by_uuid
 from utils.mulitprocessing_util.mp_util import start_process_pool
@@ -39,6 +39,7 @@ ANDROID_BP_TEMPLATE = ""
 
 
 @create_db_context
+@create_log_context
 def start_app_build_file_creator(format_name, firmware_id_list):
     worker_arguments = [format_name]
     logging.debug(f"Starting app build file creator for format {format_name}... with {len(firmware_id_list)} firmware.")
@@ -50,6 +51,7 @@ def start_app_build_file_creator(format_name, firmware_id_list):
 
 
 @create_db_context
+@create_log_context
 def worker_process_firmware(firmware_id_queue, format_name):
     """
     Worker process for creating build files for a given firmware.

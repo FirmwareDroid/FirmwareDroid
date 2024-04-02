@@ -6,7 +6,7 @@ import logging
 import os
 import traceback
 from model.Interfaces.ScanJob import ScanJob
-from context.context_creator import create_db_context
+from context.context_creator import create_db_context, create_log_context
 from model import AndroGuardReport, GenericFile
 from model import AndroGuardMethodClassAnalysisReference
 from model import AndroGuardStringAnalysis, AndroGuardClassAnalysis, AndroGuardMethodAnalysis, \
@@ -342,6 +342,7 @@ def analyse_and_save(android_app):
 
 
 @create_db_context
+@create_log_context
 def androguard_worker_multiprocessing(android_app_id_queue):
     """
     Worker process which will work on the given queue.
@@ -388,6 +389,7 @@ class AndroGuardScanJob(ScanJob):
         os.chdir(self.SOURCE_DIR)
 
     @create_db_context
+    @create_log_context
     def start_scan(self):
         """
         Starts multiple instances of AndroGuard to analyse a list of Android apps on multiple processors.

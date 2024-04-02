@@ -7,10 +7,12 @@ import tempfile
 import traceback
 from Interfaces.ScanJob import ScanJob
 from model import AndroidApp, ApkleaksReport
-from context.context_creator import create_db_context
+from context.context_creator import create_db_context, create_log_context
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
 
+@create_log_context
+@create_db_context
 def apkleaks_worker_multiprocessing(android_app_id_queue):
     """
     Start the analysis on a multiprocessor queue.
@@ -95,6 +97,7 @@ class APKLeaksScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
+    @create_log_context
     @create_db_context
     def start_scan(self):
         """

@@ -5,18 +5,18 @@
 import json
 import logging
 import os
-
 from model.Interfaces.ScanJob import ScanJob
 from database.query_document import get_filtered_list
 from model import UserAccount, AndroidApp
 from model import VirusTotalReport
-from context.context_creator import create_db_context
+from context.context_creator import create_db_context, create_log_context
 from database.mongodb_key_replacer import filter_mongodb_dict_chars
 
 
 # TODO REFACTOR THIS CLASS
 
 
+@create_log_context
 @create_db_context
 def start_virustotal_scan(android_app_id_list, user_account_id):
     """
@@ -129,6 +129,7 @@ class VirusTotalScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
+    @create_log_context
     @create_db_context
     def start_scan(self):
         """
@@ -136,3 +137,4 @@ class VirusTotalScanJob(ScanJob):
         """
         android_app_id_list = self.object_id_list
         logging.info(f"VirusTotal analysis started! With {str(len(android_app_id_list))} apps.")
+        raise NotImplementedError("Sorry, not yet refactored!")
