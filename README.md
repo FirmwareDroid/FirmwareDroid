@@ -1,10 +1,14 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 
+
+![FMD-HEADER.png](docs/FMD-HEADER.png)
+
 # FirmwareDroid (FMD)
-FirmwareDroid is a tool made for analysing Android firmware images. It is mainly made to automate the process 
-of extracting and scanning pre-installed Android apps for security research purposes. FMD is made to run in 
-docker and includes several third party analysis tools for security analysis and extraction. For instance:
+FirmwareDroid is a research project that aims to develop novel methods to analyse Android firmware. It is mainly made 
+to automate the process of extracting and scanning pre-installed Android apps for security research purposes. 
+FMD is made to run in docker and includes several third party analysis tools for security analysis and extraction. 
+For instance:
 
 * [AndroGuard](https://github.com/androguard/androguard)
 * [Androwarn](https://github.com/maaaaz/androwarn/)
@@ -34,6 +38,21 @@ enhancements.
 ### Security
 
 FMD has only a minimal set of security features and is not a production ready software. Use at your own risk.
+
+### Publications
+
+[FirmwareDroid: Towards Automated Static Analysis of Pre-Installed Android Apps](https://ieeexplore.ieee.org/document/10172951)
+``` 
+@INPROCEEDINGS{FirmwareDroid,
+  author={Sutter, Thomas and Tellenbach, Bernhard},
+  booktitle={2023 IEEE/ACM 10th International Conference on Mobile Software Engineering and Systems (MOBILESoft)}, 
+  title={FirmwareDroid: Towards Automated Static Analysis of Pre-Installed Android Apps}, 
+  year={2023},
+  month={May},
+  pages={12-22},
+  doi={10.1109/MOBILSoft59058.2023.00009}
+}
+```
   
 ### License:
 FirmwareDroid is a non-profit research project licenced under the GNU General Public License v3.0
