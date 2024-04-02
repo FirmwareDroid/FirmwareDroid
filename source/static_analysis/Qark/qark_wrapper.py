@@ -8,10 +8,12 @@ import tempfile
 import json
 from model.Interfaces.ScanJob import ScanJob
 from model import QarkReport, QarkIssue, AndroidApp
-from context.context_creator import create_db_context
+from context.context_creator import create_db_context, create_log_context
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
 
+@create_log_context
+@create_db_context
 def qark_worker_multiprocessing(android_app_id_queue):
     """
     Starts the analysis with quark.
@@ -133,6 +135,7 @@ class QarkScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
+    @create_log_context
     @create_db_context
     def start_scan(self):
         """

@@ -10,12 +10,14 @@ from multiprocessing import Lock
 
 from model.Interfaces.ScanJob import ScanJob
 from model import AndrowarnReport, AndroidApp
-from context.context_creator import create_db_context
+from context.context_creator import create_db_context, create_log_context
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
 lock = Lock()
 
 
+@create_log_context
+@create_db_context
 def androwarn_worker_multiprocessing(android_app_id_queue):
     """
     Start the analysis with androwarn. Wrapper function taken and modified from androwarn.py.
@@ -113,6 +115,7 @@ class AndrowarnScanJob(ScanJob):
         os.chdir(self.SOURCE_DIR)
 
     @create_db_context
+    @create_log_context
     def start_scan(self):
         """
         Starts multiple instances of the scanner to analyse a list of Android apps on multiple processors.
