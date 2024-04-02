@@ -184,7 +184,7 @@ def process_generic_file(generic_file_lazy, android_app, tmp_app_dir):
     """
     try:
         generic_file = generic_file_lazy.fetch()
-        if generic_file.filename == "Android.mk" or generic_file.filename == "Android.bp":
+        if generic_file.filename.lower() == "android.mk" or generic_file.filename.lower() == "android.bp":
             if not generic_file.file:
                 raise DoesNotExist(f"Filename: {generic_file.filename} has zero size. Deleting... "
                                    f"generic file id:{generic_file.pk}")
@@ -315,7 +315,7 @@ def remove_existing_build_files(android_app, file_format):
     for existing_generic_file_reference in android_app.generic_file_list:
         try:
             existing_generic_file = existing_generic_file_reference.fetch()
-            if existing_generic_file.filename == "Android." + file_format:
+            if existing_generic_file.filename.lower() == "android." + file_format.lower():
                 logging.debug(f"Deleting existing {file_format} file for app {android_app.filename}...")
                 existing_generic_file.delete()
                 android_app.generic_file_list.remove(existing_generic_file_reference)
