@@ -31,6 +31,8 @@ ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
                       "\nLOCAL_MODULE_CLASS := APPS\n" \
                       "\nLOCAL_MODULE_SUFFIX := $$(COMMON_ANDROID_PACKAGE_SUFFIX)\n" \
                       "\nLOCAL_OPTIONAL_USES_LIBRARIES := ${local_optional_uses_libraries}\n" \
+                      "\nLOCAL_ENFORCE_USES_LIBRARIES := $(local_enforce_uses_libraries)\n" \
+                      "\nLOCAL_DEX_PREOPT := $(local_dex_preopt)\n" \
                       "\ninclude $$(BUILD_PREBUILT)\n"
 
 ANDROID_BP_TEMPLATE = ""
@@ -359,10 +361,14 @@ def create_template_string(android_app, template_string):
     local_src_files = android_app.filename
     local_optional_uses_libraries = ""
     local_certificate = "platform"
+    local_enforce_uses_libraries = "false"
+    local_dex_preopt = "false"
     final_template = Template(template_string).substitute(local_module=local_module,
                                                           local_module_path=local_module_path,
                                                           local_src_files=local_src_files,
                                                           local_certificate=local_certificate,
+                                                          local_enforce_uses_libraries=local_enforce_uses_libraries,
+                                                          local_dex_preopt=local_dex_preopt,
                                                           local_optional_uses_libraries=local_optional_uses_libraries)
     logging.debug("Created template string")
     return final_template
