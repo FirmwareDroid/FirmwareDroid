@@ -30,7 +30,7 @@ def unblob_extract(compressed_file_path, destination_dir):
         command_array = ["unblob",
                          "-e", output_dir,
                          "-d", "5",  # Recursion depth
-                         "-p", "50",  # Number of workers
+                         "-p", "5",  # Number of workers
                          "-v",  # Verbose
                          ]
         for extension in SKIP_EXTENSION_DEFAULT:
