@@ -2,11 +2,8 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-import traceback
-
 import django_rq
 import graphene
-
 from api.v2.schema.RqJobsSchema import ONE_WEEK_TIMEOUT
 from dynamic_analysis.emulator_preparation.app_file_build_creator import start_app_build_file_creator
 from graphene_mongo import MongoengineObjectType
@@ -41,7 +38,7 @@ class ModifyAecsJob(graphene.Mutation):
     job is created the old will be overwritten by the new. The aecs-job is used to store a
     list of firmware ids for further processing by the aecs-service.
     """
-    is_success = graphene.Boolean()
+    job_id = graphene.String()
 
     class Arguments:
         firmware_id_list = graphene.List(graphene.String)
@@ -91,10 +88,14 @@ class ModifyAecsJob(graphene.Mutation):
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, firmware_id_list):
+    def mutate(cls, root, info, firmware_id_list, queue_name="default-python"):
+        queue = django_rq.get_queue(queue_name)
         firmware_id_list = cls.get_firmware_list(firmware_id_list)
-        is_success = cls.update_or_create_aecs_job(firmware_id_list)
-        return cls(is_success=is_success)
+        if len(firmware_id_list) == 0:
+            logging.error("No firmware ids found with AECS build files.")
+        else:
+            job = queue.enqueue(cls.update_or_create_aecs_job, firmware_id_list, job_timeout=ONE_WEEK_TIMEOUT)
+        return cls(job_id=job.id)
 
 
 class DeleteAecsJob(graphene.Mutation):
