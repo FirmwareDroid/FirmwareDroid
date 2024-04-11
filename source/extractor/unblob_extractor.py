@@ -12,10 +12,12 @@ SKIP_EXTENSION_DEFAULT = [".apk", ".dex", ".odex", ".oat", ".so", ".jar", ".clas
 SKIP_MAGIC_ANDROID = ["Android", "Java", "Font"]
 
 
-def unblob_extract(compressed_file_path, destination_dir):
+def unblob_extract(compressed_file_path, destination_dir, depth=5, worker_count=5):
     """
     Extract a file recursively with the unblob extraction suite.
 
+    :param worker_count: int - number of workers to use.
+    :param depth: int - depth of unblob extraction.
     :param destination_dir: str - path to the folder where the data is extracted to.
     :param compressed_file_path: str - path to the file to extract.
 
@@ -30,8 +32,8 @@ def unblob_extract(compressed_file_path, destination_dir):
 
         command_array = ["unblob",
                          "-e", output_dir,
-                         "-d", "5",  # Recursion depth
-                         "-p", "5",  # Number of workers
+                         "-d", depth,  # Recursion depth
+                         "-p", worker_count,  # Number of workers
                          "-v",  # Verbose
                          ]
         for extension in SKIP_EXTENSION_DEFAULT:
