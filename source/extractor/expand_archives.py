@@ -14,6 +14,8 @@ from extractor.lz4_extractor import extract_lz4
 from extractor.brotli_extractor import extract_brotli
 
 EXTRACTION_SIZE_THRESHOLD_MB = 100
+UNBLOB_DEPTH = 2
+UNBLOB_WORKER_COUNT = 2
 
 
 def normalize_file_path(file_path):
@@ -91,7 +93,7 @@ def extract_archive_layer(compressed_file_path, destination_dir, delete_compress
         file_size_mb = get_file_size_mb(compressed_file_path)
         if file_size_mb > EXTRACTION_SIZE_THRESHOLD_MB:
             logging.info(f"Changing to unblob to extract: {compressed_file_path}")
-            unblob_extract(compressed_file_path, destination_dir)
+            unblob_extract(compressed_file_path, destination_dir, UNBLOB_DEPTH, UNBLOB_WORKER_COUNT)
         else:
             logging.info(f"Skip file due small size: {compressed_file_path}")
 
