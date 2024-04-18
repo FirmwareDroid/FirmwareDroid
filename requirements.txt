@@ -7,7 +7,7 @@ django-cors-headers~=4.3.1
 ##############################
 # GrahpQL API
 graphene-django~=3.2.0
-graphene-mongo~=0.4.1
+graphene-mongo~=0.4.3
 django-graphql-jwt~=0.4.0
 ##############################
 # REST API
