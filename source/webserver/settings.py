@@ -40,10 +40,28 @@ if not CORS_ADDITIONAL_HOST.startswith("https://"):
     CORS_ADDITIONAL_HOST = "https://" + CORS_ADDITIONAL_HOST
 
 # Security Settings
-ALLOWED_HOSTS = [DOMAIN_NAME, "firmwaredroid-backend:5000", HTTPS_DOMAIN_NAME, "localhost"]
+ALLOWED_HOSTS = [DOMAIN_NAME,
+                 "firmwaredroid-backend:5000",
+                 HTTPS_DOMAIN_NAME,
+                 "localhost",
+                 "fmd.localhost",
+                 "fmd.localhost:4443",]
 CSRF_TRUSTED_ORIGINS = [HTTPS_DOMAIN_NAME]
-CORS_ALLOWED_ORIGINS = [HTTPS_DOMAIN_NAME, CORS_ADDITIONAL_HOST, "https://localhost"]
-CORS_ORIGIN_WHITELIST = [DOMAIN_NAME, CORS_ADDITIONAL_HOST, "localhost"]
+CORS_ALLOWED_ORIGINS = [HTTPS_DOMAIN_NAME,
+                        CORS_ADDITIONAL_HOST,
+                        "https://fmd.localhost",
+                        "https://localhost",
+                        "https://fmd.localhost:4443",
+                        "https://127.0.0.1"]
+CORS_ORIGIN_WHITELIST = [DOMAIN_NAME,
+                         CORS_ADDITIONAL_HOST,
+                         "fmd.localhost",
+                         "localhost",
+                         "127.0.0.1",
+                         "https://fmd.localhost",
+                         "https://fmd.localhost:4443",
+                         "https://localhost",
+                         "https://127.0.0.1"]
 CORS_ALLOW_CREDENTIALS = True
 
 GRAPHQL_JWT = {
