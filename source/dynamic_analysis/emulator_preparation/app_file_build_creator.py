@@ -129,7 +129,9 @@ def process_android_apps(firmware, tmp_root_dir):
     for android_app_lazy in firmware.android_app_id_list:
         android_app = android_app_lazy.fetch()
         logging.debug(android_app.filename)
-        module_naming = f"ib_{android_app.md5}"
+        #TODO: RENAME MODULE
+        #module_naming = f"ib_{android_app.filename.replace('.apk', '')}"
+        module_naming = f"{android_app.filename.replace('.apk', '')}"
         tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
         os.mkdir(tmp_app_dir)
         try:
@@ -354,13 +356,16 @@ def create_template_string(android_app, template_string):
     and should be valid for the AOSP build process.
 
     """
-    local_module = f"ib_{android_app.md5}"
+    directory_name = android_app.filename.replace('.apk', '')
+    # TODO: RENAME MODULE
+    #local_module = f"ib_{android_app.md5}"
+    local_module = f"{directory_name}"
     if "/priv-app/" in android_app.absolute_store_path:
-        local_module_path = f"$(TARGET_OUT)/priv-app/{android_app.md5}"
+        local_module_path = f"$(TARGET_OUT)/priv-app/"
     elif "/vendor/" in android_app.absolute_store_path:
-        local_module_path = f"$(TARGET_OUT)/odm/app/{android_app.md5}"
+        local_module_path = f"$(TARGET_OUT)/odm/app/"
     else:
-        local_module_path = f"$(TARGET_OUT)/app/{android_app.md5}"
+        local_module_path = f"$(TARGET_OUT)/app/"
     local_src_files = android_app.filename
     local_optional_uses_libraries = ""
     local_certificate = "platform"
