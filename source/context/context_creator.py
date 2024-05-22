@@ -27,6 +27,8 @@ def create_app_context():
     """
     Creates a new db app context via decorator.
     """
+    import os
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webserver.settings")
     return None
 
 
