@@ -8,7 +8,7 @@ SKIP_EXTENSION_DEFAULT = [".apk", ".dex", ".odex", ".oat", ".so", ".jar", ".clas
                           ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", "txt", ".xml", ".json", ".html", ".htm",
                           ".css", ".js", ".ts", ".tsx", ".svg", ".ttf", ".otf", ".woff", ".woff2", ".eot", ".md",
                           ".log", ".odt", ".ods", ".odp", ".odg", ".odf", ".odb", ".odc", ".odm", ".pak", ".rlib",
-                          ".mtz", ".apex", ".capex", ".vdex", ".arsc", ".pb"]
+                          ".mtz", ".apex", ".capex", ".vdex", ".arsc", ".pb", ".aab"]
 SKIP_MAGIC_ANDROID = ["Android", "Java", "Font"]
 
 

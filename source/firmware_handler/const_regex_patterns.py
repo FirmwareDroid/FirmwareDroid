@@ -54,14 +54,14 @@ EXT_IMAGE_PATTERNS_DICT = {"system": SYSTEM_IMG_PATTERN_LIST,
 ##########################################################################################
 RADIO_IMG_PATTERN_LIST = ["radio.*[.]img$"]
 BOOTLOADER_IMG_PATTERN_LIST = ["boot[.]img"]
-KERNEL_IMG_PATTERN_LIST = ["kernel[.]img"]
+KERNEL_IMG_PATTERN_LIST = ["kernel[.]img", "kernel_ranchu[.]img"]
 RECOVERY_IMG_PATTERN_LIST = ["recovery[.]img"]
 
 ##########################################################################################
 # Filename and formats.
 ##########################################################################################
 BUILD_PROP_PATTERN_LIST = ["build[.]prop", "default[.]prop"]
-ANDROID_APP_FORMATS_PATTERN_LIST = [".*[.]apk$", ".*[.]odex$", ".*[.]dex$", ".*[.]vdex$", ".*[.]art$"]
+ANDROID_APP_FORMATS_PATTERN_LIST = [".*[.]apk$", ".*[.]odex$", ".*[.]dex$", ".*[.]vdex$", ".*[.]art$", ".*[.]aab$"]
 ELF_BINARY_FORMATS_PATTERN_LIST = [".*[.]so$", ".*[.]elf$"]
 
 VENDOR_TRANSFER_PATTERN_LIST = ["vendor[.]transfer[.]list", "vendor[.]transfer"]
