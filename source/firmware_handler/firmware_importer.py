@@ -45,9 +45,9 @@ def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0):
     logging.info("Firmware extractor starting...")
     store_setting = get_active_store_by_index(storage_index)
     store_path = store_setting.store_options_dict[store_setting.uuid]["paths"]
-    firmware_archives_queue = create_file_import_queue(store_path)
-    if firmware_archives_queue.qsize() <= 10:
-        num_threads = firmware_archives_queue.qsize()
+    firmware_archives_queue, file_count = create_file_import_queue(store_path)
+    if file_count <= 10:
+        num_threads = file_count
     else:
         num_threads = NUMBER_OF_IMPORTER_THREADS
 
@@ -77,7 +77,7 @@ def create_file_import_queue(store_path):
     logging.info(
         f"Approximate number of files to import ({len(filename_list)} {file_queue.qsize()}) "
         f"from {firmware_import_folder_path}")
-    return file_queue
+    return file_queue, len(filename_list)
 
 
 def allow_import(firmware_file_path, md5):
@@ -129,7 +129,7 @@ def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes, store_path
             if is_allowed:
                 import_firmware(filename, md5, firmware_file_path, create_fuzzy_hashes, store_path)
             else:
-                shutil.move(firmware_file_path, store_path["FIRMWARE_FOLDER_IMPORT_FAILED"])
+                shutil.move(str(firmware_file_path), store_path["FIRMWARE_FOLDER_IMPORT_FAILED"])
                 raise ValueError(reason)
         except Exception as err:
             logging.error(str(err))

@@ -5,6 +5,7 @@ import functools
 import logging
 import sys
 
+
 def create_db_context(f):
     """
     Decorator for creating an app context and pushing into to the Flask context stack.
@@ -27,8 +28,6 @@ def create_app_context():
     """
     Creates a new db app context via decorator.
     """
-    import os
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webserver.settings")
     return None
 
 
