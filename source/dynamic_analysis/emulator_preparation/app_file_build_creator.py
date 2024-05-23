@@ -33,6 +33,7 @@ ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
                       "\nLOCAL_OPTIONAL_USES_LIBRARIES := ${local_optional_uses_libraries}\n" \
                       "\nLOCAL_ENFORCE_USES_LIBRARIES := ${local_enforce_uses_libraries}\n" \
                       "\nLOCAL_DEX_PREOPT := ${local_dex_preopt}\n" \
+                      "\nLOCAL_UNINSTALLABLE_MODULE := true\n" \
                       "\ninclude $$(BUILD_PREBUILT)\n"
 
 ANDROID_BP_TEMPLATE = ""
