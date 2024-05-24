@@ -33,6 +33,7 @@ ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
                       "\nLOCAL_OPTIONAL_USES_LIBRARIES := ${local_optional_uses_libraries}\n" \
                       "\nLOCAL_ENFORCE_USES_LIBRARIES := ${local_enforce_uses_libraries}\n" \
                       "\nLOCAL_DEX_PREOPT := ${local_dex_preopt}\n" \
+                      "\nLOCAL_PRIVILEGED_MODULE := ${local_privileged_module}\n" \
                       "\ninclude $$(BUILD_PREBUILT)\n"
 
 ANDROID_BP_TEMPLATE = ""
@@ -360,8 +361,10 @@ def create_template_string(android_app, template_string):
     # TODO: RENAME MODULE
     #local_module = f"ib_{android_app.md5}"
     local_module = f"{directory_name}"
+    local_privileged_module = "false"
     if "/priv-app/" in android_app.absolute_store_path:
         local_module_path = f"$(TARGET_OUT)/priv-app/"
+        local_privileged_module = "true"
     elif "/vendor/" in android_app.absolute_store_path:
         local_module_path = f"$(TARGET_OUT)/odm/app/"
     else:
@@ -377,6 +380,7 @@ def create_template_string(android_app, template_string):
                                                           local_certificate=local_certificate,
                                                           local_enforce_uses_libraries=local_enforce_uses_libraries,
                                                           local_dex_preopt=local_dex_preopt,
+                                                          local_privileged_module=local_privileged_module,
                                                           local_optional_uses_libraries=local_optional_uses_libraries)
     logging.debug("Created template string")
     return final_template
