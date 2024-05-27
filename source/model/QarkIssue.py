@@ -13,6 +13,6 @@ class QarkIssue(Document):
     severity = StringField(required=False)
     description = StringField(required=False)
     name = StringField(required=False)
-    line_number_list = ListField(required=False)
+    line_number_list = ListField(StringField(), required=False)
     file_object = StringField(required=False)
     apk_exploit_dict = DictField(required=False)

@@ -12,7 +12,7 @@ class AndroGuardClassAnalysis(Document):
     name = StringField(required=True)
     is_external = BooleanField(required=False)
     is_android_api = BooleanField(required=False)
-    implements_list = ListField(required=False)
+    implements_list = ListField(StringField(), required=False)
     extends = StringField(required=False)
     number_of_methods = IntField(required=False)
     method_list = EmbeddedDocumentListField(AndroGuardMethodAnalysis, required=False)

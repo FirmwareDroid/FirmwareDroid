@@ -4,6 +4,7 @@
 import graphene
 import graphql_jwt
 from graphene_django.debug import DjangoDebug
+from api.v2.schema.ApkScannerResultSchema import ApkScannerReportQuery
 from api.v2.schema.HealthCheckSchema import HealthCheckQuery
 from api.v2.schema.RqJobsSchema import RqJobMutation, RqQueueQuery
 from api.v2.schema.UserAccountSchema import UserAccountQuery
@@ -56,6 +57,7 @@ class Query(ApplicationSettingQuery,
             ExodusStatisticsReportQuery,
             ApkleaksReportQuery,
             ApkleaksStatisticsReportQuery,
+            ApkScannerReportQuery,
             SuperReportQuery,
             QuarkEngineReportQuery,
             LzjdHashQuery,
