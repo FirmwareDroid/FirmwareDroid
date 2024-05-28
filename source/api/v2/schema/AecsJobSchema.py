@@ -6,9 +6,9 @@ import django_rq
 import graphene
 from api.v2.schema.RqJobsSchema import ONE_WEEK_TIMEOUT
 from dynamic_analysis.emulator_preparation.aecs import update_or_create_aecs_job
-from dynamic_analysis.emulator_preparation.app_file_build_creator import start_app_build_file_creator
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
+from dynamic_analysis.emulator_preparation.aosp_module_builder import start_aosp_module_file_creator
 from model import AndroidFirmware
 from model.AecsJob import AecsJob
 
@@ -120,7 +120,7 @@ class CreateAECSBuildFilesJob(graphene.Mutation):
     @superuser_required
     def mutate(cls, root, info, format_name, firmware_id_list, queue_name="default-python"):
         queue = django_rq.get_queue(queue_name)
-        job = queue.enqueue(start_app_build_file_creator, format_name, firmware_id_list, job_timeout=ONE_WEEK_TIMEOUT)
+        job = queue.enqueue(start_aosp_module_file_creator, format_name, firmware_id_list, job_timeout=ONE_WEEK_TIMEOUT)
         return cls(job_id=job.id)
 
 

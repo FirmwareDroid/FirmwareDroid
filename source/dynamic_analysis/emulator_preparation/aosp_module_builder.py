@@ -14,6 +14,8 @@ import uuid
 from string import Template
 from mongoengine import DoesNotExist
 from context.context_creator import create_db_context, create_log_context
+from dynamic_analysis.emulator_preparation.templates.android_app_module_template import ANDROID_MK_TEMPLATE, \
+    ANDROID_BP_TEMPLATE
 from model import GenericFile, AndroidFirmware
 from model.StoreSetting import get_active_store_paths_by_uuid
 from utils.mulitprocessing_util.mp_util import start_process_pool
@@ -21,27 +23,11 @@ from utils.mulitprocessing_util.mp_util import start_process_pool
 META_BUILD_FILENAME_SYSTEM = "meta_build_system.txt"
 META_BUILD_FILENAME_VENDOR = "meta_build_vendor.txt"
 META_BUILD_FILENAME_PRODUCT = "meta_build_product.txt"
-ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
-                      "\ninclude $$(CLEAR_VARS)\n" \
-                      "\nLOCAL_MODULE_TAGS := optional \n" \
-                      "\nLOCAL_MODULE := ${local_module}\n" \
-                      "\nLOCAL_MODULE_PATH := ${local_module_path}\n" \
-                      "\nLOCAL_CERTIFICATE := ${local_certificate}\n" \
-                      "\nLOCAL_SRC_FILES := ${local_src_files}\n" \
-                      "\nLOCAL_MODULE_CLASS := APPS\n" \
-                      "\nLOCAL_MODULE_SUFFIX := $$(COMMON_ANDROID_PACKAGE_SUFFIX)\n" \
-                      "\nLOCAL_OPTIONAL_USES_LIBRARIES := ${local_optional_uses_libraries}\n" \
-                      "\nLOCAL_ENFORCE_USES_LIBRARIES := ${local_enforce_uses_libraries}\n" \
-                      "\nLOCAL_DEX_PREOPT := ${local_dex_preopt}\n" \
-                      "\nLOCAL_PRIVILEGED_MODULE := ${local_privileged_module}\n" \
-                      "\ninclude $$(BUILD_PREBUILT)\n"
-
-ANDROID_BP_TEMPLATE = ""
 
 
 @create_db_context
 @create_log_context
-def start_app_build_file_creator(format_name, firmware_id_list):
+def start_aosp_module_file_creator(format_name, firmware_id_list):
     worker_arguments = [format_name]
     logging.debug(f"Starting app build file creator for format {format_name}... with {len(firmware_id_list)} firmware.")
     start_process_pool(firmware_id_list,
