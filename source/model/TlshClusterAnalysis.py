@@ -16,6 +16,6 @@ class TlshClusterAnalysis(Document):
     distances_dict_unfiltered_file = FileField(required=True, collection_name="fs.tlsh_distance")
     distances_dict = DictField(required=False)
     group_list_file = FileField(required=True, collection_name="fs.tlsh_groups")
-    group_list = ListField(required=False)
-    group_numbers_list = ListField(required=True)
+    group_list = ListField(StringField(), required=False)
+    group_numbers_list = ListField(StringField(), required=True)
     gexf_file = FileField(required=True, collection_name="fs.tlsh_graphs")

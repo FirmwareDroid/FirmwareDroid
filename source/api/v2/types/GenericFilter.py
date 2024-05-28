@@ -1,20 +1,11 @@
+import logging
+
 import graphene
 from graphene import InputObjectType
+from mongoengine.fields import ListField, DictField, StringField, IntField, FloatField, BooleanField, LazyReferenceField
 
 
 def generate_filter(model):
-    """
-    Generate a filter for a given model that can be used in a GraphQL query. The filter will have the same name as the
-    model with the word "Filter" appended to it. The filter will have an argument for each field in the model. The
-    argument will be of the same type as the field in the model. If the field has a default value, the argument will
-    have the same type as the default value. If the field does not have a default value, the argument will have the
-    type str. The filter will be used to filter the queryset of the model.
-
-    :param model: document class - a subclass of mongoengine.Document
-
-    :return: filter class - a subclass of graphene.InputObjectType including the filter arguments for the model
-
-    """
     class Meta:
         name = f"{model.__name__}Filter"
 
@@ -23,19 +14,34 @@ def generate_filter(model):
         int: graphene.Int,
         float: graphene.Float,
         bool: graphene.Boolean,
-        list: graphene.List,
+        list: graphene.List(graphene.String),
         dict: graphene.JSONString,
+        StringField: graphene.String,
+        IntField: graphene.Int,
+        FloatField: graphene.Float,
+        BooleanField: graphene.Boolean,
+        ListField: graphene.String,
+        DictField: graphene.JSONString,
+        LazyReferenceField: graphene.String,
     }
 
     attrs = {"Meta": Meta, "type_map": type_map}
 
     for field_name, field in model._fields.items():
         if not field_name.startswith("_"):
-            python_type = type(field.default) if field.default is not None else str
-            graphene_type = type_map.get(python_type, graphene.String)
+            if isinstance(field, ListField):
+                try:
+                    python_type = type(field.field)
+                    graphene_type = graphene.List(type_map.get(python_type, graphene.String))
+                except TypeError:
+                    graphene_type = graphene.List(graphene.String)
+            else:
+                python_type = type(field.default) if field.default is not None else str
+                graphene_type = type_map.get(python_type, graphene.String)
             attrs[field_name] = graphene.Argument(
                 type_=graphene_type,
-                description=f"Filter by {field_name}"
+                description=f"Filter by {field_name}",
+                name=field_name
             )
 
     return type(f"{model.__name__}Filter", (InputObjectType,), attrs)

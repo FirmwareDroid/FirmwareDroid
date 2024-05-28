@@ -6,13 +6,16 @@ from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from model.AndroGuardReport import AndroGuardReport
+from graphene.relay import Node
 
 ModelFilter = generate_filter(AndroGuardReport)
 
 
 class AndroGuardReportType(MongoengineObjectType):
+
     class Meta:
         model = AndroGuardReport
+        interfaces = (Node,)
 
 
 class AndroGuardReportQuery(graphene.ObjectType):
