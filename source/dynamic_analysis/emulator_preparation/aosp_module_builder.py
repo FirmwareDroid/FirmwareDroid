@@ -335,23 +335,29 @@ def create_and_save_generic_file(android_app, file_format, template_string):
 def select_signing_key(android_app):
     """
     Selects the signing key for the Android app based on the path of the app and the sharedUserId.
-    possible keys are: networkstack, media, shared, platform, testkey
+    Possible keys are: networkstack, media, shared, platform, testkey
         shared: sharedUserId="android.uid.shared"
         networkstack: sharedUserId="android.uid.networkstack"
         media: sharedUserId="android.uid.media"
         platform: sharedUserId="android.uid.system"
 
+    Default use is the platform key.
+
     :return: str - The signing key for the Android app.
 
     """
     signing_key = "platform"
-    if "sharedUserId" in android_app.manifest_dict:
-        if android_app.manifest_dict["sharedUserId"] == "android.uid.shared":
-            signing_key = "shared"
-        elif android_app.manifest_dict["sharedUserId"] == "android.uid.networkstack":
-            signing_key = "networkstack"
-        elif android_app.manifest_dict["sharedUserId"] == "android.uid.media":
-            signing_key = "media"
+    if android_app.manifest_dict and android_app.manifest_dict["manifest"]:
+        if "@ns0:sharedUserId" in android_app.manifest_dict:
+            shared_user_id = android_app.manifest_dict["@ns0:sharedUserId"]
+            if shared_user_id == "android.uid.shared":
+                signing_key = "shared"
+            elif shared_user_id == "android.uid.networkstack":
+                signing_key = "networkstack"
+            elif shared_user_id == "android.uid.media":
+                signing_key = "media"
+            logging.info(f"Selected signing key: {signing_key} for app {android_app.filename} "
+                         f"based on sharedUserId: {shared_user_id}")
     return signing_key
 
 
