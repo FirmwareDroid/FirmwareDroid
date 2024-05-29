@@ -38,10 +38,11 @@ def create_managed_mp_queue(document_obj_list, manager):
 
 def create_id_mp_queue(document_list, manager):
     """
-    Creates a multiprocessor-queue from the given list to a queue.
+    Creates a multiprocessor-queue from the given list.
 
     :param manager: multiprocessor manager.
     :param document_list: list of objects to put into the queue
+
     :return: Queue(objectID)
 
     """

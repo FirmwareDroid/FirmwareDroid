@@ -29,6 +29,7 @@ class ScannerModules(Enum):
     SUPER = {"SuperAndroidAnalyzerScanJob": "static_analysis.SuperAndroidAnalyzer.super_android_analyzer_wrapper"}
     MORF = {"MORFScanJob": "static_analysis.MORF.morf_wrapper"}
     VIRUSTOTAL = {"VirusTotalScanJob": "static_analysis.Virustotal.virus_total_wrapper"}
+    MANIFEST = {"ManifestParserScanJob": "static_analysis.ManifestParser.android_manifest_parser"}
 
 
 class RqQueueQuery(graphene.ObjectType):

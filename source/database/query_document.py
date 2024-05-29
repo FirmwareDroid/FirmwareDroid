@@ -89,8 +89,11 @@ def get_filtered_list(document_id_list, document_class, reference_attribute_name
 
     """
     document_list = create_document_list_by_ids(document_id_list, document_class)
-    document_list = filter_by_attribute_exists(document_list, reference_attribute_name)
-    return filter_duplicates(document_list)
+    result_list = document_list
+    if reference_attribute_name != "":
+        document_list = filter_by_attribute_exists(document_list, reference_attribute_name)
+        result_list = filter_duplicates(document_list)
+    return result_list
 
 
 

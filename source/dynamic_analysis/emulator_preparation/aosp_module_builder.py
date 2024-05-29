@@ -332,6 +332,29 @@ def create_and_save_generic_file(android_app, file_format, template_string):
     android_app.save()
 
 
+def select_signing_key(android_app):
+    """
+    Selects the signing key for the Android app based on the path of the app and the sharedUserId.
+    possible keys are: networkstack, media, shared, platform, testkey
+        shared: sharedUserId="android.uid.shared"
+        networkstack: sharedUserId="android.uid.networkstack"
+        media: sharedUserId="android.uid.media"
+        platform: sharedUserId="android.uid.system"
+
+    :return: str - The signing key for the Android app.
+
+    """
+    signing_key = "platform"
+    if "sharedUserId" in android_app.manifest_dict:
+        if android_app.manifest_dict["sharedUserId"] == "android.uid.shared":
+            signing_key = "shared"
+        elif android_app.manifest_dict["sharedUserId"] == "android.uid.networkstack":
+            signing_key = "networkstack"
+        elif android_app.manifest_dict["sharedUserId"] == "android.uid.media":
+            signing_key = "media"
+    return signing_key
+
+
 def create_template_string(android_app, template_string):
     """
     Creates build file (Android.mk or Android.bp) as string for the AOSP image builder.
@@ -355,7 +378,8 @@ def create_template_string(android_app, template_string):
         local_module_path = f"$(TARGET_OUT)/app/"
     local_src_files = android_app.filename
     local_optional_uses_libraries = ""
-    local_certificate = "platform"
+
+    local_certificate = select_signing_key(android_app)
     local_enforce_uses_libraries = "false"
     local_dex_preopt = "false"
     final_template = Template(template_string).substitute(local_module=local_module,
