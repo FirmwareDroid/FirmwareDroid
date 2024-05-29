@@ -115,14 +115,13 @@ def process_android_apps(firmware, tmp_root_dir):
     """
     for android_app_lazy in firmware.android_app_id_list:
         android_app = android_app_lazy.fetch()
-        logging.debug(android_app.filename)
-        #TODO: RENAME MODULE
-        #module_naming = f"ib_{android_app.filename.replace('.apk', '')}"
         module_naming = f"{android_app.filename.replace('.apk', '')}"
         tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
         os.mkdir(tmp_app_dir)
+        new_filename = android_app.filename
+        destination_file_path = os.path.join(tmp_app_dir, new_filename)
         try:
-            shutil.copy(android_app.absolute_store_path, tmp_app_dir)
+            shutil.copy(android_app.absolute_store_path, destination_file_path)
         except FileNotFoundError as err:
             logging.error(f"{android_app.filename}: {err}")
             continue
@@ -253,6 +252,7 @@ def create_build_files_for_apps(android_app_id_list, format_name):
         logging.debug(f"Creating build files for app {android_app.filename}...")
         if not create_build_file_for_app(android_app, format_name):
             is_successfully_created = False
+            logging.error(f"Could not create build files for app {android_app.filename}")
     return is_successfully_created
 
 
@@ -344,8 +344,6 @@ def create_template_string(android_app, template_string):
 
     """
     directory_name = android_app.filename.replace('.apk', '')
-    # TODO: RENAME MODULE
-    #local_module = f"ib_{android_app.md5}"
     local_module = f"{directory_name}"
     local_privileged_module = "false"
     if "/priv-app/" in android_app.absolute_store_path:
