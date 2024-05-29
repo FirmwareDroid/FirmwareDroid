@@ -112,7 +112,7 @@ services:
       - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
     env_file:
       - ./.env
-    command: rqworker --logging_level DEBUG --name extractor-worker-high-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
+    command: rqworker --logging_level INFO --name extractor-worker-high-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
     networks:
       - backend
     # TODO Security enhancement / compatibility - replace/remove access right
@@ -142,7 +142,7 @@ services:
       - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
     env_file:
       - ./.env
-    command: rqworker --logging_level DEBUG --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
+    command: rqworker --logging_level INFO --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     networks:
       - backend
 
