@@ -6,7 +6,7 @@ import logging
 import os
 import mongoengine
 from mongoengine import LazyReferenceField, DateTimeField, StringField, LongField, DO_NOTHING, CASCADE, \
-    ListField, Document, BooleanField
+    ListField, Document, DictField
 from model import AndroidFirmware
 
 
@@ -29,19 +29,6 @@ class AndroidApp(Document):
     file_size_bytes = LongField(required=True)
     absolute_store_path = StringField(required=False, max_length=2048, min_length=1)
     relative_store_path = StringField(required=False, max_length=1024, min_length=1)
-    # apk_scanner_report_reference_list = ListField(GenericLazyReferenceField(
-    #     choices=['AndroGuardReport',
-    #              'VirusTotalReport',
-    #              'AndrowarnReport',
-    #              'QarkReport',
-    #              'ApkidReport',
-    #              'ExodusReport',
-    #              'QuarkEngineReport',
-    #              'SuperReport',
-    #              'ApkleaksReport'
-    #              ]))
-    #apk_scanner_report_reference_list = ListField(LazyReferenceField('ApkScannerReport',
-    #                                                                 reverse_delete_rule=DO_NOTHING))
     androguard_report_reference = LazyReferenceField('AndroGuardReport', reverse_delete_rule=DO_NOTHING)
     virus_total_report_reference = LazyReferenceField('VirusTotalReport', reverse_delete_rule=DO_NOTHING)
     androwarn_report_reference = LazyReferenceField('AndrowarnReport', reverse_delete_rule=DO_NOTHING)
@@ -56,6 +43,20 @@ class AndroidApp(Document):
     app_twins_reference_list = ListField(LazyReferenceField('AndroidApp', reverse_delete_rule=DO_NOTHING))
     certificate_id_list = ListField(LazyReferenceField('AppCertificate', reverse_delete_rule=DO_NOTHING))
     generic_file_list = ListField(LazyReferenceField('GenericFile', reverse_delete_rule=DO_NOTHING))
+    android_manifest_dict = DictField(required=False, default={})
+    # apk_scanner_report_reference_list = ListField(GenericLazyReferenceField(
+    #     choices=['AndroGuardReport',
+    #              'VirusTotalReport',
+    #              'AndrowarnReport',
+    #              'QarkReport',
+    #              'ApkidReport',
+    #              'ExodusReport',
+    #              'QuarkEngineReport',
+    #              'SuperReport',
+    #              'ApkleaksReport'
+    #              ]))
+    #apk_scanner_report_reference_list = ListField(LazyReferenceField('ApkScannerReport',
+    #                                                                 reverse_delete_rule=DO_NOTHING))
 
     @classmethod
     def _clean_app_twin(cls, document):
@@ -98,8 +99,6 @@ class AndroidApp(Document):
     def pre_delete(cls, sender, document, **kwargs):
         cls._clean_app_twin(document)
         cls._clean_generic_files(document)
-
-
 
 
 mongoengine.signals.pre_delete.connect(AndroidApp.pre_delete, sender=AndroidApp)
