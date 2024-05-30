@@ -1,5 +1,10 @@
-FROM openjdk:8-jdk-slim-bullseye as apk_scanner-worker
+FROM openjdk:23-jdk-slim-bullseye as apk_scanner-worker
 COPY --from=firmwaredroid-base / /
+
+#####################################
+# Installing required packages      #
+#####################################
+RUN apt --allow-releaseinfo-change update -y
 
 #####################################
 # Installing exodus dependencies    #
@@ -14,6 +19,7 @@ RUN APKTOOL_VERSION=$(curl -s "https://api.github.com/repos/iBotPeaches/Apktool/
     && curl -Lo /usr/local/bin/apktool.jar "https://github.com/iBotPeaches/Apktool/releases/latest/download/apktool_${APKTOOL_VERSION}.jar"
 RUN curl -o /usr/local/bin/apktool https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool
 RUN chmod a+x /usr/local/bin/apktool.jar && chmod a+x /usr/local/bin/apktool
+RUN apktool --version
 
 #####################################
 # Installing jadx                   #
@@ -28,6 +34,7 @@ RUN mv /tmp/jadx-temp/* /opt/jadx/
 ENV JADX "/opt/jadx/bin"
 ENV PATH "${JADX}:${PATH}"
 RUN export PATH=$PATH
+RUN jadx --version
 
 #####################################
 # Installing RUST based tools       #
