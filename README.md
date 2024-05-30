@@ -15,7 +15,7 @@ For instance:
 * [VirusTotal](https://www.virustotal.com)
 * [Quark-Engine](https://github.com/quark-engine/quark-engine)
 * [Qark](https://github.com/linkedin/qark/)
-* [SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/)
+* [SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/) (deprecated, discontinued by the author)
 * [APKiD](https://github.com/rednaga/APKiD/)
 * [Exodus-Core](https://github.com/Exodus-Privacy/exodus-core/)
 * [APKLeaks](https://github.com/dwisiswant0/apkleaks/)

@@ -26,7 +26,7 @@ def extract_apk_file(apk_file_path, temp_dir):
 
     """
     logging.info(f"Extracting apk file: {apk_file_path}")
-    process = subprocess.Popen(["apktool", "d", "-f", apk_file_path, "-o", temp_dir],
+    process = subprocess.Popen(["jadx", "-d", temp_dir, apk_file_path],
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
