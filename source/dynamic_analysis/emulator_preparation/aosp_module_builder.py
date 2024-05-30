@@ -99,7 +99,7 @@ def package_build_files_for_firmware(firmware):
     Packages the build files for a given firmware into a zip file.
     :param firmware: class:'AndroidFirmware' - An instance of AndroidFirmware.
     """
-    logging.debug(f"Packaging build files for firmware {firmware.md5}...")
+    logging.info(f"Packaging build files for firmware {firmware.md5}...")
     with tempfile.TemporaryDirectory() as tmp_root_dir:
         process_android_apps(firmware, tmp_root_dir)
         package_files(firmware, tmp_root_dir)
@@ -195,7 +195,7 @@ def write_to_meta_file(android_app, tmp_root_dir, module_naming):
     :return:
     """
     partition_name = android_app.absolute_store_path.split("/")[8]
-    logging.info(f"Partition name: {partition_name} for app {android_app.id}")
+    logging.debug(f"Partition name: {partition_name} for app {android_app.id}")
     if partition_name.lower() == "vendor":
         meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_VENDOR)
     elif partition_name.lower() == "product":
@@ -335,23 +335,32 @@ def create_and_save_generic_file(android_app, file_format, template_string):
 def select_signing_key(android_app):
     """
     Selects the signing key for the Android app based on the path of the app and the sharedUserId.
-    possible keys are: networkstack, media, shared, platform, testkey
+    Possible keys are: networkstack, media, shared, platform, testkey
         shared: sharedUserId="android.uid.shared"
         networkstack: sharedUserId="android.uid.networkstack"
         media: sharedUserId="android.uid.media"
         platform: sharedUserId="android.uid.system"
 
+    Default use is the platform key.
+
     :return: str - The signing key for the Android app.
 
     """
     signing_key = "platform"
-    if "sharedUserId" in android_app.manifest_dict:
-        if android_app.manifest_dict["sharedUserId"] == "android.uid.shared":
-            signing_key = "shared"
-        elif android_app.manifest_dict["sharedUserId"] == "android.uid.networkstack":
-            signing_key = "networkstack"
-        elif android_app.manifest_dict["sharedUserId"] == "android.uid.media":
-            signing_key = "media"
+
+    if android_app.android_manifest_dict and android_app.android_manifest_dict["manifest"]:
+        if "@ns0:sharedUserId" in android_app.android_manifest_dict["manifest"]:
+            manifest = android_app.android_manifest_dict["manifest"]
+            shared_user_id = manifest["@ns0:sharedUserId"]
+            logging.debug(f"UserID found: {shared_user_id} for app {android_app.filename}")
+            if shared_user_id == "android.uid.shared":
+                signing_key = "shared"
+            elif shared_user_id == "android.uid.networkstack":
+                signing_key = "networkstack"
+            elif shared_user_id == "android.uid.media":
+                signing_key = "media"
+            logging.debug(f"Selected signing key: {signing_key} for app {android_app.filename} "
+                          f"based on sharedUserId: {shared_user_id}")
     return signing_key
 
 
