@@ -43,6 +43,7 @@ class ModifyAecsJob(graphene.Mutation):
 
     class Arguments:
         firmware_id_list = graphene.List(graphene.String)
+        queue_name = graphene.String(required=False, default_value="default-python")
 
     @classmethod
     def get_firmware_list(cls, firmware_id_list):

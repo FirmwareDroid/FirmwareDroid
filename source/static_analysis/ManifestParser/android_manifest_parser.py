@@ -4,10 +4,8 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 import os
-import shlex
 import subprocess
 import traceback
-import zipfile
 from model.Interfaces.ScanJob import ScanJob
 from context.context_creator import create_db_context, create_log_context
 from model import AndroidApp

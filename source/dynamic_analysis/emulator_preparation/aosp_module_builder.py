@@ -88,7 +88,7 @@ def create_build_files_for_firmware(firmware, format_name):
     """
     is_successfully_created = False
     if format_name:
-        logging.debug(f"Creating build files for firmware {firmware.md5}...")
+        logging.debug(f"Creating build files for firmware {firmware.id}...")
         is_successfully_created = create_build_files_for_apps(firmware.android_app_id_list, format_name)
         package_build_files_for_firmware(firmware)
     return is_successfully_created
