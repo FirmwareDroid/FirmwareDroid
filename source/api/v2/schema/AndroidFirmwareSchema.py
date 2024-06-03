@@ -15,6 +15,8 @@ ModelFilter = generate_filter(AndroidFirmware)
 
 
 class AndroidFirmwareType(MongoengineObjectType):
+    pk = graphene.String(source='pk')
+
     class Meta:
         model = AndroidFirmware
         interfaces = (relay.Node,)
