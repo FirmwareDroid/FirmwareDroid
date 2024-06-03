@@ -381,7 +381,12 @@ def create_template_string(android_app, template_string):
     if "/priv-app/" in android_app.absolute_store_path:
         local_module_path = f"$(TARGET_OUT)/priv-app/"
         local_privileged_module = "true"
-    elif "/vendor/" in android_app.absolute_store_path:
+    elif ("/overlay/" in android_app.absolute_store_path
+          and ("/vendor/" in android_app.absolute_store_path) or ("/odm/" in android_app.absolute_store_path)):
+        local_module_path = f"$(TARGET_OUT)/odm/overlay/"
+    elif ("/vendor/" in android_app.absolute_store_path
+          or "/odm/" in android_app.absolute_store_path
+          or "/oem/" in android_app.absolute_store_path):
         local_module_path = f"$(TARGET_OUT)/odm/app/"
     else:
         local_module_path = f"$(TARGET_OUT)/app/"

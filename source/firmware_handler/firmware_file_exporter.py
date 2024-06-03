@@ -4,8 +4,10 @@
 import logging
 import os
 import shutil
+import tempfile
 import time
 from context.context_creator import create_db_context
+from extractor.unblob_extractor import unblob_extract
 from model import FirmwareFile
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
@@ -66,25 +68,13 @@ def export_firmware_files_by_id(firmware_file_id_queue):
     :param firmware_file_id_queue: multiprocessing.queue - queue of id to process.
 
     """
-    # TODO fix this method to support file extraction again
-
     while not firmware_file_id_queue.empty():
         firmware_file_id = firmware_file_id_queue.get()
         firmware_file = FirmwareFile.objects.get(pk=firmware_file_id)
         firmware = firmware_file.firmware_id_reference.fetch()
-        cache_temp_file_dir, cache_temp_mount_dir = create_temp_directories()
-
-        raise NotImplemented("Refactoring necessary to work correctly")
-        # extract_all_nested(firmware.absolute_store_path, cache_temp_file_dir.name, False)
-        # extract_image_files(, cache_temp_mount_dir.name)
-        #
-        # try:
-        #     firmware_file = FirmwareFile.objects.get(pk=firmware_file_id)
-        #     export_firmware_file(firmware_file, cache_temp_mount_dir.name)
-        # except FileExistsError:
-        #     pass
-        # if is_path_mounted(cache_temp_mount_dir.name):
-        #     exec_umount(cache_temp_mount_dir.name)
+        with tempfile.TemporaryDirectory() as cache_temp_file_dir:
+            unblob_extract(firmware.absolute_store_path, cache_temp_file_dir, depth=10, worker_count=5)
+            export_firmware_file(firmware_file, cache_temp_mount_dir.name)
 
 
 def export_firmware_file(firmware_file, mount_dir_path, store_paths):

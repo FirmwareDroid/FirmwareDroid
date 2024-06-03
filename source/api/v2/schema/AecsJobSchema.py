@@ -5,32 +5,37 @@ import logging
 import django_rq
 import graphene
 from api.v2.schema.RqJobsSchema import ONE_WEEK_TIMEOUT
+from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
 from dynamic_analysis.emulator_preparation.aecs import update_or_create_aecs_job
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from dynamic_analysis.emulator_preparation.aosp_module_builder import start_aosp_module_file_creator
 from model import AndroidFirmware
 from model.AecsJob import AecsJob
+from graphene.relay import Node
+
+
+ModelFilter = generate_filter(AecsJob)
 
 
 class AecsJobType(MongoengineObjectType):
+    pk = graphene.String(source='pk')
+
     class Meta:
         model = AecsJob
+        interfaces = (Node,)
 
 
 class AecsJobQuery(graphene.ObjectType):
-    aecs_firmware_id_list = graphene.List(graphene.String,
-                                          name="aecs_firmware_id_list")
+    aecs_job_list = graphene.List(AecsJobType,
+                                  object_id_list=graphene.List(graphene.String),
+                                  field_filter=graphene.Argument(ModelFilter),
+                                  name="aecs_job_list"
+                                  )
 
     @superuser_required
-    def resolve_aecs_firmware_id_list(self, info):
-        aecs_job = AecsJob.objects.first()
-        if not aecs_job:
-            return []
-        id_list = []
-        for firmware_lazy in aecs_job.firmware_id_list:
-            id_list.append(firmware_lazy.id)
-        return id_list
+    def resolve_aecs_job_list(self, info, object_id_list=None, field_filter=None):
+        return get_filtered_queryset(AecsJob, object_id_list, field_filter)
 
 
 class ModifyAecsJob(graphene.Mutation):
@@ -44,6 +49,8 @@ class ModifyAecsJob(graphene.Mutation):
     class Arguments:
         firmware_id_list = graphene.List(graphene.String)
         queue_name = graphene.String(required=False, default_value="default-python")
+        aces_job_id = graphene.String(required=False)
+        arch = graphene.String(required=False)
 
     @classmethod
     def get_firmware_list(cls, firmware_id_list):
@@ -56,7 +63,8 @@ class ModifyAecsJob(graphene.Mutation):
         """
         try:
             firmware_id_list = set(firmware_id_list)
-            firmware_list = AndroidFirmware.objects(pk__in=firmware_id_list, aecs_build_file_path__exists=True).only("id")
+            firmware_list = AndroidFirmware.objects(pk__in=firmware_id_list, aecs_build_file_path__exists=True).only(
+                "id")
             firmware_id_list = [firmware.id for firmware in firmware_list]
             return firmware_id_list
         except Exception as err:
@@ -65,14 +73,18 @@ class ModifyAecsJob(graphene.Mutation):
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, firmware_id_list, queue_name="default-python"):
+    def mutate(cls, root, info, firmware_id_list, queue_name="default-python", aces_job_id=None, arch=None):
         queue = django_rq.get_queue(queue_name)
         firmware_id_list = cls.get_firmware_list(firmware_id_list)
         response = None
         if len(firmware_id_list) == 0:
             logging.error("No firmware ids found with AECS build files.")
         else:
-            job = queue.enqueue(update_or_create_aecs_job, firmware_id_list, job_timeout=ONE_WEEK_TIMEOUT)
+            job = queue.enqueue(update_or_create_aecs_job,
+                                firmware_id_list,
+                                aces_job_id,
+                                arch,
+                                job_timeout=ONE_WEEK_TIMEOUT)
             response = job.id
         return cls(job_id=response)
 
@@ -83,17 +95,22 @@ class DeleteAecsJob(graphene.Mutation):
     """
     is_success = graphene.Boolean()
 
+    class Arguments:
+        aces_job_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
+
     @classmethod
     @superuser_required
-    def mutate(cls, root, info):
+    def mutate(cls, root, info, aces_job_id_list):
+        deleted_count = 0
         try:
-            aecs_job = AecsJob.objects.first()
-            if aecs_job:
-                aecs_job.delete()
-            is_success = True
+            for aces_job_id in aces_job_id_list:
+                aecs_job = AecsJob.objects(pk=aces_job_id)
+                if aecs_job:
+                    aecs_job.delete()
+                    deleted_count += 1
         except Exception as err:
             logging.error(err)
-            is_success = False
+        is_success = deleted_count == len(aces_job_id_list)
         return cls(is_success=is_success)
 
 
