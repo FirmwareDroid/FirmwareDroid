@@ -27,7 +27,7 @@ from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
 from bson import ObjectId
 
 NUMBER_OF_IMPORTER_THREADS = 10
-ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar", ".gz", ".bz2", ".md5", ".lz4", ".tgz"]
+ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar", ".gz", ".bz2", ".md5", ".lz4", ".tgz", ".rar", ".7z", "lzma", ".xz"]
 lock = threading.Lock()
 
 
@@ -42,7 +42,7 @@ def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0):
 
     :return: list of string with the status (errors/success) of every file.
     """
-    logging.info("Firmware extractor starting...")
+    logging.info(f"Firmware extractor starting...Storage index: {storage_index}")
     store_setting = get_active_store_by_index(storage_index)
     store_path = store_setting.store_options_dict[store_setting.uuid]["paths"]
     firmware_archives_queue, file_count = create_file_import_queue(store_path)
