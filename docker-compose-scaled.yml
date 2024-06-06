@@ -118,6 +118,96 @@ services:
     # TODO Security enhancement / compatibility - replace/remove access right
     privileged: true
 
+  extractor-worker-high-2:
+    platform: "linux/amd64"
+    user: www
+    build:
+      context: .
+      dockerfile: docker/base/Dockerfile_extractor
+    container_name: extractor-worker-high-2
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - .:/var/www/
+      - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
+      - ${LOCAL_STORAGE_PATH_03}:/var/www/file_store/03_file_storage
+      - ${LOCAL_STORAGE_PATH_04}:/var/www/file_store/04_file_storage
+      - ${LOCAL_STORAGE_PATH_05}:/var/www/file_store/05_file_storage
+      - ${LOCAL_STORAGE_PATH_06}:/var/www/file_store/06_file_storage
+      - ${LOCAL_STORAGE_PATH_07}:/var/www/file_store/07_file_storage
+      - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
+      - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --logging_level INFO --name extractor-worker-high-2 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
+    networks:
+      - backend
+    # TODO Security enhancement / compatibility - replace/remove access right
+    privileged: true
+
+  extractor-worker-high-3:
+    platform: "linux/amd64"
+    user: www
+    build:
+      context: .
+      dockerfile: docker/base/Dockerfile_extractor
+    container_name: extractor-worker-high-3
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - .:/var/www/
+      - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
+      - ${LOCAL_STORAGE_PATH_03}:/var/www/file_store/03_file_storage
+      - ${LOCAL_STORAGE_PATH_04}:/var/www/file_store/04_file_storage
+      - ${LOCAL_STORAGE_PATH_05}:/var/www/file_store/05_file_storage
+      - ${LOCAL_STORAGE_PATH_06}:/var/www/file_store/06_file_storage
+      - ${LOCAL_STORAGE_PATH_07}:/var/www/file_store/07_file_storage
+      - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
+      - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --logging_level INFO --name extractor-worker-high-3 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
+    networks:
+      - backend
+    # TODO Security enhancement / compatibility - replace/remove access right
+    privileged: true
+
+  extractor-worker-high-4:
+    platform: "linux/amd64"
+    user: www
+    build:
+      context: .
+      dockerfile: docker/base/Dockerfile_extractor
+    container_name: extractor-worker-high-4
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - .:/var/www/
+      - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
+      - ${LOCAL_STORAGE_PATH_03}:/var/www/file_store/03_file_storage
+      - ${LOCAL_STORAGE_PATH_04}:/var/www/file_store/04_file_storage
+      - ${LOCAL_STORAGE_PATH_05}:/var/www/file_store/05_file_storage
+      - ${LOCAL_STORAGE_PATH_06}:/var/www/file_store/06_file_storage
+      - ${LOCAL_STORAGE_PATH_07}:/var/www/file_store/07_file_storage
+      - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
+      - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --logging_level INFO --name extractor-worker-high-4 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
+    networks:
+      - backend
+    # TODO Security enhancement / compatibility - replace/remove access right
+    privileged: true
+
   apk_scanner-worker-1:
     platform: "linux/amd64"
     user: www
