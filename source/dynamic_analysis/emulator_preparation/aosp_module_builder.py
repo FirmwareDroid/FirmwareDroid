@@ -353,11 +353,11 @@ def select_signing_key(android_app):
             manifest = android_app.android_manifest_dict["manifest"]
             shared_user_id = manifest["@ns0:sharedUserId"]
             logging.debug(f"UserID found: {shared_user_id} for app {android_app.filename}")
-            if shared_user_id == "android.uid.shared":
+            if shared_user_id == "android.uid.shared" or shared_user_id == "android.shared":
                 signing_key = "shared"
-            elif shared_user_id == "android.uid.networkstack":
+            elif shared_user_id == "android.uid.networkstack" or shared_user_id == "android.networkstack":
                 signing_key = "networkstack"
-            elif shared_user_id == "android.uid.media":
+            elif shared_user_id == "android.uid.media" or shared_user_id == "android.media":
                 signing_key = "media"
             logging.debug(f"Selected signing key: {signing_key} for app {android_app.filename} "
                           f"based on sharedUserId: {shared_user_id}")
