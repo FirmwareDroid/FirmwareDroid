@@ -76,9 +76,9 @@ class ModifyAecsJob(graphene.Mutation):
     def mutate(cls, root, info, firmware_id_list, queue_name="default-python", aces_job_id=None, arch=None):
         queue = django_rq.get_queue(queue_name)
         firmware_id_list = cls.get_firmware_list(firmware_id_list)
-        response = None
         if len(firmware_id_list) == 0:
             logging.error("No firmware ids found with AECS build files.")
+            response = "No firmware ids found."
         else:
             job = queue.enqueue(update_or_create_aecs_job,
                                 firmware_id_list,
