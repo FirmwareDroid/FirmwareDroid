@@ -39,6 +39,12 @@ class AndroidFirmware(Document):
     os_vendor = StringField(max_length=512, required=True, default="Unknown")
     partition_info_dict = DictField(required=False, default={})
 
+    def get_store_setting(self):
+        from .StoreSetting import StoreSetting
+        storage_uuid = self.absolute_store_path.split("/")[5]
+        store_setting = StoreSetting.objects.get(uuid=storage_uuid)
+        return store_setting
+
     @classmethod
     def _delete_firmware_file(cls, android_firmware):
         try:

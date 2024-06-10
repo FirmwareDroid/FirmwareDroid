@@ -409,7 +409,7 @@ def create_partition_firmware_files(archive_firmware_file_list,
     firmware_file_list = []
     is_successful = False
     try:
-        partition_folder = os.path.join(extracted_archive_dir_path, partition_name)
+        partition_folder = str(os.path.join(extracted_archive_dir_path, partition_name))
         if os.path.exists(partition_folder) and os.path.isdir(partition_folder) and any(os.scandir(partition_folder)):
             shutil.move(partition_folder, temp_dir_path)
         else:

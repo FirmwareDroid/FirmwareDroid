@@ -132,11 +132,11 @@ class CreateAECSBuildFilesJob(graphene.Mutation):
         """
         format_name = graphene.String(required=True)
         firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=False)
-        queue_name = graphene.String(required=True, default_value="default-python")
+        queue_name = graphene.String(required=True, default_value="high-python")
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, format_name, firmware_id_list, queue_name="default-python"):
+    def mutate(cls, root, info, format_name, firmware_id_list, queue_name="high-python"):
         queue = django_rq.get_queue(queue_name)
         job = queue.enqueue(start_aosp_module_file_creator, format_name, firmware_id_list, job_timeout=ONE_WEEK_TIMEOUT)
         return cls(job_id=job.id)

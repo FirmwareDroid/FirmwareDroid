@@ -47,7 +47,7 @@ def generate_filter(model):
     return type(f"{model.__name__}Filter", (InputObjectType,), attrs)
 
 
-def get_filtered_queryset(model=None, object_id_list=None, filter=None):
+def get_filtered_queryset(model=None, object_id_list=None, query_filter=None):
     """
     Get a filtered queryset for a given model. The queryset will be filtered by the object_id_list and the filter. The
     object_id_list is a list of object ids. The filter is a dictionary of field names and values to filter by. The
@@ -57,14 +57,18 @@ def get_filtered_queryset(model=None, object_id_list=None, filter=None):
 
     :param model: document class - a subclass of mongoengine.Document
     :param object_id_list: list(str) - a list of object ids to filter by
-    :param filter: dict - a dictionary of field names and values to filter by
+    :param query_filter: dict - a dictionary of field names and values to filter by
 
     :return: queryset - a queryset of the model filtered by the object_id_list and the filter
     """
     queryset = model.objects()
-    if object_id_list:
+    if query_filter and object_id_list:
+        filter_dict = {key: value for key, value in query_filter.items() if value is not None}
+        queryset = queryset.filter(pk__in=object_id_list, **filter_dict)
+    elif object_id_list and not query_filter:
         queryset = queryset.filter(pk__in=object_id_list)
-    if filter:
-        filter_dict = {key: value for key, value in filter.items() if value is not None}
+    elif query_filter and not object_id_list:
+        filter_dict = {key: value for key, value in query_filter.items() if value is not None}
         queryset = queryset.filter(**filter_dict)
+
     return queryset
