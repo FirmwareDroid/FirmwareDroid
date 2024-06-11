@@ -127,7 +127,7 @@ def process_shared_libraries(firmware, destination_folder, store_setting_id, for
     :param format_name: str - format name of the shared library module.
 
     """
-    filename_regex = "libaudiospdif[.]so"
+    filename_regex = "[.]so$"
     search_pattern = re.compile(filename_regex, re.IGNORECASE)
     firmware_id_list = [firmware.id]
     start_firmware_file_export(search_pattern, firmware_id_list, store_setting_id)
