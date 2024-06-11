@@ -15,7 +15,7 @@ from string import Template
 from mongoengine import DoesNotExist
 from context.context_creator import create_db_context, create_log_context
 from dynamic_analysis.emulator_preparation.aosp_shared_library_builder import process_shared_libraries
-from dynamic_analysis.emulator_preparation.asop_meta_writer import add_app_to_meta_file
+from dynamic_analysis.emulator_preparation.asop_meta_writer import add_module_to_meta_file
 from dynamic_analysis.emulator_preparation.templates.android_app_module_template import ANDROID_MK_TEMPLATE, \
     ANDROID_BP_TEMPLATE
 from model import GenericFile, AndroidFirmware
@@ -100,7 +100,8 @@ def package_build_files_for_firmware(firmware, format_name):
     """
     logging.info(f"Packaging build files for firmware {firmware.md5}...")
     store_setting = firmware.get_store_setting()
-    with tempfile.TemporaryDirectory() as tmp_root_dir:
+    store_paths = store_setting.get_store_paths()
+    with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as tmp_root_dir:
         process_android_apps(firmware, tmp_root_dir)
         process_shared_libraries(firmware, tmp_root_dir, store_setting.id, format_name)
         package_files(firmware, tmp_root_dir)
@@ -130,7 +131,7 @@ def process_android_apps(firmware, tmp_root_dir):
         process_generic_files(android_app, tmp_app_dir)
         partition_name = android_app.absolute_store_path.split("/")[8]
         logging.debug(f"Partition name: {partition_name} for app {android_app.id}")
-        add_app_to_meta_file(partition_name, tmp_root_dir, module_naming)
+        add_module_to_meta_file(partition_name, tmp_root_dir, module_naming)
 
 
 def process_generic_files(android_app, tmp_app_dir):

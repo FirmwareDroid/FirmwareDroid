@@ -3,6 +3,8 @@ import os
 import re
 import shutil
 from string import Template
+
+from dynamic_analysis.emulator_preparation.asop_meta_writer import add_module_to_meta_file
 from dynamic_analysis.emulator_preparation.templates.shared_library_module_template import \
     ANDROID_MK_SHARED_LIBRARY_TEMPLATE, ANDROID_BP_SHARED_LIBRARY_TEMPLATE
 from firmware_handler.firmware_file_exporter import start_firmware_file_export, NAME_EXPORT_FOLDER
@@ -86,10 +88,11 @@ def write_template_to_file(template_out, destination_folder):
     return file_path
 
 
-def create_shared_library_modules(source_folder, destination_folder, format_name):
+def create_shared_library_modules(source_folder, destination_folder, format_name, search_pattern):
     """
     This function is used to create the shared library module for AOSP firmware.
 
+    :param search_pattern: regex - search pattern for the shared library.
     :param source_folder: str - path to the source folder.
     :param destination_folder: str - path to the destination folder.
     :param format_name: str - format name of the shared library module.
@@ -99,15 +102,18 @@ def create_shared_library_modules(source_folder, destination_folder, format_name
     """
     for root, dirs, files in os.walk(str(source_folder)):
         for file in files:
-            source_file = os.path.join(root, file)
-            if not os.path.exists(source_file):
-                raise Exception(f"The source file does not exist: {source_file}")
-            template_out = create_template_string(format_name, source_file)
-            destination_folder = os.path.join(destination_folder,
-                                              os.path.basename(source_file.replace(".so", "")))
-            logging.info(f"Creating shared library module for {source_file} in {destination_folder}")
-            copy_file(source_file, destination_folder)
-            write_template_to_file(template_out, destination_folder)
+            if search_pattern.match(file):
+                source_file = os.path.join(root, file)
+                logging.info(f"Processing shared library: {source_file}")
+                if not os.path.exists(source_file):
+                    raise Exception(f"The source file does not exist: {source_file}")
+                template_out = create_template_string(format_name, source_file)
+                module_name = os.path.basename(source_file).replace(".so", "")
+                module_folder = os.path.join(destination_folder, module_name)
+                copy_file(source_file, module_folder)
+                write_template_to_file(template_out, module_folder)
+                partition_name = source_file.split("/")[7]
+                add_module_to_meta_file(partition_name, destination_folder, module_name)
 
 
 def process_shared_libraries(firmware, destination_folder, store_setting_id, format_name):
@@ -121,7 +127,7 @@ def process_shared_libraries(firmware, destination_folder, store_setting_id, for
     :param format_name: str - format name of the shared library module.
 
     """
-    filename_regex = ".so$"
+    filename_regex = "libaudiospdif[.]so"
     search_pattern = re.compile(filename_regex, re.IGNORECASE)
     firmware_id_list = [firmware.id]
     start_firmware_file_export(search_pattern, firmware_id_list, store_setting_id)
@@ -132,5 +138,5 @@ def process_shared_libraries(firmware, destination_folder, store_setting_id, for
         str(firmware.id))
     if not os.path.exists(source_folder):
         raise Exception(f"The source folder does not exist: {source_folder}")
-    logging.info(f"Processing shared libraries in {source_folder}")
-    create_shared_library_modules(source_folder, destination_folder, format_name)
+    logging.debug(f"Processing shared libraries in {source_folder}")
+    create_shared_library_modules(source_folder, destination_folder, format_name, search_pattern)

@@ -164,31 +164,6 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
     if not os.path.exists(dst_file_path):
         raise OSError(f"Could not copy firmware file {firmware_file.id} to {destination_path}")
 
-#
-# def find_firmware_file_abs_path(firmware_file, source_dir_path):
-#     """
-#     Finds a file in the extracted firmware directory by md5 matching.
-#
-#     :param firmware_file: class:'FirmwareFile'
-#     :param source_dir_path: str - path of the mount directory.
-#
-#     :return: str - path of the firmware file.
-#
-#     """
-#     file_abs_path = None
-#     if not firmware_file.is_directory:
-#         for root, dirs, files in os.walk(source_dir_path):
-#             for file in files:
-#                 if file == firmware_file.name:
-#                     file_path = os.path.join(root, file)
-#                     file_path = os.path.abspath(file_path)
-#                     if os.path.exists(file_path):
-#                         md5 = md5_from_file(file_path)
-#                         if md5 == firmware_file.md5:
-#                             file_abs_path = file_path
-#                             break
-#     return file_abs_path
-
 
 def find_firmware_file_abs_path(firmware_file, source_dir_path):
     """

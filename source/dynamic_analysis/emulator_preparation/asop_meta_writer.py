@@ -5,7 +5,7 @@ META_BUILD_FILENAME_VENDOR = "meta_build_vendor.txt"
 META_BUILD_FILENAME_PRODUCT = "meta_build_product.txt"
 
 
-def add_app_to_meta_file(partition_name, tmp_root_dir, module_naming):
+def add_module_to_meta_file(partition_name, tmp_root_dir, module_naming):
     """
     Writes the module naming to a meta file for the given Android app.
 
@@ -16,7 +16,7 @@ def add_app_to_meta_file(partition_name, tmp_root_dir, module_naming):
     :return:
     """
 
-    if partition_name.lower() == "vendor":
+    if partition_name.lower() == "vendor" or partition_name.lower() == "oem" or partition_name.lower() == "odm":
         meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_VENDOR)
     elif partition_name.lower() == "product":
         meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_PRODUCT)
