@@ -6,13 +6,13 @@ import graphql_jwt
 from graphene_django.debug import DjangoDebug
 from api.v2.schema.ApkScannerResultSchema import ApkScannerReportQuery
 from api.v2.schema.HealthCheckSchema import HealthCheckQuery
-from api.v2.schema.RqJobsSchema import RqJobMutation, RqQueueQuery
+from api.v2.schema.RqJobsSchema import RqQueueQuery
 from api.v2.schema.UserAccountSchema import UserAccountQuery
 from api.v2.schema.StoreSettingsSchema import StoreSettingsQuery
 from api.v2.schema.AndroidFirmwareSchema import AndroidFirmwareQuery, AndroidFirmwareMutation
-from api.v2.schema.AndroidAppSchema import AndroidAppQuery
+from api.v2.schema.AndroidAppSchema import AndroidAppQuery, AndroidAppMutation
 from api.v2.schema.AndrowarnSchema import AndrowarnReportQuery
-from api.v2.schema.FirmwareFileSchema import FirmwareFileQuery
+from api.v2.schema.FirmwareFileSchema import FirmwareFileQuery, FirmwareFileMutation
 from api.v2.schema.ApkidSchema import ApkidReportQuery
 from api.v2.schema.ExodusSchema import ExodusReportQuery
 from api.v2.schema.QarkSchema import QarkReportQuery
@@ -75,9 +75,10 @@ class Query(ApplicationSettingQuery,
     refresh_token = graphql_jwt.Refresh.Field()
 
 
-class Mutation(RqJobMutation,
+class Mutation(AndroidAppMutation,
                AecsJobMutation,
                AndroidFirmwareMutation,
+               FirmwareFileMutation,
                graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name='_debug')
     delete_token_cookie = graphql_jwt.DeleteJSONWebTokenCookie.Field()

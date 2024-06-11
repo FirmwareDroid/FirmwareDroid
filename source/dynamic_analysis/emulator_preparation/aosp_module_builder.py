@@ -14,15 +14,13 @@ import uuid
 from string import Template
 from mongoengine import DoesNotExist
 from context.context_creator import create_db_context, create_log_context
+from dynamic_analysis.emulator_preparation.aosp_shared_library_builder import process_shared_libraries
+from dynamic_analysis.emulator_preparation.asop_meta_writer import add_module_to_meta_file
 from dynamic_analysis.emulator_preparation.templates.android_app_module_template import ANDROID_MK_TEMPLATE, \
     ANDROID_BP_TEMPLATE
 from model import GenericFile, AndroidFirmware
 from model.StoreSetting import get_active_store_paths_by_uuid
 from utils.mulitprocessing_util.mp_util import start_process_pool
-
-META_BUILD_FILENAME_SYSTEM = "meta_build_system.txt"
-META_BUILD_FILENAME_VENDOR = "meta_build_vendor.txt"
-META_BUILD_FILENAME_PRODUCT = "meta_build_product.txt"
 
 
 @create_db_context
@@ -90,18 +88,22 @@ def create_build_files_for_firmware(firmware, format_name):
     if format_name:
         logging.debug(f"Creating build files for firmware {firmware.id}...")
         is_successfully_created = create_build_files_for_apps(firmware.android_app_id_list, format_name)
-        package_build_files_for_firmware(firmware)
+        package_build_files_for_firmware(firmware, format_name)
     return is_successfully_created
 
 
-def package_build_files_for_firmware(firmware):
+def package_build_files_for_firmware(firmware, format_name):
     """
     Packages the build files for a given firmware into a zip file.
+    :param format_name: str - 'mk' or 'bp' file format.
     :param firmware: class:'AndroidFirmware' - An instance of AndroidFirmware.
     """
     logging.info(f"Packaging build files for firmware {firmware.md5}...")
-    with tempfile.TemporaryDirectory() as tmp_root_dir:
+    store_setting = firmware.get_store_setting()
+    store_paths = store_setting.get_store_paths()
+    with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as tmp_root_dir:
         process_android_apps(firmware, tmp_root_dir)
+        process_shared_libraries(firmware, tmp_root_dir, store_setting.id, format_name)
         package_files(firmware, tmp_root_dir)
 
 
@@ -126,25 +128,24 @@ def process_android_apps(firmware, tmp_root_dir):
             logging.error(f"{android_app.filename}: {err}")
             continue
 
-        process_generic_files(android_app, tmp_app_dir, tmp_root_dir, module_naming)
+        process_generic_files(android_app, tmp_app_dir)
+        partition_name = android_app.absolute_store_path.split("/")[8]
+        logging.debug(f"Partition name: {partition_name} for app {android_app.id}")
+        add_module_to_meta_file(partition_name, tmp_root_dir, module_naming)
 
 
-def process_generic_files(android_app, tmp_app_dir, tmp_root_dir, module_naming):
+def process_generic_files(android_app, tmp_app_dir):
     """
     Processes the generic files of a given Android app and creates build files for them. The build files will be stored
     in the tmp_app_dir.
 
-    :param tmp_root_dir: str - A temporary directory to store the build files.
     :param android_app: class:'AndroidApp' - An instance of AndroidApp.
     :param tmp_app_dir: tempfile.TemporaryDirectory - A temporary directory to store the build files.
-    :param module_naming: str - A string to name the module in the build file.
 
     """
     for generic_file_lazy in android_app.generic_file_list:
         check_generic_file(android_app, generic_file_lazy)
         process_generic_file(generic_file_lazy, android_app, tmp_app_dir)
-
-    write_to_meta_file(android_app, tmp_root_dir, module_naming)
 
 
 def check_generic_file(android_app, generic_file_lazy):
@@ -184,29 +185,6 @@ def process_generic_file(generic_file_lazy, android_app, tmp_app_dir):
         logging.error(f"{generic_file_lazy.pk}: {err}")
 
 
-def write_to_meta_file(android_app, tmp_root_dir, module_naming):
-    """
-    Writes the module naming to a meta file for the given Android app.
-
-    :param android_app: class:'AndroidApp' - An instance of AndroidApp.
-    :param tmp_root_dir: str - A temporary directory to store the build files.
-    :param module_naming: str - A string to name the module in the build file.
-
-    :return:
-    """
-    partition_name = android_app.absolute_store_path.split("/")[8]
-    logging.debug(f"Partition name: {partition_name} for app {android_app.id}")
-    if partition_name.lower() == "vendor":
-        meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_VENDOR)
-    elif partition_name.lower() == "product":
-        meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_PRODUCT)
-    else:
-        meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_SYSTEM)
-
-    with open(meta_file, 'a') as fp:
-        fp.write("    " + module_naming + " \\\n")
-
-
 def package_files(firmware, tmp_root_dir):
     """
     Packages the build files for a given firmware into a zip file and stores it in the aecs_build_file_path of the
@@ -216,6 +194,7 @@ def package_files(firmware, tmp_root_dir):
     :param tmp_root_dir: tempfile.TemporaryDirectory - A temporary directory to store the build files.
 
     """
+    # TODO use cache folder of the store setting
     with tempfile.TemporaryDirectory() as tmp_output_dir:
         package_filename = f"{uuid.uuid4()}"
         output_zip = os.path.join(tmp_output_dir, package_filename)
@@ -276,7 +255,7 @@ def create_build_file_for_app(android_app, format_name):
         return False
 
 
-def create_soong_build_files(android_app, file_format, file_template):
+def create_soong_build_files(android_app, file_format, template_string):
     """
     Create an Android.mk or Android.bp file and stores it into the db for the given Android app. A reference to the
     newly created file will be added to the Android app and stored in the db. If an Android.mk or Android.bp file
@@ -285,12 +264,12 @@ def create_soong_build_files(android_app, file_format, file_template):
     :param android_app: class:'AndroidApp' - App where the reference for the newly create file will be written to. If
     a reference already exists, it will be overwritten.
     :param file_format: str - mk or bp format.
-    :param file_template: str - template string for an Android.mk or Android.bp file.
+    :param template_string: str - template string for an Android.mk or Android.bp file.
 
     """
-    template_string = create_template_string(android_app, file_template)
+    template_string_complete = create_template_string(android_app, template_string)
     remove_existing_build_files(android_app, file_format)
-    create_and_save_generic_file(android_app, file_format, template_string)
+    create_and_save_generic_file(android_app, file_format, template_string_complete)
 
 
 def remove_existing_build_files(android_app, file_format):

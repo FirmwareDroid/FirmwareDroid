@@ -14,6 +14,9 @@ class StoreSetting(Document):
     uuid = StringField(required=True, unique=True)
     storage_root = StringField(required=True, unique=True)
 
+    def get_store_paths(self):
+        return self.store_options_dict[self.uuid]["paths"]
+
 
 def setup_storage_folders(paths_dict):
     """

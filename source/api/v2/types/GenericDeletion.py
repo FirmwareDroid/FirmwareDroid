@@ -29,5 +29,5 @@ def delete_queryset_background(object_id_list):
 
     """
     from model import AndroidFirmware
-    queryset = get_filtered_queryset(model=AndroidFirmware, filter=None, object_id_list=object_id_list)
+    queryset = get_filtered_queryset(model=AndroidFirmware, query_filter=None, object_id_list=object_id_list)
     delete_queryset(queryset)
