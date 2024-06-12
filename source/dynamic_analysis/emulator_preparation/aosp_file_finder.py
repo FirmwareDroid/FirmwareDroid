@@ -22,6 +22,7 @@ def find_and_export_files(firmware, destination_folder, store_setting_id, format
         store_setting.store_options_dict[store_setting.uuid]["paths"]["FIRMWARE_FOLDER_FILE_EXTRACT"],
         NAME_EXPORT_FOLDER,
         str(firmware.id))
+    os.makedirs(source_folder)
     if not os.path.exists(source_folder):
         raise Exception(f"The source folder does not exist: {source_folder}")
     return source_folder
