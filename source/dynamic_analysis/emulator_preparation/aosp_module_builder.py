@@ -11,7 +11,9 @@ import tempfile
 import logging
 import traceback
 import uuid
+from queue import Empty
 from string import Template
+from threading import Thread
 from mongoengine import DoesNotExist
 from context.context_creator import create_db_context, create_log_context
 from dynamic_analysis.emulator_preparation.aosp_framework_builder import process_framework_files
@@ -21,7 +23,7 @@ from dynamic_analysis.emulator_preparation.templates.android_app_module_template
     ANDROID_BP_TEMPLATE
 from model import GenericFile, AndroidFirmware
 from model.StoreSetting import get_active_store_paths_by_uuid
-from utils.mulitprocessing_util.mp_util import start_process_pool
+from utils.mulitprocessing_util.mp_util import start_process_pool, create_multi_threading_queue
 
 
 @create_db_context
@@ -68,11 +70,35 @@ def process_firmware(format_name, firmware_list):
     :param firmware_list: list(class:'AndroidFirmware') - A list of class:'AndroidFirmware'
 
     :return: list - A list of failed firmware that could not be processed.
+
     """
-    for firmware in firmware_list:
-        is_successfully_created = create_build_files_for_firmware(firmware, format_name)
-        if not is_successfully_created:
-            raise RuntimeError(f"Could not create build files for firmware {firmware.id}")
+    firmware_id_list = [firmware.id for firmware in firmware_list]
+    firmware_id_queue = create_multi_threading_queue(firmware_id_list)
+    for i in range(10):
+        worker = Thread(target=worker_firmware_multithreading, args=(firmware_id_queue, format_name))
+        worker.setDaemon(True)
+        worker.start()
+    firmware_id_queue.join()
+
+
+def worker_firmware_multithreading(firmware_id_queue, format_name):
+    """
+    Worker process for creating build files for a given firmware.
+
+    :param firmware_id_queue: queue - Queue of firmware ids to process.
+    :param format_name: str - 'mk' or 'bp' file format.
+
+    """
+    while True:
+        try:
+            firmware_id = firmware_id_queue.get(block=False, timeout=300)
+            firmware = AndroidFirmware.objects(pk=firmware_id).first()
+            is_successfully_created = create_build_files_for_firmware(firmware, format_name)
+            if not is_successfully_created:
+                raise RuntimeError(f"Could not create build files for firmware {firmware.id}")
+        except Empty:
+            logging.debug("No more files to export on. Exiting.")
+        firmware_id_queue.task_done()
 
 
 def create_build_files_for_firmware(firmware, format_name):

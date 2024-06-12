@@ -66,6 +66,7 @@ def create_multi_threading_queue(document_list):
     unique_document_list = set(document_list)
     for doc in unique_document_list:
         doc_queue.put(doc)
+    time.sleep(5)
     return doc_queue
 
 

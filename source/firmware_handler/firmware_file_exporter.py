@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import tempfile
+import time
 from queue import Empty
 from threading import Thread
 from context.context_creator import create_db_context, create_log_context
@@ -72,8 +73,8 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
         try:
             firmware_id = firmware_id_queue.get(block=False, timeout=300)
         except Empty:
-            logging.debug("No more files to work on. Exiting.")
-            break
+            logging.debug("No more files to export on. Exiting.")
+            time.sleep(30)
         firmware = AndroidFirmware.objects.get(pk=firmware_id)
         firmware_file_list = FirmwareFile.objects(name__regex=search_pattern, firmware_id_reference=firmware.pk)
         logging.debug(f"Exporting {len(firmware_file_list)} firmware files for firmware {firmware_id} "
@@ -212,4 +213,6 @@ def get_firmware_file_abs_path(firmware_file, source_dir_path):
         if firmware_file_abs_path is None:
             logging.warning(f"Could not find firmware file {firmware_file.id}."
                             f"Skipping file.")
+    if firmware_file_abs_path:
+        firmware_file_abs_path = os.path.abspath(firmware_file_abs_path)
     return firmware_file_abs_path
