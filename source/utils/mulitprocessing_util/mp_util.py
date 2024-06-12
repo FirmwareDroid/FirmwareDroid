@@ -47,8 +47,7 @@ def create_id_mp_queue(document_list, manager):
 
     """
     mp_queue = manager.Queue()
-    unique_document_list = set(document_list)
-    for obj in unique_document_list:
+    for obj in document_list:
         mp_queue.put(obj.id)
     time.sleep(1)
     return mp_queue
@@ -63,8 +62,7 @@ def create_multi_threading_queue(document_list):
 
     """
     doc_queue = queue.Queue(maxsize=0)
-    unique_document_list = set(document_list)
-    for doc in unique_document_list:
+    for doc in document_list:
         doc_queue.put(doc)
     time.sleep(5)
     return doc_queue
