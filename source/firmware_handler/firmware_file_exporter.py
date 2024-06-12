@@ -87,7 +87,8 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             for firmware_file in firmware_file_list:
                 destination_path_abs = get_store_export_folder(store_setting, firmware_file)
                 export_firmware_file(firmware_file, temp_dir_path, destination_path_abs)
-                logging.debug(f"Exported firmware file {firmware_file.id} to {destination_path_abs}")
+            logging.debug(f"Exported firmware file {firmware_file.id} to {destination_path_abs}")
+
         firmware_id_queue.task_done()
 
 
@@ -136,7 +137,8 @@ def export_firmware_file(firmware_file, source_dir_path, destination_dir_path):
 
     """
     firmware_file_abs_path = get_firmware_file_abs_path(firmware_file, source_dir_path)
-    copy_firmware_file(firmware_file, firmware_file_abs_path, destination_dir_path)
+    if firmware_file_abs_path:
+        copy_firmware_file(firmware_file, firmware_file_abs_path, destination_dir_path)
 
 
 def copy_firmware_file(firmware_file, source_path, destination_path):
@@ -208,6 +210,6 @@ def get_firmware_file_abs_path(firmware_file, source_dir_path):
         firmware_file_abs_path = find_firmware_file_abs_path(firmware_file, source_dir_path)
         logging.debug(f"Found file by md5 {firmware_file.id} at {firmware_file_abs_path}")
         if firmware_file_abs_path is None:
-            logging.warning(f"Could not find firmware file {firmware_file.id} at {firmware_file_abs_path}. "
+            logging.warning(f"Could not find firmware file {firmware_file.id}."
                             f"Skipping file.")
-    return os.path.abspath(firmware_file_abs_path)
+    return firmware_file_abs_path

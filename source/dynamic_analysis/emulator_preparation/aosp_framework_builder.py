@@ -1,11 +1,10 @@
 import logging
 import os
 import re
-from string import Template
 from dynamic_analysis.emulator_preparation.aosp_file_finder import find_and_export_files
+from string import Template
 from dynamic_analysis.emulator_preparation.asop_meta_writer import create_modules
-from dynamic_analysis.emulator_preparation.templates.shared_library_module_template import \
-    ANDROID_MK_SHARED_LIBRARY_TEMPLATE, ANDROID_BP_SHARED_LIBRARY_TEMPLATE
+from dynamic_analysis.emulator_preparation.templates.java_module_template import ANDROID_MK_JAVA_MODULE_TEMPLATE
 
 
 def create_template_string(format_name, library_path):
@@ -18,41 +17,24 @@ def create_template_string(format_name, library_path):
     :return: str - template string for the shared library module.
 
     """
-    file_template = ANDROID_MK_SHARED_LIBRARY_TEMPLATE if format_name.lower() == "mk" \
-        else ANDROID_BP_SHARED_LIBRARY_TEMPLATE
 
-    if format_name.lower() != "mk":
+    if format_name.lower() == "mk":
+        file_template = ANDROID_MK_JAVA_MODULE_TEMPLATE
+    else:
         raise NotImplementedError(f"Format name {format_name} is not supported yet.")
 
-    library_name = os.path.basename(library_path)
-    local_module = library_name.replace(".so", "")
-    local_src_files = library_name
-
-    # Installation path on the device
-    if "/app/" in library_path:
-        app_name = library_path.split("/app/")[1]
-        local_module_path = f"$(TARGET_OUT)/app/{app_name}/lib/$(TARGET_ARCH_ABI)/"
-    elif "/priv-app/" in library_path:
-        app_name = library_path.split("/priv-app/")[1]
-        local_module_path = f"$(TARGET_OUT)/priv-app/{app_name}/lib/$(TARGET_ARCH_ABI)/"
-    elif "/lib64/" in library_path:
-        local_module_path = "$(TARGET_OUT)/lib64/"
-    elif "/lib/" in library_path:
-        # Emulator does not have lib folder for 32-bit libraries
-        local_module_path = "$(TARGET_OUT)/lib64/"
-    else:
-        local_module_path = "$(TARGET_OUT)/lib64/"
-
-    local_prebuilt_module_file = f"$(LOCAL_PATH)/{library_name}"
+    file_name = os.path.basename(library_path)
+    local_module = file_name.replace(".jar", "")
+    local_src_files = file_name
+    local_module_path = "$(TARGET_OUT)/system/framework/"
     template_out = Template(file_template).substitute(local_module=local_module,
                                                       local_module_path=local_module_path,
                                                       local_src_files=local_src_files,
-                                                      local_prebuilt_module_file=local_prebuilt_module_file
                                                       )
     return template_out
 
 
-def process_shared_libraries(firmware, destination_folder, store_setting_id, format_name):
+def process_framework_files(firmware, destination_folder, store_setting_id, format_name):
     """
     This function is used to process the shared libraries of a firmware. It extracts the shared libraries from the
     firmware and creates the shared library modules for AOSP firmware.
@@ -63,8 +45,9 @@ def process_shared_libraries(firmware, destination_folder, store_setting_id, for
     :param format_name: str - format name of the shared library module.
 
     """
-    filename_regex = "[.]so$"
+    filename_regex = "framework[.]jar$"
     search_pattern = re.compile(filename_regex, re.IGNORECASE)
     source_folder = find_and_export_files(firmware, destination_folder, store_setting_id, format_name, search_pattern)
-    logging.debug(f"Processing shared libraries in {source_folder}")
+    logging.debug(f"Processing framework in {source_folder}")
     create_modules(source_folder, destination_folder, format_name, search_pattern, create_template_string)
+
