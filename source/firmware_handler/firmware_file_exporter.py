@@ -74,7 +74,7 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             firmware_id = firmware_id_queue.get(block=False, timeout=300)
         except Empty:
             logging.debug("No more files to export on. Exiting.")
-            time.sleep(30)
+            break
         firmware = AndroidFirmware.objects.get(pk=firmware_id)
         firmware_file_list = FirmwareFile.objects(name__regex=search_pattern, firmware_id_reference=firmware.pk)
         logging.debug(f"Exporting {len(firmware_file_list)} firmware files for firmware {firmware_id} "
@@ -88,7 +88,7 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             for firmware_file in firmware_file_list:
                 destination_path_abs = get_store_export_folder(store_setting, firmware_file)
                 export_firmware_file(firmware_file, temp_dir_path, destination_path_abs)
-            logging.debug(f"Exported firmware file {firmware_file.id} to {destination_path_abs}")
+                logging.debug(f"Exported firmware file {firmware_file.id} to {destination_path_abs}")
 
         firmware_id_queue.task_done()
 

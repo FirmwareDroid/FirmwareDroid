@@ -74,6 +74,7 @@ def process_firmware(format_name, firmware_list):
     """
     firmware_id_list = [firmware.id for firmware in firmware_list]
     firmware_id_queue = create_multi_threading_queue(firmware_id_list)
+    logging.info(f"Processing {firmware_id_queue.qsize()} firmware for format {format_name}...")
     for i in range(10):
         worker = Thread(target=worker_firmware_multithreading, args=(firmware_id_queue, format_name))
         worker.setDaemon(True)
@@ -92,13 +93,16 @@ def worker_firmware_multithreading(firmware_id_queue, format_name):
     while True:
         try:
             firmware_id = firmware_id_queue.get(block=False, timeout=300)
+            logging.info(f"Processing firmware {firmware_id}; Format: {format_name}...")
             firmware = AndroidFirmware.objects(pk=firmware_id).first()
             is_successfully_created = create_build_files_for_firmware(firmware, format_name)
             if not is_successfully_created:
                 raise RuntimeError(f"Could not create build files for firmware {firmware.id}")
+            firmware_id_queue.task_done()
         except Empty:
             logging.debug("No more files to export on. Exiting.")
-        firmware_id_queue.task_done()
+            break
+
 
 
 def create_build_files_for_firmware(firmware, format_name):
