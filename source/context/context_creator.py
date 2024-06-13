@@ -4,7 +4,7 @@
 import functools
 import logging
 import sys
-
+import secrets
 
 def create_db_context(f):
     """
@@ -38,10 +38,11 @@ def setup_logging():
     """
     logger = logging.getLogger()
     if not logger.handlers:
+        unique_string = secrets.token_hex(5)
         logger.setLevel(logging.DEBUG)
         handler = logging.StreamHandler(sys.stdout)
         handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        formatter = logging.Formatter(f'%(asctime)s - %(name)s - {unique_string} - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 

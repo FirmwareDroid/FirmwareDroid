@@ -28,9 +28,11 @@ from utils.mulitprocessing_util.mp_util import start_process_pool
 def start_aosp_module_file_creator(format_name, firmware_id_list):
     worker_arguments = [format_name]
     logging.debug(f"Starting app build file creator for format {format_name}... with {len(firmware_id_list)} firmware.")
+
+    number_of_processes = len(firmware_id_list) if len(firmware_id_list) < os.cpu_count() else os.cpu_count()
     start_process_pool(firmware_id_list,
                        worker_process_firmware_multiprocessing,
-                       number_of_processes=os.cpu_count(),
+                       number_of_processes=number_of_processes,
                        create_id_list=False,
                        worker_args_dict=worker_arguments)
 
@@ -47,7 +49,7 @@ def worker_process_firmware_multiprocessing(firmware_id_queue, format_name):
     """
     logging.debug(f"Worker process for format {format_name} started...")
     while True:
-        firmware_id = firmware_id_queue.get(timeout=.5)
+        firmware_id = firmware_id_queue.get(timeout=.10)
         logging.debug(f"Processing firmware {firmware_id}; Format: {format_name}...")
         try:
             firmware = AndroidFirmware.objects.get(pk=firmware_id, aecs_build_file_path__exists=False)
