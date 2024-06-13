@@ -1,4 +1,8 @@
+import glob
 import logging
+import os
+import shutil
+
 import redis_lock
 from model import WebclientSetting
 from model.StoreSetting import StoreSetting, create_file_store_setting, setup_storage_folders
@@ -38,6 +42,23 @@ def setup_file_store_setting():
     return store_setting
 
 
+def clear_cache(store_setting):
+    """
+    Clear the cache on disk of the server.
+    """
+    store_paths = store_setting.get_store_paths()
+    cache_path = store_paths["FIRMWARE_FOLDER_CACHE"]
+    file_list = glob.glob(os.path.join(cache_path, "*"))
+    for file_path in file_list:
+        try:
+            if os.path.exists(file_path) and os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+            elif os.path.exists(file_path) and os.path.isfile(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            logging.debug(f"Error while deleting cache: {e}")
+
+
 def setup_store_folders(store_setting_list):
     """
     Creates the folder structure for a list of store settings.
@@ -49,6 +70,7 @@ def setup_store_folders(store_setting_list):
         for key in store_setting.store_options_dict.keys():
             store_dict = store_setting.store_options_dict[key]
             setup_storage_folders(store_dict["paths"])
+            clear_cache(store_setting)
 
 
 def setup_application_setting():
