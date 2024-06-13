@@ -129,16 +129,24 @@ class CreateAECSBuildFilesJob(graphene.Mutation):
         format_name: str - name of the format to create the build files for. Example, "mk" or "bp".
         firmware_id_list: list(str) - list of firmware ids to create the build files for.
         queue_name: str - name of the queue to use for the job.
+        skip_file_export: bool - flag to skip the file export.
+
+
         """
         format_name = graphene.String(required=True)
         firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=False)
         queue_name = graphene.String(required=True, default_value="high-python")
+        skip_file_export = graphene.Boolean(required=False, default_value=False)
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, format_name, firmware_id_list, queue_name="high-python"):
+    def mutate(cls, root, info, format_name, firmware_id_list, queue_name="high-python", skip_file_export=False):
         queue = django_rq.get_queue(queue_name)
-        job = queue.enqueue(start_aosp_module_file_creator, format_name, firmware_id_list, job_timeout=ONE_WEEK_TIMEOUT)
+        job = queue.enqueue(start_aosp_module_file_creator,
+                            format_name,
+                            firmware_id_list,
+                            skip_file_export,
+                            job_timeout=ONE_WEEK_TIMEOUT)
         return cls(job_id=job.id)
 
 

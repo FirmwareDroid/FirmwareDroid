@@ -25,8 +25,8 @@ from utils.mulitprocessing_util.mp_util import start_process_pool
 
 @create_db_context
 @create_log_context
-def start_aosp_module_file_creator(format_name, firmware_id_list):
-    worker_arguments = [format_name]
+def start_aosp_module_file_creator(format_name, firmware_id_list, skip_file_export=False):
+    worker_arguments = [format_name, skip_file_export]
     number_of_processes = len(firmware_id_list) if len(firmware_id_list) < os.cpu_count() else os.cpu_count()
     logging.info(f"Starting module build creator: format {format_name} with {len(firmware_id_list)} samples. "
                  f"Number of processes: {number_of_processes}")
@@ -39,12 +39,13 @@ def start_aosp_module_file_creator(format_name, firmware_id_list):
 
 @create_db_context
 @create_log_context
-def worker_process_firmware_multiprocessing(firmware_id_queue, format_name):
+def worker_process_firmware_multiprocessing(firmware_id_queue, format_name, skip_file_export):
     """
     Worker process for creating build files for a given firmware.
 
     :param firmware_id_queue: mp.Queue - Queue of firmware ids to process.
     :param format_name: str - 'mk' or 'bp' file format.
+    :param skip_file_export: bool - flag to skip the file export.
 
     """
     logging.info(f"Worker process for format {format_name} started...")
@@ -53,7 +54,7 @@ def worker_process_firmware_multiprocessing(firmware_id_queue, format_name):
         logging.info(f"Processing firmware {firmware_id}; Format: {format_name}...")
         try:
             firmware = AndroidFirmware.objects.get(pk=firmware_id, aecs_build_file_path__exists=False)
-            process_firmware(format_name, firmware)
+            process_firmware(format_name, firmware, skip_file_export)
         except Exception as err:
             traceback.print_exc()
             logging.error(f"Could not process firmware {firmware_id}: {err}")
@@ -63,28 +64,30 @@ def worker_process_firmware_multiprocessing(firmware_id_queue, format_name):
     logging.info(f"Worker process finished...")
 
 
-def process_firmware(format_name, firmware):
+def process_firmware(format_name, firmware, skip_file_export):
     """
     Creates for every given Android app a AOSP compatible module build file and stores it to the database. The process
     support mk and bp file formats.
 
     :param format_name: str - 'mk' or 'bp' file format.
     :param firmware: class:'AndroidFirmware' - A list of class:'AndroidFirmware'
+    :param skip_file_export: bool - flag to skip the file export.
 
     :return: list - A list of failed firmware that could not be processed.
 
     """
-    is_successfully_created = create_build_files_for_firmware(firmware, format_name)
+    is_successfully_created = create_build_files_for_firmware(firmware, format_name, skip_file_export)
     if not is_successfully_created:
         raise RuntimeError(f"Could not create build files for firmware {firmware.id}")
 
 
-def create_build_files_for_firmware(firmware, format_name):
+def create_build_files_for_firmware(firmware, format_name, skip_file_export):
     """
     Creates build files for a given firmware.
 
     :param firmware: class:'AndroidFirmware' - An instance of AndroidFirmware.
     :param format_name: str - 'mk' or 'bp' file format.
+    :param skip_file_export: bool - flag to skip the file export.
 
     :return: bool - True if build files were successfully created for all apps, False otherwise.
 
@@ -93,15 +96,18 @@ def create_build_files_for_firmware(firmware, format_name):
     if format_name:
         logging.debug(f"Creating build files for firmware {firmware.id}...")
         is_successfully_created = create_build_files_for_apps(firmware.android_app_id_list, format_name)
-        package_build_files_for_firmware(firmware, format_name)
+        package_build_files_for_firmware(firmware, format_name, skip_file_export)
     return is_successfully_created
 
 
-def package_build_files_for_firmware(firmware, format_name):
+def package_build_files_for_firmware(firmware, format_name, skip_file_export):
     """
     Packages the build files for a given firmware into a zip file.
+
     :param format_name: str - 'mk' or 'bp' file format.
     :param firmware: class:'AndroidFirmware' - An instance of AndroidFirmware.
+    :param skip_file_export: bool - flag to skip the file export.
+
     """
     logging.info(f"Packaging build files for firmware {firmware.md5}...")
     store_setting = firmware.get_store_setting()
@@ -109,7 +115,7 @@ def package_build_files_for_firmware(firmware, format_name):
     with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as tmp_root_dir:
         process_android_apps(firmware, tmp_root_dir)
         # TODO ACTIVATE THIS LINE AGAIN
-        process_shared_libraries(firmware, tmp_root_dir, store_setting.id, format_name)
+        process_shared_libraries(firmware, tmp_root_dir, store_setting.id, format_name, skip_file_export)
         #process_framework_files(firmware, tmp_root_dir, store_setting.id, format_name)
         package_files(firmware, tmp_root_dir)
 

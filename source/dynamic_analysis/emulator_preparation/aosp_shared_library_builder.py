@@ -2,7 +2,7 @@ import logging
 import os
 import re
 from string import Template
-from dynamic_analysis.emulator_preparation.aosp_file_finder import find_and_export_files
+from dynamic_analysis.emulator_preparation.aosp_file_finder import export_files, get_file_export_folder
 from dynamic_analysis.emulator_preparation.asop_meta_writer import create_modules
 from dynamic_analysis.emulator_preparation.templates.shared_library_module_template import \
     ANDROID_MK_SHARED_LIBRARY_TEMPLATE, ANDROID_BP_SHARED_LIBRARY_TEMPLATE
@@ -26,8 +26,8 @@ def get_subfolders(library_path, top_folder_name):
     subfolders = []
     if top_folder_name in library_path and not is_top_folder(library_path, top_folder_name):
         path_list = library_path.split(os.sep)
-        lib64_index = path_list.index("lib64")
-        subfolders = path_list[lib64_index + 1:]
+        top_folder_index = path_list.index(top_folder_name.replace("/", ""))
+        subfolders = path_list[top_folder_index + 1:]
     return subfolders
 
 
@@ -100,19 +100,22 @@ def create_template_string(format_name, library_path):
     return template_out
 
 
-def process_shared_libraries(firmware, destination_folder, store_setting_id, format_name):
+def process_shared_libraries(firmware, destination_folder, store_setting_id, format_name, skip_file_export):
     """
     This function is used to process the shared libraries of a firmware. It extracts the shared libraries from the
     firmware and creates the shared library modules for AOSP firmware.
 
+    :param skip_file_export: bool - flag to skip the file export.
     :param firmware: class:'Firmware'
     :param destination_folder: str - path to the destination folder.
     :param store_setting_id: int - id of the store setting.
     :param format_name: str - format name of the shared library module.
 
     """
-    filename_regex = "[.]so$"
+    filename_regex = ".so$"
     search_pattern = re.compile(filename_regex, re.IGNORECASE)
-    source_folder = find_and_export_files(firmware, destination_folder, store_setting_id, format_name, search_pattern)
+    if not skip_file_export:
+        export_files(firmware, store_setting_id, search_pattern)
+    source_folder = get_file_export_folder(store_setting_id, firmware)
     logging.debug(f"Processing shared libraries in {source_folder}")
     create_modules(source_folder, destination_folder, format_name, search_pattern, create_template_string)

@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import shutil
 
 META_BUILD_FILENAME_SYSTEM = "meta_build_system.txt"
@@ -42,20 +43,29 @@ def create_modules(source_folder, destination_folder, format_name, search_patter
     :return: str - path to the shared library module.
 
     """
+    if source_folder and destination_folder:
+        source_folder = os.path.abspath(source_folder)
+        destination_folder = os.path.abspath(destination_folder)
+    else:
+        raise Exception(f"Source folder is not provided.")
+
+    logging.info(f"Creating shared library modules from {source_folder} to {destination_folder}")
     for root, dirs, files in os.walk(str(source_folder)):
         for file in files:
-            if search_pattern.match(file):
+            if re.search(search_pattern, file):
                 source_file = os.path.join(root, file)
-                logging.info(f"Processing shared library: {source_file}")
+                logging.info(f"Creating module for shared library: {source_file} to {destination_folder}")
                 if not os.path.exists(source_file):
                     raise Exception(f"The source file does not exist: {source_file}")
                 template_out = create_template_string(format_name, source_file)
-                module_name = os.path.splitext(source_file)[0]
+                module_name = os.path.splitext(file)[0]
                 module_folder = os.path.join(destination_folder, module_name)
                 copy_file(source_file, module_folder)
                 write_template_to_file(template_out, module_folder)
                 partition_name = source_file.split("/")[7]
                 add_module_to_meta_file(partition_name, destination_folder, module_name)
+            else:
+                logging.debug(f"Skipping file: {file}")
 
 
 def write_template_to_file(template_out, destination_folder):
