@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from dynamic_analysis.emulator_preparation.aosp_file_finder import find_and_export_files
+from dynamic_analysis.emulator_preparation.aosp_file_finder import export_files
 from string import Template
 from dynamic_analysis.emulator_preparation.asop_meta_writer import create_modules
 from dynamic_analysis.emulator_preparation.templates.java_module_template import ANDROID_MK_JAVA_MODULE_TEMPLATE
@@ -47,7 +47,7 @@ def process_framework_files(firmware, destination_folder, store_setting_id, form
     """
     filename_regex = "framework[.]jar$"
     search_pattern = re.compile(filename_regex, re.IGNORECASE)
-    source_folder = find_and_export_files(firmware, destination_folder, store_setting_id, format_name, search_pattern)
+    source_folder = export_files(firmware, destination_folder, store_setting_id, format_name, search_pattern)
     logging.debug(f"Processing framework in {source_folder}")
     create_modules(source_folder, destination_folder, format_name, search_pattern, create_template_string)
 

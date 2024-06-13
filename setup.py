@@ -460,7 +460,7 @@ def main():
                         action="store_true",
                         default=False,
                         required=False,
-                        help="Specifies the domain name used to setup FirmwareDroid")
+                        help="Allows a production setup with advanced settings.")
     args = parser.parse_args()
 
     env_path = os.path.join("./.env")
