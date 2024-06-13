@@ -151,14 +151,13 @@ def start_process_pool(item_list,
         with get_context("fork").Pool(processes=number_of_processes,
                                       maxtasksperchild=3,
                                       initializer=multiprocess_initializer) as pool:
-            if not worker_args_dict:
-                pool.starmap_async(worker_function, [(item_id_queue,)])
-                pool.close()
-                pool.join()
-            else:
-                pool.starmap_async(worker_function, [(item_id_queue, *worker_args_dict)])
-                pool.close()
-                pool.join()
+            for _ in range(number_of_processes):
+                if not worker_args_dict:
+                    pool.starmap_async(worker_function, [(item_id_queue,)])
+                else:
+                    pool.starmap_async(worker_function, [(item_id_queue, *worker_args_dict)])
+            pool.close()
+            pool.join()
 
 
 def multiprocess_initializer():

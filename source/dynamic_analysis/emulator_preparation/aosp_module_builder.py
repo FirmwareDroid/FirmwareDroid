@@ -27,9 +27,9 @@ from utils.mulitprocessing_util.mp_util import start_process_pool
 @create_log_context
 def start_aosp_module_file_creator(format_name, firmware_id_list):
     worker_arguments = [format_name]
-    logging.debug(f"Starting app build file creator for format {format_name}... with {len(firmware_id_list)} firmware.")
-
     number_of_processes = len(firmware_id_list) if len(firmware_id_list) < os.cpu_count() else os.cpu_count()
+    logging.info(f"Starting module build creator: format {format_name} with {len(firmware_id_list)} samples. "
+                 f"Number of processes: {number_of_processes}")
     start_process_pool(firmware_id_list,
                        worker_process_firmware_multiprocessing,
                        number_of_processes=number_of_processes,
@@ -47,10 +47,10 @@ def worker_process_firmware_multiprocessing(firmware_id_queue, format_name):
     :param format_name: str - 'mk' or 'bp' file format.
 
     """
-    logging.debug(f"Worker process for format {format_name} started...")
-    while True:
-        firmware_id = firmware_id_queue.get(timeout=.10)
-        logging.debug(f"Processing firmware {firmware_id}; Format: {format_name}...")
+    logging.info(f"Worker process for format {format_name} started...")
+    try:
+        firmware_id = firmware_id_queue.get(timeout=.5)
+        logging.info(f"Processing firmware {firmware_id}; Format: {format_name}...")
         try:
             firmware = AndroidFirmware.objects.get(pk=firmware_id, aecs_build_file_path__exists=False)
             process_firmware(format_name, firmware)
@@ -58,6 +58,9 @@ def worker_process_firmware_multiprocessing(firmware_id_queue, format_name):
             traceback.print_exc()
             logging.error(f"Could not process firmware {firmware_id}: {err}")
         firmware_id_queue.task_done()
+    except Exception as err:
+        logging.warning(f"Worker process: {err}")
+    logging.info(f"Worker process finished...")
 
 
 def process_firmware(format_name, firmware):
@@ -71,7 +74,6 @@ def process_firmware(format_name, firmware):
     :return: list - A list of failed firmware that could not be processed.
 
     """
-    logging.info(f"Processing firmware {firmware.id}; Format: {format_name}...")
     is_successfully_created = create_build_files_for_firmware(firmware, format_name)
     if not is_successfully_created:
         raise RuntimeError(f"Could not create build files for firmware {firmware.id}")
