@@ -46,17 +46,17 @@ def clear_cache(store_setting):
     """
     Clear the cache on disk of the server.
     """
-    store_paths = store_setting.get_store_paths()
-    cache_path = store_paths["FIRMWARE_FOLDER_CACHE"]
-    file_list = glob.glob(os.path.join(cache_path, "*"))
-    for file_path in file_list:
-        try:
+    try:
+        store_paths = store_setting.get_store_paths()
+        cache_path = store_paths["FIRMWARE_FOLDER_CACHE"]
+        file_list = glob.glob(os.path.join(cache_path, "*"))
+        for file_path in file_list:
             if os.path.exists(file_path) and os.path.isdir(file_path):
                 shutil.rmtree(file_path)
             elif os.path.exists(file_path) and os.path.isfile(file_path):
                 os.remove(file_path)
-        except Exception as e:
-            logging.debug(f"Error while deleting cache: {e}")
+    except Exception as e:
+        logging.debug(f"Error while deleting cache: {e}")
 
 
 def setup_store_folders(store_setting_list):
