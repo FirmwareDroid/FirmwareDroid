@@ -58,7 +58,10 @@ def create_modules(source_folder, destination_folder, format_name, search_patter
                 if not os.path.exists(source_file):
                     raise Exception(f"The source file does not exist: {source_file}")
                 template_out = create_template_string(format_name, source_file)
-                module_name = os.path.splitext(file)[0]
+                if os.path.splitext(file)[1] == ".jar":
+                    module_name = os.path.splitext(file)[0] + "_INJECTED_PREBUILT_JAR"
+                else:
+                    module_name = os.path.splitext(file)[0]
                 module_folder = os.path.join(destination_folder, module_name)
                 copy_file(source_file, module_folder)
                 write_template_to_file(template_out, module_folder)

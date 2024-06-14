@@ -10,6 +10,7 @@ def export_files(firmware, store_setting_id, search_pattern):
 
     :param firmware: class:'Firmware'
     :param store_setting_id: int - id of the store setting.
+    :param search_pattern: regex - search pattern for the shared library.
 
     """
     firmware_id_list = [firmware.id]
@@ -24,5 +25,31 @@ def get_file_export_folder(store_setting_id, firmware):
         str(firmware.id))
     if not os.path.exists(source_folder):
         raise Exception(f"The source folder does not exist: {source_folder}")
+    source_folder = os.path.abspath(source_folder)
     return source_folder
+
+
+def is_top_folder(library_path, folder_name):
+    path_list = library_path.split(os.sep)
+    return path_list[0] == folder_name
+
+
+def get_subfolders(library_path, top_folder_name):
+    """
+    Get the subfolders after a specific top folder.
+
+    :param library_path: str - path to the library.
+    :param top_folder_name: str - name of the top folder.
+
+    :return: list(str) - list of subfolders after the folder in case there are any subfolders.
+
+    """
+    subfolders = []
+    if top_folder_name in library_path and not is_top_folder(library_path, top_folder_name):
+        path_list = library_path.split(os.sep)
+        top_folder_index = path_list.index(top_folder_name.replace("/", ""))
+        subfolders = path_list[top_folder_index + 1:]
+        subfolders = subfolders[:-1]
+    return subfolders
+
 
