@@ -117,7 +117,7 @@ def package_build_files_for_firmware(firmware, format_name, skip_file_export):
         process_android_apps(firmware, tmp_root_dir)
         process_shared_libraries(firmware, tmp_root_dir, store_setting.id, format_name, skip_file_export)
         process_framework_files(firmware, tmp_root_dir, store_setting.id, format_name, skip_file_export)
-        package_files(firmware, tmp_root_dir)
+        package_files(firmware, tmp_root_dir, store_paths)
 
 
 def process_android_apps(firmware, tmp_root_dir):
@@ -198,17 +198,18 @@ def process_generic_file(generic_file_lazy, android_app, tmp_app_dir):
         logging.error(f"{generic_file_lazy.pk}: {err}")
 
 
-def package_files(firmware, tmp_root_dir):
+def package_files(firmware, tmp_root_dir, store_paths):
     """
     Packages the build files for a given firmware into a zip file and stores it in the aecs_build_file_path of the
     firmware.
 
     :param firmware: class:'AndroidFirmware' - An instance of AndroidFirmware.
     :param tmp_root_dir: tempfile.TemporaryDirectory - A temporary directory to store the build files.
+    :param store_paths: dict - A dictionary with the store paths.
 
     """
-    # TODO use cache folder of the store setting
-    with tempfile.TemporaryDirectory() as tmp_output_dir:
+    logging.info(f"Packaging build files for firmware {firmware.id}...")
+    with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as tmp_output_dir:
         package_filename = f"{uuid.uuid4()}"
         output_zip = os.path.join(tmp_output_dir, package_filename)
         zip_file_path = shutil.make_archive(base_name=output_zip,
