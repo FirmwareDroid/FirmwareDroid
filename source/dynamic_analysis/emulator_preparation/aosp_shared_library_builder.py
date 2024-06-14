@@ -28,6 +28,7 @@ def get_subfolders(library_path, top_folder_name):
         path_list = library_path.split(os.sep)
         top_folder_index = path_list.index(top_folder_name.replace("/", ""))
         subfolders = path_list[top_folder_index + 1:]
+        subfolders = subfolders[:-1]
     return subfolders
 
 
@@ -48,7 +49,7 @@ def get_lib_local_module_path(library_path, folder_name):
         if len(subfolder_list) == 0:
             local_module_path = f"$(TARGET_OUT)/{folder_name}/"
         else:
-            local_module_path = f"$(TARGET_OUT)/{folder_name}/{os.path.join(*subfolder_list)}/"
+            local_module_path = f"$(TARGET_OUT)/{folder_name}/{os.path.join(*subfolder_list)}"
     return local_module_path, subfolder_list
 
 

@@ -157,21 +157,29 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
     :param destination_path: str - path to copy the file/folder to.
 
     """
+    dst_file_path = None
+    destination_path = os.path.abspath(destination_path)
     if firmware_file.is_directory:
         dst_file_path = shutil.copytree(source_path, destination_path)
     else:
-        os.makedirs(os.path.dirname(destination_path), exist_ok=True)
-        if os.path.exists(destination_path):
-            source_md5 = md5_from_file(source_path)
-            dest_md5 = md5_from_file(destination_path)
-            if source_md5 != dest_md5:
-                dst_file_path = shutil.copy(source_path, destination_path)
+        try:
+            if not os.path.exists(destination_path):
+                os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+            if os.path.exists(destination_path):
+                source_md5 = md5_from_file(source_path)
+                dest_md5 = md5_from_file(destination_path)
+                if source_md5 != dest_md5:
+                    dst_file_path = shutil.copy(source_path, destination_path)
+                else:
+                    dst_file_path = destination_path
             else:
-                dst_file_path = destination_path
-        else:
-            dst_file_path = shutil.copy(source_path, destination_path)
+                dst_file_path = shutil.copy(source_path, destination_path)
+        except OSError as e:
+            logging.error(f"Could not copy: {source_path} to {os.path.dirname(destination_path)} error: {e}")
+
     if not os.path.exists(dst_file_path):
         raise OSError(f"Could not copy firmware file {firmware_file.id} to {destination_path}")
+
 
 
 def find_firmware_file_abs_path(firmware_file, source_dir_path):
