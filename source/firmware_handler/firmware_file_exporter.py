@@ -87,8 +87,9 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             unblob_extract(firmware.absolute_store_path, temp_dir_path, depth=20, worker_count=5)
             for firmware_file in firmware_file_list:
                 destination_path_abs = get_store_export_folder(store_setting, firmware_file)
-                export_firmware_file(firmware_file, temp_dir_path, destination_path_abs)
-                logging.debug(f"Exported firmware file {firmware_file.id} to {destination_path_abs}")
+                is_successful = export_firmware_file(firmware_file, temp_dir_path, destination_path_abs)
+                if is_successful:
+                    logging.debug(f"Exported firmware file {firmware_file.id} to {destination_path_abs}")
 
         firmware_id_queue.task_done()
 
@@ -136,7 +137,9 @@ def export_firmware_file(firmware_file, source_dir_path, destination_dir_path):
     :param firmware_file: class:'FirmwareFile'
     :param source_dir_path: str - path to the extracted firmware.
 
+    :return: bool - flag if the export was successful.
     """
+    is_successful = False
     if os.path.exists(source_dir_path):
         firmware_file_abs_path = get_firmware_file_abs_path(firmware_file, source_dir_path)
     else:
@@ -144,8 +147,10 @@ def export_firmware_file(firmware_file, source_dir_path, destination_dir_path):
 
     if firmware_file_abs_path:
         copy_firmware_file(firmware_file, firmware_file_abs_path, destination_dir_path)
+        is_successful = True
     else:
-        logging.warning(f"Could not find firmware file {firmware_file.id}. Skipping file.")
+        logging.warning(f"Could not find firmware file {firmware_file.id}. Skipping file {source_dir_path}")
+    return is_successful
 
 
 def copy_firmware_file(firmware_file, source_path, destination_path):
@@ -179,7 +184,6 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
 
     if not os.path.exists(dst_file_path):
         raise OSError(f"Could not copy firmware file {firmware_file.id} to {destination_path}")
-
 
 
 def find_firmware_file_abs_path(firmware_file, source_dir_path):

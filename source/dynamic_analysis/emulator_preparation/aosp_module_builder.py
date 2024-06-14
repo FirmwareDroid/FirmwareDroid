@@ -14,6 +14,7 @@ import uuid
 from string import Template
 from mongoengine import DoesNotExist
 from context.context_creator import create_db_context, create_log_context
+from dynamic_analysis.emulator_preparation.aosp_framework_builder import process_framework_files
 from dynamic_analysis.emulator_preparation.aosp_shared_library_builder import process_shared_libraries
 from dynamic_analysis.emulator_preparation.asop_meta_writer import add_module_to_meta_file
 from dynamic_analysis.emulator_preparation.templates.android_app_module_template import ANDROID_MK_TEMPLATE, \
@@ -114,10 +115,9 @@ def package_build_files_for_firmware(firmware, format_name, skip_file_export):
     store_paths = store_setting.get_store_paths()
     with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as tmp_root_dir:
         process_android_apps(firmware, tmp_root_dir)
-        # TODO ACTIVATE THIS LINE AGAIN
         process_shared_libraries(firmware, tmp_root_dir, store_setting.id, format_name, skip_file_export)
-        #process_framework_files(firmware, tmp_root_dir, store_setting.id, format_name)
-        package_files(firmware, tmp_root_dir)
+        process_framework_files(firmware, tmp_root_dir, store_setting.id, format_name, skip_file_export)
+        package_files(firmware, tmp_root_dir, store_paths)
 
 
 def process_android_apps(firmware, tmp_root_dir):
@@ -198,17 +198,18 @@ def process_generic_file(generic_file_lazy, android_app, tmp_app_dir):
         logging.error(f"{generic_file_lazy.pk}: {err}")
 
 
-def package_files(firmware, tmp_root_dir):
+def package_files(firmware, tmp_root_dir, store_paths):
     """
     Packages the build files for a given firmware into a zip file and stores it in the aecs_build_file_path of the
     firmware.
 
     :param firmware: class:'AndroidFirmware' - An instance of AndroidFirmware.
     :param tmp_root_dir: tempfile.TemporaryDirectory - A temporary directory to store the build files.
+    :param store_paths: dict - A dictionary with the store paths.
 
     """
-    # TODO use cache folder of the store setting
-    with tempfile.TemporaryDirectory() as tmp_output_dir:
+    logging.info(f"Packaging build files for firmware {firmware.id}...")
+    with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as tmp_output_dir:
         package_filename = f"{uuid.uuid4()}"
         output_zip = os.path.join(tmp_output_dir, package_filename)
         zip_file_path = shutil.make_archive(base_name=output_zip,

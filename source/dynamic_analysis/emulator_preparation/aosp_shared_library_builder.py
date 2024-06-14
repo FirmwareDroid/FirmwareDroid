@@ -2,39 +2,16 @@ import logging
 import os
 import re
 from string import Template
-from dynamic_analysis.emulator_preparation.aosp_file_finder import export_files, get_file_export_folder
+from dynamic_analysis.emulator_preparation.aosp_file_finder import export_files, get_file_export_folder, is_top_folder, \
+    get_subfolders
 from dynamic_analysis.emulator_preparation.asop_meta_writer import create_modules
 from dynamic_analysis.emulator_preparation.templates.shared_library_module_template import \
     ANDROID_MK_SHARED_LIBRARY_TEMPLATE, ANDROID_BP_SHARED_LIBRARY_TEMPLATE
 
 
-def is_top_folder(library_path, folder_name):
-    path_list = library_path.split(os.sep)
-    return path_list[0] == folder_name
-
-
-def get_subfolders(library_path, top_folder_name):
-    """
-    Get the subfolders after a specific top folder.
-
-    :param library_path: str - path to the library.
-    :param top_folder_name: str - name of the top folder.
-
-    :return: list(str) - list of subfolders after the folder in case there are any subfolders.
-
-    """
-    subfolders = []
-    if top_folder_name in library_path and not is_top_folder(library_path, top_folder_name):
-        path_list = library_path.split(os.sep)
-        top_folder_index = path_list.index(top_folder_name.replace("/", ""))
-        subfolders = path_list[top_folder_index + 1:]
-        subfolders = subfolders[:-1]
-    return subfolders
-
-
 def get_lib_local_module_path(library_path, folder_name):
     """
-    Get the local module path for the shared library module.
+    Get the local module path for the given folder_name.
 
     :param library_path: str - path to the shared library module.
     :param folder_name: str - name of the lib folder on Android.
