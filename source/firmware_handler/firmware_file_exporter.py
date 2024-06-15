@@ -93,6 +93,7 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
                 raise ValueError(f"Could not extract firmware {firmware_id} to {temp_dir_path}")
             for firmware_file in firmware_file_list:
                 destination_path_abs = get_store_export_folder(store_setting, firmware_file)
+                os.makedirs(destination_path_abs, exist_ok=True)
                 is_successful = export_firmware_file(firmware_file, temp_dir_path, destination_path_abs)
                 if is_successful:
                     logging.debug(f"Exported firmware file {firmware_file.id} to {destination_path_abs}")
@@ -156,7 +157,8 @@ def export_firmware_file(firmware_file, source_dir_path, destination_dir_path):
         copy_firmware_file(firmware_file, firmware_file_abs_path, destination_dir_path)
         is_successful = True
     else:
-        logging.warning(f"Could not find firmware file {firmware_file.id}. Skipping file {source_dir_path}")
+        logging.warning(f"Could not find firmware file {firmware_file.id} {firmware_file.name}."
+                        f" Skipping file {source_dir_path}")
     return is_successful
 
 
@@ -206,16 +208,21 @@ def find_firmware_file_abs_path(firmware_file, source_dir_path):
     :return: str - path of the firmware file.
 
     """
-    files = glob.glob(f'{source_dir_path}/**/{firmware_file.name}', recursive=True)
     file_abs_path = None
-    if files:
-        for file in files:
-            file_abs_path = os.path.abspath(file)
+    candidate_files = []
+    for root, dirs, files in os.walk(source_dir_path):
+        if firmware_file.name in files:
+            file_abs_path = os.path.join(root, firmware_file.name)
             if os.path.exists(file_abs_path):
                 md5 = md5_from_file(file_abs_path)
                 if md5 == firmware_file.md5:
                     break
-                file_abs_path = None
+                else:
+                    candidate_files.append(file_abs_path)
+        file_abs_path = None
+    # TODO: Add more sophisticated file matching.
+    if file_abs_path is None and len(candidate_files) > 0:
+        file_abs_path = candidate_files[0]
     return file_abs_path
 
 
