@@ -7,7 +7,6 @@ import os
 import re
 import shutil
 import tempfile
-import time
 from queue import Empty
 from threading import Thread
 from context.context_creator import create_db_context, create_log_context
@@ -18,6 +17,8 @@ from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
 
 NUMBER_OF_EXPORTER_THREADS = 10
 NAME_EXPORT_FOLDER = "firmware_file_export"
+UNBLOB_WORKER_COUNT = 1
+UNBLBOB_DEPTH = 10
 
 
 @create_db_context
@@ -84,7 +85,12 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             raise ValueError(f"Store settings not found for id {store_setting_id}")
         store_paths = store_setting.get_store_paths()
         with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as temp_dir_path:
-            unblob_extract(firmware.absolute_store_path, temp_dir_path, depth=20, worker_count=5)
+            is_success = unblob_extract(firmware.absolute_store_path,
+                                        temp_dir_path,
+                                        depth=UNBLBOB_DEPTH,
+                                        worker_count=UNBLOB_WORKER_COUNT)
+            if not is_success:
+                raise ValueError(f"Could not extract firmware {firmware_id} to {temp_dir_path}")
             for firmware_file in firmware_file_list:
                 destination_path_abs = get_store_export_folder(store_setting, firmware_file)
                 is_successful = export_firmware_file(firmware_file, temp_dir_path, destination_path_abs)
@@ -126,6 +132,7 @@ def get_store_export_folder(store_setting, firmware_file):
                                       firmware_file.partition_name,
                                       "." + minimized_relative_path)
     destination_folder_abs = os.path.abspath(destination_folder)
+    logging.info(f"Exporting firmware file {firmware_file.id} to {destination_folder_abs}")
     return destination_folder_abs
 
 
@@ -169,7 +176,10 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
     else:
         try:
             if not os.path.exists(destination_path):
-                os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+                try:
+                    os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+                except OSError as e:
+                    logging.error(f"Could not create directory: {os.path.dirname(destination_path)} error: {e}")
             if os.path.exists(destination_path):
                 source_md5 = md5_from_file(source_path)
                 dest_md5 = md5_from_file(destination_path)
