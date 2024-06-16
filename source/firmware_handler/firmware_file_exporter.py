@@ -126,12 +126,25 @@ def get_store_export_folder(store_setting, firmware_file):
     :return: str - absolute path of the output folder.
     """
     store_paths = store_setting.store_options_dict[store_setting.uuid]["paths"]
+    logging.debug(f"Normalize path: {firmware_file.relative_path}")
     minimized_relative_path = remove_unblob_extract_directories(firmware_file.relative_path)
-    destination_folder = os.path.join(store_paths["FIRMWARE_FOLDER_FILE_EXTRACT"],
+    logging.debug(f"Minimized path: {minimized_relative_path}")
+    store_path_abs = os.path.abspath(store_paths["FIRMWARE_FOLDER_FILE_EXTRACT"])
+    logging.debug(f"{store_path_abs},"
+                  f"{NAME_EXPORT_FOLDER}, "
+                  f"{firmware_file.firmware_id_reference.pk},"
+                  f"{firmware_file.partition_name},"
+                  f"{minimized_relative_path}")
+    if firmware_file.partition_name == "/":
+        partition_name = "system"
+    else:
+        partition_name = firmware_file.partition_name
+    destination_folder = os.path.join(store_path_abs,
                                       NAME_EXPORT_FOLDER,
                                       str(firmware_file.firmware_id_reference.pk),
-                                      firmware_file.partition_name,
+                                      partition_name,
                                       "." + minimized_relative_path)
+    logging.debug(f"Exporting firmware file {firmware_file.id} to {destination_folder}")
     destination_folder_abs = os.path.abspath(destination_folder)
     logging.info(f"Exporting firmware file {firmware_file.id} to {destination_folder_abs}")
     return destination_folder_abs
@@ -235,6 +248,7 @@ def get_firmware_file_abs_path(firmware_file, source_dir_path):
     :return: str - absolute path of the firmware file.
 
     """
+    logging.info(f"Searching for firmware file {firmware_file.id} in {source_dir_path}")
     if firmware_file.relative_path.startswith("/"):
         firmware_file_abs_path = os.path.join(source_dir_path,
                                               firmware_file.relative_path.replace("/", "", 1))
@@ -247,5 +261,5 @@ def get_firmware_file_abs_path(firmware_file, source_dir_path):
             firmware_file_abs_path = find_firmware_file_abs_path(firmware_file, source_dir_path)
     else:
         firmware_file_abs_path = find_firmware_file_abs_path(firmware_file, source_dir_path)
-
+    logging.info(f"Found firmware file {firmware_file.id} at {firmware_file_abs_path}")
     return firmware_file_abs_path
