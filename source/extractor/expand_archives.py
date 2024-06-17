@@ -14,7 +14,7 @@ from extractor.lz4_extractor import extract_lz4
 from extractor.brotli_extractor import extract_brotli
 
 EXTRACTION_SIZE_THRESHOLD_MB = 100
-UNBLOB_DEPTH = 2
+UNBLOB_DEPTH = 15
 UNBLOB_WORKER_COUNT = 2
 
 

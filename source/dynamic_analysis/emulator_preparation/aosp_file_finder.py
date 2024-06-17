@@ -23,9 +23,9 @@ def get_file_export_folder(store_setting_id, firmware):
         store_setting.store_options_dict[store_setting.uuid]["paths"]["FIRMWARE_FOLDER_FILE_EXTRACT"],
         NAME_EXPORT_FOLDER,
         str(firmware.id))
-    if not os.path.exists(source_folder):
-        raise Exception(f"The source folder does not exist: {source_folder}")
     source_folder = os.path.abspath(source_folder)
+    if not os.path.exists(source_folder):
+        os.makedirs(source_folder)
     return source_folder
 
 
