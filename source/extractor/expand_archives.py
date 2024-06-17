@@ -14,7 +14,7 @@ from extractor.lz4_extractor import extract_lz4
 from extractor.brotli_extractor import extract_brotli
 
 EXTRACTION_SIZE_THRESHOLD_MB = 100
-UNBLOB_DEPTH = 15
+UNBLOB_DEPTH = 10
 UNBLOB_WORKER_COUNT = 2
 
 
@@ -29,7 +29,7 @@ def process_file(root, filename, supported_file_types_regex):
         nested_file_path = os.path.join(root, filename)
         nested_file_path = normalize_file_path(nested_file_path)
 
-        if os.path.exists(nested_file_path):
+        if os.path.exists(nested_file_path) and sys.getrecursionlimit():
             extract_archive_layer(nested_file_path, root, True)
         else:
             logging.debug(f"Skipped file cause it no longer exists on disk: {nested_file_path}")
