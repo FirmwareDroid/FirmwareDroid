@@ -1,6 +1,7 @@
 import os
 import re
-from dynamic_analysis.emulator_preparation.aosp_file_finder import export_files, get_file_export_folder, get_subfolders
+from dynamic_analysis.emulator_preparation.aosp_file_exporter import (export_files, get_firmware_export_folder_root,
+                                                                      get_subfolders)
 from string import Template
 from dynamic_analysis.emulator_preparation.asop_meta_writer import create_modules
 from dynamic_analysis.emulator_preparation.templates.java_module_template import ANDROID_MK_JAVA_MODULE_TEMPLATE
@@ -67,5 +68,5 @@ def process_framework_files(firmware, destination_folder, store_setting_id, form
     search_pattern = re.compile(filename_regex, re.IGNORECASE)
     if not skip_file_export:
         export_files(firmware, store_setting_id, search_pattern)
-    source_folder = get_file_export_folder(store_setting_id, firmware)
+    source_folder = get_firmware_export_folder_root(store_setting_id, firmware)
     create_modules(source_folder, destination_folder, format_name, search_pattern, create_template_string)

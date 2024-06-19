@@ -67,8 +67,6 @@ def create_modules(source_folder, destination_folder, format_name, search_patter
                 write_template_to_file(template_out, module_folder)
                 partition_name = source_file.split("/")[7]
                 add_module_to_meta_file(partition_name, destination_folder, module_name)
-            else:
-                logging.debug(f"Skipping file: {file}")
 
 
 def write_template_to_file(template_out, destination_folder):

@@ -4,6 +4,7 @@
 import logging
 import os
 import re
+import magic
 from extractor.ext4_extractor import extract_dat
 from extractor.bin_extractor.bin_extractor import extract_bin
 from extractor.nb0_extractor import extract_nb0
@@ -14,8 +15,6 @@ from extractor.lz4_extractor import extract_lz4
 from extractor.brotli_extractor import extract_brotli
 
 EXTRACTION_SIZE_THRESHOLD_MB = 100
-UNBLOB_DEPTH = 10
-UNBLOB_WORKER_COUNT = 2
 
 
 def normalize_file_path(file_path):
@@ -54,11 +53,18 @@ def get_file_size_mb(file_path):
     return size_in_mb
 
 
-def extract_archive_layer(compressed_file_path, destination_dir, delete_compressed_file):
+def get_file_type(file_path):
+    mime = magic.Magic(mime=True)
+    file_type = mime.from_file(file_path)
+    return file_type
+
+
+def extract_archive_layer(compressed_file_path, destination_dir, delete_compressed_file, depth=2):
     """
     Decompress supported archive file type and its contents recursively, including nested archives files.
     Files smaller than EXTRACTION_SIZE_THRESHOLD_MB are not extracted.
 
+    :param depth: int - depth of the unblob extraction.
     :param compressed_file_path: str - path to the compressed file.
     :param destination_dir: str - path to extract to.
     :param delete_compressed_file: boolean - if true, deletes the archive after it is extracted.
@@ -81,6 +87,11 @@ def extract_archive_layer(compressed_file_path, destination_dir, delete_compress
 
     is_success = False
     file_extension = os.path.splitext(compressed_file_path.lower())[1]
+    if file_extension is None:
+        try:
+            file_extension = get_file_type(compressed_file_path)
+        except Exception as e:
+            pass
 
     if file_extension in extract_function_dict:
         extraction_function = extract_function_dict[file_extension]
@@ -93,7 +104,7 @@ def extract_archive_layer(compressed_file_path, destination_dir, delete_compress
         file_size_mb = get_file_size_mb(compressed_file_path)
         if file_size_mb > EXTRACTION_SIZE_THRESHOLD_MB:
             logging.info(f"Changing to unblob to extract: {compressed_file_path}")
-            unblob_extract(compressed_file_path, destination_dir, UNBLOB_DEPTH, UNBLOB_WORKER_COUNT)
+            unblob_extract(compressed_file_path, destination_dir, depth)
         else:
             logging.info(f"Skip file due small size: {compressed_file_path}")
 

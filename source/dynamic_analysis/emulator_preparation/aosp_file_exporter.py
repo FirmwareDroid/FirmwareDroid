@@ -17,7 +17,16 @@ def export_files(firmware, store_setting_id, search_pattern):
     start_firmware_file_export(search_pattern, firmware_id_list, store_setting_id)
 
 
-def get_file_export_folder(store_setting_id, firmware):
+def get_firmware_export_folder_root(store_setting_id, firmware):
+    """
+    Get the file export folder for the firmware.
+
+    :param store_setting_id: str - id of the store setting.
+    :param firmware: class:'Firmware'
+
+    :return: str - path to the file export folder.
+
+    """
     store_setting = StoreSetting.objects.get(pk=store_setting_id)
     source_folder = os.path.join(
         store_setting.store_options_dict[store_setting.uuid]["paths"]["FIRMWARE_FOLDER_FILE_EXTRACT"],
@@ -30,6 +39,15 @@ def get_file_export_folder(store_setting_id, firmware):
 
 
 def is_top_folder(library_path, folder_name):
+    """
+    Check if the library path is the top folder.
+
+    :param library_path: str - path to the library.
+    :param folder_name: str - name of the top folder.
+
+    :return: bool - True if the library path is the top folder, False otherwise.
+
+    """
     path_list = library_path.split(os.sep)
     return path_list[0] == folder_name
 
