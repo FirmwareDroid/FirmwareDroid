@@ -14,8 +14,6 @@ from extractor.lz4_extractor import extract_lz4
 from extractor.brotli_extractor import extract_brotli
 
 EXTRACTION_SIZE_THRESHOLD_MB = 100
-UNBLOB_DEPTH = 10
-UNBLOB_WORKER_COUNT = 2
 
 
 def normalize_file_path(file_path):
@@ -54,11 +52,12 @@ def get_file_size_mb(file_path):
     return size_in_mb
 
 
-def extract_archive_layer(compressed_file_path, destination_dir, delete_compressed_file):
+def extract_archive_layer(compressed_file_path, destination_dir, delete_compressed_file, depth=2):
     """
     Decompress supported archive file type and its contents recursively, including nested archives files.
     Files smaller than EXTRACTION_SIZE_THRESHOLD_MB are not extracted.
 
+    :param depth: int - depth of the unblob extraction.
     :param compressed_file_path: str - path to the compressed file.
     :param destination_dir: str - path to extract to.
     :param delete_compressed_file: boolean - if true, deletes the archive after it is extracted.
@@ -93,7 +92,7 @@ def extract_archive_layer(compressed_file_path, destination_dir, delete_compress
         file_size_mb = get_file_size_mb(compressed_file_path)
         if file_size_mb > EXTRACTION_SIZE_THRESHOLD_MB:
             logging.info(f"Changing to unblob to extract: {compressed_file_path}")
-            unblob_extract(compressed_file_path, destination_dir, UNBLOB_DEPTH, UNBLOB_WORKER_COUNT)
+            unblob_extract(compressed_file_path, destination_dir, depth)
         else:
             logging.info(f"Skip file due small size: {compressed_file_path}")
 

@@ -325,7 +325,10 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
             archive_firmware_file_list = open_firmware(firmware_archive_file_path, temp_extract_dir)
             files_dict["archive_firmware_file_list"].extend(archive_firmware_file_list)
             files_dict["firmware_file_list"].extend(archive_firmware_file_list)
-            files_dict, partition_info_dict = index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5,
+            files_dict, partition_info_dict = index_partitions(temp_extract_dir,
+                                                               files_dict,
+                                                               create_fuzzy_hashes,
+                                                               md5,
                                                                store_paths)
 
             version_detected = detect_by_build_prop(files_dict["build_prop_file_list"])
