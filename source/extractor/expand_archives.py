@@ -4,7 +4,6 @@
 import logging
 import os
 import re
-import magic
 from extractor.ext4_extractor import extract_dat
 from extractor.bin_extractor.bin_extractor import extract_bin
 from extractor.nb0_extractor import extract_nb0
@@ -53,12 +52,6 @@ def get_file_size_mb(file_path):
     return size_in_mb
 
 
-def get_file_type(file_path):
-    mime = magic.Magic(mime=True)
-    file_type = mime.from_file(file_path)
-    return file_type
-
-
 def extract_archive_layer(compressed_file_path, destination_dir, delete_compressed_file, depth=2):
     """
     Decompress supported archive file type and its contents recursively, including nested archives files.
@@ -87,11 +80,6 @@ def extract_archive_layer(compressed_file_path, destination_dir, delete_compress
 
     is_success = False
     file_extension = os.path.splitext(compressed_file_path.lower())[1]
-    if file_extension is None:
-        try:
-            file_extension = get_file_type(compressed_file_path)
-        except Exception as e:
-            pass
 
     if file_extension in extract_function_dict:
         extraction_function = extract_function_dict[file_extension]
