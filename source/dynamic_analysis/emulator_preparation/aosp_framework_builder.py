@@ -1,6 +1,9 @@
 import os
 import re
-from dynamic_analysis.emulator_preparation.aosp_file_exporter import (export_files, get_firmware_export_folder_root,
+import shutil
+
+from dynamic_analysis.emulator_preparation.aosp_file_exporter import (export_files,
+                                                                      get_firmware_export_folder_root,
                                                                       get_subfolders)
 from string import Template
 from dynamic_analysis.emulator_preparation.asop_meta_writer import create_modules
@@ -40,16 +43,22 @@ def create_template_string(format_name, file_path):
     else:
         raise NotImplementedError(f"Format name {format_name} is not supported yet.")
 
-    file_name = os.path.basename(file_path)
-    local_module = file_name.replace(".jar", "") + "_INJECTED_PREBUILT_JAR"
-    local_src_files = file_name
+    in_file_name = os.path.basename(file_path)
+    out_file_name = "INJECTED_PREBUILT_JAR_" + in_file_name
+    local_module = in_file_name.replace(".jar", "") + "_INJECTED_PREBUILT_JAR"
+    local_src_files = out_file_name
     partition_name = file_path.split("/")[9]
     local_module_path = get_local_module_path(file_path, partition_name)
+    local_src_files_target = in_file_name
     template_out = Template(file_template).substitute(local_module=local_module,
                                                       local_module_path=local_module_path,
                                                       local_src_files=local_src_files,
+                                                      local_src_files_target=local_src_files_target
                                                       )
     return template_out
+
+
+
 
 
 def process_framework_files(firmware, destination_folder, store_setting_id, format_name, skip_file_export):
@@ -70,3 +79,4 @@ def process_framework_files(firmware, destination_folder, store_setting_id, form
         export_files(firmware, store_setting_id, search_pattern)
     source_folder = get_firmware_export_folder_root(store_setting_id, firmware)
     create_modules(source_folder, destination_folder, format_name, search_pattern, create_template_string)
+
