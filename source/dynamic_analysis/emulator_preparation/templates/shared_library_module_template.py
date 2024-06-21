@@ -7,6 +7,9 @@ ANDROID_MK_SHARED_LIBRARY_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
                                      "\nLOCAL_MODULE_TAGS := optional\n" \
                                      "\nLOCAL_MODULE_PATH := ${local_module_path}\n" \
                                      "\nLOCAL_PREBUILT_MODULE_FILE := ${local_prebuilt_module_file}\n" \
+                                     "\n$$(LOCAL_MODULE_PATH):\n" \
+                                     "\t$$(hide) mkdir -p '$$(LOCAL_MODULE_PATH)'\n" \
+                                     "\n$$(LOCAL_INSTALLED_MODULE): $$(LOCAL_MODULE_PATH)\n" \
                                      "\ninclude $$(PREBUILT_SHARED_LIBRARY)\n"
 
 ANDROID_BP_SHARED_LIBRARY_TEMPLATE = "cc_library_shared {\n" \

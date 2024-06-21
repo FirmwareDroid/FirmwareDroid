@@ -1,7 +1,5 @@
 import os
 import re
-import shutil
-
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import (export_files,
                                                                       get_firmware_export_folder_root,
                                                                       get_subfolders)
@@ -10,10 +8,11 @@ from dynamic_analysis.emulator_preparation.asop_meta_writer import create_module
 from dynamic_analysis.emulator_preparation.templates.java_module_template import ANDROID_MK_JAVA_MODULE_TEMPLATE
 
 
-def get_local_module_path(file_path, partition_name):
+def get_local_module_path(file_path, partition_name, file_name):
     """
     Get the local module path for the given partition_name.
 
+    :param file_name: str - name of the file to remove from the path.
     :param file_path: str - path to the shared library module.
     :param partition_name: str - name of the partition on Android.
 
@@ -25,6 +24,7 @@ def get_local_module_path(file_path, partition_name):
         local_module_path = f"$(TARGET_OUT)/"
     else:
         local_module_path = f"$(TARGET_OUT)/{os.path.join(*subfolder_list)}"
+    local_module_path = local_module_path.replace(file_name, "")
     return local_module_path
 
 
@@ -48,7 +48,7 @@ def create_template_string(format_name, file_path):
     local_module = in_file_name.replace(".jar", "") + "_INJECTED_PREBUILT_JAR"
     local_src_files = out_file_name
     partition_name = file_path.split("/")[9]
-    local_module_path = get_local_module_path(file_path, partition_name)
+    local_module_path = get_local_module_path(file_path, partition_name, in_file_name)
     local_src_files_target = in_file_name
     template_out = Template(file_template).substitute(local_module=local_module,
                                                       local_module_path=local_module_path,
@@ -56,9 +56,6 @@ def create_template_string(format_name, file_path):
                                                       local_src_files_target=local_src_files_target
                                                       )
     return template_out
-
-
-
 
 
 def process_framework_files(firmware, destination_folder, store_setting_id, format_name, skip_file_export):
