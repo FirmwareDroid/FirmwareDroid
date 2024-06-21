@@ -30,6 +30,18 @@ def add_module_to_meta_file(partition_name, tmp_root_dir, module_naming):
         fp.write("    " + module_naming + " \\\n")
 
 
+def copy_replacer_script(destination_folder):
+    """
+    Copy the replacer script to the destination folder.
+
+    :param destination_folder: str - path to the destination folder.
+
+    """
+    replacer_script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates/replacer.sh")
+    destination_path = os.path.join(destination_folder, "replacer.sh")
+    shutil.copy(replacer_script_path, destination_path)
+
+
 def create_modules(source_folder, destination_folder, format_name, search_pattern, create_template_string):
     """
     This function is used to create the shared library module for AOSP firmware.
@@ -49,21 +61,24 @@ def create_modules(source_folder, destination_folder, format_name, search_patter
     else:
         raise Exception(f"Source folder is not provided.")
 
-    logging.info(f"Creating shared library modules from {source_folder} to {destination_folder}")
+    logging.info(f"Creating AOSP modules from {source_folder} to {destination_folder}")
     for root, dirs, files in os.walk(str(source_folder)):
         for file in files:
             if re.search(search_pattern, file):
+                is_jar = os.path.splitext(file)[1] == ".jar"
                 source_file = os.path.join(root, file)
                 logging.info(f"Creating module for shared library: {source_file} to {destination_folder}")
                 if not os.path.exists(source_file):
                     raise Exception(f"The source file does not exist: {source_file}")
                 template_out = create_template_string(format_name, source_file)
-                if os.path.splitext(file)[1] == ".jar":
+                if is_jar:
                     module_name = os.path.splitext(file)[0] + "_INJECTED_PREBUILT_JAR"
                 else:
                     module_name = os.path.splitext(file)[0]
                 module_folder = os.path.join(destination_folder, module_name)
                 copy_file(source_file, module_folder)
+                if is_jar:
+                    copy_replacer_script(module_folder)
                 write_template_to_file(template_out, module_folder)
                 partition_name = source_file.split("/")[7]
                 add_module_to_meta_file(partition_name, destination_folder, module_name)

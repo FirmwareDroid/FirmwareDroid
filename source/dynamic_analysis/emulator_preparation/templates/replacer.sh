@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# Check if the correct number of arguments are provided
+if [ "$#" -ne 2 ]; then
+    echo "Usage: $0 <target_file> <existing_file>"
+    exit 1
+fi
+
+# Assign arguments to variables
+target_file="$1"
+existing_file="$2"
+
+echo "Overwrite: $target_file $existing_file"
+cp "$existing_file" "$target_file"
+rm "$existing_file"
