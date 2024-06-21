@@ -31,6 +31,47 @@ def get_lib_local_module_path(library_path, folder_name):
     return local_module_path, subfolder_list
 
 
+def get_local_module_path(file_path, partition_name):
+    """
+    Get the local module path for the given partition_name.
+
+    :param file_path: str - path to the shared library module.
+    :param partition_name: str - name of the partition on Android.
+
+    :return: str - local module path for the shared library module.
+
+    """
+    subfolder_list = get_subfolders(file_path, partition_name)
+    if len(subfolder_list) == 0:
+        local_module_path = f"$(TARGET_OUT)/"
+    else:
+        local_module_path = f"$(TARGET_OUT)/{os.path.join(*subfolder_list)}"
+    return local_module_path
+
+
+def select_local_module_path(file_path, file_name):
+    """
+    Creates the local module path for the shared library module based on the input path
+
+    :param file_path: str - path to the shared library module.
+    :param file_name: str - name of the file to remove from the path.
+
+    :return: str - local module path for the shared library module.
+
+    """
+    if "/app/" in file_path:
+        app_name = file_path.split("/app/")[1]
+        local_module_path = f"$(TARGET_OUT)/app/{app_name}/lib/$(TARGET_ARCH_ABI)/"
+    elif "/priv-app/" in file_path:
+        app_name = file_path.split("/priv-app/")[1]
+        local_module_path = f"$(TARGET_OUT)/priv-app/{app_name}/lib/$(TARGET_ARCH_ABI)/"
+    else:
+        partition_name = file_path.split("/")[9]
+        local_module_path = get_local_module_path(file_path, partition_name)
+    local_module_path = local_module_path.replace("//", "/").replace(file_name, "")
+    return local_module_path
+
+
 def create_template_string(format_name, library_path):
     """
     Creates the template string for the shared library module.
@@ -47,31 +88,11 @@ def create_template_string(format_name, library_path):
     if format_name.lower() != "mk":
         raise NotImplementedError(f"Format name {format_name} is not supported yet.")
 
-    library_name = os.path.basename(library_path)
-    local_src_files = library_name
-    local_module = library_name.replace(".so", "")
-
-    if "/app/" in library_path:
-        app_name = library_path.split("/app/")[1]
-        local_module_path = f"$(TARGET_OUT)/app/{app_name}/lib/$(TARGET_ARCH_ABI)/"
-    elif "/priv-app/" in library_path:
-        app_name = library_path.split("/priv-app/")[1]
-        local_module_path = f"$(TARGET_OUT)/priv-app/{app_name}/lib/$(TARGET_ARCH_ABI)/"
-    elif "/lib64/" in library_path:
-        local_module_path, subfolder_list = get_lib_local_module_path(library_path, "/lib64/")
-        if len(subfolder_list) > 0:
-            local_module = f"{os.path.join(*subfolder_list)}_{local_module}".replace("/", "_")
-    elif "/lib/" in library_path:
-        local_module_path, subfolder_list = get_lib_local_module_path(library_path, "/lib/")
-        # Android emulator uses lib64 for 64-bit libraries and does not have a lib folder for 32-bit libraries.
-        local_module_path = local_module_path.replace("lib", "lib64")
-        if len(subfolder_list) > 0:
-            local_module = f"{os.path.join(*subfolder_list)}_{local_module}".replace("/", "_")
-    else:
-        local_module_path = "$(TARGET_OUT)/lib64/"
-    local_module_path = local_module_path.replace("//", "/")
-
-    local_prebuilt_module_file = f"$(LOCAL_PATH)/{library_name}"
+    file_name = os.path.basename(library_path)
+    local_src_files = file_name
+    local_module = file_name.replace(".so", "")
+    local_module_path = select_local_module_path(library_path, file_name)
+    local_prebuilt_module_file = f"$(LOCAL_PATH)/{file_name}"
     template_out = Template(file_template).substitute(local_module=local_module,
                                                       local_module_path=local_module_path,
                                                       local_src_files=local_src_files,
