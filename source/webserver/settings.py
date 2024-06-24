@@ -9,10 +9,10 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+import logging
 import environ
 import os
 from pathlib import Path
-
 from context.context_creator import setup_logging
 from database.connector import init_db
 
@@ -27,9 +27,10 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 APP_ENV = env('APP_ENV')
 if APP_ENV == "production":
     DEBUG = False
+    setup_logging(logging.ERROR)
 else:
     DEBUG = True
-    setup_logging()
+    setup_logging(logging.DEBUG)
 
 DOMAIN_NAME = os.environ['DOMAIN_NAME']
 HTTPS_DOMAIN_NAME = "https://" + DOMAIN_NAME

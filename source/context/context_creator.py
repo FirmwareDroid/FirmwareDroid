@@ -6,6 +6,7 @@ import logging
 import sys
 import secrets
 
+
 def create_db_context(f):
     """
     Decorator for creating an app context and pushing into to the Flask context stack.
@@ -31,17 +32,16 @@ def create_app_context():
     return None
 
 
-def setup_logging():
+def setup_logging(log_level=logging.INFO):
     """
     Setup logging for the application.
-    :return:
     """
     logger = logging.getLogger()
     if not logger.handlers:
         unique_string = secrets.token_hex(5)
-        logger.setLevel(logging.DEBUG)
+        logger.setLevel(log_level)
         handler = logging.StreamHandler(sys.stdout)
-        handler.setLevel(logging.DEBUG)
+        handler.setLevel(log_level)
         formatter = logging.Formatter(f'%(asctime)s - %(name)s - {unique_string} - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         logger.addHandler(handler)

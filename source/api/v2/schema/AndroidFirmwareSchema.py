@@ -36,7 +36,9 @@ class AndroidFirmwareQuery(graphene.ObjectType):
                                              )
 
     @superuser_required
-    def resolve_android_firmware_list(self, info, object_id_list, field_filter=None):
+    def resolve_android_firmware_list(self, info, object_id_list=None, field_filter=None):
+        if object_id_list is None and field_filter is None:
+            return "Please provide at least one filter."
         return get_filtered_queryset(AndroidFirmware, object_id_list, field_filter)
 
     @superuser_required

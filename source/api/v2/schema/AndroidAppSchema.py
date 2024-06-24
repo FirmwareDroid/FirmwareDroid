@@ -10,7 +10,7 @@ from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from api.v2.schema.RqJobsSchema import ONE_WEEK_TIMEOUT, MAX_OBJECT_ID_LIST_SIZE
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
-from model import AndroidApp
+from model import AndroidApp, AndroidFirmware
 from android_app_importer.standalone_importer import start_android_app_standalone_importer
 
 ModelFilter = generate_filter(AndroidApp)
@@ -54,8 +54,15 @@ class AndroidAppQuery(graphene.ObjectType):
         return get_filtered_queryset(AndroidApp, object_id_list, field_filter)
 
     @superuser_required
-    def resolve_android_app_id_list(self, info, field_filter=None):
-        queryset = get_filtered_queryset(model=AndroidApp, query_filter=field_filter, object_id_list=None)
+    def resolve_android_app_id_list(self, info, field_filter=None, firmware_id_list=None):
+        if firmware_id_list and len(firmware_id_list) > 0:
+            firmware_list = AndroidFirmware.objects(pk__in=firmware_id_list)
+            object_id_list = []
+            for firmware in firmware_list:
+                object_id_list.extend([app.pk for app in AndroidApp.objects(firmware_id_reference=firmware.pk)])
+            queryset = get_filtered_queryset(model=AndroidApp, query_filter=field_filter, object_id_list=object_id_list)
+        else:
+            queryset = get_filtered_queryset(model=AndroidApp, query_filter=field_filter, object_id_list=None)
         return [document.pk for document in queryset]
 
 
