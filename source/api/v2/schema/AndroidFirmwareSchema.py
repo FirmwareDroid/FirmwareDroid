@@ -54,10 +54,10 @@ class DeleteAndroidFirmwareMutation(graphene.Mutation):
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, firmware_file_id_list, queue_name):
+    def mutate(cls, root, info, firmware_id_list, queue_name):
         func_to_run = delete_queryset_background
         queue = django_rq.get_queue(queue_name)
-        job = queue.enqueue(func_to_run, firmware_file_id_list, job_timeout=ONE_DAY_TIMEOUT)
+        job = queue.enqueue(func_to_run, firmware_id_list, job_timeout=ONE_DAY_TIMEOUT)
         return cls(job_id=job.id)
 
 
