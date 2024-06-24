@@ -41,31 +41,6 @@ def quark_engine_worker_multiprocessing(android_app_id_queue):
         remove_logs()
 
 
-def quark_engine_parallel_worker(android_app_list):
-    """
-    Run Quark-Engine with the built in parallel mode.
-    :param android_app_list: list(class:'AndroidApp')
-    """
-    rule_path = get_quark_engine_rules()
-    for android_app in android_app_list:
-        try:
-            # TODO remove this if statement as soon as quark-engine fixes this issue.
-            if android_app.file_size_bytes <= 83886080:
-                logging.info(f"Quark-Engine scans: {android_app.filename} {android_app.id}")
-                scan_results = run_paralell_quark(android_app.absolute_store_path, rule_path)
-                if not scan_results:
-                    raise RuntimeError()
-                report = create_quark_engine_report(android_app, scan_results)
-                logging.info(f"Scan success: {android_app.filename} {android_app.id} {report.id}")
-            else:
-                logging.warning(f"Skipping: Android is over maximal file size for quark-engine. "
-                                f"{android_app.filename} {android_app.id}")
-        except Exception as err:
-            logging.error(f"Quark-Engine could not scan app {android_app.filename} id: {android_app.id} - "
-                          f"error: {err}")
-            traceback.print_exc()
-
-
 def get_quark_engine_rules(rule_path=None):
     """
     Download the latest quark-engine rules if no other rule path is specified.
@@ -149,7 +124,7 @@ def create_quark_engine_report(android_app, scan_results):
         android_app_id_reference=android_app.id,
         scanner_version=__version__,
         scanner_name="QuarkEngine",
-        scan_results=scan_results
+        results=scan_results
     ).save()
     android_app.quark_engine_report_reference = report.id
     android_app.save()

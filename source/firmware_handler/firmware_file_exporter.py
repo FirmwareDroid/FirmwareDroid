@@ -213,7 +213,7 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
         os.makedirs(destination_path, exist_ok=True)
 
     dst_file_path = None
-    if firmware_file.is_directory:
+    if os.path.isdir(source_path):
         dst_file_path = shutil.copytree(source_path, destination_path)
     else:
         try:
