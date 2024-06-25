@@ -53,7 +53,7 @@ def worker_process_firmware_multiprocessing(firmware_id_queue, format_name, skip
         try:
             firmware = AndroidFirmware.objects.get(pk=firmware_id)
             if firmware.aecs_build_file_path:
-                remove_existing_aecs_archive(firmware.aecs_build_file_path)
+                remove_existing_aecs_archive(firmware.aecs_build_file_path, firmware)
             process_firmware(format_name, firmware, skip_file_export)
         except Exception as err:
             traceback.print_exc()
@@ -64,9 +64,11 @@ def worker_process_firmware_multiprocessing(firmware_id_queue, format_name, skip
     logging.info(f"Worker process finished...")
 
 
-def remove_existing_aecs_archive(aecs_build_file_path):
+def remove_existing_aecs_archive(aecs_build_file_path, firmware):
     try:
         os.remove(aecs_build_file_path)
+        firmware.aecs_build_file_path = None
+        firmware.save()
         logging.debug(f"Deleted existing build files for firmware {aecs_build_file_path}")
     except FileNotFoundError as err:
         logging.debug(f"No existing build files found for firmware {aecs_build_file_path}")
