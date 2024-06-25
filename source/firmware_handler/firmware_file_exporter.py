@@ -200,6 +200,13 @@ def export_firmware_file(firmware_file, source_dir_path, destination_dir_path):
     return is_successful
 
 
+def create_directory(destination_path):
+    if os.path.splitext(destination_path)[1]:
+        os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+    else:
+        os.makedirs(destination_path, exist_ok=True)
+
+
 def copy_firmware_file(firmware_file, source_path, destination_path):
     """
     Copy a class:'FirmwareFile' to the filesystem.
@@ -209,8 +216,7 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
     :param destination_path: str - path to copy the file/folder to.
 
     """
-    if not os.path.exists(destination_path):
-        os.makedirs(destination_path, exist_ok=True)
+    create_directory(destination_path)
 
     dst_file_path = None
     if os.path.isdir(source_path):

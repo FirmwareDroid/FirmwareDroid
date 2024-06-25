@@ -7,8 +7,8 @@ if [ "$#" -ne 2 ]; then
 fi
 
 # Assign arguments to variables
-target_file="$1"
-existing_file="$2"
+target_file="$2"
+existing_file="$1"
 
 echo "Overwrite: $target_file $existing_file"
 cp "$existing_file" "$target_file"

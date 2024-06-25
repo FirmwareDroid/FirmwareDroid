@@ -44,16 +44,15 @@ def create_template_string(format_name, file_path):
         raise NotImplementedError(f"Format name {format_name} is not supported yet.")
 
     in_file_name = os.path.basename(file_path)
-    out_file_name = "INJECTED_PREBUILT_JAR_" + in_file_name
     local_module = in_file_name.replace(".jar", "") + "_INJECTED_PREBUILT_JAR"
-    local_src_files = out_file_name
+    out_file_name = local_module + ".jar"
+    local_src_files = in_file_name
     partition_name = file_path.split("/")[9]
     local_module_path = get_local_module_path(file_path, partition_name, in_file_name)
-    local_src_files_target = in_file_name
-    template_out = Template(file_template).substitute(local_module=local_module,
+    template_out = Template(file_template).substitute(local_src_files=local_src_files,
+                                                      local_module=local_module,
                                                       local_module_path=local_module_path,
-                                                      local_src_files=local_src_files,
-                                                      local_src_files_target=local_src_files_target
+                                                      local_scr_file_out=out_file_name,
                                                       )
     return template_out
 

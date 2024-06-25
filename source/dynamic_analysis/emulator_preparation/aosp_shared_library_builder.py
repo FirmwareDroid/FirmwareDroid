@@ -113,7 +113,7 @@ def process_shared_libraries(firmware, destination_folder, store_setting_id, for
     :param format_name: str - format name of the shared library module.
 
     """
-    filename_regex = ".so$"
+    filename_regex = r"\.so(\.\d+)?$"
     search_pattern = re.compile(filename_regex, re.IGNORECASE)
     if not skip_file_export:
         export_files(firmware, store_setting_id, search_pattern)
