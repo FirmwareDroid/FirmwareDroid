@@ -35,9 +35,9 @@ def mount_android_image(android_ext4_path, mount_folder_path, store_paths):
         if is_mounted:
             break
         if attempt_simg2img_mount(android_ext4_path, mount_folder_path, mount_option, store_paths) \
-                or attempt_ext4_mount(android_ext4_path, mount_folder_path, mount_option):
-                #or attempt_repair_and_mount(android_ext4_path, mount_folder_path, mount_option, store_paths) \
-                #or attempt_resize_and_mount(android_ext4_path, mount_folder_path, mount_option, store_paths):
+                or attempt_ext4_mount(android_ext4_path, mount_folder_path, mount_option) \
+                or attempt_repair_and_mount(android_ext4_path, mount_folder_path, mount_option, store_paths) \
+                or attempt_resize_and_mount(android_ext4_path, mount_folder_path, mount_option, store_paths):
             if not has_files_in_folder(mount_folder_path):
                 logging.debug("Overwrite chown of mount folders.")
                 execute_chown(mount_folder_path)

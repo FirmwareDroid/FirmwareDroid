@@ -13,6 +13,6 @@ ANDROID_MK_JAVA_MODULE_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" + \
                                   "\t$$(hide) mkdir -p '${local_module_path}'\n" \
                                   "\n$$(LOCAL_INSTALLED_MODULE): ${local_module_path}\n" \
                                    "LOCAL_POST_INSTALL_CMD := $$(hide) " \
-                                   "$$(LOCAL_PATH)/replacer.sh ${local_module_path}/${local_scr_file_out} " \
-                                   "${local_module_path}/${local_src_files}\n" + \
+                                   "$$(LOCAL_PATH)/replacer.sh ${local_module_path}${local_scr_file_out} " \
+                                   "${local_module_path}${local_src_files}\n" + \
                                   "include $$(BUILD_PREBUILT)\n"
