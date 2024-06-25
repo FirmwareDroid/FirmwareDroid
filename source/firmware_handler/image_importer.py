@@ -47,12 +47,12 @@ def extract_image_files(image_path, extract_dir_path, store_paths):
         logging.debug("Image extraction successful with simg_ext4extractor")
     elif extract_ext4(image_path, extract_dir_path):
         logging.debug("Image extraction successful with ext4extractor")
+    elif unblob_extract(image_path, extract_dir_path):
+        logging.debug("Image extraction successful with unblob extraction suite")
     elif mount_android_image(image_path, extract_dir_path, store_paths):
         logging.debug("Image mount successful")
     elif extract_ubi_image(image_path, extract_dir_path):
         logging.debug("Image extraction successful with UBI")
-    elif unblob_extract(image_path, extract_dir_path):
-        logging.debug("Image extraction successful with unblob extraction suite")
     else:
         raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
 

@@ -67,7 +67,8 @@ def create_file_import_queue(store_path):
     """
     firmware_import_folder_path = store_path["FIRMWARE_FOLDER_IMPORT"]
     filename_list = get_filenames(firmware_import_folder_path)
-    filename_list = list(filter(lambda x: any(x.endswith(ext) for ext in ALLOWED_ARCHIVE_FILE_EXTENSIONS), filename_list))
+    filename_list = list(filter(lambda x: any(x.endswith(ext) for ext in ALLOWED_ARCHIVE_FILE_EXTENSIONS),
+                                filename_list))
     logging.info(f"{len(filename_list)} files to import from {firmware_import_folder_path}:"
                  f"\n\n{''.join(map(str, filename_list))}")
     if len(filename_list) == 0:
@@ -104,7 +105,7 @@ def allow_import(firmware_file_path, md5):
 @create_db_context
 def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes, store_path):
     """
-    An multi-threaded import script that extracts meta information of a firmware file from the system.img.
+    A multithreaded import script that extracts meta information of a firmware file from the system.img.
     Stores a firmware into the database if it is not already stored.
 
     :param store_path: dict(str, str) - paths of the store setting.
@@ -215,7 +216,7 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
     :param create_fuzzy_hashes: boolean - create fuzzy hashes index.
     :param md5: str - md5 hash of the firmware
 
-    :return: dict - extentions of the original dict with all newly found files.
+    :return: dict - extensions of the original dict with all newly found files.
     """
     partition_info_dict = {}
     for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
@@ -265,7 +266,7 @@ def store_firmware_archive(firmware_archive_file_path, md5, version_detected, st
     :return: str, str - name of the firmware within the permanent storage and path to the storage.
     """
     store_filename = md5
-    firmware_archive_store_path = Path(os.path.join(store_path["FIRMWARE_FOLDER_STORE"],
+    firmware_archive_store_path = Path(os.path.join(str(store_path["FIRMWARE_FOLDER_STORE"]),
                                                     version_detected,
                                                     md5))
     if not firmware_archive_store_path.exists():
@@ -487,11 +488,11 @@ def add_app_firmware_references(firmware, android_app_list):
 
 def extract_build_prop(firmware_file_list, mount_path):
     """
-    Extracts the build.prop file from the given directory and creates an parsed it's content.
+    Extracts the "build.prop" file from the given directory and parses it's content.
 
     :param mount_path: str - path where the firmware image is mounted to.
     :param firmware_file_list: list(class:'FirmwareFile') - list of firmware-files that contains a
-    minimum of one build.prop file
+    minimum of one "build.prop" file
 
     :return: list(class:'BuildPropFile') - list of BuildPropFile documents.
     """
@@ -499,7 +500,7 @@ def extract_build_prop(firmware_file_list, mount_path):
     build_prop_file_list = []
     for firmware_file in build_prop_firmware_file_list:
         try:
-            firmware_file.absolute_store_path = os.path.join(mount_path, "." + firmware_file.absolute_store_path)
+            firmware_file.absolute_store_path = os.path.join(mount_path, "." + str(firmware_file.absolute_store_path))
             build_prop_parser = BuildPropParser(firmware_file)
             build_prop_file = build_prop_parser.create_build_prop_document()
             build_prop_file_list.append(build_prop_file)
@@ -510,11 +511,11 @@ def extract_build_prop(firmware_file_list, mount_path):
 
 def find_build_prop_file_paths(firmware_file_list):
     """
-    Returns a build.prop file if found within the given path.
+    Returns a "build.prop" file if found within the given path.
 
     :param firmware_file_list: list(class:FirmwareFile)
 
-    :return: list(class:FirmwareFile) - list of build.prop firmware files.
+    :return: list(class:FirmwareFile) - list of "build.prop" firmware files.
     """
     build_prop_firmware_file_list = []
     for firmware_file in firmware_file_list:
