@@ -23,10 +23,10 @@ def get_local_module_path(file_path, partition_name, file_name):
     if len(subfolder_list) == 0:
         local_module_path = f"$(TARGET_OUT)/"
     else:
-        if partition_name == "system" and "system/system/framework" in file_path:
+        if partition_name == "system" and "system/framework" in file_path:
             # Redirect jar files to the emulator framework folder instead of the system/framework folder
             local_module_path = f"$(TARGET_OUT)/framework"
-        elif partition_name == "system" and "system/system_ext/framework" in file_path:
+        elif partition_name == "system" and "system_ext/framework" in file_path:
             # Redirect jar files to the system_ext framework folder instead of the system/system_ext/framework folder
             local_module_path = f"$(TARGET_OUT)/system_ext/framework"
         else:
