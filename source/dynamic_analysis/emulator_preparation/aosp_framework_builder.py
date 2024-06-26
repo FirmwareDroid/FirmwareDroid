@@ -13,7 +13,7 @@ def get_local_module_path(file_path, partition_name, file_name):
     Get the local module path for the given partition_name.
 
     :param file_name: str - name of the file to remove from the path.
-    :param file_path: str - path to the shared library module.
+    :param file_path: str - path to the module file.
     :param partition_name: str - name of the partition on Android.
 
     :return: str - local module path for the shared library module.
@@ -23,10 +23,12 @@ def get_local_module_path(file_path, partition_name, file_name):
     if len(subfolder_list) == 0:
         local_module_path = f"$(TARGET_OUT)/"
     else:
-        if partition_name == "system" and "system/framework" in file_path:
+        if ((partition_name == "system" or partition_name == "super")
+                and "framework" in file_path):
             # Redirect jar files to the emulator framework folder instead of the system/framework folder
             local_module_path = f"$(TARGET_OUT)/framework"
-        elif partition_name == "system" and "system_ext/framework" in file_path:
+        elif ((partition_name == "system" or partition_name == "super")
+              and "system_ext" in file_path and "framework" in file_path):
             # Redirect jar files to the system_ext framework folder instead of the system/system_ext/framework folder
             local_module_path = f"$(TARGET_OUT)/system_ext/framework"
         else:
