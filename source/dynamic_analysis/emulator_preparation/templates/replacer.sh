@@ -1,4 +1,8 @@
 #!/bin/bash
+################################################################################
+# This script is used to replace the target file with the existing file.
+################################################################################
+
 
 # Check if the correct number of arguments are provided
 if [ "$#" -ne 2 ]; then
