@@ -44,6 +44,8 @@ class ExportFirmwareFileByRegexMutation(graphene.Mutation):
     @classmethod
     @superuser_required
     def mutate(cls, root, info, firmware_id_list, filename_regex, store_setting_id, queue_name):
+        # TODO - Add a check (whitelist) for the given regex to prevent ReDos attacks.
+        # See: https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS
         func_to_run = start_file_export_by_regex
         queue = django_rq.get_queue(queue_name)
         job = queue.enqueue(func_to_run, filename_regex, firmware_id_list, store_setting_id, job_timeout=ONE_DAY_TIMEOUT)
