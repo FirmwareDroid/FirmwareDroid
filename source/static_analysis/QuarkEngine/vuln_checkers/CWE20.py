@@ -1,4 +1,3 @@
-import logging
 import os.path
 from static_analysis.QuarkEngine.VulnCheck import VulnCheck
 
@@ -14,7 +13,6 @@ class CWE20(VulnCheck):
             raise FileNotFoundError(f"Rule file not found: {self.rule_path}")
 
     def verify(self):
-        logging.debug(f"Rule name: {self.rule_name} {self.apk_path}, {self.rule_path}")
         from quark.script import runQuarkAnalysis, Rule
         if not self.rule_name or not self.rule_path:
             raise FileNotFoundError(f"Rule name and path not set: {self.rule_name}, {self.rule_path}")

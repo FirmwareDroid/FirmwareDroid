@@ -22,20 +22,19 @@ class CWE22(VulnCheck):
         result_dict = None
 
         for accessExternalDir in quark_result.behaviorOccurList:
-            filePath = accessExternalDir.secondAPI.getArguments()[2]
-
-            if quark_result.isHardcoded(filePath):
-                continue
-
-            caller = accessExternalDir.methodCaller
-            strMatchingAPIs = [
-                api
-                for api in self.string_matching_api
-                if quark_result.findMethodInCaller(caller, api)
-            ]
-
-            if not strMatchingAPIs:
-                result_dict = {"CWE22": f"Improper Limitation of a Pathname to a Restricted Directory "
-                                        f"('Path Traversal') detected in method, {caller.fullName}"}
+            argument_list = accessExternalDir.secondAPI.getArguments()
+            if argument_list and len(argument_list) >= 3:
+                filePath = argument_list[2]
+                if quark_result.isHardcoded(filePath):
+                    continue
+                caller = accessExternalDir.methodCaller
+                strMatchingAPIs = [
+                    api
+                    for api in self.string_matching_api
+                    if quark_result.findMethodInCaller(caller, api)
+                ]
+                if not strMatchingAPIs:
+                    result_dict = {"CWE22": f"Improper Limitation of a Pathname to a Restricted Directory "
+                                            f"('Path Traversal') detected in method, {caller.fullName}"}
 
         return result_dict

@@ -23,11 +23,14 @@ class CWE73(VulnCheck):
 
         result_list = []
         for accessExternalDir in quarkResult.behaviorOccurList:
-            filePath = accessExternalDir.secondAPI.getArguments()[2]
-            if quarkResult.isHardcoded(filePath):
-                continue
-            caller = accessExternalDir.methodCaller
-            result = quarkResult.findMethodInCaller(caller, self.OPEN_FILE_API)
-            if result:
-                result_list.append(f"External Control of File Name or Path is detected in method, {caller.fullName}")
+            argument_list = accessExternalDir.secondAPI.getArguments()
+            if argument_list and len(argument_list) >= 3:
+                filePath = argument_list[2]
+                if quarkResult.isHardcoded(filePath):
+                    continue
+                caller = accessExternalDir.methodCaller
+                result = quarkResult.findMethodInCaller(caller, self.OPEN_FILE_API)
+                if result:
+                    result_list.append(f"External Control of File Name or Path is detected in method, "
+                                       f"{caller.fullName}")
         return {"CWE73": result_list}

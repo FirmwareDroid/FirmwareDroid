@@ -39,10 +39,12 @@ class CWE328(VulnCheck):
             methodsFound += findMethodInAPK(self.apk_path, target)
 
         for setHashAlgo in methodsFound:
-            algoName = setHashAlgo.getArguments()[0].replace("-", "")
+            argument_list = setHashAlgo.getArguments()
+            if argument_list and len(argument_list) >= 1:
+                algoName = argument_list[0].replace("-", "")
 
-            if any(keyword in algoName for keyword in self.hash_keyword_list):
-                finding = f"Use of Weak Hash is detected with {algoName} in method, {setHashAlgo.fullName}"
-                result_list.append(finding)
+                if any(keyword in algoName for keyword in self.hash_keyword_list):
+                    result_list.append(f"Use of Weak Hash is detected with {algoName} in method, "
+                                       f"{setHashAlgo.fullName}")
 
         return {"CWE328": result_list}
