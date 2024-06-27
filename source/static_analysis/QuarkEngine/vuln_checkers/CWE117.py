@@ -19,14 +19,16 @@ class CWE117(VulnCheck):
 
         result_list = []
         for logOutputBehavior in quarkResult.behaviorOccurList:
-            secondAPIParam = logOutputBehavior.getParamValues()[1]
-            isKeywordFound = False
-            for keyword in self.KEYWORDS_FOR_NEUTRALIZATION:
-                if keyword in secondAPIParam:
-                    isKeywordFound = True
-                    break
-            if not isKeywordFound:
-                finding = {"CWE117": f"Improper Output Neutralization for Logs in method, {secondAPIParam}"}
-                result_list.append(finding)
+            param_value_list = logOutputBehavior.getParamValues()
+            if param_value_list and len(param_value_list) >= 2:
+                secondAPIParam = param_value_list[1]
+                isKeywordFound = False
+                for keyword in self.KEYWORDS_FOR_NEUTRALIZATION:
+                    if keyword in secondAPIParam:
+                        isKeywordFound = True
+                        break
+                if not isKeywordFound:
+                    finding = {"CWE117": f"Improper Output Neutralization for Logs in method, {secondAPIParam}"}
+                    result_list.append(finding)
 
         return {"CWE117": result_list}
