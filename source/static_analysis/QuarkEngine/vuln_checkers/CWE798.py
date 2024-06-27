@@ -19,11 +19,13 @@ class CWE798(VulnCheck):
         result_list = []
 
         for secretKeySpec in quark_result.behaviorOccurList:
-            firstParam = secretKeySpec.getParamValues()[1]
-            secondParam = secretKeySpec.getParamValues()[2]
-            if secondParam == "AES":
-                AESKey = re.findall(r"\((.*?)\)", firstParam)[1]
-                if quark_result.isHardcoded(AESKey):
-                    finding = {"CWE798": f"Use of Hard-coded Credentials found {secondParam} key {AESKey}"}
-                    result_list.append(finding)
+            param_value_list = secretKeySpec.getParamValues()
+            if param_value_list and len(param_value_list) >= 2:
+                firstParam = param_value_list[1]
+                secondParam = param_value_list[2]
+                if secondParam == "AES":
+                    AESKey = re.findall(r"\((.*?)\)", firstParam)[1]
+                    if quark_result.isHardcoded(AESKey):
+                        finding = {"CWE798": f"Use of Hard-coded Credentials found {secondParam} key {AESKey}"}
+                        result_list.append(finding)
         return {"CWE798": result_list}

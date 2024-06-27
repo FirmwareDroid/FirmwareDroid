@@ -23,7 +23,7 @@ class CWE312(VulnCheck):
         result_list = []
         for putString in fridaResult.behaviorOccurList:
             firstParam, secondParam = putString.getParamValues()
-            if firstParam in ["email", "password"] and \
+            if firstParam and secondParam and firstParam in ["email", "password"] and \
                     secondParam == checkClearText(secondParam):
                 result_list.append(f'Cleartext Storage of Sensitive Information. The cleartext is "{secondParam} '
                                    f'for the key "{firstParam}"')

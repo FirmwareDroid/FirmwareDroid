@@ -17,11 +17,13 @@ class CWE921(VulnCheck):
         result_list = []
 
         for existingFile in quark_result.behaviorOccurList:
-            filePath = existingFile.getParamValues()[0]
-            if "sdcard" in filePath:
-                finding = {"CWE921": f"Storage of Sensitive Data in a Mechanism without Access Control."
-                                     f"File is stored inside the SDcard {filePath} and can be accessed "
-                                     f"by other apps"}
-                result_list.append(finding)
+            param_value_list = existingFile.getParamValues()
+            if param_value_list and len(param_value_list) >= 1:
+                filePath = param_value_list[0]
+                if "sdcard" in filePath:
+                    finding = {"CWE921": f"Storage of Sensitive Data in a Mechanism without Access Control."
+                                         f"File is stored inside the SDcard {filePath} and can be accessed "
+                                         f"by other apps"}
+                    result_list.append(finding)
 
         return {"CWE921": result_list}
