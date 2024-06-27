@@ -1,0 +1,18 @@
+{
+    "crime": "Access a file in an external directory",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/os/Environment;",
+            "method": "getExternalStorageDirectory",
+            "descriptor": "()Ljava/io/File;"
+        },
+        {
+            "class": "Ljava/io/File;",
+            "method": "<init>",
+            "descriptor": "(Ljava/io/File;Ljava/lang/String;)V"
+        }
+    ],
+    "score": 1,
+    "label": []
+}

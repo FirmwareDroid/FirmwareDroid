@@ -1,0 +1,21 @@
+{
+    "crime": "Check the list of currently running applications",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/app/ActivityManager;",
+            "method": "getRunningTasks",
+            "descriptor": "(I)Ljava/util/List;"
+        },
+        {
+            "class": "Landroid/content/ComponentName;",
+            "method": "getPackageName",
+            "descriptor": "()Ljava/lang/String;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "reflection",
+        "collection"
+    ]
+}

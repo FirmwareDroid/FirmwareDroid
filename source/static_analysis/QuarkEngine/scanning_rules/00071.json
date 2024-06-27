@@ -1,0 +1,23 @@
+{
+    "crime": "Write the ISO country code of the current network operator into a file",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/telephony/TelephonyManager;",
+            "method": "getNetworkCountryIso"
+        },
+        {
+            "descriptor": "([B)V",
+            "class": "Ljava/io/FileOutputStream;",
+            "method": "write"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "command",
+        "network",
+        "file"
+    ]
+}

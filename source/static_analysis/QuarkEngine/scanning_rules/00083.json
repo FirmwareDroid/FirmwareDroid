@@ -1,0 +1,21 @@
+{
+    "crime": "Query the IMEI number",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/Object;",
+            "class": "Landroid/app/Activity;",
+            "method": "getSystemService"
+        },
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/telephony/TelephonyManager;",
+            "method": "getDeviceId"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "telephony"
+    ]
+}

@@ -1,0 +1,21 @@
+{
+    "crime": "Get the sender address of the SMS and put it into JSON",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/telephony/SmsMessage;",
+            "method": "getOriginatingAddress"
+        },
+        {
+            "descriptor": "(Ljava/lang/String; Ljava/lang/Object;)Lorg/json/JSONObject;",
+            "class": "Lorg/json/JSONObject;",
+            "method": "put"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "sms"
+    ]
+}

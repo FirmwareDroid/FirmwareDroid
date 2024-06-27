@@ -1,0 +1,20 @@
+{
+    "crime": "Read file from assets directory",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/content/res/AssetManager;",
+            "method": "open",
+            "descriptor": "(Ljava/lang/String;)Ljava/io/InputStream;"
+        },
+        {
+            "class": "Ljava/io/InputStream;",
+            "method": "read",
+            "descriptor": "([B)I"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "file"
+    ]
+}

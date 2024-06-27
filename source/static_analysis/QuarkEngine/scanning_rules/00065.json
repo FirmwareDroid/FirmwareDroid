@@ -1,0 +1,20 @@
+{
+    "crime": "Get the country code of the SIM card provider",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/content/Context;",
+            "method": "getSystemService",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/Object;"
+        },
+        {
+            "class": "Landroid/telephony/TelephonyManager;",
+            "method": "getSimCountryIso",
+            "descriptor": "()Ljava/lang/String;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection"
+    ]
+}

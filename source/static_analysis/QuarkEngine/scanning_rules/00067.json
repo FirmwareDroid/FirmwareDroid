@@ -1,0 +1,20 @@
+{
+    "crime": "Query the IMSI number",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/content/Context;",
+            "method": "getSystemService",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/Object;"
+        },
+        {
+            "class": "Landroid/telephony/TelephonyManager;",
+            "method": "getSubscriberId",
+            "descriptor": "()Ljava/lang/String;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection"
+    ]
+}

@@ -1,0 +1,20 @@
+{
+    "crime": "Set the audio source (MIC)",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "class": "Landroid/os/Bundle;",
+            "method": "getString"
+        },
+        {
+            "descriptor": "(I)V",
+            "class": "Landroid/media/MediaRecorder;",
+            "method": "setAudioSource"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "record"
+    ]
+}

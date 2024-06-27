@@ -1,0 +1,20 @@
+{
+    "crime": "Install other APKs from file",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/net/Uri;",
+            "method": "fromFile",
+            "descriptor": "(Ljava/io/File;)Landroid/net/Uri;"
+        },
+        {
+            "class": "Landroid/content/Intent;",
+            "method": "setDataAndType",
+            "descriptor": "(Landroid/net/Uri; Ljava/lang/String;)Landroid/content/Intent;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "reflection"
+    ]
+}

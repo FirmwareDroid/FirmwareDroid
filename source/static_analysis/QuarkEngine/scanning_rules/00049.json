@@ -1,0 +1,21 @@
+{
+    "crime": "Query the phone number from SMS sender",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/telephony/SmsMessage;",
+            "method": "createFromPdu",
+            "descriptor": "([B)Landroid/telephony/SmsMessage;"
+        },
+        {
+            "class": "Landroid/telephony/SmsMessage;",
+            "method": "getDisplayOriginatingAddress",
+            "descriptor": "()Ljava/lang/String;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "sms",
+        "collection"
+    ]
+}

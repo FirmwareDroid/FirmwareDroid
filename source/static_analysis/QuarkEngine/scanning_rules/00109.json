@@ -1,0 +1,21 @@
+{
+    "crime": "Connect to a URL and get the response code",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/net/URLConnection;",
+            "class": "Ljava/net/URL;",
+            "method": "openConnection"
+        },
+        {
+            "descriptor": "()I",
+            "class": "Ljava/net/HttpURLConnection;",
+            "method": "getResponseCode"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "network",
+        "command"
+    ]
+}

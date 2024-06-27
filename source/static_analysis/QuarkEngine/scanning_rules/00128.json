@@ -1,0 +1,21 @@
+{
+    "crime": "Query user account information",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Landroid/content/Context;)Landroid/accounts/AccountManager;",
+            "class": "Landroid/accounts/AccountManager;",
+            "method": "get"
+        },
+        {
+            "descriptor": "()[Landroid/accounts/Account;",
+            "class": "Landroid/accounts/AccountManager;",
+            "method": "getAccounts"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "account"
+    ]
+}

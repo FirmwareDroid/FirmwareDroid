@@ -1,0 +1,18 @@
+{
+    "crime": "Configure JavaScript execution on websites",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/webkit/WebView;",
+            "method": "getSettings",
+            "descriptor": "()Landroid/webkit/WebSettings;"
+        },
+        {
+            "class": "Landroid/webkit/WebSettings;",
+            "method": "setJavaScriptEnabled",
+            "descriptor": "(Z)V"
+        }
+    ],
+    "score": 1,
+    "label": []
+}

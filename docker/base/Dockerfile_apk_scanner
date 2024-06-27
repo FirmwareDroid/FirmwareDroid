@@ -44,6 +44,12 @@ RUN apt-get install -y default-jre-headless
 RUN wget -P /tmp/ https://github.com/SUPERAndroidAnalyzer/super/releases/download/0.5.1/super-analyzer_0.5.1_ubuntu_amd64.deb
 RUN dpkg -i /tmp/super-analyzer_0.5.1_ubuntu_amd64.deb
 
+########################################################
+# Install Python requirements                          #
+########################################################
+RUN --mount=type=cache,target=/tmp/.cache \
+    pip install -r /var/www/requirements/requirements_apk_scanner.txt
+
 ##################################################
 # Installing python-based static-analysis tools  #
 ##################################################

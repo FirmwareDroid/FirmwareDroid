@@ -1,0 +1,20 @@
+{
+    "crime": "Send SMS",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/telephony/SmsManager;",
+            "method": "divideMessage",
+            "descriptor": "(Ljava/lang/String;)Ljava/util/ArrayList;"
+        },
+        {
+            "class": "Landroid/telephony/SmsManager;",
+            "method": "sendMultipartTextMessage",
+            "descriptor": "(Ljava/lang/String; Ljava/lang/String; Ljava/util/ArrayList; Ljava/util/ArrayList; Ljava/util/ArrayList;)V"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "sms"
+    ]
+}

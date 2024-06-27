@@ -1,0 +1,20 @@
+{
+    "crime": "Send broadcast",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Landroid/content/Context;",
+            "class": "Landroid/app/Activity;",
+            "method": "getApplicationContext"
+        },
+        {
+            "descriptor": "(Landroid/content/Intent;)V",
+            "class": "Landroid/content/Context;",
+            "method": "sendBroadcast"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "command"
+    ]
+}

@@ -1,0 +1,20 @@
+{
+    "crime": "Query the SIM card status",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/telephony/TelephonyManager;",
+            "method": "getSimState",
+            "descriptor": "()I"
+        },
+        {
+            "class": "Ljava/lang/Integer;",
+            "method": "intValue",
+            "descriptor": "()I"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection"
+    ]
+}

@@ -1,0 +1,21 @@
+{
+    "crime": "Start another application from current application",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/content/pm/PackageManager;",
+            "method": "getLaunchIntentForPackage",
+            "descriptor": "(Ljava/lang/String;)Landroid/content/Intent;"
+        },
+        {
+            "class": "Landroid/content/Context;",
+            "method": "startActivity",
+            "descriptor": "(Landroid/content/Intent;)V"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "reflection",
+        "control"
+    ]
+}

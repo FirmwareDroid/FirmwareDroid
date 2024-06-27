@@ -1,0 +1,21 @@
+{
+    "crime": "Get the date of the calendar event",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()J",
+            "class": "Ljava/util/Calendar;",
+            "method": "getTimeInMillis"
+        },
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Ljava/util/Date;",
+            "method": "toString"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "calendar"
+    ]
+}

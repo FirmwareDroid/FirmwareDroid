@@ -1,0 +1,21 @@
+{
+    "crime": "Query the name of currently running application",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/app/usage/UsageStatsManager;",
+            "method": "queryUsageStats",
+            "descriptor": "(I J J)Ljava/util/List;"
+        },
+        {
+            "class": "Landroid/app/usage/UsageStats;",
+            "method": "getPackageName",
+            "descriptor": "()Ljava/lang/String;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "reflection"
+    ]
+}

@@ -1,0 +1,18 @@
+{
+    "crime": "Open the Url that user input",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/widget/EditText;",
+            "method": "getText",
+            "descriptor": "()Landroid/text/Editable;"
+        },
+        {
+            "class": "Landroid/webkit/WebView;",
+            "method": "loadUrl",
+            "descriptor": "(Ljava/lang/String;)V"
+        }
+    ],
+    "score": 1,
+    "label": []
+}

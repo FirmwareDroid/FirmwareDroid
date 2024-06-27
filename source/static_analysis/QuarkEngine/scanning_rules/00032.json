@@ -1,0 +1,20 @@
+{
+    "crime": "Load external class",
+    "permission": [],
+    "api": [
+        {
+            "class": "Ljava/lang/Class;",
+            "method": "getClassLoader",
+            "descriptor": "()Ljava/lang/ClassLoader;"
+        },
+        {
+            "class": "Ljava/lang/ClassLoader;",
+            "method": "loadClass",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/Class;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "reflection"
+    ]
+}

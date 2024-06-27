@@ -1,0 +1,20 @@
+{
+    "crime": "Deserialize Data",
+    "permission": [],
+    "api": [
+
+        {
+            "class": "Ljava/io/ObjectInputStream;",
+            "method": "<init>",
+            "descriptor": "(Ljava/io/InputStream;)V"
+        },
+        {
+            "class": "Ljava/io/ObjectInputStream;",
+            "method": "readObject",
+            "descriptor": "()Ljava/lang/Object;"
+        }
+
+    ],
+    "score": 1,
+    "label": []
+}

@@ -1,0 +1,22 @@
+{
+    "crime": "Send binary data over HTTP",
+    "permission": [
+        "android.permission.INTERNET"
+    ],
+    "api": [
+        {
+            "class": "Ljava/net/HttpURLConnection;",
+            "method": "getOutputStream",
+            "descriptor": "()Ljava/io/OutputStream;"
+        },
+        {
+            "descriptor": "([BII)V",
+            "class": "Ljava/io/DataOutputStream;",
+            "method": "write"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "http"
+    ]
+}

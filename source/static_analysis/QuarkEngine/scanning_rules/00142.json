@@ -1,0 +1,21 @@
+{
+    "crime": "Get calendar information",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(I)I",
+            "class": "Ljava/util/Calendar;",
+            "method": "get"
+        },
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/StringBuilder;",
+            "class": "Ljava/lang/StringBuilder;",
+            "method": "append"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "calendar"
+    ]
+}

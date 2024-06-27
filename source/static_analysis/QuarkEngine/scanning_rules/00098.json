@@ -1,0 +1,20 @@
+{
+    "crime": "Check if the network is connected",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Z",
+            "class": "Landroid/net/NetworkInfo;",
+            "method": "isConnected"
+        },
+        {
+            "descriptor": "(Ljava/lang/Object;)Z",
+            "class": "Ljava/lang/Object;",
+            "method": "equals"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "network"
+    ]
+}

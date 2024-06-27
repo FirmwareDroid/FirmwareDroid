@@ -1,0 +1,20 @@
+{
+    "crime": "Initialize class object dynamically",
+    "permission": [],
+    "api": [
+        {
+            "class": "Ljava/lang/Class;",
+            "method": "forName",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/Class;"
+        },
+        {
+            "class": "Ljava/lang/reflect/Constructor;",
+            "method": "newInstance",
+            "descriptor": "([Ljava/lang/Object;)Ljava/lang/Object;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "reflection"
+    ]
+}

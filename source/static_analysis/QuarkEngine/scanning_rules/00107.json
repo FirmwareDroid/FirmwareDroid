@@ -1,0 +1,23 @@
+{
+    "crime": "Write the IMSI number into a file",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/telephony/TelephonyManager;",
+            "method": "getSubscriberId"
+        },
+        {
+            "descriptor": "([B)V",
+            "class": "Ljava/io/FileOutputStream;",
+            "method": "write"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "telephony",
+        "file",
+        "command"
+    ]
+}

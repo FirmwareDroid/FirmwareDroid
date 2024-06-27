@@ -1,0 +1,18 @@
+{
+    "crime": "Load URL from intent to WebView",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Landroid/net/Uri;",
+            "class": "Landroid/content/Intent;",
+            "method": "getData"
+        },
+        {
+            "descriptor": "(Ljava/lang/String;)V",
+            "class": "Landroid/webkit/WebView;",
+            "method": "loadUrl"
+        }
+    ],
+    "score": 1,
+    "label": []
+}

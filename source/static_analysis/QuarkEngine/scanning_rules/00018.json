@@ -1,0 +1,21 @@
+{
+    "crime": "Get JSON object prepared and fill in location info",
+    "permission": [],
+    "api": [
+        {
+            "class": "Lorg/json/JSONObject;",
+            "method": "<init>",
+            "descriptor": "()V"
+        },
+        {
+            "class": "Landroid/location/LocationManager;",
+            "method": "requestLocationUpdates",
+            "descriptor": "(Ljava/lang/String; J F Landroid/location/LocationListener;)V"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "location",
+        "collection"
+    ]
+}

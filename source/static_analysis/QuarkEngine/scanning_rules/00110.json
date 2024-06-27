@@ -1,0 +1,21 @@
+{
+    "crime": "Query the ICCID number",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/util/List;",
+            "class": "Landroid/telephony/SubscriptionManager;",
+            "method": "getActiveSubscriptionInfoList"
+        },
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/telephony/SubscriptionInfo;",
+            "method": "getIccId"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "telephony"
+    ]
+}

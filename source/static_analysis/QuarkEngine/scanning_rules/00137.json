@@ -1,0 +1,21 @@
+{
+    "crime": "Get last known location of the device",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;)Landroid/location/Location;",
+            "class": "Landroid/location/LocationManager;",
+            "method": "getLastKnownLocation"
+        },
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/location/Location;",
+            "method": "toString"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "location",
+        "collection"
+    ]
+}

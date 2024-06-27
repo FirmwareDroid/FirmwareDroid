@@ -1,0 +1,20 @@
+{
+    "crime": "Implicit intent(view a web page, make a phone call, etc.) via setData",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/net/Uri;",
+            "method": "parse",
+            "descriptor": "(Ljava/lang/String;)Landroid/net/Uri;"
+        },
+        {
+            "class": "Landroid/content/Intent;",
+            "method": "setData",
+            "descriptor": "(Landroid/net/Uri;)Landroid/content/Intent;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "control"
+    ]
+}

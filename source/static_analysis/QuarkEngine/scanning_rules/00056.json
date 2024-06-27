@@ -1,0 +1,20 @@
+{
+    "crime": "Modify voice volume",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/media/AudioManager;",
+            "method": "getStreamMaxVolume",
+            "descriptor": "(I)I"
+        },
+        {
+            "class": "Landroid/media/AudioManager;",
+            "method": "setStreamVolume",
+            "descriptor": "(I I I)V"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "control"
+    ]
+}

@@ -1,0 +1,21 @@
+{
+    "crime": "Get the current WiFi id",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/Object;",
+            "class": "Landroid/content/Context;",
+            "method": "getSystemService"
+        },
+        {
+            "descriptor": "()I",
+            "class": "Landroid/net/wifi/WifiInfo;",
+            "method": "getNetworkId"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "wifi"
+    ]
+}

@@ -1,0 +1,21 @@
+{
+    "crime": "Query WiFi BSSID and scan results",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/net/wifi/WifiInfo;",
+            "method": "getBSSID",
+            "descriptor": "()Ljava/lang/String;"
+        },
+        {
+            "class": "Landroid/net/wifi/WifiManager;",
+            "method": "getScanResults",
+            "descriptor": "()Ljava/util/List;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "wifi"
+    ]
+}

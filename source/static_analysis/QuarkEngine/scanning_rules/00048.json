@@ -1,0 +1,21 @@
+{
+    "crime": "Query the SMS contents",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/telephony/SmsMessage;",
+            "method": "createFromPdu",
+            "descriptor": "([B)Landroid/telephony/SmsMessage;"
+        },
+        {
+            "class": "Landroid/telephony/SmsMessage;",
+            "method": "getDisplayMessageBody",
+            "descriptor": "()Ljava/lang/String;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "sms",
+        "collection"
+    ]
+}

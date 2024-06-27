@@ -1,0 +1,21 @@
+{
+    "crime": "Query the SMS service centre timestamp",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/telephony/SmsMessage;",
+            "method": "createFromPdu",
+            "descriptor": "([B)Landroid/telephony/SmsMessage;"
+        },
+        {
+            "class": "Landroid/telephony/SmsMessage;",
+            "method": "getTimestampMillis",
+            "descriptor": "()J"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "sms",
+        "collection"
+    ]
+}

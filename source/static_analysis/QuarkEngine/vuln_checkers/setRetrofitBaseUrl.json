@@ -1,0 +1,19 @@
+{
+    "crime": "Set Retrofit Base Url",
+    "permission": [],
+    "api":
+    [
+        {
+            "descriptor": "()V",
+            "class": "Lretrofit2/Retrofit$Builder;",
+            "method": "<init>"
+        },
+        {
+            "descriptor": "(Ljava/lang/String;)Lretrofit2/Retrofit$Builder;",
+            "class": "Lretrofit2/Retrofit$Builder;",
+            "method": "baseUrl"
+        }
+    ],
+    "score": 1,
+    "label": []
+}

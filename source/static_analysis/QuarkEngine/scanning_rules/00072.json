@@ -1,0 +1,22 @@
+{
+    "crime": "Write HTTP input stream into a file",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/io/InputStream;",
+            "class": "Ljava/net/HttpURLConnection;",
+            "method": "getInputStream"
+        },
+        {
+            "descriptor": "([B I I)V",
+            "class": "Ljava/io/FileOutputStream;",
+            "method": "write"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "command",
+        "network",
+        "file"
+    ]
+}

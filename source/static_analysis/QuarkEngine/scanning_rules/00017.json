@@ -1,0 +1,21 @@
+{
+    "crime": "Get Location of the device and append this info to a string",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/location/Location;",
+            "method": "getLatitude",
+            "descriptor": "()D"
+        },
+        {
+            "class": "Ljava/lang/StringBuilder;",
+            "method": "append",
+            "descriptor": "(D)Ljava/lang/StringBuilder;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "location",
+        "collection"
+    ]
+}

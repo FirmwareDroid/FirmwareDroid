@@ -1,0 +1,21 @@
+{
+    "crime": "Get the current WiFi MAC address",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/Object;",
+            "class": "Landroid/content/Context;",
+            "method": "getSystemService"
+        },
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/net/wifi/WifiInfo;",
+            "method": "getMacAddress"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "wifi"
+    ]
+}

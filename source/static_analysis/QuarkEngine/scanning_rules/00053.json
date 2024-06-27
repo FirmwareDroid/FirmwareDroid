@@ -1,0 +1,20 @@
+{
+    "crime": "Monitor data identified by a given content URI changes(SMS, MMS, etc.)",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/net/Uri;",
+            "method": "parse",
+            "descriptor": "(Ljava/lang/String;)Landroid/net/Uri;"
+        },
+        {
+            "class": "Landroid/content/ContentResolver;",
+            "method": "registerContentObserver",
+            "descriptor": "(Landroid/net/Uri; Z Landroid/database/ContentObserver;)V"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "sms"
+    ]
+}
