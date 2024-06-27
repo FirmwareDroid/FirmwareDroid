@@ -30,7 +30,7 @@ class CWE79(VulnCheck):
 
     def __init__(self, apk_path, rule_dir_path):
         self.apk_path = apk_path
-        self.rule_name = "loadUrlFromIntent.json"
+        self.rule_name = "loadUrlFromIntent2.json"
         self.rule_path = os.path.abspath(os.path.join(rule_dir_path, self.rule_name))
         if not os.path.exists(self.rule_path):
             raise FileNotFoundError(f"Rule file not found: {self.rule_path}")
