@@ -24,8 +24,8 @@ def quark_engine_worker_multiprocessing(android_app_id_queue):
         raise RuntimeError(f"Could not get quark-engine scanning rules from {rule_dir_path}.")
 
     while True:
+        android_app_id = android_app_id_queue.get(timeout=.5)
         try:
-            android_app_id = android_app_id_queue.get(timeout=.5)
             android_app = AndroidApp.objects.get(pk=android_app_id)
             logging.info(f"Quark-Engine scans: {android_app.filename} {android_app.id} "
                          f"estimated queue-size: {android_app_id_queue.qsize()}")
