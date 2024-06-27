@@ -30,9 +30,8 @@ class CWE532(VulnCheck):
             arguments = debugLogger.getArguments()
 
             for keyword in self.credential_keywords:
-                if keyword in arguments[1]:
-                    finding = (f"Insertion of Sensitive Information into Log File"
-                               f" is detected in method, {debugLogger.fullName}")
-                    result_list.append(finding)
+                if len(arguments) > 2 and keyword in arguments[1]:
+                    result_list.append(f"Insertion of Sensitive Information into Log File"
+                                       f" is detected in method, {debugLogger.fullName}")
 
         return {"CWE532": result_list}
