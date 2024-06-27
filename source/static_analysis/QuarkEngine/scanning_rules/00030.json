@@ -1,0 +1,20 @@
+{
+    "crime": "Connect to the remote server through the given URL",
+    "permission": [],
+    "api": [
+        {
+            "class": "Ljava/net/URL;",
+            "method": "openConnection",
+            "descriptor": "()Ljava/net/URLConnection;"
+        },
+        {
+            "class": "Ljava/net/HttpURLConnection;",
+            "method": "connect",
+            "descriptor": "()V"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "network"
+    ]
+}

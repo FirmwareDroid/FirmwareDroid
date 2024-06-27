@@ -1,0 +1,20 @@
+{
+    "crime": "Initialize recorder",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "class": "Landroid/os/Bundle;",
+            "method": "getString"
+        },
+        {
+            "descriptor": "()V",
+            "class": "Landroid/media/MediaRecorder;",
+            "method": "prepare"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "record"
+    ]
+}

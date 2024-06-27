@@ -1,0 +1,20 @@
+{
+    "crime": "Unpack an asset, possibly decrypt it and load it as DEX",
+    "permission": [],
+    "api": [
+        {
+            "class": "android/content/res/Resources;",
+            "method": "getAssets",
+            "descriptor": "()Landroid/content/res/AssetManager;"
+        },
+        {
+            "class": "Ldalvik/system/DexClassLoader;",
+            "method": "<init>",
+            "descriptor": "(Ljava/lang/String; Ljava/lang/String; Ljava/lang/String; Ljava/lang/ClassLoader;)V"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "packer"
+    ]
+}

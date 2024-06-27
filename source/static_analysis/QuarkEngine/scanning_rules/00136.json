@@ -1,0 +1,21 @@
+{
+    "crime": "Stop recording",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "class": "Landroid/os/Bundle;",
+            "method": "getString"
+        },
+        {
+            "descriptor": "()V",
+            "class": "Landroid/media/MediaRecorder;",
+            "method": "stop"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "record",
+        "command"
+    ]
+}

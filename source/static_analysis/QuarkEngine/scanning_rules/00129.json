@@ -1,0 +1,21 @@
+{
+    "crime": "Get the content of SMS",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/telephony/SmsMessage;",
+            "method": "getMessageBody"
+        },
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Ljava/lang/String;",
+            "method": "toString"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "sms",
+        "collection"
+    ]
+}

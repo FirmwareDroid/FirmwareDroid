@@ -1,0 +1,20 @@
+{
+    "crime": "Use absolute path of directory for the output media file path",
+    "permission": [],
+    "api": [
+        {
+            "class": "Ljava/io/File;",
+            "method": "getAbsolutePath",
+            "descriptor": "()Ljava/lang/String;"
+        },
+        {
+            "class": "Landroid/media/MediaRecorder;",
+            "method": "setOutputFile",
+            "descriptor": "(Ljava/lang/String;)V"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "file"
+    ]
+}

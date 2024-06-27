@@ -1,0 +1,21 @@
+{
+    "crime": "Append the sender's address to the string",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/telephony/SmsMessage;",
+            "method": "getOriginatingAddress"
+        },
+        {
+            "descriptor": "(I)Ljava/lang/StringBuilder;",
+            "class": "Ljava/lang/StringBuilder;",
+            "method": "append"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "sms",
+        "collection"
+    ]
+}

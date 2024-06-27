@@ -1,0 +1,20 @@
+{
+    "crime": "Open the camera and take picture",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/hardware/Camera;",
+            "method": "open",
+            "descriptor": "(I)Landroid/hardware/Camera;"
+        },
+        {
+            "class": "Landroid/hardware/Camera;",
+            "method": "takePicture",
+            "descriptor": "(Landroid/hardware/Camera$ShutterCallback; Landroid/hardware/Camera$PictureCallback; Landroid/hardware/Camera$PictureCallback;)V"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "camera"
+    ]
+}

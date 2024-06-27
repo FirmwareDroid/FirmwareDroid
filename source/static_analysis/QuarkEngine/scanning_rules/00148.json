@@ -1,0 +1,21 @@
+{
+    "crime": "Create a socket connection to the given host address",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Ljava/net/InetAddress;",
+            "method": "getHostAddress"
+        },
+        {
+            "descriptor": "()Ljava/net/Socket;",
+            "class": "Ljavax/net/SocketFactory;",
+            "method": "createSocket"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "network",
+        "command"
+    ]
+}

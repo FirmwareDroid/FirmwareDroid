@@ -1,0 +1,18 @@
+{
+    "crime": "Write contents to the log.",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Landroid/text/Editable;",
+            "class": "Lcom/google/android/material/textfield/TextInputEditText;",
+            "method": "getText"
+        },
+        {
+            "descriptor": "(Ljava/lang/String;Ljava/lang/String;)I",
+            "class": "Landroid/util/Log;",
+            "method": "d"
+        }
+    ],
+    "score": 1,
+    "label": []
+}

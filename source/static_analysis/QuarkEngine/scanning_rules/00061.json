@@ -1,0 +1,21 @@
+{
+    "crime": "Return dynamic information about the current Wi-Fi connection",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/net/wifi/WifiManager;",
+            "method": "getConnectionInfo",
+            "descriptor": "()Landroid/net/wifi/WifiInfo;"
+        },
+        {
+            "class": "Ljava/lang/Integer;",
+            "method": "valueOf",
+            "descriptor": "(I)Ljava/lang/Integer;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "wifi",
+        "collection"
+    ]
+}

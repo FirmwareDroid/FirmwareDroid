@@ -1,0 +1,21 @@
+{
+    "crime": "Write file after Base64 decoding",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/util/Base64;",
+            "method": "decode",
+            "descriptor": "([B I)[B"
+        },
+        {
+            "class": "Ljava/io/FileOutputStream;",
+            "method": "write",
+            "descriptor": "([B)V"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "reflection",
+        "file"
+    ]
+}

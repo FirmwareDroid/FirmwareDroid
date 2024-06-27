@@ -1,0 +1,21 @@
+{
+    "crime": "Query the network operator name",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/telephony/TelephonyManager;",
+            "method": "getNetworkOperatorName",
+            "descriptor": "()Ljava/lang/String;"
+        },
+        {
+            "class": "Ljava/lang/Integer;",
+            "method": "valueOf",
+            "descriptor": "(I)Ljava/lang/Integer;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "network",
+        "collection"
+    ]
+}

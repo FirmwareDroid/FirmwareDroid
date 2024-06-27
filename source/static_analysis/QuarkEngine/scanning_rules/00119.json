@@ -1,0 +1,23 @@
+{
+    "crime": "Write the IMEI number into a file",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/telephony/TelephonyManager;",
+            "method": "getDeviceId"
+        },
+        {
+            "descriptor": "([B)V",
+            "class": "Ljava/io/FileOutputStream;",
+            "method": "write"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "file",
+        "telephony",
+        "command"
+    ]
+}

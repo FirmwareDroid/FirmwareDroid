@@ -1,0 +1,21 @@
+{
+    "crime": "Get the current WiFi MAC address and put it into JSON",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/net/wifi/WifiInfo;",
+            "method": "getMacAddress"
+        },
+        {
+            "descriptor": "(Ljava/lang/String; Ljava/lang/Object;)Lorg/json/JSONObject;",
+            "class": "Lorg/json/JSONObject;",
+            "method": "put"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "wifi",
+        "collection"
+    ]
+}

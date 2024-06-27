@@ -1,0 +1,20 @@
+{
+    "crime": "Get external class from given path or file name",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Ljava/lang/StringBuilder;",
+            "method": "toString"
+        },
+        {
+            "descriptor": "()Ljava/lang/ClassLoader;",
+            "class": "Landroid/app/Service;",
+            "method": "getClassLoader"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "reflection"
+    ]
+}

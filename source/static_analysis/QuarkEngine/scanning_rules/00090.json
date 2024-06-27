@@ -1,0 +1,20 @@
+{
+    "crime": "Set recroded audio/video file format",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "class": "Landroid/os/Bundle;",
+            "method": "getString"
+        },
+        {
+            "descriptor": "(I)V",
+            "class": "Landroid/media/MediaRecorder;",
+            "method": "setOutputFormat"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "record"
+    ]
+}

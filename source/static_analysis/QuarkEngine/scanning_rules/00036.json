@@ -1,0 +1,20 @@
+{
+    "crime": "Get resource file from res/raw directory",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/content/Context;",
+            "method": "getPackageName",
+            "descriptor": "()Ljava/lang/String;"
+        },
+        {
+            "class": "Landroid/net/Uri;",
+            "method": "parse",
+            "descriptor": "(Ljava/lang/String;)Landroid/net/Uri;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "reflection"
+    ]
+}

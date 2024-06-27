@@ -1,0 +1,18 @@
+{
+    "crime": "Use of cryptographic algorithm",
+    "permission": [],
+    "api": [
+        {
+            "class": "Ljavax/crypto/Cipher;",
+            "method": "getInstance",
+            "descriptor": "(Ljava/lang/String; Ljava/lang/String;)Ljavax/crypto/Cipher"
+        },
+        {
+            "class": "Ljavax/crypto/Cipher;",
+            "method": "init",
+            "descriptor": "(I Ljava/security/Key;)V"
+        }
+    ],
+    "score": 1,
+    "label": []
+}

@@ -1,0 +1,21 @@
+{
+    "crime": "Check the network capabilities",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Landroid/net/Network;)Landroid/net/NetworkCapabilities;",
+            "class": "Landroid/net/ConnectivityManager;",
+            "method": "getNetworkCapabilities"
+        },
+        {
+            "descriptor": "(Ljava/lang/Object;)Z",
+            "class": "Ljava/lang/Object;",
+            "method": "equals"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "network"
+    ]
+}

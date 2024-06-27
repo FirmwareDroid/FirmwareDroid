@@ -1,0 +1,20 @@
+{
+    "crime": "Read file and put it into a stream",
+    "permission": [],
+    "api": [
+        {
+            "class": "Ljava/io/File;",
+            "method": "<init>",
+            "descriptor": "(Ljava/lang/String;)V"
+        },
+        {
+            "class": "Ljava/io/FileInputStream;",
+            "method": "<init>",
+            "descriptor": "(Ljava/io/File;)V"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "file"
+    ]
+}

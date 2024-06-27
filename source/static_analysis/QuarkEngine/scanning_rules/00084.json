@@ -1,0 +1,21 @@
+{
+    "crime": "Get the ISO country code and IMSI",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/telephony/TelephonyManager;",
+            "method": "getNetworkCountryIso"
+        },
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/telephony/TelephonyManager;",
+            "method": "getSubscriberId"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "telephony"
+    ]
+}

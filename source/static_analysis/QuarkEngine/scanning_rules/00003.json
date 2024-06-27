@@ -1,0 +1,20 @@
+{
+    "crime": "Put the compressed bitmap data into JSON object",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/graphics/Bitmap;",
+            "method": "compress",
+            "descriptor": "(Landroid/graphics/Bitmap$CompressFormat; I Ljava/io/OutputStream;)Z"
+        },
+        {
+            "class": "Lorg/json/JSONObject;",
+            "method": "put",
+            "descriptor": "(Ljava/lang/String; Z)Lorg/json/JSONObject;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "camera"
+    ]
+}

@@ -1,0 +1,20 @@
+{
+    "crime": "Load additional DEX files dynamically",
+    "permission": [],
+    "api": [
+        {
+            "class": "Ljava/io/File;",
+            "method": "getAbsolutePath",
+            "descriptor": "()Ljava/lang/String;"
+        },
+        {
+            "class": "Ljava/lang/ClassLoader;",
+            "method": "loadClass",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/Class;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "reflection"
+    ]
+}

@@ -1,0 +1,21 @@
+{
+    "crime": "Connect to the specific WIFI network",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/net/wifi/WifiManager;",
+            "method": "getConfiguredNetworks",
+            "descriptor": "()Ljava/util/List;"
+        },
+        {
+            "class": "Landroid/net/wifi/WifiManager;",
+            "method": "enableNetwork",
+            "descriptor": "(I Z)Z"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "wifi",
+        "control"
+    ]
+}

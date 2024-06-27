@@ -1,0 +1,20 @@
+{
+    "crime": "Monitor the broadcast action events (BOOT_COMPLETED, etc)",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/content/Intent;",
+            "method": "getAction"
+        },
+        {
+            "descriptor": "(Ljava/lang/String;)I",
+            "class": "Ljava/lang/String;",
+            "method": "compareToIgnoreCase"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "command"
+    ]
+}

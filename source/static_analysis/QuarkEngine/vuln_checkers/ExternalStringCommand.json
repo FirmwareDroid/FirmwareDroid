@@ -1,0 +1,18 @@
+{
+    "crime": "Using external strings as commands",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/content/Intent;",
+            "method": "getStringExtra",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String"
+        },
+        {
+            "class": "Ljava/lang/Runtime;",
+            "method": "exec",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/Process"
+        }
+    ],
+    "score": 1,
+    "label": []
+}

@@ -1,0 +1,20 @@
+{
+    "crime": "Check if successfully sending out SMS",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/telephony/SmsManager;",
+            "method": "sendTextMessage",
+            "descriptor": "(Ljava/lang/String; Ljava/lang/String; Ljava/lang/String; Landroid/app/PendingIntent; Landroid/app/PendingIntent;)V"
+        },
+        {
+            "class": "Ljava/lang/Boolean;",
+            "method": "valueOf",
+            "descriptor": "(Z)Ljava/lang/Boolean;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "sms"
+    ]
+}

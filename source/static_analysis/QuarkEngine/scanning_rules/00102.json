@@ -1,0 +1,20 @@
+{
+    "crime": "Set the phone speaker on",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/Object;",
+            "class": "Landroid/content/Context;",
+            "method": "getSystemService"
+        },
+        {
+            "descriptor": "(Z)V",
+            "class": "Landroid/media/AudioManager;",
+            "method": "setSpeakerphoneOn"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "command"
+    ]
+}

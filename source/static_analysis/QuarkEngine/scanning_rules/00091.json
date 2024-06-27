@@ -1,0 +1,20 @@
+{
+    "crime": "Retrieve data from broadcast",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Landroid/os/Bundle;",
+            "class": "Landroid/content/Intent;",
+            "method": "getExtras"
+        },
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "class": "Landroid/os/Bundle;",
+            "method": "getString"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection"
+    ]
+}

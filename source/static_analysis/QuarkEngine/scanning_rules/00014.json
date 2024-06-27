@@ -1,0 +1,20 @@
+{
+    "crime": "Read file into a stream and put it into a JSON object",
+    "permission": [],
+    "api": [
+        {
+            "class": "Ljava/io/FileInputStream;",
+            "method": "<init>",
+            "descriptor": "(Ljava/io/File;)V"
+        },
+        {
+            "class": "Lorg/json/JSONObject;",
+            "method": "put",
+            "descriptor": "(Ljava/lang/String; Ljava/lang/Object;)Lorg/json/JSONObject;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "file"
+    ]
+}

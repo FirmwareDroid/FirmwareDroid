@@ -1,0 +1,23 @@
+{
+    "crime": "Write SIM card serial number into a file",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/lang/String;",
+            "class": "Landroid/telephony/TelephonyManager;",
+            "method": "getSimSerialNumber"
+        },
+        {
+            "descriptor": "([B)V",
+            "class": "Ljava/io/FileOutputStream;",
+            "method": "write"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "telephony",
+        "file",
+        "command"
+    ]
+}

@@ -1,0 +1,22 @@
+{
+    "crime": "Write the SIM card information into a file",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/util/List;",
+            "class": "Landroid/telephony/SubscriptionManager;",
+            "method": "getActiveSubscriptionInfoList"
+        },
+        {
+            "descriptor": "([B)V",
+            "class": "Ljava/io/FileOutputStream;",
+            "method": "write"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "telephony",
+        "file"
+    ]
+}

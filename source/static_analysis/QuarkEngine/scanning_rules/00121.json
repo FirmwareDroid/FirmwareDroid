@@ -1,0 +1,21 @@
+{
+    "crime": "Create a directory",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "class": "Landroid/os/Bundle;",
+            "method": "getString"
+        },
+        {
+            "descriptor": "()Z",
+            "class": "Ljava/io/File;",
+            "method": "mkdirs"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "file",
+        "command"
+    ]
+}

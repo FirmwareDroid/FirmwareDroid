@@ -1,0 +1,20 @@
+{
+    "crime": "Run shell script programmably",
+    "permission": [],
+    "api": [
+        {
+            "class": "Ljava/lang/Runtime;",
+            "method": "exec",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/Process;"
+        },
+        {
+            "class": "Ljava/lang/Process;",
+            "method": "getOutputStream",
+            "descriptor": "()Ljava/io/OutputStream;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "control"
+    ]
+}

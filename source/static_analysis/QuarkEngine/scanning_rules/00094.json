@@ -1,0 +1,21 @@
+{
+    "crime": "Connect to a URL and read data from it",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()Ljava/net/URLConnection;",
+            "class": "Ljava/net/URL;",
+            "method": "openConnection"
+        },
+        {
+            "descriptor": "([B)I",
+            "class": "Ljava/io/InputStream;",
+            "method": "read"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "command",
+        "network"
+    ]
+}

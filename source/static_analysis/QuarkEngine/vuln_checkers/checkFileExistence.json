@@ -1,0 +1,18 @@
+{
+    "crime": "Check file existence",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;)V",
+            "class": "Ljava/io/File;",
+            "method": "<init>"
+        },
+        {
+            "descriptor": "()Z",
+            "class": "Ljava/io/File;",
+            "method": "exists"
+        }
+    ],
+    "score": 1,
+    "label": []
+}

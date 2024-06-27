@@ -1,0 +1,18 @@
+{
+    "crime": "Load external code from other APK.",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;I)Landroid/content/Context;",
+            "class": "",
+            "method": "createPackageContext"
+        },
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/Class;",
+            "class": "Ljava/lang/ClassLoader;",
+            "method": "loadClass"
+        }
+    ],
+    "score": 1,
+    "label": []
+}

@@ -1,0 +1,21 @@
+{
+    "crime": "Return the DHCP-assigned addresses from the last successful DHCP request",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/net/wifi/WifiManager;",
+            "method": "getDhcpInfo",
+            "descriptor": "()Landroid/net/DhcpInfo;"
+        },
+        {
+            "class": "Ljava/lang/StringBuilder;",
+            "method": "toString",
+            "descriptor": "()Ljava/lang/String;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "network",
+        "collection"
+    ]
+}

@@ -1,0 +1,21 @@
+{
+    "crime": "Get the current WIFI information",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/Object;",
+            "class": "Landroid/content/Context;",
+            "method": "getSystemService"
+        },
+        {
+            "descriptor": "()Landroid/net/wifi/WifiInfo;",
+            "class": "Landroid/net/wifi/WifiManager;",
+            "method": "getConnectionInfo"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "wifi",
+        "collection"
+    ]
+}

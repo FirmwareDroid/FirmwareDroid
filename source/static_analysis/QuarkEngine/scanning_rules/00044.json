@@ -1,0 +1,21 @@
+{
+    "crime": "Query the last time this package's activity was used",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/app/usage/UsageStatsManager;",
+            "method": "queryUsageStats",
+            "descriptor": "(I J J)Ljava/util/List;"
+        },
+        {
+            "class": "Landroid/app/usage/UsageStats;",
+            "method": "getLastTimeUsed",
+            "descriptor": "()J"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "reflection"
+    ]
+}

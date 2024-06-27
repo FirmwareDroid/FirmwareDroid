@@ -1,0 +1,20 @@
+{
+    "crime": "Monitor the general action to be performed",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/content/Intent;",
+            "method": "getAction",
+            "descriptor": "()Ljava/lang/String;"
+        },
+        {
+            "class": "Ljava/lang/String;",
+            "method": "equals",
+            "descriptor": "(Ljava/lang/Object;)Z"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "reflection"
+    ]
+}

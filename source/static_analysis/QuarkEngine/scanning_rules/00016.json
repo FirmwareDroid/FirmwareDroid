@@ -1,0 +1,21 @@
+{
+    "crime": "Get location info of the device and put it to JSON object",
+    "permission": [],
+    "api": [
+        {
+            "class": "Landroid/location/Location;",
+            "method": "getLongitude",
+            "descriptor": "()D"
+        },
+        {
+            "class": "Lorg/json/JSONObject;",
+            "method": "put",
+            "descriptor": "(Ljava/lang/String; Ljava/lang/Object;)Lorg/json/JSONObject;"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "location",
+        "collection"
+    ]
+}

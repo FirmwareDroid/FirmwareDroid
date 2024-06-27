@@ -1,0 +1,20 @@
+{
+    "crime": "Check if the given file path exist",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "class": "Landroid/os/Bundle;",
+            "method": "getString"
+        },
+        {
+            "descriptor": "()Z",
+            "class": "Ljava/io/File;",
+            "method": "exists"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "file"
+    ]
+}

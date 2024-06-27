@@ -1,0 +1,18 @@
+{
+    "crime": "Execute SQL Command",
+    "permission": [],
+    "api": [
+        {
+            "class": "Ljava/lang/StringBuilder;",
+            "method": "append",
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/StringBuilder;"
+        },
+        {
+            "class": "Landroid/database/sqlite/SQLiteDatabase;",
+            "method": "rawQuery",
+            "descriptor": "(Ljava/lang/String; [Ljava/lang/String;)Landroid/database/Cursor;"
+        }
+    ],
+    "score": 1,
+    "label": []
+}

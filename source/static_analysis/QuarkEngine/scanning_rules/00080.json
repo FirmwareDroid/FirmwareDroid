@@ -1,0 +1,21 @@
+{
+    "crime": "Save recorded audio/video to a file",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "(Ljava/lang/String;)Ljava/lang/String;",
+            "class": "Landroid/os/Bundle;",
+            "method": "getString"
+        },
+        {
+            "descriptor": "(Ljava/lang/String;)V",
+            "class": "Landroid/media/MediaRecorder;",
+            "method": "setOutputFile"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "record",
+        "file"
+    ]
+}

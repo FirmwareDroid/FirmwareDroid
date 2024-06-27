@@ -1,0 +1,21 @@
+{
+    "crime": "Get location of the current GSM and put it into JSON",
+    "permission": [],
+    "api": [
+        {
+            "descriptor": "()I",
+            "class": "Landroid/telephony/gsm/GsmCellLocation;",
+            "method": "getCid"
+        },
+        {
+            "descriptor": "(Ljava/lang/String; I)Lorg/json/JSONObject;",
+            "class": "Lorg/json/JSONObject;",
+            "method": "put"
+        }
+    ],
+    "score": 1,
+    "label": [
+        "collection",
+        "location"
+    ]
+}
