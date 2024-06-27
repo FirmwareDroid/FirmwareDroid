@@ -23,12 +23,12 @@ class CWE749(VulnCheck):
         for configureJsExecution in quark_result.behaviorOccurList:
             caller = configureJsExecution.methodCaller
             secondAPI = configureJsExecution.secondAPI
-            enableJS = secondAPI.getArguments()[1]
-            exposeAPI = quark_result.findMethodInCaller(caller, self.target_method)
-
-            if enableJS and exposeAPI:
-                finding = (f"Exposed Dangerous Method or Function"
-                           f" is detected in method, {caller.fullName}")
-                result_list.append(finding)
+            argument_list = secondAPI.getArguments()
+            if argument_list and len(argument_list) >= 2:
+                enableJS = argument_list[1]
+                exposeAPI = quark_result.findMethodInCaller(caller, self.target_method)
+                if enableJS and exposeAPI:
+                    result_list.append(f"Exposed Dangerous Method or Function"
+                                       f" is detected in method, {caller.fullName}")
 
         return {"CWE749": result_list}

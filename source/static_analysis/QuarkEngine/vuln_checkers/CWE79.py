@@ -44,20 +44,21 @@ class CWE79(VulnCheck):
         for loadUrl in quarkResult.behaviorOccurList:
             caller = loadUrl.methodCaller
             setJS = quarkResult.findMethodInCaller(caller, self.target_method)
-            enableJS = []
 
-            if setJS:
-                enableJS = setJS[0].getArguments()[1]
+            if setJS and len(setJS) > 0:
+                argument_list = setJS[0].getArguments()
+                if argument_list and len(argument_list) >= 2:
+                    enableJS = argument_list[1]
 
-            if enableJS:
-                XSSFiltersInCaller = [
-                    filterAPI
-                    for filterAPI in self.XSS_FILTERS
-                    if quarkResult.findMethodInCaller(caller, filterAPI)
-                ]
+                    if enableJS:
+                        XSSFiltersInCaller = [
+                            filterAPI
+                            for filterAPI in self.XSS_FILTERS
+                            if quarkResult.findMethodInCaller(caller, filterAPI)
+                        ]
 
-                if not XSSFiltersInCaller:
-                    finding = {"CWE79": f"Improper Neutralization of Input During Web Page Generation "
-                                        f"(‘Cross-site Scripting’) in method, {caller.fullName}"}
-                    result_list.append(finding)
+                        if not XSSFiltersInCaller:
+                            finding = {"CWE79": f"Improper Neutralization of Input During Web Page Generation "
+                                                f"(‘Cross-site Scripting’) in method, {caller.fullName}"}
+                            result_list.append(finding)
         return {"CWE79": result_list}

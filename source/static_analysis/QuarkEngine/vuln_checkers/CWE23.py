@@ -29,16 +29,18 @@ class CWE23(VulnCheck):
 
         result_list = []
         for accessExternalDir in quarkResult.behaviorOccurList:
-            filePath = accessExternalDir.secondAPI.getArguments()[2]
-            if quarkResult.isHardcoded(filePath):
-                continue
-            caller = accessExternalDir.methodCaller
-            strMatchingAPIs = [
-                api
-                for api in self.STRING_MATCHING_API
-                if quarkResult.findMethodInCaller(caller, api)
-            ]
-            if not strMatchingAPIs or ".." not in strMatchingAPIs:
-                result_list.append(f"Relative Path Traversal detected in method, {caller.fullName}")
+            argument_list = accessExternalDir.secondAPI.getArguments()
+            if argument_list and len(argument_list) >= 3:
+                filePath = argument_list[2]
+                if quarkResult.isHardcoded(filePath):
+                    continue
+                caller = accessExternalDir.methodCaller
+                strMatchingAPIs = [
+                    api
+                    for api in self.STRING_MATCHING_API
+                    if quarkResult.findMethodInCaller(caller, api)
+                ]
+                if not strMatchingAPIs or ".." not in strMatchingAPIs:
+                    result_list.append(f"Relative Path Traversal detected in method, {caller.fullName}")
 
         return {"CWE23": result_list}
