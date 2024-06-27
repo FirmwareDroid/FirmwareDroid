@@ -1,3 +1,4 @@
+import logging
 import os
 from static_analysis.QuarkEngine.VulnCheck import VulnCheck
 
@@ -27,11 +28,13 @@ class CWE532(VulnCheck):
 
         methodsFound = findMethodInAPK(self.apk_path, self.target_method_list)
         for debugLogger in methodsFound:
-            arguments = debugLogger.getArguments()
-
-            for keyword in self.credential_keywords:
-                if len(arguments) >= 2 and keyword in arguments[1]:
-                    result_list.append(f"Insertion of Sensitive Information into Log File"
-                                       f" is detected in method, {debugLogger.fullName}")
-
+            try:
+                arguments = debugLogger.getArguments()
+                if arguments:
+                    for keyword in self.credential_keywords:
+                        if len(arguments) >= 2 and keyword in arguments[1]:
+                            result_list.append(f"Insertion of Sensitive Information into Log File"
+                                               f" is detected in method, {debugLogger.fullName}")
+            except Exception as e:
+                logging.error(f"Error in CWE532: {e}")
         return {"CWE532": result_list}
