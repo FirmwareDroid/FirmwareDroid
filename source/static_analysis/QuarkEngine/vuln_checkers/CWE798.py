@@ -20,7 +20,7 @@ class CWE798(VulnCheck):
 
         for secretKeySpec in quark_result.behaviorOccurList:
             param_value_list = secretKeySpec.getParamValues()
-            if param_value_list and len(param_value_list) >= 2:
+            if param_value_list and len(param_value_list) >= 3:
                 firstParam = param_value_list[1]
                 secondParam = param_value_list[2]
                 if secondParam == "AES":
