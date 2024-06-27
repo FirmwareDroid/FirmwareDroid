@@ -24,10 +24,18 @@ def quark_engine_worker_multiprocessing(android_app_id_queue):
         raise RuntimeError(f"Could not get quark-engine scanning rules from {rule_dir_path}.")
 
     while True:
-        android_app_id = android_app_id_queue.get(timeout=.5)
-        android_app = AndroidApp.objects.get(pk=android_app_id)
-        logging.info(f"Quark-Engine scans: {android_app.filename} {android_app.id} "
-                     f"estimated queue-size: {android_app_id_queue.qsize()}")
+        try:
+            android_app_id = android_app_id_queue.get(timeout=.5)
+            android_app = AndroidApp.objects.get(pk=android_app_id)
+            logging.info(f"Quark-Engine scans: {android_app.filename} {android_app.id} "
+                         f"estimated queue-size: {android_app_id_queue.qsize()}")
+            if os.path.exists(android_app.absolute_store_path) is False:
+                raise FileNotFoundError(f"Android app not found in store: {android_app.filename} {android_app.id}")
+        except Exception as err:
+            logging.error(f"Quark-Engine could not get android app from queue. Error: {err}")
+            android_app_id_queue.task_done()
+            continue
+
         try:
             # TODO remove this if filesize check as soon as quark-engine fixes the issue with large apk files.
             if android_app.file_size_bytes <= 83886080:
