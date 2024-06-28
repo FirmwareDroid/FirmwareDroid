@@ -1,15 +1,26 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
-import json
 import logging
 import os
+import time
 import traceback
+import psutil
 from model.Interfaces.ScanJob import ScanJob
 from model import QuarkEngineReport, AndroidApp
 from context.context_creator import create_db_context, create_log_context
 from static_analysis.QuarkEngine.vuln_checkers import *
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
+
+
+def is_low_memory():
+    """
+    Check if the available memory is below 10% of the total memory.
+
+    :return: bool - True if the available memory is below 90%, False otherwise.
+    """
+    memory_info = psutil.virtual_memory()
+    return memory_info.available < memory_info.total * 0.1
 
 
 @create_log_context
@@ -35,6 +46,10 @@ def quark_engine_worker_multiprocessing(android_app_id_queue):
             logging.error(f"Quark-Engine could not get android app from queue. Error: {err}")
             android_app_id_queue.task_done()
             continue
+
+        while is_low_memory():
+            logging.warning("Low memory, waiting for available memory...")
+            time.sleep(10)
 
         try:
             # TODO remove this if filesize check as soon as quark-engine fixes the issue with large apk files.

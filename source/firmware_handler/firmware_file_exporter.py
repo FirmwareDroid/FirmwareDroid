@@ -72,7 +72,6 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
     :param firmware_id_queue: class:'Queue' - queue of firmware file ids to export.
 
     """
-    from firmware_handler.firmware_importer import open_firmware
     while True:
         try:
             firmware_id = firmware_id_queue.get(block=False, timeout=300)
@@ -179,7 +178,7 @@ def export_firmware_file(firmware_file, source_dir_path, destination_dir_path):
     """
     Exports a file from the firmware to the file extract folder.
 
-    :param destination_dir_path: str- path to the file storage, where the file will be copied to.
+    :param destination_dir_path: str - path to the file storage, where the file will be copied to.
     :param firmware_file: class:'FirmwareFile'
     :param source_dir_path: str - path to the extracted firmware.
 
@@ -200,8 +199,8 @@ def export_firmware_file(firmware_file, source_dir_path, destination_dir_path):
     return is_successful
 
 
-def create_directory(destination_path):
-    if os.path.splitext(destination_path)[1]:
+def create_directory(destination_path, firmware_file):
+    if os.path.splitext(destination_path)[1] or firmware_file.is_directory is False:
         os.makedirs(os.path.dirname(destination_path), exist_ok=True)
     else:
         os.makedirs(destination_path, exist_ok=True)
@@ -216,16 +215,15 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
     :param destination_path: str - path to copy the file/folder to.
 
     """
-    create_directory(destination_path)
-
+    create_directory(destination_path, firmware_file)
     dst_file_path = None
-    if os.path.isdir(source_path):
-        dst_file_path = shutil.copytree(source_path, destination_path)
-    else:
-        try:
+    try:
+        if os.path.isdir(source_path):
+            dst_file_path = shutil.copytree(source_path, destination_path)
+        else:
             dst_file_path = shutil.copy(source_path, destination_path)
-        except OSError as e:
-            logging.error(f"Could not copy: {source_path} to {os.path.dirname(destination_path)} error: {e}")
+    except OSError as e:
+        logging.error(f"Could not copy: {source_path} to {os.path.dirname(destination_path)} error: {e}")
     if dst_file_path is None or not os.path.exists(dst_file_path):
         raise OSError(f"Could not copy firmware file {firmware_file.id} to {destination_path}")
 
