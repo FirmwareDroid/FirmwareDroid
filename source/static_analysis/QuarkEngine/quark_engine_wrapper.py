@@ -197,7 +197,7 @@ class QuarkEngineScanJob(ScanJob):
         if len(android_app_id_list) > 0:
             python_process = start_python_interpreter(item_list=android_app_id_list,
                                                       worker_function=quark_engine_worker_multiprocessing,
-                                                      number_of_processes=os.cpu_count(),
+                                                      number_of_processes=os.cpu_count()/4,
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
                                                       report_reference_name="quark_engine_report_reference",
