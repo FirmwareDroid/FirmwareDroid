@@ -1,4 +1,4 @@
-lief~=0.12.3        # Upgrade as soon unblob supports it
+lief~=0.14.1        # Upgrade as soon unblob supports it
 ubi-reader~=0.8.5
 py-lz4framed~=0.14.0
 python-lzo~=1.15
