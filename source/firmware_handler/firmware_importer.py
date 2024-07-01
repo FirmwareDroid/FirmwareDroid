@@ -70,7 +70,7 @@ def create_file_import_queue(store_path):
     filename_list = list(filter(lambda x: any(x.endswith(ext) for ext in ALLOWED_ARCHIVE_FILE_EXTENSIONS),
                                 filename_list))
     logging.info(f"{len(filename_list)} files to import from {firmware_import_folder_path}:"
-                 f"\n\n{''.join(map(str, filename_list))}")
+                 f"\n{';'.join(map(str, filename_list))}")
     if len(filename_list) == 0:
         logging.error(f"No files to import ({len(filename_list)} files in {firmware_import_folder_path}")
         raise ValueError("No files in import folder")
