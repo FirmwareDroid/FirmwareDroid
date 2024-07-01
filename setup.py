@@ -55,6 +55,21 @@ def _create_directory(path):
     return True
 
 
+def is_valid_memory_limit(memory_limit):
+    """
+    Checks if the given memory limit is valid.
+
+    :param memory_limit: str - memory limit
+
+    :return: bool - True if the memory limit is valid, False otherwise
+    """
+    import re
+    if re.match(r"^[0-9]+[KMGTP]B$", memory_limit):
+        return True
+    else:
+        return False
+
+
 class FmdEnvironment:
     """
     Class that contains the env configuration for the FirmwareDroid service.
@@ -93,6 +108,8 @@ class FmdEnvironment:
     django_superuser_password = None
     django_superuser_username = None
     django_superuser_email = None
+    docker_memory_limit = None
+    docker_memory_swap_limit = None
 
     def __init__(self, use_defaults):
         self.use_defaults = use_defaults
@@ -237,6 +254,21 @@ class FmdEnvironment:
         self.django_superuser_password = uuid.uuid4()
         self.django_superuser_email = "fmd-admin@" + self.domain_name
 
+    def _get_docker_memory(self):
+        """
+        Asks the user for the memory limit for the docker container. If the user enters an invalid memory limit,
+        the user is asked again.
+        """
+        if self.use_defaults:
+            self.docker_memory_limit = "10GB"
+            self.docker_memory_swap_limit = "10GB"
+        else:
+            while not is_valid_memory_limit(self.docker_memory_limit):
+                self.docker_memory_limit = input("Enter the memory limit for the docker container "
+                                                 "(default: 10GB):") or "10GB"
+                self.docker_memory_swap_limit = input("Enter the swap memory limit for the docker "
+                                                      "container (default: 10GB):") or "10GB"
+
     def create_env_file(self):
         """
         Creates the .env file for the FirmwareDroid service.
@@ -245,6 +277,7 @@ class FmdEnvironment:
         self._get_blob_storage()
         self._get_mongodb_settings()
         self._get_web_config()
+        self._get_docker_memory()
         template = TEMPLATE_ENV.get_template(ENV_FILE_NAME)
         content = template.render(
             app_env=self.app_env,
@@ -286,6 +319,8 @@ class FmdEnvironment:
             django_superuser_password=self.django_superuser_password,
             django_superuser_username=self.django_superuser_username,
             django_superuser_email=self.django_superuser_email,
+            docker_memory_limit=self.docker_memory_limit,
+            docker_memory_swap_limit=self.docker_memory_swap_limit
         )
         out_file_path = os.path.join(self.script_file_path, "." + ENV_FILE_NAME)
         with open(out_file_path, mode="w", encoding="utf-8") as out_file:
@@ -470,8 +505,10 @@ def main():
 
     if args.production_mode:
         use_defaults = False
+        print("Using production settings...")
     else:
         use_defaults = True
+        print("Using default development settings...")
 
     env_instance = setup_environment_variables(use_defaults=use_defaults)
     setup_nginx(env_instance)

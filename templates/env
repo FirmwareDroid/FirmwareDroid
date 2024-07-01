@@ -4,7 +4,7 @@
 APP_ENV={{ app_env }} # Environments: production, development, testing
 APP_DEBUG={{ app_debug }}
 
-# Storage
+# Docker Storage
 LOCAL_STORAGE_PATH_00={{ local_storage_path_00 }}
 LOCAL_STORAGE_PATH_01={{ local_storage_path_01 }}
 LOCAL_STORAGE_PATH_02={{ local_storage_path_02 }}
@@ -16,6 +16,11 @@ LOCAL_STORAGE_PATH_07={{ local_storage_path_07 }}
 LOCAL_STORAGE_PATH_08={{ local_storage_path_08 }}
 LOCAL_STORAGE_PATH_09={{ local_storage_path_09 }}
 LOCAL_MONGO_DB_PATH_NODE1={{ local_mongo_db_path_node1 }}
+
+# Docker Memory
+DOCKER_MEMORY_LIMIT={{ docker_memory_limit }}
+DOCKER_MEMORY_SWAP_LIMIT={{ docker_memory_swap_limit }}
+
 
 # Redis-Database
 REDIS_CONFIG_PATH={{ redis_config_path }}
@@ -52,3 +57,4 @@ DJANGO_SUPERUSER_EMAIL={{ django_superuser_email }}
 # Container constants - DO NOT CHANGE
 APP_PORT=5000
 PYTHONPATH="/home/www/source/"
+
