@@ -3,9 +3,7 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 import os
-import time
 import traceback
-import psutil
 from model.Interfaces.ScanJob import ScanJob
 from model import QuarkEngineReport, AndroidApp
 from context.context_creator import create_db_context, create_log_context
