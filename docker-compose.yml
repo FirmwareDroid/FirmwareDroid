@@ -142,6 +142,8 @@ services:
       - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
     env_file:
       - ./.env
+    mem_limit: ${DOCKER_MEMORY_LIMIT}
+    memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
     command: rqworker --logging_level INFO --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     networks:
       - backend
