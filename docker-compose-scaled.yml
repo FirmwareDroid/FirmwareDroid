@@ -235,10 +235,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    deploy:
-      resources:
-        limits:
-          memory: ${DOCKER_MEMORY_LIMIT}
     networks:
       - backend
 
@@ -269,10 +265,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-2 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    deploy:
-      resources:
-        limits:
-          memory: ${DOCKER_MEMORY_LIMIT}
     networks:
       - backend
 
@@ -303,10 +295,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-3 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    deploy:
-      resources:
-        limits:
-          memory: ${DOCKER_MEMORY_LIMIT}
     networks:
       - backend
 
@@ -337,10 +325,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-4 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    deploy:
-      resources:
-        limits:
-          memory: ${DOCKER_MEMORY_LIMIT}
     networks:
       - backend
 
@@ -371,10 +355,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-5 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    deploy:
-      resources:
-        limits:
-          memory: ${DOCKER_MEMORY_LIMIT}
     networks:
       - backend
 
@@ -405,10 +385,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-6 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    deploy:
-      resources:
-        limits:
-          memory: ${DOCKER_MEMORY_LIMIT}
     networks:
       - backend
 
@@ -439,10 +415,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-7 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    deploy:
-      resources:
-        limits:
-          memory: ${DOCKER_MEMORY_LIMIT}
     networks:
       - backend
 
@@ -473,10 +445,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-8 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    deploy:
-      resources:
-        limits:
-          memory: ${DOCKER_MEMORY_LIMIT}
     networks:
       - backend
 
@@ -507,10 +475,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-9 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    deploy:
-      resources:
-        limits:
-          memory: ${DOCKER_MEMORY_LIMIT}
     networks:
       - backend
 
@@ -541,10 +505,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-10 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    deploy:
-      resources:
-        limits:
-          memory: ${DOCKER_MEMORY_LIMIT}
     networks:
       - backend
 
@@ -575,10 +535,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-11 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    deploy:
-      resources:
-        limits:
-          memory: ${DOCKER_MEMORY_LIMIT}
     networks:
       - backend
 
@@ -609,10 +565,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-12 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    deploy:
-      resources:
-        limits:
-          memory: ${DOCKER_MEMORY_LIMIT}
     networks:
       - backend
 
@@ -643,10 +595,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-13 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    deploy:
-      resources:
-        limits:
-          memory: ${DOCKER_MEMORY_LIMIT}
     networks:
       - backend
 
@@ -677,10 +625,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-14 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    deploy:
-      resources:
-        limits:
-          memory: ${DOCKER_MEMORY_LIMIT}
     networks:
       - backend
 
