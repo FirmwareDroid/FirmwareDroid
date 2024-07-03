@@ -66,6 +66,7 @@ def quark_engine_worker_multiprocessing(android_app_id_queue):
                           f"error: {err}")
             traceback.print_exc()
         finally:
+            logging.info(f"Quark-Engine finished scanning: {android_app.filename} {android_app.id}")
             android_app_id_queue.task_done()
             remove_logs()
 
