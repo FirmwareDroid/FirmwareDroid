@@ -118,7 +118,7 @@ def start_python_interpreter(item_list,
                              current_file,
                              serialized_list_str,
                              worker_function.__name__,
-                             str(os.cpu_count()),
+                             str(number_of_processes),
                              str(use_id_list),
                              module_name,
                              report_reference_name

@@ -9,7 +9,7 @@ import shutil
 import tempfile
 from queue import Empty
 from threading import Thread
-from context.context_creator import create_db_context, create_log_context
+from context.context_creator import create_db_context, create_log_context, create_multithread_log_context
 from extractor.expand_archives import extract_archive_layer
 from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
 from firmware_handler.firmware_file_indexer import create_firmware_file_list
@@ -62,7 +62,7 @@ def start_firmware_file_export(search_pattern, firmware_id_list, store_setting_i
 
 
 @create_db_context
-@create_log_context
+@create_multithread_log_context
 def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pattern):
     """
     Copies a firmware file to the file extract store (on disk).
@@ -78,30 +78,35 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
         except Empty:
             logging.debug("No more files to export on. Exiting.")
             break
-        firmware = AndroidFirmware.objects.get(pk=firmware_id)
-        store_setting = StoreSetting.objects.get(pk=store_setting_id, is_active=True)
-        if not store_setting:
-            raise ValueError(f"Store settings not found for id {store_setting_id}")
-        store_paths = store_setting.get_store_paths()
-        with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as temp_dir_path:
-            firmware_file_list = extract_firmware(firmware.absolute_store_path, temp_dir_path, store_paths)
-            for firmware_file in firmware_file_list:
-                if re.search(search_pattern, firmware_file.name):
-                    firmware_file.firmware_id_reference = firmware.id
-                    if firmware_file.partition_name == "/":
-                        firmware_file.partition_name = "root"
-                    destination_path_abs = get_file_export_path_abs(store_setting, firmware_file)
-                    is_successful = export_firmware_file(firmware_file, temp_dir_path, destination_path_abs)
-                    if is_successful:
-                        logging.debug(f"Exported firmware file {firmware_file.id} to {destination_path_abs}")
-
-        firmware_id_queue.task_done()
+        try:
+            firmware = AndroidFirmware.objects.get(pk=firmware_id)
+            store_setting = StoreSetting.objects.get(pk=store_setting_id, is_active=True)
+            if not store_setting:
+                raise ValueError(f"Store settings not found for id {store_setting_id}")
+            store_paths = store_setting.get_store_paths()
+            with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as temp_dir_path:
+                firmware_file_list = extract_firmware(firmware.absolute_store_path, temp_dir_path, store_paths)
+                for firmware_file in firmware_file_list:
+                    if re.search(search_pattern, firmware_file.name):
+                        firmware_file.firmware_id_reference = firmware.id
+                        if firmware_file.partition_name == "/":
+                            firmware_file.partition_name = "root"
+                        destination_path_abs = get_file_export_path_abs(store_setting, firmware_file)
+                        is_successful = export_firmware_file(firmware_file, temp_dir_path, destination_path_abs)
+                        if not is_successful:
+                            raise ValueError(f"Could not export firmware file {firmware_file.id} {firmware_file.name}")
+            logging.info(f"Exported files from firmware {firmware.id} to {store_paths['FIRMWARE_FOLDER_FILE_EXTRACT']}")
+        except Exception as e:
+            logging.error(f"Could not export firmware files for firmware {firmware_id}. Error: {e}")
+        finally:
+            firmware_id_queue.task_done()
 
 
 def extract_firmware(firmware_archive_file_path, temp_extract_dir, store_paths):
     """
     Extracts a firmware to the given folder.
 
+    :param store_paths: str - path to the store settings.
     :param firmware_archive_file_path: str - path to the firmware to extract.
     :param temp_extract_dir: str - destination folder to extract the firmware to.
 
