@@ -38,8 +38,8 @@ def setup_logging(log_level=logging.INFO):
     """
     Setup logging for the application.
     """
-    process_id = os.getpid()  # Get current process ID
-    logger = logging.getLogger()
+    process_id = os.getpid()
+    logger = logging.getLogger(f"Process-{process_id}")
     if not logger.handlers:
         logger.setLevel(log_level)
         handler = logging.StreamHandler(sys.stdout)
