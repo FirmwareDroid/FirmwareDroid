@@ -3,12 +3,22 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 import os
+import time
 import traceback
 from model.Interfaces.ScanJob import ScanJob
 from model import QuarkEngineReport, AndroidApp
 from context.context_creator import create_db_context, create_log_context
 from static_analysis.QuarkEngine.vuln_checkers import *
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
+
+
+def available_memory_percentage():
+    """
+    Returns the percentage of available memory.
+    """
+    import psutil
+    memory = psutil.virtual_memory()
+    return memory.available * 100 / memory.total
 
 
 @create_log_context
@@ -18,11 +28,16 @@ def quark_engine_worker_multiprocessing(android_app_id_queue):
     Start the analysis with quark-engine on a multiprocessor queue.
     :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
     """
+
     rule_dir_path = get_quark_engine_rules()
     if rule_dir_path is None or os.path.isdir(rule_dir_path) is False or os.path.exists(rule_dir_path) is False:
         raise RuntimeError(f"Could not get quark-engine scanning rules from {rule_dir_path}.")
 
     while True:
+        while available_memory_percentage() < 25:
+            logging.warning("Low memory detected. Throttling processing.")
+            time.sleep(60)
+
         android_app_id = android_app_id_queue.get(timeout=.5)
         try:
             android_app = AndroidApp.objects.get(pk=android_app_id)
@@ -44,14 +59,15 @@ def quark_engine_worker_multiprocessing(android_app_id_queue):
                 scan_results = {"malware": scan_results_malware, "vulnerabilities": scan_results_vulns}
                 create_quark_engine_report(android_app, scan_results)
             else:
-                logging.warning(f"Skipping: Android apk is over maximal file size for quark-engine. "
-                                f"{android_app.filename} {android_app.id}")
+                logging.error(f"Skipping: Android apk is over maximal file size for quark-engine. "
+                              f"{android_app.filename} {android_app.id}")
         except Exception as err:
             logging.error(f"Quark-Engine could not scan app {android_app.filename} id: {android_app.id} - "
                           f"error: {err}")
             traceback.print_exc()
-        android_app_id_queue.task_done()
-        remove_logs()
+        finally:
+            android_app_id_queue.task_done()
+            remove_logs()
 
 
 def get_quark_engine_rules():

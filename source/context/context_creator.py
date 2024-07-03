@@ -3,9 +3,7 @@
 # See the file 'LICENSE' for copying permission.
 import functools
 import logging
-import os
 import sys
-import secrets
 import threading
 
 
@@ -38,13 +36,12 @@ def setup_logging(log_level=logging.INFO):
     """
     Setup logging for the application.
     """
-    process_id = os.getpid()
-    logger = logging.getLogger(f"Process-{process_id}")
+    logger = logging.getLogger()
     if not logger.handlers:
         logger.setLevel(log_level)
         handler = logging.StreamHandler(sys.stdout)
         handler.setLevel(log_level)
-        formatter = logging.Formatter(f'%(asctime)s - %(name)s - {process_id} - %(levelname)s - %(message)s')
+        formatter = logging.Formatter(f'%(asctime)s - %(processName)s/%(process)d - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
