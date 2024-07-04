@@ -14,6 +14,7 @@ from extractor.lz4_extractor import extract_lz4
 from extractor.brotli_extractor import extract_brotli
 
 EXTRACTION_SIZE_THRESHOLD_MB = 100
+MAX_RECURSION_DEPTH = 50
 
 
 def normalize_file_path(file_path):
@@ -22,21 +23,21 @@ def normalize_file_path(file_path):
     return file_path
 
 
-def process_file(root, filename, supported_file_types_regex):
+def process_file(root, filename, supported_file_types_regex, depth):
     if re.search(supported_file_types_regex, filename.lower()):
         nested_file_path = os.path.join(root, filename)
         nested_file_path = normalize_file_path(nested_file_path)
 
         if os.path.exists(nested_file_path):
-            extract_archive_layer(nested_file_path, root, True)
+            extract_archive_layer(nested_file_path, root, True, depth)
         else:
             logging.debug(f"Skipped file cause it no longer exists on disk: {nested_file_path}")
 
 
-def process_directory(destination_dir, supported_file_types_regex):
+def process_directory(destination_dir, supported_file_types_regex, depth):
     for root, dirs, files in os.walk(destination_dir):
         for filename in files:
-            process_file(root, filename, supported_file_types_regex)
+            process_file(root, filename, supported_file_types_regex, depth)
 
 
 def delete_file_safely(file_path):
@@ -52,17 +53,30 @@ def get_file_size_mb(file_path):
     return size_in_mb
 
 
-def extract_archive_layer(compressed_file_path, destination_dir, delete_compressed_file, depth=2):
+def extract_archive_layer(compressed_file_path,
+                          destination_dir,
+                          delete_compressed_file,
+                          unblob_depth=2,
+                          depth=0,
+                          max_rec_depth=MAX_RECURSION_DEPTH):
     """
     Decompress supported archive file type and its contents recursively, including nested archives files.
     Files smaller than EXTRACTION_SIZE_THRESHOLD_MB are not extracted.
 
-    :param depth: int - depth of the unblob extraction.
+    :param depth: int - current recursion depth.
+    :param max_rec_depth: int - maximum recursion depth.
+    :param unblob_depth: int - depth of the unblob extraction.
     :param compressed_file_path: str - path to the compressed file.
     :param destination_dir: str - path to extract to.
     :param delete_compressed_file: boolean - if true, deletes the archive after it is extracted.
 
     """
+    if depth >= max_rec_depth:
+        logging.warning(f"Max recursion depth reached: {max_rec_depth}")
+        return
+    else:
+        depth += 1
+
     supported_file_types_regex = r".(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz)$"
     extract_function_dict = {
         ".zip": extract_zip,
@@ -92,14 +106,14 @@ def extract_archive_layer(compressed_file_path, destination_dir, delete_compress
         file_size_mb = get_file_size_mb(compressed_file_path)
         if file_size_mb > EXTRACTION_SIZE_THRESHOLD_MB:
             logging.info(f"Changing to unblob to extract: {compressed_file_path}")
-            unblob_extract(compressed_file_path, destination_dir, depth)
+            unblob_extract(compressed_file_path, destination_dir, unblob_depth)
         else:
             logging.info(f"Skip file due small size: {compressed_file_path}")
 
     if delete_compressed_file:
         delete_file_safely(compressed_file_path)
 
-    process_directory(destination_dir, supported_file_types_regex)
+    process_directory(destination_dir, supported_file_types_regex, depth)
 
 
 
