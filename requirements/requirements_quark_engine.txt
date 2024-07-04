@@ -1,1 +1,2 @@
 quark-engine==24.6.1
+psutil~=6.0.0

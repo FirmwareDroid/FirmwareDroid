@@ -18,6 +18,7 @@ LOCAL_STORAGE_PATH_09={{ local_storage_path_09 }}
 LOCAL_MONGO_DB_PATH_NODE1={{ local_mongo_db_path_node1 }}
 
 # Docker Memory
+DOCKER_CPU_LIMIT={{ docker_cpu_limit }}
 DOCKER_MEMORY_LIMIT={{ docker_memory_limit }}
 DOCKER_MEMORY_SWAP_LIMIT={{ docker_memory_swap_limit }}
 

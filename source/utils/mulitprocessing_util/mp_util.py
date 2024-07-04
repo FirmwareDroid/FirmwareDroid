@@ -17,7 +17,7 @@ import time
 from multiprocessing import Manager, get_context
 from threading import Thread
 from database.connector import multiprocess_disconnect_all
-from context.context_creator import create_app_context
+from context.context_creator import create_app_context, setup_logging
 
 
 def create_managed_mp_queue(document_obj_list, manager):
@@ -118,7 +118,7 @@ def start_python_interpreter(item_list,
                              current_file,
                              serialized_list_str,
                              worker_function.__name__,
-                             str(os.cpu_count()),
+                             str(number_of_processes),
                              str(use_id_list),
                              module_name,
                              report_reference_name
@@ -149,7 +149,7 @@ def start_process_pool(item_list,
         else:
             item_id_queue = create_managed_mp_queue(item_list, manager)
         with get_context("fork").Pool(processes=number_of_processes,
-                                      maxtasksperchild=3,
+                                      #maxtasksperchild=3,
                                       initializer=multiprocess_initializer) as pool:
             for _ in range(number_of_processes):
                 if not worker_args_dict:
@@ -162,6 +162,7 @@ def start_process_pool(item_list,
 
 def multiprocess_initializer():
     create_app_context()
+    setup_logging()
 
 
 def main():
