@@ -5,11 +5,15 @@ import logging
 import os
 import time
 import traceback
+from multiprocessing import Process, Queue
 from model.Interfaces.ScanJob import ScanJob
 from model import QuarkEngineReport, AndroidApp
 from context.context_creator import create_db_context, create_log_context
 from static_analysis.QuarkEngine.vuln_checkers import *
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
+
+MAX_WAITING_TIME = 60 * 10
+MAX_EXECUTION_TIME = 60 * 30
 
 
 def available_memory_percentage():
@@ -34,9 +38,16 @@ def quark_engine_worker_multiprocessing(android_app_id_queue):
         raise RuntimeError(f"Could not get quark-engine scanning rules from {rule_dir_path}.")
 
     while True:
+        waiting_time = 0
         while available_memory_percentage() < 25:
             logging.warning("Low memory detected. Throttling processing.")
-            time.sleep(60)
+            if waiting_time > MAX_WAITING_TIME:
+                logging.error(f"Quark-Engine could not get enough memory. Time waited: {waiting_time}s")
+                break
+            else:
+                logging.warning(f"Waiting for memory to be available. Time waited: {waiting_time}s")
+                time.sleep(60)
+                waiting_time += 60
 
         android_app_id = android_app_id_queue.get(timeout=.5)
         try:
@@ -86,21 +97,53 @@ def get_quark_engine_rules():
     return scanning_rules_path
 
 
-def get_quark_engine_scan(apk_path, rule_dir_path):
-    """
-    Runs the quark-engine scan on one apk with all the given rules without verification.
+# def get_quark_engine_scan(apk_path, rule_dir_path):
+#     """
+#     Runs the quark-engine scan on one apk with all the given rules without verification.
+#
+#     :param apk_path: str - path of the android app to analyse.
+#     :param rule_dir_path: str - path of the directory with the scanning rules.
+#
+#     :return: str - scanning results in json format.
+#
+#     """
+#     from quark.report import Report
+#     report = Report()
+#     report.analysis(apk_path, rule_dir_path)
+#     json_report = report.get_report("json")
+#     return json_report
 
-    :param apk_path: str - path of the android app to analyse.
-    :param rule_dir_path: str - path of the directory with the scanning rules.
 
-    :return: str - scanning results in json format.
-
-    """
-    from quark.report import Report
+def worker_get_quark_engine_scan(apk_path, rule_dir_path, output_queue):
+    from quark.report import Report  # Ensure import is inside the function for multiprocessing compatibility
     report = Report()
     report.analysis(apk_path, rule_dir_path)
     json_report = report.get_report("json")
-    return json_report
+    output_queue.put(json_report)
+
+
+def get_quark_engine_scan(apk_path, rule_dir_path, timeout=60*60):
+    """
+    Executes the Quark Engine scan with a timeout.
+
+    :param apk_path: str - Path to the APK file.
+    :param rule_dir_path: str - Path to the directory containing Quark Engine rules.
+    :param timeout: int - Timeout in seconds.
+
+    :return: str or None - The scan results in JSON format, or None if the scan was terminated due to timeout.
+
+    """
+    output_queue = Queue()
+    process = Process(target=worker_get_quark_engine_scan, args=(apk_path, rule_dir_path, output_queue))
+    process.start()
+    process.join(timeout)
+    if process.is_alive():
+        process.terminate()
+        process.join()  # Ensure the process has terminated before continuing
+        logging.warning(f"Quark Engine scan for {apk_path} terminated due to timeout.")
+        return None  # or handle timeout case as needed
+    else:
+        return output_queue.get()  # Retrieve the scan results from the queue
 
 
 def get_vuln_checks():

@@ -50,8 +50,23 @@ def get_file_size_mb(file_path):
     return size_in_mb
 
 
-def extract_archive_layer(compressed_file_path, destination_dir, delete_compressed_file, unblob_depth=2,
+def extract_archive_layer(compressed_file_path,
+                          destination_dir,
+                          delete_compressed_file,
+                          unblob_depth=1,
                           max_rec_depth=MAX_EXTRACTION_DEPTH):
+    """
+    Extract the compressed file to the destination directory.
+    If the file is not supported, it will be extracted with a python function otherwise with unblob.
+
+    :param compressed_file_path: str - path to the compressed file.
+    :param destination_dir: str - path to the folder where the data is extracted to.
+    :param delete_compressed_file: bool - delete the compressed file after extraction.
+    :param unblob_depth: int - depth of unblob extraction.
+    :param max_rec_depth: int - maximum extraction depth.
+
+    :return:
+    """
     queue = deque([(compressed_file_path, 0)])  # Each item is a tuple of (path, current depth)
     while queue:
         current_path, current_depth = queue.popleft()
@@ -62,19 +77,16 @@ def extract_archive_layer(compressed_file_path, destination_dir, delete_compress
         if os.path.isdir(current_path):
             for filename in os.listdir(current_path):
                 file_path = os.path.join(current_path, filename)
+                logging.debug(f"Adding to queue: {file_path}")
                 queue.append((file_path, current_depth + 1))
         else:
+            logging.debug(f"Extracting: {current_path}")
             file_extension = os.path.splitext(current_path.lower())[1]
             if file_extension in EXTRACT_FUNCTION_MAP_DICT:
                 logging.info(f"Attempt to extract: {current_path}")
                 is_success = EXTRACT_FUNCTION_MAP_DICT[file_extension](current_path, destination_dir)
                 if not is_success:
-                    file_size_mb = get_file_size_mb(current_path)
-                    if file_size_mb > EXTRACTION_SIZE_THRESHOLD_MB:
-                        logging.info(f"Changing to unblob to extract: {current_path}")
-                        unblob_extract(current_path, destination_dir, unblob_depth)
-                    else:
-                        logging.info(f"Skip file due small size: {current_path}")
+                    unblob_extract(current_path, destination_dir, unblob_depth)
             else:
                 unblob_extract(current_path, destination_dir, unblob_depth)
 

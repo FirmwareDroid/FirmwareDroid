@@ -6,4 +6,4 @@ rq~=1.15.0
 numpy~=1.26.4
 pymongo~=4.6.1
 mongoengine~=0.27.0
-unblob~=24.1.22
+unblob~=24.6.10

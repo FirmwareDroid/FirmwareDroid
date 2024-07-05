@@ -19,6 +19,8 @@ from threading import Thread
 from database.connector import multiprocess_disconnect_all
 from context.context_creator import create_app_context, setup_logging
 
+MAX_PROCESS_TIME = 60 * 60 * 24
+
 
 def create_managed_mp_queue(document_obj_list, manager):
     """
@@ -157,7 +159,7 @@ def start_process_pool(item_list,
                 else:
                     pool.starmap_async(worker_function, [(item_id_queue, *worker_args_dict)])
             pool.close()
-            pool.join()
+            pool.join(timeout=MAX_PROCESS_TIME)
 
 
 def multiprocess_initializer():

@@ -115,7 +115,8 @@ def extract_firmware(firmware_archive_file_path, temp_extract_dir, store_paths):
     """
     from firmware_handler.firmware_importer import create_partition_file_index
     firmware_file_list = []
-    extract_archive_layer(firmware_archive_file_path, temp_extract_dir, False, 2)
+    extract_archive_layer(firmware_archive_file_path, temp_extract_dir, False, 2,
+                          max_rec_depth=1)
     top_level_firmware_file_list = create_firmware_file_list(temp_extract_dir, "/")
     for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
         logging.info(f"Attempt to index files for partition: {partition_name}")
