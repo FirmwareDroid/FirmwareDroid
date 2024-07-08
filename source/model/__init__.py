@@ -44,4 +44,5 @@ from .QuarkEngineStatisticsReport import QuarkEngineStatisticsReport
 from .SuperStatisticsReport import SuperStatisticsReport
 from .GenericFile import GenericFile
 from .AecsJob import AecsJob
+from .MobSFScanReport import MobSFScanReport
 from . import *

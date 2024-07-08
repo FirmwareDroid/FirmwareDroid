@@ -75,6 +75,8 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
     while True:
         try:
             firmware_id = firmware_id_queue.get(block=False, timeout=300)
+            logging.debug(f"Exporting files for firmware {firmware_id}")
+            logging.debug(f"Queue size: {firmware_id_queue.qsize()}")
         except Empty:
             logging.debug("No more files to export on. Exiting.")
             break

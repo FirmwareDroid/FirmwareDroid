@@ -70,6 +70,7 @@ def extract_archive_layer(compressed_file_path,
     queue = deque([(compressed_file_path, 0)])  # Each item is a tuple of (path, current depth)
     while queue:
         current_path, current_depth = queue.popleft()
+        logging.debug(f"Current path: {current_path}")
         if current_depth >= max_rec_depth:
             logging.warning(f"Max recursion depth reached: {max_rec_depth}")
             continue

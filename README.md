@@ -7,26 +7,35 @@
 # FirmwareDroid (FMD)
 FirmwareDroid is a research project that aims to develop novel methods to analyse Android firmware. It is mainly made 
 to automate the process of extracting and scanning pre-installed Android apps for security research purposes. 
-FMD is made to run in docker and includes several third party analysis tools for security analysis and extraction. 
-For instance:
+FMD is made to run in docker and includes several third party analysis tools for security analysis and extraction.
+Some of the tools and features included are:
 
-* [AndroGuard](https://github.com/androguard/androguard)
-* [Androwarn](https://github.com/maaaaz/androwarn/)
-* [VirusTotal](https://www.virustotal.com)
-* [Quark-Engine](https://github.com/quark-engine/quark-engine)
-* [Qark](https://github.com/linkedin/qark/)
-* [SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/) (deprecated, discontinued by the author)
-* [APKiD](https://github.com/rednaga/APKiD/)
-* [Exodus-Core](https://github.com/Exodus-Privacy/exodus-core/)
-* [APKLeaks](https://github.com/dwisiswant0/apkleaks/)
+* Static-Analyzers:
+  * [AndroGuard](https://github.com/androguard/androguard)
+  * [Quark-Engine](https://github.com/quark-engine/quark-engine)
+  * [APKiD](https://github.com/rednaga/APKiD/)
+  * [Exodus-Core](https://github.com/Exodus-Privacy/exodus-core/)
+  * [APKLeaks](https://github.com/dwisiswant0/apkleaks/)
+  * [MobSFScan](https://github.com/MobSF/mobsfscan)
+  * [Qark](https://github.com/linkedin/qark/) (deprecated, no updates by the author)
+  * [Androwarn](https://github.com/maaaaz/androwarn/) (deprecated, no updates by the author)
+  * [SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/) (deprecated, discontinued by the author)
+* APIs:
+  * [VirusTotal](https://www.virustotal.com)
 * Fuzzy-Hashing (currently unavailable -> refactoring in progress)
   * [SSDeep](https://ssdeep-project.github.io/ssdeep/index.html)
   * [TLSH](https://tlsh.org/)
-* [Unblob](https://github.com/onekey-sec/unblob)
+* Decompilers:
+  * [Apktool](https://apktool.org/)
+  * [Jadx](https://github.com/skylot/jadx)
+* File Extraction:
+  * [Unblob](https://github.com/onekey-sec/unblob)
+* Miscellaneous:
+  * AndroidManifest Parsing
 
 In this repository you will find the code for the backend of FMD. The application has a minimal React
 frontend (see https://github.com/FirmwareDroid/FMD-WebClient), but is mainly an API and database 
-that can be use for research studies.
+that can be used for research studies.
 
 Usage documentation can be found at: https://firmwaredroid.github.io/
 

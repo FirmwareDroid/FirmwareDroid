@@ -351,7 +351,10 @@ def androguard_worker_multiprocessing(android_app_id_queue):
 
     """
     while True:
-        android_app_id = android_app_id_queue.get(timeout=.5)
+        try:
+            android_app_id = android_app_id_queue.get(timeout=.5)
+        except Exception as err:
+            break
         android_app = AndroidApp.objects.get(pk=android_app_id)
         logging.info(f"AndroGuard scan: {android_app.filename} {android_app.id} "
                      f"estimated queue-size: {android_app_id_queue.qsize()}")

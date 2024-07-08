@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
-import logging
 import sys
-
 sys.path.append("/var/www/source/")
 from database.query_document import get_filtered_list
 from model import AndroidApp
@@ -159,7 +157,7 @@ def start_process_pool(item_list,
                 else:
                     pool.starmap_async(worker_function, [(item_id_queue, *worker_args_dict)])
             pool.close()
-            pool.join(timeout=MAX_PROCESS_TIME)
+            pool.join()
 
 
 def multiprocess_initializer():

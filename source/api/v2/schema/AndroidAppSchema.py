@@ -29,6 +29,7 @@ class ScannerModules(Enum):
     MORF = {"MORFScanJob": "static_analysis.MORF.morf_wrapper"}
     VIRUSTOTAL = {"VirusTotalScanJob": "static_analysis.Virustotal.virus_total_wrapper"}
     MANIFEST = {"ManifestParserScanJob": "static_analysis.ManifestParser.android_manifest_parser"}
+    MOBSF = {"MobSFScanJob": "static_analysis.MobSFScan.mobsfscan_wrapper"}
 
 
 class AndroidAppType(MongoengineObjectType):
