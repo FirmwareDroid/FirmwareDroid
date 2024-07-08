@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
-import glob
 import logging
 import os
 import re
 import shutil
 import tempfile
+import traceback
 from queue import Empty
 from threading import Thread
 from context.context_creator import create_db_context, create_log_context, create_multithread_log_context
-from extractor.expand_archives import extract_archive_layer
+from extractor.expand_archives import extract_archive_layer, is_partition_found, extract_first_layer
 from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
 from firmware_handler.firmware_file_indexer import create_firmware_file_list
 from hashing import md5_from_file
@@ -86,10 +86,15 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             if not store_setting:
                 raise ValueError(f"Store settings not found for id {store_setting_id}")
             store_paths = store_setting.get_store_paths()
-            with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as temp_dir_path:
+            with (tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as temp_dir_path):
                 firmware_file_list = extract_firmware(firmware.absolute_store_path, temp_dir_path, store_paths)
                 for firmware_file in firmware_file_list:
-                    if re.search(search_pattern, firmware_file.name):
+                    if not firmware_file.is_directory \
+                            and re.search(search_pattern, firmware_file.name) \
+                            and ".unknown" not in firmware_file.name \
+                            and ".padding" not in firmware_file.name \
+                            and "_extract" not in firmware_file.name:
+                        logging.debug(f"Exporting firmware file {firmware_file.id} {firmware_file.name}")
                         firmware_file.firmware_id_reference = firmware.id
                         if firmware_file.partition_name == "/":
                             firmware_file.partition_name = "root"
@@ -100,6 +105,7 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             logging.info(f"Exported files from firmware {firmware.id} to {store_paths['FIRMWARE_FOLDER_FILE_EXTRACT']}")
         except Exception as e:
             logging.error(f"Could not export firmware files for firmware {firmware_id}. Error: {e}")
+            traceback.print_stack()
         finally:
             firmware_id_queue.task_done()
 
@@ -117,8 +123,8 @@ def extract_firmware(firmware_archive_file_path, temp_extract_dir, store_paths):
     """
     from firmware_handler.firmware_importer import create_partition_file_index
     firmware_file_list = []
-    extract_archive_layer(firmware_archive_file_path, temp_extract_dir, False, 2,
-                          max_rec_depth=1)
+    extract_first_layer(firmware_archive_file_path, temp_extract_dir)
+    logging.info(f"Extracted first layer of firmware {firmware_archive_file_path} to {temp_extract_dir}")
     top_level_firmware_file_list = create_firmware_file_list(temp_extract_dir, "/")
     for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
         logging.info(f"Attempt to index files for partition: {partition_name}")
@@ -198,7 +204,7 @@ def export_firmware_file(firmware_file, source_dir_path, destination_dir_path):
     else:
         raise FileNotFoundError(f"Source directory {source_dir_path} does not exist.")
 
-    if firmware_file_abs_path:
+    if firmware_file_abs_path and os.path.exists(str(firmware_file_abs_path)):
         copy_firmware_file(firmware_file, firmware_file_abs_path, destination_dir_path)
         is_successful = True
     else:

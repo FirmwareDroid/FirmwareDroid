@@ -3,7 +3,7 @@
 # See the file 'LICENSE' for copying permission.
 import base64
 from struct import unpack
-from mongoengine import StringField, ListField, IntField, LazyReferenceField, CASCADE, signals, DictField, Document
+from mongoengine import StringField, ListField, IntField, LazyReferenceField, CASCADE, signals, Document
 
 
 class SsDeepHash(Document):
@@ -11,7 +11,6 @@ class SsDeepHash(Document):
     firmware_file_reference = LazyReferenceField('FirmwareFile', reverse_delete_rule=CASCADE, required=True)
     filename = StringField(required=True)
     ssdeep_digest = StringField(required=True)
-    sub_file_digest_dict = DictField(required=False)
     block_size = StringField(required=False)
     block_data = StringField(required=False)
     double_block_data = StringField(required=False)

@@ -9,17 +9,17 @@ import os
 import shutil
 from queue import Empty
 from pathlib import Path
+from hashing.fuzzy_hash_creator import add_fuzzy_hashes
 from model import AndroidFirmware, FirmwareFile, AndroidApp
 from threading import Thread
 from firmware_handler.image_importer import create_abs_image_file_path, find_image_firmware_file, extract_image_files
-from hashing.fuzzy_hash_creator import fuzzy_hash_firmware_files
 from context.context_creator import create_db_context, create_log_context
 from firmware_handler.firmware_file_indexer import create_firmware_file_list, add_firmware_file_references
 from firmware_handler.const_regex_patterns import BUILD_PROP_PATTERN_LIST, EXT_IMAGE_PATTERNS_DICT
 from android_app_importer.android_app_import import store_android_apps_from_firmware
 from firmware_handler.build_prop_parser import BuildPropParser
 from hashing.standard_hash_generator import md5_from_file, sha1_from_file, sha256_from_file
-from extractor.expand_archives import extract_archive_layer
+from extractor.expand_archives import extract_archive_layer, extract_first_layer
 from model.StoreSetting import get_active_store_by_index
 from utils.file_utils.file_util import get_filenames
 from firmware_handler.firmware_version_detect import detect_by_build_prop
@@ -147,7 +147,7 @@ def open_firmware(firmware_archive_file_path, temp_extract_dir):
     :return: list(class:FirmwareFile)
 
     """
-    extract_archive_layer(firmware_archive_file_path, temp_extract_dir, False)
+    extract_first_layer(firmware_archive_file_path, temp_extract_dir)
     archive_firmware_file_list = get_firmware_archive_content(temp_extract_dir)
     return archive_firmware_file_list
 
@@ -245,7 +245,7 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
                     build_prop_list = extract_build_prop(partition_firmware_file_list, partition_temp_dir)
                     files_dict["build_prop_file_list"].extend(build_prop_list)
                 if create_fuzzy_hashes:
-                    fuzzy_hash_firmware_files(partition_firmware_file_list, partition_temp_dir)
+                    add_fuzzy_hashes(partition_firmware_file_list)
 
             partition_info_dict[partition_name] = {"is_import_success": is_successful,
                                                    "firmware_file_count": len(partition_firmware_file_list),

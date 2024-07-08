@@ -12,12 +12,12 @@ that incorrect files match the patterns.
 # Partitions that are in ext or sparse format.
 ##########################################################################################
 SYSTEM_IMG_PATTERN_LIST = [
-    "system[.]img",
-    ".*system[.]img$",
-    "^system[.].*[.]img$",
-    "^system[.]img[.].*",
-    ".*system.*img_sparsechunk$",
-    ".*system.*(img|rfs|img.ext4|ext4.img)$",
+    "(?<![a-zA-Z0-9_])system[.]img",
+    "(?<![a-zA-Z0-9_])system[.]img$",
+    "(?<![a-zA-Z0-9_])system[.].*[.]img$",
+    "(?<![a-zA-Z0-9_])system[.]img[.].*",
+    "(?<![a-zA-Z0-9_]).*system.*img_sparsechunk$",
+    "(?<![a-zA-Z0-9_]).*system.*(img|rfs|img.ext4|ext4.img)$",
 ]
 SUPER_IMG_PATTERN_LIST = ["super[.]img",
                           ".*super[.]img$",
@@ -34,7 +34,7 @@ ODM_IMG_PATTERN_LIST = ["odm[.]img", "odm[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 USERDATA_IMG_PATTERN_LIST = ["userdata[.]img", "userdata[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 PRODUCT_IMG_PATTERN_LIST = ["product[.]img", "product[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 PVMFW_IMG_PATTERN_LIST = ["pvmfw[.]img", "pvmfw[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
-VBMETA__IMG_PATTERN_LIST = ["vbmeta[.]img", "vbmeta[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
+VBMETA_IMG_PATTERN_LIST = ["vbmeta[.]img", "vbmeta[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 VBMETA_SYSTEM_IMG_PATTERN_LIST = ["vbmeta_system[.]img", "vbmeta_system[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 
 EXT_IMAGE_PATTERNS_DICT = {"system": SYSTEM_IMG_PATTERN_LIST,

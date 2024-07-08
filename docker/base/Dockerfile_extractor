@@ -8,19 +8,21 @@ USER root
 #####################################
 # Installing apt dependencies       #
 #####################################
-RUN apt-get update
-RUN apt-get -y install pkgconf && \
-    apt-get -y install simg2img && \
-    apt-get -y install liblzo2-dev && \
-    apt-get -y install fuse && \
-    apt-get -y install brotli && \
-    apt-get -y install libmagic1
+RUN apt update
+RUN apt install -y pkgconf simg2img liblzo2-dev fuse brotli libmagic1
     #apt-get -y install f2fs-tools -> TODO: Add f2fs file system support as soon as it is support in Debian bullseye
 
 #####################################
 # Installing unblob dependencies    #
 #####################################
-RUN apt-get -y install e2fsprogs p7zip-full unar zlib1g-dev liblzo2-dev lzop lziprecover img2simg zstd
+RUN DEBIAN_FRONTEND=noninteractive apt install -y android-sdk-libsparse-utils e2fsprogs p7zip-full unar \
+    zlib1g-dev liblzo2-dev lzop lziprecover \
+    libhyperscan-dev zstd lz4 && apt-get clean
+
+#####################################
+# Installing ssdeep dependencies    #
+#####################################
+RUN DEBIAN_FRONTEND=noninteractive apt install -y ssdeep libfuzzy-dev && apt-get clean
 
 #####################################
 # Set access rights for mounting    #

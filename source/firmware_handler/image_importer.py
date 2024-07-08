@@ -25,7 +25,9 @@ def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
     for firmware_file in firmware_file_list:
         filename = firmware_file.name.lower()
         for pattern in image_filename_pattern_list:
-            if not firmware_file.is_directory and re.search(pattern, filename) and not filename.startswith("._"):
+            if (not firmware_file.is_directory
+                    and re.search(pattern, filename)
+                    and not filename.startswith("._")):
                 logging.debug("Found image file: " + str(firmware_file.name))
                 return firmware_file
     raise ValueError(f"Continuing. Could not find any image file in the filelist based on the patterns: "
@@ -43,18 +45,23 @@ def extract_image_files(image_path, extract_dir_path, store_paths):
     :raise RuntimeError: In case none of the support methods can extract files from the image.
 
     """
-    if extract_simg_ext4(image_path, extract_dir_path, store_paths):
-        logging.debug("Image extraction successful with simg_ext4extractor")
-    elif extract_ext4(image_path, extract_dir_path):
-        logging.debug("Image extraction successful with ext4extractor")
-    elif unblob_extract(image_path, extract_dir_path):
-        logging.debug("Image extraction successful with unblob extraction suite")
-    elif mount_android_image(image_path, extract_dir_path, store_paths):
-        logging.debug("Image mount successful")
-    elif extract_ubi_image(image_path, extract_dir_path):
-        logging.debug("Image extraction successful with UBI")
+    file_extension = os.path.splitext(image_path)[1]
+    if file_extension == ".img":
+        if extract_simg_ext4(image_path, extract_dir_path, store_paths):
+            logging.debug("Image extraction successful with simg_ext4extractor")
+        elif extract_ext4(image_path, extract_dir_path):
+            logging.debug("Image extraction successful with ext4extractor")
+        elif unblob_extract(image_path, extract_dir_path):
+            logging.debug("Image extraction successful with unblob extraction suite")
+        elif mount_android_image(image_path, extract_dir_path, store_paths):
+            logging.debug("Image mount successful")
+        elif extract_ubi_image(image_path, extract_dir_path):
+            logging.debug("Image extraction successful with UBI")
+        else:
+            raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
     else:
-        raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
+        if unblob_extract(image_path, extract_dir_path):
+            logging.debug("Image extraction successful with unblob extraction suite")
 
 
 def create_abs_image_file_path(image_file, cache_temp_file_dir_path):

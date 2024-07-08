@@ -2,20 +2,7 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-from hashing.fuzzy_hash_common import hash_sub_files
 from model import SsDeepHash
-
-
-def start_ssdeep_hashing(firmware_file):
-    """
-    Creates ssDeep digests from the given file.
-
-    :param firmware_file: class:'FirmwareFile'
-
-    """
-    logging.info(f"Create ssdeep hash for: {firmware_file.absolute_store_path}")
-    ssdeep_hash = create_ssdeep_hash(firmware_file)
-    hash_sub_files(firmware_file, ssdeep_hash, ssdeep_from_file, ssdeep_from_buffer)
 
 
 def create_ssdeep_hash(firmware_file):
@@ -31,14 +18,13 @@ def create_ssdeep_hash(firmware_file):
     ssdeep_digest = ssdeep_from_file(firmware_file.absolute_store_path)
     ssdeep_hash = SsDeepHash(ssdeep_digest=ssdeep_digest,
                              filename=firmware_file.name,
-                             sub_file_digest_dict={},
                              firmware_id_reference=firmware_file.firmware_id_reference,
                              firmware_file_reference=firmware_file.id)
     ssdeep_hash.save()
+    if firmware_file.ssdeep_reference:
+        firmware_file.ssdeep_reference.delete()
     firmware_file.ssdeep_reference = ssdeep_hash.id
     firmware_file.save()
-    if not ssdeep_hash:
-        raise ValueError(f"Could not create ssDeep hash for file {firmware_file.absolute_store_path}")
     return ssdeep_hash
 
 

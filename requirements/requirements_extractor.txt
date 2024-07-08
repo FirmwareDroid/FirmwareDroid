@@ -1,4 +1,4 @@
-lief~=0.12.3        # Upgrade as soon unblob supports it
+lief~=0.12.3
 ubi-reader~=0.8.5
 py-lz4framed~=0.14.0
 python-lzo~=1.15
@@ -7,3 +7,7 @@ numpy~=1.26.4
 pymongo~=4.6.1
 mongoengine~=0.27.0
 unblob~=24.6.10
+
+# Fuzzy hashing
+python-tlsh==4.5.0
+ssdeep==3.4

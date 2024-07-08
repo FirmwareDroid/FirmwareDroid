@@ -1,2 +1,0 @@
-python-tlsh==3.17.0
-ssdeep==3.4
