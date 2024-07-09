@@ -420,7 +420,7 @@ def create_partition_firmware_files(archive_firmware_file_list,
             image_firmware_file = find_image_firmware_file(archive_firmware_file_list, file_pattern_list)
             image_absolute_path = create_abs_image_file_path(image_firmware_file, extracted_archive_dir_path)
             extract_image_files(image_absolute_path, temp_dir_path, store_paths)
-        partition_firmware_files = create_firmware_file_list(temp_dir_path, partition_name)
+        partition_firmware_files = create_firmware_file_list(extracted_archive_dir_path, partition_name)
         firmware_file_list.extend(partition_firmware_files)
         is_successful = True
     except (RuntimeError, ValueError) as err:

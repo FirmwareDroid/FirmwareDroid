@@ -74,6 +74,8 @@ def fuzzy_hash_worker_multithreading(firmware_id_queue, storage_index):
                 firmware_file_list = extract_firmware(firmware.absolute_store_path, temp_dir_path, store_paths)
                 replace_firmware_files(firmware_file_list, firmware, store_paths)
                 add_fuzzy_hashes(firmware.firmware_file_id_list)
+                firmware.has_fuzzy_hash_index = True
+                firmware.save()
         except Exception as err:
             logging.error(err)
             traceback.print_exc()
