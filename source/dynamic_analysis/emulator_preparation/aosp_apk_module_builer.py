@@ -3,6 +3,8 @@ import os
 import shutil
 from mongoengine import DoesNotExist
 from string import Template
+
+from dynamic_analysis.emulator_preparation.aosp_file_exporter import get_subfolders
 from model import GenericFile
 from dynamic_analysis.emulator_preparation.asop_meta_writer import add_module_to_meta_file
 from dynamic_analysis.emulator_preparation.templates.android_app_module_template import ANDROID_MK_TEMPLATE, \
@@ -137,6 +139,36 @@ def select_signing_key(android_app):
     return signing_key
 
 
+def get_apk_local_module_path(file_path, partition_name, android_app):
+    """
+    Get the local module path for the given partition_name.
+
+    :param android_app: class:'AndroidApp' - App that a
+    :param file_path: str - path to the module file.
+    :param partition_name: str - name of the partition on Android.
+
+    :return: str - local module path for the shared library module.
+
+    """
+    subfolder_list = get_subfolders(file_path, partition_name)
+    if "/priv-app/" in android_app.absolute_store_path:
+        local_module_path = f"$(TARGET_OUT)/priv-app/"
+    elif ("/overlay/" in android_app.absolute_store_path
+          and ("/vendor/" in android_app.absolute_store_path)
+          or ("/odm/" in android_app.absolute_store_path)):
+        local_module_path = f"$(TARGET_OUT)/odm/overlay/"
+    elif ("/vendor/" in android_app.absolute_store_path
+          or "/odm/" in android_app.absolute_store_path
+          or "/oem/" in android_app.absolute_store_path):
+        local_module_path = f"$(TARGET_OUT)/odm/app/"
+    elif len(subfolder_list) == 0:
+        local_module_path = f"$(TARGET_OUT)/app/"
+    else:
+        local_module_path = f"$(TARGET_OUT)/{os.path.join(*subfolder_list)}"
+        local_module_path = local_module_path.replace(android_app.filename, "")
+    return local_module_path
+
+
 def create_template_string(android_app, template_string):
     """
     Creates build file (Android.mk or Android.bp) as string for the AOSP image builder.
@@ -151,19 +183,10 @@ def create_template_string(android_app, template_string):
     directory_name = android_app.filename.replace('.apk', '')
     local_module = f"{directory_name}"
     local_privileged_module = "false"
-    if "/priv-app/" in android_app.absolute_store_path:
-        local_module_path = f"$(TARGET_OUT)/priv-app/"
+    partition_name = android_app.absolute_store_path.split("/")[8]
+    local_module_path = get_apk_local_module_path(android_app.absolute_store_path, partition_name, android_app)
+    if "/priv-app/" in local_module_path or "/framework/" in local_module_path:
         local_privileged_module = "true"
-    elif ("/overlay/" in android_app.absolute_store_path
-          and ("/vendor/" in android_app.absolute_store_path) or ("/odm/" in android_app.absolute_store_path)):
-        local_module_path = f"$(TARGET_OUT)/odm/overlay/"
-    elif ("/vendor/" in android_app.absolute_store_path
-          or "/odm/" in android_app.absolute_store_path
-          or "/oem/" in android_app.absolute_store_path):
-        local_module_path = f"$(TARGET_OUT)/odm/app/"
-    else:
-        #TODO consider other apk paths
-        local_module_path = f"$(TARGET_OUT)/app/"
 
     local_src_files = android_app.filename
     local_optional_uses_libraries = ""
@@ -179,7 +202,6 @@ def create_template_string(android_app, template_string):
                                                           local_dex_preopt=local_dex_preopt,
                                                           local_privileged_module=local_privileged_module,
                                                           local_optional_uses_libraries=local_optional_uses_libraries)
-    logging.debug("Created template string")
     return final_template
 
 
