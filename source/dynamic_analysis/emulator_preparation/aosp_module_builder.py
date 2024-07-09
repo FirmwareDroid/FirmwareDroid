@@ -14,6 +14,7 @@ import uuid
 from context.context_creator import create_db_context, create_log_context
 from dynamic_analysis.emulator_preparation.aosp_apk_module_builer import create_build_files_for_apps, \
     process_android_apps
+from dynamic_analysis.emulator_preparation.aosp_executable_module_builder import process_executable_files
 from dynamic_analysis.emulator_preparation.aosp_framework_builder import process_framework_files
 from dynamic_analysis.emulator_preparation.aosp_shared_library_builder import process_shared_libraries
 from model import AndroidFirmware
@@ -54,7 +55,7 @@ def worker_process_firmware_multiprocessing(firmware_id_queue, format_name, skip
             firmware = AndroidFirmware.objects.get(pk=firmware_id)
             if firmware.aecs_build_file_path:
                 remove_existing_aecs_archive(firmware.aecs_build_file_path, firmware)
-            process_firmware(format_name, firmware, skip_file_export)
+            create_build_files_for_firmware(firmware, format_name, skip_file_export)
         except Exception as err:
             traceback.print_exc()
             logging.error(f"Could not process firmware {firmware_id}: {err}")
@@ -74,23 +75,6 @@ def remove_existing_aecs_archive(aecs_build_file_path, firmware):
         logging.debug(f"No existing build files found for firmware {aecs_build_file_path}")
 
 
-def process_firmware(format_name, firmware, skip_file_export):
-    """
-    Creates for every given Android app a AOSP compatible module build file and stores it to the database. The process
-    support mk and bp file formats.
-
-    :param format_name: str - 'mk' or 'bp' file format.
-    :param firmware: class:'AndroidFirmware' - A list of class:'AndroidFirmware'
-    :param skip_file_export: bool - flag to skip the file export.
-
-    :return: list - A list of failed firmware that could not be processed.
-
-    """
-    is_successfully_created = create_build_files_for_firmware(firmware, format_name, skip_file_export)
-    if not is_successfully_created:
-        raise RuntimeError(f"Could not create build files for firmware {firmware.id}")
-
-
 def create_build_files_for_firmware(firmware, format_name, skip_file_export):
     """
     Creates build files for a given firmware.
@@ -102,12 +86,10 @@ def create_build_files_for_firmware(firmware, format_name, skip_file_export):
     :return: bool - True if build files were successfully created for all apps, False otherwise.
 
     """
-    is_successfully_created = False
     if format_name:
         logging.debug(f"Creating build files for firmware {firmware.id}...")
-        is_successfully_created = create_build_files_for_apps(firmware.android_app_id_list, format_name)
+        create_build_files_for_apps(firmware.android_app_id_list, format_name)
         package_build_files_for_firmware(firmware, format_name, skip_file_export)
-    return is_successfully_created
 
 
 def package_build_files_for_firmware(firmware, format_name, skip_file_export):
@@ -126,6 +108,7 @@ def package_build_files_for_firmware(firmware, format_name, skip_file_export):
         process_android_apps(firmware, tmp_root_dir)
         process_shared_libraries(firmware, tmp_root_dir, store_setting.id, format_name, skip_file_export)
         process_framework_files(firmware, tmp_root_dir, store_setting.id, format_name, skip_file_export)
+        process_executable_files(firmware, tmp_root_dir, store_setting.id, format_name, skip_file_export)
         package_files(firmware, tmp_root_dir, store_paths)
 
 

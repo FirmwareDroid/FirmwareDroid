@@ -3,7 +3,6 @@ import os
 import shutil
 from mongoengine import DoesNotExist
 from string import Template
-
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import get_subfolders
 from model import GenericFile
 from dynamic_analysis.emulator_preparation.asop_meta_writer import add_module_to_meta_file
@@ -18,17 +17,12 @@ def create_build_files_for_apps(android_app_id_list, format_name):
     :param android_app_id_list: list - A list of ObjectIDs for class:'AndroidApp'.
     :param format_name: str - 'mk' or 'bp' file format.
 
-    :return: bool - True if build files were successfully created for all apps, False otherwise.
 
     """
-    is_successfully_created = True
     for android_app_lazy in android_app_id_list:
         android_app = android_app_lazy.fetch()
         logging.debug(f"Creating build files for app {android_app.filename}...")
-        if not create_build_file_for_app(android_app, format_name):
-            is_successfully_created = False
-            logging.error(f"Could not create build files for app {android_app.filename}")
-    return is_successfully_created
+        create_build_file_for_app(android_app, format_name)
 
 
 def create_build_file_for_app(android_app, format_name):
@@ -38,17 +32,10 @@ def create_build_file_for_app(android_app, format_name):
     :param android_app: class:'AndroidApp' - An instance of AndroidApp.
     :param format_name: str - 'mk' or 'bp' file format.
 
-    :return: bool - True if the build file was successfully created, False otherwise.
-
     """
-    try:
-        logging.debug(f"Creating build file for app {android_app.filename}...")
-        template = ANDROID_MK_TEMPLATE if format_name.lower() == "mk" else ANDROID_BP_TEMPLATE
-        create_soong_build_files(android_app, format_name, template)
-        return True
-    except Exception as err:
-        logging.error(f"Error with app {android_app.pk}; {err}")
-        return False
+    logging.debug(f"Creating build file for app {android_app.filename}...")
+    template = ANDROID_MK_TEMPLATE if format_name.lower() == "mk" else ANDROID_BP_TEMPLATE
+    create_soong_build_files(android_app, format_name, template)
 
 
 def create_soong_build_files(android_app, file_format, template_string):
@@ -63,7 +50,7 @@ def create_soong_build_files(android_app, file_format, template_string):
     :param template_string: str - template string for an Android.mk or Android.bp file.
 
     """
-    template_string_complete = create_template_string(android_app, template_string)
+    template_string_complete, local_module = create_template_string(android_app, template_string)
     remove_existing_build_files(android_app, file_format)
     create_and_save_generic_file(android_app, file_format, template_string_complete)
 
@@ -105,6 +92,57 @@ def create_and_save_generic_file(android_app, file_format, template_string):
     logging.debug(f"Created {file_format} file for app {android_app.filename}...")
     android_app.generic_file_list.append(generic_file)
     android_app.save()
+
+
+def process_generic_files(android_app, tmp_app_dir):
+    """
+    Processes the generic files of a given Android app and creates build files for them. The build files will be stored
+    in the tmp_app_dir.
+
+    :param android_app: class:'AndroidApp' - An instance of AndroidApp.
+    :param tmp_app_dir: tempfile.TemporaryDirectory - A temporary directory to store the build files.
+
+    """
+    for generic_file_lazy in android_app.generic_file_list:
+        check_generic_file(android_app, generic_file_lazy)
+        process_generic_file(generic_file_lazy, android_app, tmp_app_dir)
+
+
+def check_generic_file(android_app, generic_file_lazy):
+    """
+    Checks if a generic file is valid. If not, it will be removed from the Android app.
+    :param android_app: class:'AndroidApp' - An instance of AndroidApp.
+    :param generic_file_lazy: class:'GenericFile' - An instance of GenericFile.
+    """
+    try:
+        generic_file = generic_file_lazy.fetch()
+    except Exception as err:
+        android_app.generic_file_list.remove(generic_file_lazy)
+        android_app.save()
+        logging.debug(f"Removed dead reference{generic_file_lazy.pk} from {android_app.id}: {err}")
+
+
+def process_generic_file(generic_file_lazy, android_app, tmp_app_dir):
+    """
+    Processes a generic file of a given Android app and creates a build file for it. The build file will be stored in
+
+    :param generic_file_lazy: class:'GenericFile' - An instance of GenericFile.
+    :param android_app: class:'AndroidApp' - An instance of AndroidApp.
+    :param tmp_app_dir: str - A temporary directory to store the build files.
+
+    """
+    try:
+        generic_file = generic_file_lazy.fetch()
+        if generic_file.filename.lower() == "android.mk" or generic_file.filename.lower() == "android.bp":
+            if not generic_file.file:
+                raise DoesNotExist(f"Filename: {generic_file.filename} has zero size. Deleting... "
+                                   f"generic file id:{generic_file.pk}")
+            logging.debug(f"Found build file {generic_file.filename} for {android_app.filename}")
+            file_path = os.path.join(tmp_app_dir, generic_file.filename)
+            with open(file_path, 'wb') as fp:
+                fp.write(generic_file.file.read())
+    except Exception as err:
+        logging.error(f"{generic_file_lazy.pk}: {err}")
 
 
 def select_signing_key(android_app):
@@ -176,8 +214,8 @@ def create_template_string(android_app, template_string):
     :param android_app: class:'AndroidApp' - App class that is used to fill in the template variables.
     :param template_string: String template where variables will be substituted.
 
-    :return: A template string with substituted variables. This string can be written to an Android.mk or Android.bp
-    and should be valid for the AOSP build process.
+    :return: str - A template string with substituted variables.
+            str - The string of the local module name
 
     """
     directory_name = android_app.filename.replace('.apk', '')
@@ -202,7 +240,7 @@ def create_template_string(android_app, template_string):
                                                           local_dex_preopt=local_dex_preopt,
                                                           local_privileged_module=local_privileged_module,
                                                           local_optional_uses_libraries=local_optional_uses_libraries)
-    return final_template
+    return final_template, local_module
 
 
 def process_android_apps(firmware, tmp_root_dir):
@@ -230,54 +268,3 @@ def process_android_apps(firmware, tmp_root_dir):
         partition_name = android_app.absolute_store_path.split("/")[8]
         logging.debug(f"Partition name: {partition_name} for app {android_app.id}")
         add_module_to_meta_file(partition_name, tmp_root_dir, module_naming)
-
-
-def process_generic_files(android_app, tmp_app_dir):
-    """
-    Processes the generic files of a given Android app and creates build files for them. The build files will be stored
-    in the tmp_app_dir.
-
-    :param android_app: class:'AndroidApp' - An instance of AndroidApp.
-    :param tmp_app_dir: tempfile.TemporaryDirectory - A temporary directory to store the build files.
-
-    """
-    for generic_file_lazy in android_app.generic_file_list:
-        check_generic_file(android_app, generic_file_lazy)
-        process_generic_file(generic_file_lazy, android_app, tmp_app_dir)
-
-
-def check_generic_file(android_app, generic_file_lazy):
-    """
-    Checks if a generic file is valid. If not, it will be removed from the Android app.
-    :param android_app: class:'AndroidApp' - An instance of AndroidApp.
-    :param generic_file_lazy: class:'GenericFile' - An instance of GenericFile.
-    """
-    try:
-        generic_file = generic_file_lazy.fetch()
-    except Exception as err:
-        android_app.generic_file_list.remove(generic_file_lazy)
-        android_app.save()
-        logging.debug(f"Removed dead reference{generic_file_lazy.pk} from {android_app.id}: {err}")
-
-
-def process_generic_file(generic_file_lazy, android_app, tmp_app_dir):
-    """
-    Processes a generic file of a given Android app and creates a build file for it. The build file will be stored in
-
-    :param generic_file_lazy: class:'GenericFile' - An instance of GenericFile.
-    :param android_app: class:'AndroidApp' - An instance of AndroidApp.
-    :param tmp_app_dir: str - A temporary directory to store the build files.
-
-    """
-    try:
-        generic_file = generic_file_lazy.fetch()
-        if generic_file.filename.lower() == "android.mk" or generic_file.filename.lower() == "android.bp":
-            if not generic_file.file:
-                raise DoesNotExist(f"Filename: {generic_file.filename} has zero size. Deleting... "
-                                   f"generic file id:{generic_file.pk}")
-            logging.debug(f"Found build file {generic_file.filename} for {android_app.filename}")
-            file_path = os.path.join(tmp_app_dir, generic_file.filename)
-            with open(file_path, 'wb') as fp:
-                fp.write(generic_file.file.read())
-    except Exception as err:
-        logging.error(f"{generic_file_lazy.pk}: {err}")

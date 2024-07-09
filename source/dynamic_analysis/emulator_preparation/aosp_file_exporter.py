@@ -1,9 +1,9 @@
 import os
-from firmware_handler.firmware_file_exporter import start_firmware_file_export, NAME_EXPORT_FOLDER
+from firmware_handler.firmware_file_exporter import start_regex_firmware_file_export, NAME_EXPORT_FOLDER
 from model import StoreSetting
 
 
-def export_files(firmware, store_setting_id, search_pattern):
+def export_files_by_regex(firmware, store_setting_id, search_pattern):
     """
     This function is used to process the shared libraries of a firmware. It extracts the shared libraries from the
     firmware and creates the shared library modules for AOSP firmware.
@@ -14,7 +14,7 @@ def export_files(firmware, store_setting_id, search_pattern):
 
     """
     firmware_id_list = [firmware.id]
-    start_firmware_file_export(search_pattern, firmware_id_list, store_setting_id)
+    start_regex_firmware_file_export(search_pattern, firmware_id_list, store_setting_id)
 
 
 def get_firmware_export_folder_root(store_setting_id, firmware):
@@ -70,4 +70,22 @@ def get_subfolders(library_path, top_folder_name):
         subfolders = subfolders[:-1]
     return subfolders
 
+
+def replace_first_from_right(original, target, replacement):
+    """
+    Replace the first occurrence of the target string from the right in the original string with the replacement string.
+
+    :param original: str - the original string
+    :param target: str - the target string to replace from the right
+    :param replacement: str - the replacement string to replace with in the original string
+
+    :return: str - result
+    """
+    original_reversed = original[::-1]
+    target_reversed = target[::-1]
+    replacement_reversed = replacement[::-1]
+    result_reversed = original_reversed.replace(target_reversed, replacement_reversed, 1)
+    result = result_reversed[::-1]
+
+    return result
 

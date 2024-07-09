@@ -65,20 +65,13 @@ def create_modules(source_folder, destination_folder, format_name, search_patter
     for root, dirs, files in os.walk(str(source_folder)):
         for file in files:
             if re.search(search_pattern, file):
-                is_jar = os.path.splitext(file)[1] == ".jar"
                 source_file = os.path.join(root, file)
                 logging.info(f"Creating module for shared library: {source_file} to {destination_folder}")
                 if not os.path.exists(source_file):
                     raise Exception(f"The source file does not exist: {source_file}")
-                template_out = create_template_string(format_name, source_file)
-                if is_jar:
-                    module_name = os.path.splitext(file)[0] + "_INJECTED_PREBUILT_JAR"
-                else:
-                    module_name = os.path.splitext(file)[0]
+                template_out, module_name = create_template_string(format_name, source_file)
                 module_folder = os.path.join(destination_folder, module_name)
                 copy_file(source_file, module_folder)
-                if is_jar:
-                    copy_replacer_script(module_folder)
                 write_template_to_file(template_out, module_folder)
                 partition_name = source_file.split("/")[7]
                 add_module_to_meta_file(partition_name, destination_folder, module_name)

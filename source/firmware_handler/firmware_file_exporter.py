@@ -10,7 +10,7 @@ import traceback
 from queue import Empty
 from threading import Thread
 from context.context_creator import create_db_context, create_log_context, create_multithread_log_context
-from extractor.expand_archives import extract_archive_layer, is_partition_found, extract_first_layer
+from extractor.expand_archives import extract_first_layer
 from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
 from firmware_handler.firmware_file_indexer import create_firmware_file_list
 from hashing import md5_from_file
@@ -42,12 +42,14 @@ def start_file_export_by_regex(filename_regex, firmware_id_list, store_setting_i
         raise ValueError("No search pattern given.")
     if not store_setting_id:
         raise ValueError("No store setting id given.")
-    start_firmware_file_export(search_pattern, firmware_id_list, store_setting_id)
+    start_regex_firmware_file_export(search_pattern, firmware_id_list, store_setting_id)
 
 
-def start_firmware_file_export(search_pattern, firmware_id_list, store_setting_id):
+def start_regex_firmware_file_export(search_pattern, firmware_id_list, store_setting_id):
     """
-    Starts to export firmware files to the filesystem.
+    Starts to export firmware files to the filesystem by a regex pattern. Searches for the files in the firmware
+    by filename and exports them to the file system. Using a regex pattern to filter the files and multiple threads
+    to export the files.
 
     :return: str - path to the exported file.
 

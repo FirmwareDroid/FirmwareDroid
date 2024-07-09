@@ -2,9 +2,9 @@ import logging
 import os
 import re
 from string import Template
-from dynamic_analysis.emulator_preparation.aosp_file_exporter import (export_files, get_firmware_export_folder_root,
+from dynamic_analysis.emulator_preparation.aosp_file_exporter import (export_files_by_regex, get_firmware_export_folder_root,
                                                                       is_top_folder, \
-    get_subfolders)
+                                                                      get_subfolders)
 from dynamic_analysis.emulator_preparation.asop_meta_writer import create_modules
 from dynamic_analysis.emulator_preparation.templates.shared_library_module_template import \
     ANDROID_MK_SHARED_LIBRARY_TEMPLATE, ANDROID_BP_SHARED_LIBRARY_TEMPLATE
@@ -80,6 +80,7 @@ def create_template_string(format_name, library_path):
     :param library_path: str - path to the shared library module.
 
     :return: str - template string for the shared library module.
+             str - the name of the local module.
 
     """
     file_template = ANDROID_MK_SHARED_LIBRARY_TEMPLATE if format_name.lower() == "mk" \
@@ -98,7 +99,7 @@ def create_template_string(format_name, library_path):
                                                       local_src_files=local_src_files,
                                                       local_prebuilt_module_file=local_prebuilt_module_file
                                                       )
-    return template_out
+    return template_out, local_module
 
 
 def process_shared_libraries(firmware, destination_folder, store_setting_id, format_name, skip_file_export):
@@ -116,7 +117,7 @@ def process_shared_libraries(firmware, destination_folder, store_setting_id, for
     filename_regex = r"\.so(\.\d+)?$"
     search_pattern = re.compile(filename_regex, re.IGNORECASE)
     if not skip_file_export:
-        export_files(firmware, store_setting_id, search_pattern)
+        export_files_by_regex(firmware, store_setting_id, search_pattern)
     source_folder = get_firmware_export_folder_root(store_setting_id, firmware)
     logging.debug(f"Processing shared libraries in {source_folder}")
     create_modules(source_folder, destination_folder, format_name, search_pattern, create_template_string)

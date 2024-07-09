@@ -6,6 +6,7 @@ import os
 from multiprocessing import Lock
 from model import FirmwareFile
 from hashing import md5_from_file
+from utils.file_utils.file_util import get_file_libmagic
 
 lock = Lock()
 
@@ -69,6 +70,7 @@ def process_directories(dir_list, root, scan_directory, partition_name, result_f
                                              parent_name=parent_name,
                                              is_directory=True,
                                              relative_file_path=relative_dir_path,
+                                             absolute_store_path=os.path.join(root, directory),
                                              partition_name=partition_name,
                                              md5=None)
         result_firmware_file_list.append(firmware_file)
@@ -95,12 +97,16 @@ def process_files(file_list, root, scan_directory, partition_name, result_firmwa
                 md5_file = md5_from_file(filename_path)
                 file_size_bytes = os.path.getsize(filename_path)
                 parent_name = get_parent_name(root, scan_directory)
+                filename_abs_path = os.path.join(root, filename)
+                filename_abs_path = os.path.abspath(filename_abs_path)
                 firmware_file = create_firmware_file(name=filename,
                                                      parent_name=parent_name,
                                                      is_directory=False,
                                                      file_size_bytes=file_size_bytes,
                                                      relative_file_path=relative_file_path,
+                                                     absolute_store_path=filename_abs_path,
                                                      partition_name=partition_name,
+                                                     meta_dict={"libmagic": get_file_libmagic(filename_path)},
                                                      md5=md5_file)
                 result_firmware_file_list.append(firmware_file)
             except Exception as err:
@@ -108,11 +114,20 @@ def process_files(file_list, root, scan_directory, partition_name, result_firmwa
     return result_firmware_file_list
 
 
-def create_firmware_file(name, parent_name, is_directory, relative_file_path, partition_name, md5,
-                         file_size_bytes=None):
+def create_firmware_file(name,
+                         parent_name,
+                         is_directory,
+                         relative_file_path,
+                         absolute_store_path,
+                         partition_name,
+                         md5,
+                         file_size_bytes=None,
+                         meta_dict=None):
     """
     Creates a class:'FirmwareFile' document. Does not save the document to the database.
 
+    :param absolute_store_path: str - absolute path to the file.
+    :param meta_dict: dict - metadata for the file.
     :param file_size_bytes: int - file size in bytes
     :param partition_name: str - name of the partition.
     :param name: str - name of file or directory
@@ -120,16 +135,20 @@ def create_firmware_file(name, parent_name, is_directory, relative_file_path, pa
     :param is_directory: bool - true if it is a directory
     :param relative_file_path: str - relative path within the firmware
     :param md5: str - md5 digest of the file.
-    :return: class:'FirmwareFile'
+
+    :return: class:'FirmwareFile' - instance of FirmwareFile
 
     """
+    if meta_dict is None:
+        meta_dict = {}
     return FirmwareFile(name=name,
                         parent_dir=parent_name,
                         is_directory=is_directory,
                         file_size_bytes=file_size_bytes,
-                        absolute_store_path=os.path.abspath(relative_file_path),
+                        absolute_store_path=absolute_store_path,
                         relative_path=relative_file_path,
                         partition_name=partition_name,
+                        meta_dict=meta_dict,
                         md5=md5).save()
 
 
