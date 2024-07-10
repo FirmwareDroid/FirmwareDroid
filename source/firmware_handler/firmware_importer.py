@@ -410,8 +410,8 @@ def create_partition_firmware_files(archive_firmware_file_list,
     :return: list(class:'FirmwareFile') - list of files found in the image. In case the image could not be processed the
     method returns an empty list.
     """
-    firmware_file_list = []
     is_successful = False
+    partition_firmware_files = []
     try:
         partition_folder = str(os.path.join(extracted_archive_dir_path, partition_name))
         if os.path.exists(partition_folder) and os.path.isdir(partition_folder) and any(os.scandir(partition_folder)):
@@ -420,12 +420,11 @@ def create_partition_firmware_files(archive_firmware_file_list,
             image_firmware_file = find_image_firmware_file(archive_firmware_file_list, file_pattern_list)
             image_absolute_path = create_abs_image_file_path(image_firmware_file, extracted_archive_dir_path)
             extract_image_files(image_absolute_path, temp_dir_path, store_paths)
-        partition_firmware_files = create_firmware_file_list(extracted_archive_dir_path, partition_name)
-        firmware_file_list.extend(partition_firmware_files)
+        partition_firmware_files = create_firmware_file_list(temp_dir_path, partition_name)
         is_successful = True
     except (RuntimeError, ValueError) as err:
         logging.warning(err)
-    return firmware_file_list, is_successful
+    return partition_firmware_files, is_successful
 
 
 def store_firmware_object(store_filename, original_filename, firmware_store_path, md5, sha256, sha1, android_app_list,

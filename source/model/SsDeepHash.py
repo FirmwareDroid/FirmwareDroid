@@ -10,7 +10,7 @@ class SsDeepHash(Document):
     firmware_id_reference = LazyReferenceField('AndroidFirmware', reverse_delete_rule=CASCADE)
     firmware_file_reference = LazyReferenceField('FirmwareFile', reverse_delete_rule=CASCADE, required=True)
     filename = StringField(required=True)
-    ssdeep_digest = StringField(required=True)
+    digest = StringField(required=True)
     block_size = StringField(required=False)
     block_data = StringField(required=False)
     double_block_data = StringField(required=False)

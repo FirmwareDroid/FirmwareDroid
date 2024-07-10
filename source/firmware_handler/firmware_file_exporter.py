@@ -139,6 +139,8 @@ def extract_firmware(firmware_archive_file_path, temp_extract_dir, store_paths):
                                                                                   store_paths)
         if is_successful:
             firmware_file_list.extend(partition_firmware_file_list)
+        else:
+            logging.warning(f"Could not index files for partition: {partition_name}")
     return firmware_file_list
 
 

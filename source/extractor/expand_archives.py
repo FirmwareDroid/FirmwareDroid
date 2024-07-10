@@ -4,6 +4,8 @@
 import logging
 import os
 import re
+import tempfile
+
 from extractor.ext4_extractor import extract_dat
 from extractor.bin_extractor.bin_extractor import extract_bin
 from extractor.nb0_extractor import extract_nb0
@@ -114,15 +116,16 @@ def extract_first_layer(firmware_archive_file_path, destination_dir):
                                       unblob_depth=1,
                                       max_rec_depth=1)
     while is_partition_found(file_list) is False:
+        temp_dir_path = tempfile.TemporaryDirectory(dir=destination_dir)
         file_list = extract_archive_layer(file_list,
-                                          destination_dir,
-                                          delete_compressed_file=True,
+                                          temp_dir_path.name,
+                                          delete_compressed_file=False,
                                           unblob_depth=1,
                                           max_rec_depth=1)
     return file_list
 
 
-def extract_archive_layer(compressed_file_path_list,
+def extract_archive_layer(file_path_list,
                           destination_dir,
                           delete_compressed_file,
                           unblob_depth=1,
@@ -130,7 +133,7 @@ def extract_archive_layer(compressed_file_path_list,
     """
     Extract the compressed file to the destination directory.
 
-    :param compressed_file_path_list: list(str) - paths to the compressed files.
+    :param file_path_list: list(str) - paths to be processed.
     :param destination_dir: str - path to the folder where the data is extracted to.
     :param delete_compressed_file: bool - delete the compressed file after extraction.
     :param unblob_depth: int - depth of unblob extraction.
@@ -139,12 +142,15 @@ def extract_archive_layer(compressed_file_path_list,
     :return: list(str) - list of paths to the extracted files.
     """
     extracted_files_path_list = []
-    for file_path in compressed_file_path_list:
-        if not os.path.isfile(file_path):
-            logging.warning(f"Invalid file path: {file_path}")
+    for file_path in file_path_list:
+        if not os.path.exists(file_path):
+            logging.error(f"File does not exist: {file_path}")
             continue
-        extracted_files_for_current_path = process_single_file_path(
-            file_path, destination_dir, delete_compressed_file, unblob_depth, max_rec_depth)
+        extracted_files_for_current_path = process_single_file_path(file_path,
+                                                                    destination_dir,
+                                                                    delete_compressed_file,
+                                                                    unblob_depth,
+                                                                    max_rec_depth)
         extracted_files_path_list.extend(extracted_files_for_current_path)
     return extracted_files_path_list
 

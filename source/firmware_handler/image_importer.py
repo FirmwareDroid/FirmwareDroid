@@ -46,7 +46,7 @@ def extract_image_files(image_path, extract_dir_path, store_paths):
 
     """
     file_extension = os.path.splitext(image_path)[1]
-    if file_extension == ".img":
+    if file_extension == ".img" or file_extension == ".image":
         if extract_simg_ext4(image_path, extract_dir_path, store_paths):
             logging.debug("Image extraction successful with simg_ext4extractor")
         elif extract_ext4(image_path, extract_dir_path):

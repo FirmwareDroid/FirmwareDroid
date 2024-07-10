@@ -105,9 +105,6 @@ def replace_firmware_files(firmware_file_list, firmware, store_paths):
     firmware.save()
     for firmware_file in firmware_file_list:
         firmware_file.firmware_id_reference = firmware.id
-        full_path = os.path.join(store_paths["FIRMWARE_FOLDER_CACHE"], "." + firmware_file.relative_path)
-        normalized_path = os.path.normpath(full_path)
-        firmware_file.absolute_store_path = os.path.abspath(normalized_path)
         firmware_file.save()
         firmware.firmware_file_id_list.append(firmware_file.id)
         firmware.save()

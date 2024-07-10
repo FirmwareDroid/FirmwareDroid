@@ -18,7 +18,7 @@ def create_tlsh_hash(firmware_file):
         firmware_id_reference=firmware_file.firmware_id_reference,
         firmware_file_reference=firmware_file.id,
         filename=firmware_file.name,
-        tlsh_digest=digest
+        digest=digest
     )
     tlsh_hash.save()
     if firmware_file.tlsh_reference:

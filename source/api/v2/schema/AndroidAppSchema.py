@@ -26,7 +26,6 @@ class ScannerModules(Enum):
     QUARKENGINE = {"QuarkEngineScanJob": "static_analysis.QuarkEngine.quark_engine_wrapper"}
     QARK = {"QarkScanJob": "static_analysis.Qark.qark_wrapper"}
     SUPER = {"SuperAndroidAnalyzerScanJob": "static_analysis.SuperAndroidAnalyzer.super_android_analyzer_wrapper"}
-    MORF = {"MORFScanJob": "static_analysis.MORF.morf_wrapper"}
     VIRUSTOTAL = {"VirusTotalScanJob": "static_analysis.Virustotal.virus_total_wrapper"}
     MANIFEST = {"ManifestParserScanJob": "static_analysis.ManifestParser.android_manifest_parser"}
     MOBSF = {"MobSFScanJob": "static_analysis.MobSFScan.mobsfscan_wrapper"}

@@ -16,7 +16,7 @@ def create_ssdeep_hash(firmware_file):
     logging.info(f"Creates ssdeep digest for file: {firmware_file.id} {firmware_file.name} "
                  f"{firmware_file.absolute_store_path}")
     ssdeep_digest = ssdeep_from_file(firmware_file.absolute_store_path)
-    ssdeep_hash = SsDeepHash(ssdeep_digest=ssdeep_digest,
+    ssdeep_hash = SsDeepHash(digest=ssdeep_digest,
                              filename=firmware_file.name,
                              firmware_id_reference=firmware_file.firmware_id_reference,
                              firmware_file_reference=firmware_file.id)
