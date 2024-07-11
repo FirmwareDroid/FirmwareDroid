@@ -2,7 +2,7 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 
-FROM firmwaredroid-base as extractor-worker
+FROM firmwaredroid-base AS extractor-worker
 USER root
 
 #####################################
@@ -10,7 +10,6 @@ USER root
 #####################################
 RUN apt update
 RUN apt install -y pkgconf simg2img liblzo2-dev fuse brotli libmagic1
-    #apt-get -y install f2fs-tools -> TODO: Add f2fs file system support as soon as it is support in Debian bullseye
 
 #####################################
 # Installing unblob dependencies    #
@@ -23,13 +22,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt install -y android-sdk-libsparse-utils e2
 # Installing ssdeep dependencies    #
 #####################################
 RUN DEBIAN_FRONTEND=noninteractive apt install -y ssdeep libfuzzy-dev && apt-get clean
-
-#####################################
-# Set access rights for mounting    #
-#####################################
-# TODO Problematic security rights for the user www. Find alternative solution to mounting
-RUN echo "www ALL=(root) NOPASSWD: /bin/unmount" >> /etc/sudoers
-RUN echo "www ALL=(root) NOPASSWD: /bin/mount" >> /etc/sudoers
 
 #####################################
 # Install python dependencies       #

@@ -176,16 +176,13 @@ def get_file_export_path_abs(store_setting, firmware_file):
                   f"{firmware_file.firmware_id_reference.pk},"
                   f"{firmware_file.partition_name},"
                   f"{minimized_relative_path}")
-
     destination_folder = os.path.join(store_path_abs,
                                       NAME_EXPORT_FOLDER,
                                       str(firmware_file.firmware_id_reference.pk),
                                       firmware_file.partition_name,
                                       "." + minimized_relative_path)
-
-    logging.debug(f"Exporting firmware file {firmware_file.id} to {destination_folder}")
     destination_folder_abs = os.path.abspath(destination_folder)
-    logging.info(f"Exporting firmware file {firmware_file.id} to {destination_folder_abs}")
+    logging.debug(f"Exporting firmware file {firmware_file.id} to {destination_folder_abs}")
     return destination_folder_abs
 
 

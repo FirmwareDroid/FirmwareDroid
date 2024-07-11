@@ -1,4 +1,4 @@
-FROM openjdk:23-jdk-slim-bullseye as apk_scanner-worker
+FROM openjdk:23-jdk-slim-bullseye AS apk_scanner-worker
 COPY --from=firmwaredroid-base / /
 
 #####################################
@@ -31,8 +31,8 @@ RUN JADX_VERSION=$(curl -s "https://api.github.com/repos/skylot/jadx/releases/la
     && curl -Lo jadx.zip "https://github.com/skylot/jadx/releases/latest/download/jadx-${JADX_VERSION}.zip"
 RUN unzip jadx.zip -d /tmp/jadx-temp/
 RUN mv /tmp/jadx-temp/* /opt/jadx/
-ENV JADX "/opt/jadx/bin"
-ENV PATH "${JADX}:${PATH}"
+ENV JADX="/opt/jadx/bin"
+ENV PATH="${JADX}:${PATH}"
 RUN export PATH=$PATH
 RUN jadx --version
 
@@ -57,7 +57,7 @@ USER root
 RUN chown -R www:www /opt/firmwaredroid/python/
 
 USER www
-ENV PATH "$PATH:/home/www/.local/bin/"
-ENV PYTHONPATH "/var/www/source/:$PYTHONPATH"
+ENV PATH="$PATH:/home/www/.local/bin/"
+ENV PYTHONPATH="/var/www/source/:${PYTHONPATH}"
 WORKDIR /var/www/source/
 RUN python3 /var/www/docker/setup_apk_scanner.py

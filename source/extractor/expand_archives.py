@@ -137,25 +137,35 @@ def extract_first_layer(firmware_archive_file_path, destination_dir):
                                       destination_dir,
                                       delete_compressed_file=False,
                                       unblob_depth=1)
-    max_depth = 5
-    while has_extracted_all_supported_files(file_list) is False or max_depth > 0:
+    max_depth = 10
+    while max_depth > 0 or has_extracted_all_supported_files(file_list) is False:
         logging.info(f"Checking for Android partition in the first layer depth: {max_depth} | "
                      f"File count: {len(file_list)}")
         file_list = extract_list_of_files(file_list,
                                           destination_dir,
                                           delete_compressed_file=True,
                                           unblob_depth=1)
-        file_list = filter_supported_files(file_list)
+        filtered_file_list = filter_supported_files(file_list)
+        if len(filtered_file_list) > 0:
+            file_list = filtered_file_list
         max_depth = max_depth - 1
-    logging.info(f"Found Android partition in the first layer")
+    logging.info(f"Found Android partition in the first layer: {max_depth}")
     return file_list
+
+
+def get_raw_image(file_path_list):
+    raw_image_path = None
+    for file_path in file_path_list:
+        if os.path.basename(file_path) == "raw.image":
+            raw_image_path = file_path
+    return raw_image_path
 
 
 def extract_second_layer(firmware_archive_file_path, destination_dir):
     logging.info(f"Extracting all layers of the firmware archive: {firmware_archive_file_path}")
     extract_image_file(firmware_archive_file_path, destination_dir)
-    extracted_files = get_file_list(destination_dir)
-    return extracted_files
+    extracted_file_abs_path_list = get_file_list(destination_dir)
+    return extracted_file_abs_path_list
 
 
 def extract_image_file(image_path, extract_dir_path):
@@ -163,10 +173,6 @@ def extract_image_file(image_path, extract_dir_path):
         logging.debug("Image extraction successful with simg_ext4extractor")
     elif extract_ext4(image_path, extract_dir_path):
         logging.debug("Image extraction successful with ext4extractor")
-    elif mount_android_image(image_path, extract_dir_path):
-        logging.debug("Image mount successful")
-    elif extract_ubi_image(image_path, extract_dir_path):
-        logging.debug("Image extraction successful with UBI")
     elif unblob_extract(image_path, extract_dir_path):
         logging.debug("Image extraction successful with unblob extraction suite")
     else:

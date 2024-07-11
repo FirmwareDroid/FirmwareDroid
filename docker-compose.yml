@@ -115,8 +115,6 @@ services:
     command: rqworker --logging_level INFO --name extractor-worker-high-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
     networks:
       - backend
-    # TODO Security enhancement / compatibility - replace/remove access right
-    privileged: true
 
   apk_scanner-worker-1:
     platform: "linux/amd64"
