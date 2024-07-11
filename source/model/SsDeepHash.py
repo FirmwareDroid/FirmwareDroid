@@ -20,7 +20,7 @@ class SsDeepHash(Document):
     @classmethod
     def pre_save(cls, sender, document, **kwargs):
         block_data, double_block_data, block_size, chunk_7_set, chunk_7_double_set \
-            = preprocess_hash(document.ssdeep_digest)
+            = preprocess_hash(document.digest)
         document.block_size = block_size
         document.block_data = block_data
         document.double_block_data = double_block_data

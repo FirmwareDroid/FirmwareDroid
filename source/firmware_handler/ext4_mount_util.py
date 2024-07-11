@@ -11,12 +11,11 @@ import traceback
 from firmware_handler.image_repair import attempt_repair, attempt_repair_and_resize
 
 
-def mount_android_image(android_ext4_path, mount_folder_path, store_paths):
+def mount_android_image(android_ext4_path, mount_folder_path):
     """
     Attempts to mount the given android image (only *.img) to the file system. Uses different mounting strategies to
     find a working configuration.
 
-    :param store_paths: dict(str, str) - paths to the storage folders.
     :param android_ext4_path: str path to the image file to convert or mount.
     :param mount_folder_path: str path to the folder in which the partition will be mounted.
 
@@ -34,10 +33,10 @@ def mount_android_image(android_ext4_path, mount_folder_path, store_paths):
     for mount_option in mount_option_list:
         if is_mounted:
             break
-        if attempt_simg2img_mount(android_ext4_path, mount_folder_path, mount_option, store_paths) \
+        if attempt_simg2img_mount(android_ext4_path, mount_folder_path, mount_option) \
                 or attempt_ext4_mount(android_ext4_path, mount_folder_path, mount_option) \
-                or attempt_repair_and_mount(android_ext4_path, mount_folder_path, mount_option, store_paths) \
-                or attempt_resize_and_mount(android_ext4_path, mount_folder_path, mount_option, store_paths):
+                or attempt_repair_and_mount(android_ext4_path, mount_folder_path, mount_option) \
+                or attempt_resize_and_mount(android_ext4_path, mount_folder_path, mount_option):
             if not has_files_in_folder(mount_folder_path):
                 logging.debug("Overwrite chown of mount folders.")
                 execute_chown(mount_folder_path)
@@ -50,7 +49,6 @@ def mount_android_image(android_ext4_path, mount_folder_path, store_paths):
                 logging.debug(f"Mount success: {android_ext4_path} to {mount_folder_path}")
         else:
             logging.warning(f"All mount attempts failed. Could not mount {android_ext4_path}")
-    logging.debug(f"Was file mounted? {is_mounted}")
     return is_mounted
 
 
@@ -97,11 +95,10 @@ def attempt_ext4_mount(source, target, mount_options):
     return is_mounted
 
 
-def attempt_simg2img_mount(source, target, mount_options, store_paths):
+def attempt_simg2img_mount(source, target, mount_options):
     """
     Converts the given image with simg2img and attempts to mount it.
 
-    :param store_paths: dict(str, str) - paths to the storage folders.
     :param source: str - the file-path to be mounted.
     :param target: str - the destination path where the file will be mounted to.
     :param mount_options: str - mount options flags.
@@ -111,7 +108,7 @@ def attempt_simg2img_mount(source, target, mount_options, store_paths):
     logging.debug(f"Attempt simg2img mount {source}")
     is_mounted = False
     try:
-        tempdir = tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"])
+        tempdir = tempfile.TemporaryDirectory()
         ext4_raw_image_path = simg2img_convert_ext4(source, tempdir.name)
         if ext4_raw_image_path:
             try:
@@ -126,7 +123,7 @@ def attempt_simg2img_mount(source, target, mount_options, store_paths):
     return is_mounted
 
 
-def attempt_repair_and_mount(source, target, mount_options, store_paths):
+def attempt_repair_and_mount(source, target, mount_options):
     """
     Attempts to repair the given source file.
 
@@ -140,7 +137,7 @@ def attempt_repair_and_mount(source, target, mount_options, store_paths):
     logging.debug(f"Attempt repair and mount {source}")
     is_mounted = False
     try:
-        temp_dir = tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"])
+        temp_dir = tempfile.TemporaryDirectory()
         repaired_source = attempt_repair(source, temp_dir.name)
         exec_mount(repaired_source, target, mount_options)
         is_mounted = True
@@ -151,11 +148,10 @@ def attempt_repair_and_mount(source, target, mount_options, store_paths):
     return is_mounted
 
 
-def attempt_resize_and_mount(source, target, mount_options, store_paths):
+def attempt_resize_and_mount(source, target, mount_options):
     """
     Attempts to repair and resize the given source file.
 
-    :param store_paths: dict(str, str) - paths to the storage folders.
     :param source: str - the file-path to be mounted.
     :param target: str - the destination path where the file will be mounted to.
     :param mount_options: str - mount options flags.
@@ -165,7 +161,7 @@ def attempt_resize_and_mount(source, target, mount_options, store_paths):
     logging.debug(f"Attempt repair, resize and mount {source}")
     is_mounted = False
     try:
-        temp_dir = tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"])
+        temp_dir = tempfile.TemporaryDirectory()
         repaired_source = attempt_repair_and_resize(source, temp_dir.name)
         exec_mount(repaired_source, target, mount_options)
         is_mounted = True

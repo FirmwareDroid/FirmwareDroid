@@ -58,7 +58,7 @@ def compare_ssdeep_hashes(ssdeep_hash_list):
         for other in similar_to:
             node_b_label = other
             ssdeep_id, filename = other.split(":", 1)
-            score = ssdeep_compare_hashs(ssdeep_hash.ssdeep_digest, SsDeepHash.objects.get(pk=ssdeep_id).ssdeep_digest)
+            score = ssdeep_compare_hashs(ssdeep_hash.digest, SsDeepHash.objects.get(pk=ssdeep_id).digest)
             if score > 0:
                 matches_dict[node_a_label].add(node_b_label)
                 matches_dict[node_b_label].add(node_a_label)

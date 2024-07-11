@@ -9,7 +9,8 @@ SKIP_EXTENSION_DEFAULT = [".apk", ".dex", ".odex", ".oat", ".so", ".jar", ".clas
                           ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".xml", ".json", ".html", ".htm",
                           ".css", ".js", ".ts", ".tsx", ".svg", ".ttf", ".otf", ".woff", ".woff2", ".eot", ".md",
                           ".log", ".odt", ".ods", ".odp", ".odg", ".odf", ".odb", ".odc", ".odm", ".pak", ".rlib",
-                          ".mtz", ".apex", ".capex", ".vdex", ".arsc", ".pb", ".aab"]
+                          ".mtz", ".apex", ".capex", ".vdex", ".arsc", ".pb", ".aab", ".list", ".config", ".elf",
+                          ".mbn", ".uncompressed", ".unknown", ".1", ".2", ".3", ".4"]
 
 
 def remove_unblob_log():
@@ -40,6 +41,11 @@ def unblob_extract(compressed_file_path, destination_dir, depth=25, worker_count
     try:
         input_file = shlex.quote(compressed_file_path)
         output_dir = shlex.quote(destination_dir)
+        filename = os.path.basename(compressed_file_path)
+        file_extension = os.path.splitext(filename)[1]
+        if file_extension in SKIP_EXTENSION_DEFAULT:
+            logging.info(f"Skipping {filename} due to blacklisted extension for unblob extraction.")
+            return False
         logging.info(f"Unblob {input_file} to {output_dir}")
 
         command_array = ["unblob",

@@ -5,21 +5,21 @@ import logging
 import os
 import re
 import tempfile
-
-from extractor.ext4_extractor import extract_dat
+from extractor.ext4_extractor import extract_dat, extract_simg_ext4, extract_ext4
 from extractor.bin_extractor.bin_extractor import extract_bin
 from extractor.nb0_extractor import extract_nb0
 from extractor.pac_extractor import extract_pac
+from extractor.ubi_extractor import extract_ubi_image
 from extractor.unblob_extractor import unblob_extract
 from extractor.unzipper import extract_tar, extract_zip, extract_gz
 from extractor.lz4_extractor import extract_lz4
 from extractor.brotli_extractor import extract_brotli
-from collections import deque
-
 from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
+from firmware_handler.ext4_mount_util import mount_android_image
 
 EXTRACTION_SIZE_THRESHOLD_MB = 100
 MAX_EXTRACTION_DEPTH = 20
+IMG_FILE_TYPE_REGEX = r".(img|dat)$"
 SUPPORTED_FILE_TYPE_REGEX = r".(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz)$"
 EXTRACT_FUNCTION_MAP_DICT = {
     ".zip": extract_zip,
@@ -100,6 +100,29 @@ def is_partition_found(file_list):
     return has_partition
 
 
+def has_extracted_all_supported_files(file_list):
+    """
+    Check if all supported files were extracted.
+
+    :param file_list: list(str) - file paths to check for.
+
+    :return: bool - flag if all supported files were extracted.
+
+    """
+    has_all_files = True
+    for file in file_list:
+        if not re.search(SUPPORTED_FILE_TYPE_REGEX, file):
+            has_all_files = False
+            break
+    return has_all_files
+
+
+def filter_supported_files(file_list):
+    pattern = re.compile(SUPPORTED_FILE_TYPE_REGEX)
+    filtered_list = [file for file in file_list if pattern.search(file)]
+    return filtered_list
+
+
 def extract_first_layer(firmware_archive_file_path, destination_dir):
     """
     Extract the first layer of the firmware archive. Stops extracting when an Android partition (.img file) is found.
@@ -110,26 +133,50 @@ def extract_first_layer(firmware_archive_file_path, destination_dir):
     :return: list(str) - list of paths to the extracted files.
 
     """
-    file_list = extract_archive_layer([firmware_archive_file_path],
+    file_list = extract_list_of_files([firmware_archive_file_path],
                                       destination_dir,
                                       delete_compressed_file=False,
-                                      unblob_depth=1,
-                                      max_rec_depth=1)
-    while is_partition_found(file_list) is False:
-        temp_dir_path = tempfile.TemporaryDirectory(dir=destination_dir)
-        file_list = extract_archive_layer(file_list,
-                                          temp_dir_path.name,
-                                          delete_compressed_file=False,
-                                          unblob_depth=1,
-                                          max_rec_depth=1)
+                                      unblob_depth=1)
+    max_depth = 5
+    while has_extracted_all_supported_files(file_list) is False or max_depth > 0:
+        logging.info(f"Checking for Android partition in the first layer depth: {max_depth} | "
+                     f"File count: {len(file_list)}")
+        file_list = extract_list_of_files(file_list,
+                                          destination_dir,
+                                          delete_compressed_file=True,
+                                          unblob_depth=1)
+        file_list = filter_supported_files(file_list)
+        max_depth = max_depth - 1
+    logging.info(f"Found Android partition in the first layer")
     return file_list
 
 
-def extract_archive_layer(file_path_list,
+def extract_second_layer(firmware_archive_file_path, destination_dir):
+    logging.info(f"Extracting all layers of the firmware archive: {firmware_archive_file_path}")
+    extract_image_file(firmware_archive_file_path, destination_dir)
+    extracted_files = get_file_list(destination_dir)
+    return extracted_files
+
+
+def extract_image_file(image_path, extract_dir_path):
+    if extract_simg_ext4(image_path, extract_dir_path):
+        logging.debug("Image extraction successful with simg_ext4extractor")
+    elif extract_ext4(image_path, extract_dir_path):
+        logging.debug("Image extraction successful with ext4extractor")
+    elif mount_android_image(image_path, extract_dir_path):
+        logging.debug("Image mount successful")
+    elif extract_ubi_image(image_path, extract_dir_path):
+        logging.debug("Image extraction successful with UBI")
+    elif unblob_extract(image_path, extract_dir_path):
+        logging.debug("Image extraction successful with unblob extraction suite")
+    else:
+        raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
+
+
+def extract_list_of_files(file_path_list,
                           destination_dir,
                           delete_compressed_file,
-                          unblob_depth=1,
-                          max_rec_depth=MAX_EXTRACTION_DEPTH):
+                          unblob_depth=1):
     """
     Extract the compressed file to the destination directory.
 
@@ -137,66 +184,50 @@ def extract_archive_layer(file_path_list,
     :param destination_dir: str - path to the folder where the data is extracted to.
     :param delete_compressed_file: bool - delete the compressed file after extraction.
     :param unblob_depth: int - depth of unblob extraction.
-    :param max_rec_depth: int - maximum extraction depth.
 
     :return: list(str) - list of paths to the extracted files.
     """
     extracted_files_path_list = []
     for file_path in file_path_list:
         if not os.path.exists(file_path):
-            logging.error(f"File does not exist: {file_path}")
             continue
-        extracted_files_for_current_path = process_single_file_path(file_path,
-                                                                    destination_dir,
-                                                                    delete_compressed_file,
-                                                                    unblob_depth,
-                                                                    max_rec_depth)
-        extracted_files_path_list.extend(extracted_files_for_current_path)
+        if os.path.isfile(file_path):
+            extracted_files_for_current_path = process_single_file_path(file_path,
+                                                                        destination_dir,
+                                                                        delete_compressed_file,
+                                                                        unblob_depth)
+            extracted_files_path_list.extend(extracted_files_for_current_path)
     return extracted_files_path_list
+
+
+def process_directory(current_path, queue, failed_extractions, processed_files):
+    for filename in os.listdir(current_path):
+        next_path = os.path.join(current_path, filename)
+        if next_path not in failed_extractions and next_path not in processed_files:
+            queue.append(next_path)
+
+
+def process_file(current_path,
+                 destination_dir,
+                 unblob_depth,
+                 delete_compressed_file):
+    file_extension = os.path.splitext(current_path.lower())[1]
+    is_success = False
+    if file_extension in EXTRACT_FUNCTION_MAP_DICT.keys():
+        is_success = EXTRACT_FUNCTION_MAP_DICT[file_extension](current_path, destination_dir)
+    is_unblob_success = False
+    if not is_success:
+        is_unblob_success = unblob_extract(current_path, destination_dir, unblob_depth)
+
+    if delete_compressed_file and (is_success or is_unblob_success):
+        delete_file_safely(current_path)
 
 
 def process_single_file_path(file_path,
                              destination_dir,
                              delete_compressed_file,
-                             unblob_depth=1,
-                             max_rec_depth=MAX_EXTRACTION_DEPTH):
-    """
-    Extract the compressed file to the destination directory.
-    If the file is not supported, it will be extracted with a python function otherwise with unblob.
-
-    :param file_path: str - path to the compressed file.
-    :param destination_dir: str - path to the folder where the data is extracted to.
-    :param delete_compressed_file: bool - delete the compressed file after extraction.
-    :param unblob_depth: int - depth of unblob extraction.
-    :param max_rec_depth: int - maximum extraction depth.
-
-    :return: list(str) - list of paths to the extracted files.
-    """
-    logging.info(f"Extracting: {file_path}")
-    queue = deque([(file_path, 0)])  # Each item is a tuple of (path, current depth)
-    while queue:
-        current_path, current_depth = queue.popleft()
-        logging.debug(f"Current path: {current_path}")
-        if current_depth >= max_rec_depth:
-            logging.warning(f"Max recursion depth reached: {max_rec_depth}")
-            continue
-
-        if os.path.isdir(current_path):
-            for filename in os.listdir(current_path):
-                file_path = os.path.join(current_path, filename)
-                logging.debug(f"Adding to queue: {file_path}")
-                queue.append((file_path, current_depth + 1))
-        else:
-            file_extension = os.path.splitext(current_path.lower())[1]
-            logging.debug(f"Extracting: {current_path}, extension: {file_extension}")
-            if file_extension in EXTRACT_FUNCTION_MAP_DICT.keys():
-                logging.info(f"Attempt to extract: {current_path}")
-                is_success = EXTRACT_FUNCTION_MAP_DICT[file_extension](current_path, destination_dir)
-                if not is_success:
-                    unblob_extract(current_path, destination_dir, unblob_depth)
-            else:
-                unblob_extract(current_path, destination_dir, unblob_depth)
-
-            if delete_compressed_file:
-                delete_file_safely(current_path)
+                             unblob_depth=1):
+    logging.info(f"Extracting: {file_path}, destination: {destination_dir}, delete: {delete_compressed_file}")
+    process_file(file_path, destination_dir, unblob_depth, delete_compressed_file)
+    logging.info(f"Extraction finished for: {file_path}")
     return get_file_list(destination_dir)

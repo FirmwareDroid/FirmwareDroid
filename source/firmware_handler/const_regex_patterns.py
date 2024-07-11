@@ -2,29 +2,30 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 """
-Constant patterns for file names and formats of firmware images and files.
+Constant patterns for file names and formats of Android firmware images and files.
 
-Pattern lists should always start with the most fitting one and then get slowly more vague. Otherwise, it is possible
-that incorrect files match the patterns.
+Pattern lists should always start with the most fitting one and then get slowly more vague.
 """
 
 ##########################################################################################
 # Partitions that are in ext or sparse format.
 ##########################################################################################
 SYSTEM_IMG_PATTERN_LIST = [
-    "(?<![a-zA-Z0-9_])system[.]img",
-    "(?<![a-zA-Z0-9_])system[.]img$",
-    "(?<![a-zA-Z0-9_])system[.].*[.]img$",
-    "(?<![a-zA-Z0-9_])system[.]img[.].*",
-    "(?<![a-zA-Z0-9_]).*system.*img_sparsechunk$",
-    "(?<![a-zA-Z0-9_]).*system.*(img|rfs|img.ext4|ext4.img)$",
-]
+        "system[.]img",
+        ".*system[.]img$",
+        "^system[.].*[.]img$",
+        "^system[.]img[.].*",
+        ".*system.*img_sparsechunk$",
+        ".*system.*(img|rfs|img.ext4|ext4.img)$",
+    ]
+
 SUPER_IMG_PATTERN_LIST = ["super[.]img",
                           ".*super[.]img$",
                           "^super[.].*[.]img$",
                           "^super[.]img[.].*",
                           ".*super.*img_sparsechunk$",
                           "super[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
+
 SUPER_EMPTY_PATTERN_LIST = ["super_empty[.]img"]
 SYSTEM_OTHER_IMG_PATTERN_LIST = ["system_other[.]img", "system_other[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 SYSTEM_EXT_IMG_PATTERN_LIST = ["system_ext[.]img", "system_ext[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
