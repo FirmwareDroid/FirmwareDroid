@@ -13,7 +13,6 @@ from context.context_creator import create_db_context, create_log_context, creat
 from extractor.expand_archives import extract_first_layer
 from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
 from firmware_handler.firmware_file_indexer import create_firmware_file_list
-from hashing import md5_from_file
 from model import StoreSetting, AndroidFirmware
 from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
 
@@ -42,6 +41,7 @@ def start_file_export_by_regex(filename_regex, firmware_id_list, store_setting_i
         raise ValueError("No search pattern given.")
     if not store_setting_id:
         raise ValueError("No store setting id given.")
+    logging.info(f"Start exporting firmware files by regex {filename_regex} for firmware {firmware_id_list}")
     start_regex_firmware_file_export(search_pattern, firmware_id_list, store_setting_id)
 
 
@@ -56,7 +56,6 @@ def start_regex_firmware_file_export(search_pattern, firmware_id_list, store_set
     """
     firmware_id_queue = create_multi_threading_queue(firmware_id_list)
     for i in range(NUMBER_OF_EXPORTER_THREADS):
-        logging.debug(f"Start exporter thread {i} of {NUMBER_OF_EXPORTER_THREADS}")
         worker = Thread(target=export_worker_multithreading, args=(firmware_id_queue, store_setting_id, search_pattern))
         worker.setDaemon(True)
         worker.start()

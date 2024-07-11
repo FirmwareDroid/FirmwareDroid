@@ -21,7 +21,6 @@ def create_firmware_file_list(scan_directory, partition_name):
 
     """
     result_firmware_file_list = []
-    logging.debug(f"Start scanning through directory for files: {scan_directory}")
     for root, dir_list, file_list in os.walk(scan_directory):
         result_firmware_file_list = process_directories(dir_list,
                                                         root,
@@ -98,10 +97,6 @@ def process_files(file_list, root, scan_directory, partition_name, result_firmwa
                 file_size_bytes = os.path.getsize(filename_path)
                 parent_name = get_parent_name(root, scan_directory)
                 filename_abs_path = os.path.abspath(filename_path)
-                logging.debug(f"Create firmware file: {filename_abs_path} "
-                              f"\n{relative_file_path}"
-                              f"\n{root}"
-                              f"\n{scan_directory}")
                 filename_abs_path = os.path.realpath(filename_abs_path)
                 if not os.path.exists(filename_abs_path) or not os.path.isfile(filename_abs_path):
                     raise ValueError(f"Firmware File could not be created because file does not exist: "
