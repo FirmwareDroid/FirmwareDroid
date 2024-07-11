@@ -9,9 +9,9 @@ from graphql_jwt.decorators import superuser_required
 from api.v2.schema.RqJobsSchema import ONE_DAY_TIMEOUT, ONE_WEEK_TIMEOUT
 from api.v2.types.GenericDeletion import delete_queryset_background
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
+from hashing.fuzzy_hash_creator import start_fuzzy_hasher
 from model.AndroidFirmware import AndroidFirmware
 from firmware_handler.firmware_importer import start_firmware_mass_import
-
 
 ModelFilter = generate_filter(AndroidFirmware)
 
@@ -81,6 +81,7 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
         """
         Create a job to import firmware.
 
+        :param storage_index: int - index of the storage to use.
         :param queue_name: str - name of the RQ to use.
         :param create_fuzzy_hashes: boolean - True: will create fuzzy hashes for all files in the firmware found.
 
@@ -92,6 +93,28 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
         return cls(job_id=job.id)
 
 
+class CreateFuzzyHashesJob(graphene.Mutation):
+    """
+    Starts the fuzzy hasher module. The fuzzy hasher module is used to create fuzzy hashes for all firmware files in
+    the given firmware list.
+    """
+    job_id = graphene.String()
+
+    class Arguments:
+        queue_name = graphene.String(required=True, default_value="high-python")
+        firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=False)
+        storage_index = graphene.Int(required=True, default_value=0)
+
+    @classmethod
+    @superuser_required
+    def mutate(cls, root, info, queue_name, firmware_id_list, storage_index):
+        queue = django_rq.get_queue(queue_name)
+        func_to_run = start_fuzzy_hasher
+        job = queue.enqueue(func_to_run, firmware_id_list, storage_index, job_timeout=ONE_WEEK_TIMEOUT)
+        return cls(job_id=job.id)
+
+
 class AndroidFirmwareMutation(graphene.ObjectType):
     delete_android_firmware = DeleteAndroidFirmwareMutation.Field()
     create_firmware_extractor_job = CreateFirmwareExtractorJob.Field()
+    create_fuzzy_hashes_job = CreateFuzzyHashesJob.Field()

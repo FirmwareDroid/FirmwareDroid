@@ -2,29 +2,30 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 """
-Constant patterns for file names and formats of firmware images and files.
+Constant patterns for file names and formats of Android firmware images and files.
 
-Pattern lists should always start with the most fitting one and then get slowly more vague. Otherwise, it is possible
-that incorrect files match the patterns.
+Pattern lists should always start with the most fitting one and then get slowly more vague.
 """
 
 ##########################################################################################
 # Partitions that are in ext or sparse format.
 ##########################################################################################
 SYSTEM_IMG_PATTERN_LIST = [
-    "system[.]img",
-    ".*system[.]img$",
-    "^system[.].*[.]img$",
-    "^system[.]img[.].*",
-    ".*system.*img_sparsechunk$",
-    ".*system.*(img|rfs|img.ext4|ext4.img)$",
-]
+        "system[.]img",
+        ".*system[.]img$",
+        "^system[.].*[.]img$",
+        "^system[.]img[.].*",
+        ".*system.*img_sparsechunk$",
+        ".*system.*(img|rfs|img.ext4|ext4.img)$",
+    ]
+
 SUPER_IMG_PATTERN_LIST = ["super[.]img",
                           ".*super[.]img$",
                           "^super[.].*[.]img$",
                           "^super[.]img[.].*",
                           ".*super.*img_sparsechunk$",
                           "super[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
+
 SUPER_EMPTY_PATTERN_LIST = ["super_empty[.]img"]
 SYSTEM_OTHER_IMG_PATTERN_LIST = ["system_other[.]img", "system_other[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 SYSTEM_EXT_IMG_PATTERN_LIST = ["system_ext[.]img", "system_ext[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
@@ -34,7 +35,7 @@ ODM_IMG_PATTERN_LIST = ["odm[.]img", "odm[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 USERDATA_IMG_PATTERN_LIST = ["userdata[.]img", "userdata[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 PRODUCT_IMG_PATTERN_LIST = ["product[.]img", "product[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 PVMFW_IMG_PATTERN_LIST = ["pvmfw[.]img", "pvmfw[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
-VBMETA__IMG_PATTERN_LIST = ["vbmeta[.]img", "vbmeta[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
+VBMETA_IMG_PATTERN_LIST = ["vbmeta[.]img", "vbmeta[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 VBMETA_SYSTEM_IMG_PATTERN_LIST = ["vbmeta_system[.]img", "vbmeta_system[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 
 EXT_IMAGE_PATTERNS_DICT = {"system": SYSTEM_IMG_PATTERN_LIST,

@@ -3,6 +3,7 @@ import os
 import shutil
 from mongoengine import DoesNotExist
 from string import Template
+from dynamic_analysis.emulator_preparation.aosp_file_exporter import get_subfolders
 from model import GenericFile
 from dynamic_analysis.emulator_preparation.asop_meta_writer import add_module_to_meta_file
 from dynamic_analysis.emulator_preparation.templates.android_app_module_template import ANDROID_MK_TEMPLATE, \
@@ -16,17 +17,12 @@ def create_build_files_for_apps(android_app_id_list, format_name):
     :param android_app_id_list: list - A list of ObjectIDs for class:'AndroidApp'.
     :param format_name: str - 'mk' or 'bp' file format.
 
-    :return: bool - True if build files were successfully created for all apps, False otherwise.
 
     """
-    is_successfully_created = True
     for android_app_lazy in android_app_id_list:
         android_app = android_app_lazy.fetch()
         logging.debug(f"Creating build files for app {android_app.filename}...")
-        if not create_build_file_for_app(android_app, format_name):
-            is_successfully_created = False
-            logging.error(f"Could not create build files for app {android_app.filename}")
-    return is_successfully_created
+        create_build_file_for_app(android_app, format_name)
 
 
 def create_build_file_for_app(android_app, format_name):
@@ -36,17 +32,10 @@ def create_build_file_for_app(android_app, format_name):
     :param android_app: class:'AndroidApp' - An instance of AndroidApp.
     :param format_name: str - 'mk' or 'bp' file format.
 
-    :return: bool - True if the build file was successfully created, False otherwise.
-
     """
-    try:
-        logging.debug(f"Creating build file for app {android_app.filename}...")
-        template = ANDROID_MK_TEMPLATE if format_name.lower() == "mk" else ANDROID_BP_TEMPLATE
-        create_soong_build_files(android_app, format_name, template)
-        return True
-    except Exception as err:
-        logging.error(f"Error with app {android_app.pk}; {err}")
-        return False
+    logging.debug(f"Creating build file for app {android_app.filename}...")
+    template = ANDROID_MK_TEMPLATE if format_name.lower() == "mk" else ANDROID_BP_TEMPLATE
+    create_soong_build_files(android_app, format_name, template)
 
 
 def create_soong_build_files(android_app, file_format, template_string):
@@ -61,7 +50,7 @@ def create_soong_build_files(android_app, file_format, template_string):
     :param template_string: str - template string for an Android.mk or Android.bp file.
 
     """
-    template_string_complete = create_template_string(android_app, template_string)
+    template_string_complete, local_module = create_template_string(android_app, template_string)
     remove_existing_build_files(android_app, file_format)
     create_and_save_generic_file(android_app, file_format, template_string_complete)
 
@@ -103,111 +92,6 @@ def create_and_save_generic_file(android_app, file_format, template_string):
     logging.debug(f"Created {file_format} file for app {android_app.filename}...")
     android_app.generic_file_list.append(generic_file)
     android_app.save()
-
-
-def select_signing_key(android_app):
-    """
-    Selects the signing key for the Android app based on the path of the app and the sharedUserId.
-    Possible keys are: networkstack, media, shared, platform, testkey
-        shared: sharedUserId="android.uid.shared"
-        networkstack: sharedUserId="android.uid.networkstack"
-        media: sharedUserId="android.uid.media"
-        platform: sharedUserId="android.uid.system"
-
-    Default use is the platform key.
-
-    :return: str - The signing key for the Android app.
-
-    """
-    signing_key = "platform"
-
-    if android_app.android_manifest_dict and android_app.android_manifest_dict["manifest"]:
-        if "@ns0:sharedUserId" in android_app.android_manifest_dict["manifest"]:
-            manifest = android_app.android_manifest_dict["manifest"]
-            shared_user_id = manifest["@ns0:sharedUserId"]
-            logging.debug(f"UserID found: {shared_user_id} for app {android_app.filename}")
-            if shared_user_id == "android.uid.shared" or shared_user_id == "android.shared":
-                signing_key = "shared"
-            elif shared_user_id == "android.uid.networkstack" or shared_user_id == "android.networkstack":
-                signing_key = "networkstack"
-            elif shared_user_id == "android.uid.media" or shared_user_id == "android.media":
-                signing_key = "media"
-            logging.debug(f"Selected signing key: {signing_key} for app {android_app.filename} "
-                          f"based on sharedUserId: {shared_user_id}")
-    return signing_key
-
-
-def create_template_string(android_app, template_string):
-    """
-    Creates build file (Android.mk or Android.bp) as string for the AOSP image builder.
-
-    :param android_app: class:'AndroidApp' - App class that is used to fill in the template variables.
-    :param template_string: String template where variables will be substituted.
-
-    :return: A template string with substituted variables. This string can be written to an Android.mk or Android.bp
-    and should be valid for the AOSP build process.
-
-    """
-    directory_name = android_app.filename.replace('.apk', '')
-    local_module = f"{directory_name}"
-    local_privileged_module = "false"
-    if "/priv-app/" in android_app.absolute_store_path:
-        local_module_path = f"$(TARGET_OUT)/priv-app/"
-        local_privileged_module = "true"
-    elif ("/overlay/" in android_app.absolute_store_path
-          and ("/vendor/" in android_app.absolute_store_path) or ("/odm/" in android_app.absolute_store_path)):
-        local_module_path = f"$(TARGET_OUT)/odm/overlay/"
-    elif ("/vendor/" in android_app.absolute_store_path
-          or "/odm/" in android_app.absolute_store_path
-          or "/oem/" in android_app.absolute_store_path):
-        local_module_path = f"$(TARGET_OUT)/odm/app/"
-    else:
-        #TODO consider other apk paths
-        local_module_path = f"$(TARGET_OUT)/app/"
-
-    local_src_files = android_app.filename
-    local_optional_uses_libraries = ""
-
-    local_certificate = select_signing_key(android_app)
-    local_enforce_uses_libraries = "false"
-    local_dex_preopt = "false"
-    final_template = Template(template_string).substitute(local_module=local_module,
-                                                          local_module_path=local_module_path,
-                                                          local_src_files=local_src_files,
-                                                          local_certificate=local_certificate,
-                                                          local_enforce_uses_libraries=local_enforce_uses_libraries,
-                                                          local_dex_preopt=local_dex_preopt,
-                                                          local_privileged_module=local_privileged_module,
-                                                          local_optional_uses_libraries=local_optional_uses_libraries)
-    logging.debug("Created template string")
-    return final_template
-
-
-def process_android_apps(firmware, tmp_root_dir):
-    """
-    Processes the Android apps of a given firmware and creates build files for them.
-
-    :param firmware: class:'AndroidFirmware' - An instance of AndroidFirmware.
-    :param tmp_root_dir: tempfile.TemporaryDirectory - A temporary directory to store the build files.
-
-    """
-    for android_app_lazy in firmware.android_app_id_list:
-        android_app = android_app_lazy.fetch()
-        module_naming = f"{android_app.filename.replace('.apk', '')}"
-        tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
-        os.mkdir(tmp_app_dir)
-        new_filename = android_app.filename
-        destination_file_path = os.path.join(tmp_app_dir, new_filename)
-        try:
-            shutil.copy(android_app.absolute_store_path, destination_file_path)
-        except FileNotFoundError as err:
-            logging.error(f"{android_app.filename}: {err}")
-            continue
-
-        process_generic_files(android_app, tmp_app_dir)
-        partition_name = android_app.absolute_store_path.split("/")[8]
-        logging.debug(f"Partition name: {partition_name} for app {android_app.id}")
-        add_module_to_meta_file(partition_name, tmp_root_dir, module_naming)
 
 
 def process_generic_files(android_app, tmp_app_dir):
@@ -259,3 +143,128 @@ def process_generic_file(generic_file_lazy, android_app, tmp_app_dir):
                 fp.write(generic_file.file.read())
     except Exception as err:
         logging.error(f"{generic_file_lazy.pk}: {err}")
+
+
+def select_signing_key(android_app):
+    """
+    Selects the signing key for the Android app based on the path of the app and the sharedUserId.
+    Possible keys are: networkstack, media, shared, platform, testkey
+        shared: sharedUserId="android.uid.shared"
+        networkstack: sharedUserId="android.uid.networkstack"
+        media: sharedUserId="android.uid.media"
+        platform: sharedUserId="android.uid.system"
+
+    Default use is the platform key.
+
+    :return: str - The signing key for the Android app.
+
+    """
+    signing_key = "platform"
+
+    if android_app.android_manifest_dict and android_app.android_manifest_dict["manifest"]:
+        if "@ns0:sharedUserId" in android_app.android_manifest_dict["manifest"]:
+            manifest = android_app.android_manifest_dict["manifest"]
+            shared_user_id = manifest["@ns0:sharedUserId"]
+            logging.debug(f"UserID found: {shared_user_id} for app {android_app.filename}")
+            if shared_user_id == "android.uid.shared" or shared_user_id == "android.shared":
+                signing_key = "shared"
+            elif shared_user_id == "android.uid.networkstack" or shared_user_id == "android.networkstack":
+                signing_key = "networkstack"
+            elif shared_user_id == "android.uid.media" or shared_user_id == "android.media":
+                signing_key = "media"
+            logging.debug(f"Selected signing key: {signing_key} for app {android_app.filename} "
+                          f"based on sharedUserId: {shared_user_id}")
+    return signing_key
+
+
+def get_apk_local_module_path(file_path, partition_name, android_app):
+    """
+    Get the local module path for the given partition_name.
+
+    :param android_app: class:'AndroidApp' - App that a
+    :param file_path: str - path to the module file.
+    :param partition_name: str - name of the partition on Android.
+
+    :return: str - local module path for the shared library module.
+
+    """
+    subfolder_list = get_subfolders(file_path, partition_name)
+    if "/priv-app/" in android_app.absolute_store_path:
+        local_module_path = f"$(TARGET_OUT)/priv-app/"
+    elif ("/overlay/" in android_app.absolute_store_path
+          and ("/vendor/" in android_app.absolute_store_path)
+          or ("/odm/" in android_app.absolute_store_path)):
+        local_module_path = f"$(TARGET_OUT)/odm/overlay/"
+    elif ("/vendor/" in android_app.absolute_store_path
+          or "/odm/" in android_app.absolute_store_path
+          or "/oem/" in android_app.absolute_store_path):
+        local_module_path = f"$(TARGET_OUT)/odm/app/"
+    elif len(subfolder_list) == 0:
+        local_module_path = f"$(TARGET_OUT)/app/"
+    else:
+        local_module_path = f"$(TARGET_OUT)/{os.path.join(*subfolder_list)}"
+        local_module_path = local_module_path.replace(android_app.filename, "")
+    return local_module_path
+
+
+def create_template_string(android_app, template_string):
+    """
+    Creates build file (Android.mk or Android.bp) as string for the AOSP image builder.
+
+    :param android_app: class:'AndroidApp' - App class that is used to fill in the template variables.
+    :param template_string: String template where variables will be substituted.
+
+    :return: str - A template string with substituted variables.
+            str - The string of the local module name
+
+    """
+    directory_name = android_app.filename.replace('.apk', '')
+    local_module = f"{directory_name}"
+    local_privileged_module = "false"
+    partition_name = android_app.absolute_store_path.split("/")[8]
+    local_module_path = get_apk_local_module_path(android_app.absolute_store_path, partition_name, android_app)
+    if "/priv-app/" in local_module_path or "/framework/" in local_module_path:
+        local_privileged_module = "true"
+
+    local_src_files = android_app.filename
+    local_optional_uses_libraries = ""
+
+    local_certificate = select_signing_key(android_app)
+    local_enforce_uses_libraries = "false"
+    local_dex_preopt = "false"
+    final_template = Template(template_string).substitute(local_module=local_module,
+                                                          local_module_path=local_module_path,
+                                                          local_src_files=local_src_files,
+                                                          local_certificate=local_certificate,
+                                                          local_enforce_uses_libraries=local_enforce_uses_libraries,
+                                                          local_dex_preopt=local_dex_preopt,
+                                                          local_privileged_module=local_privileged_module,
+                                                          local_optional_uses_libraries=local_optional_uses_libraries)
+    return final_template, local_module
+
+
+def process_android_apps(firmware, tmp_root_dir):
+    """
+    Processes the Android apps of a given firmware and creates build files for them.
+
+    :param firmware: class:'AndroidFirmware' - An instance of AndroidFirmware.
+    :param tmp_root_dir: tempfile.TemporaryDirectory - A temporary directory to store the build files.
+
+    """
+    for android_app_lazy in firmware.android_app_id_list:
+        android_app = android_app_lazy.fetch()
+        module_naming = f"{android_app.filename.replace('.apk', '')}"
+        tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
+        os.mkdir(tmp_app_dir)
+        new_filename = android_app.filename
+        destination_file_path = os.path.join(tmp_app_dir, new_filename)
+        try:
+            shutil.copy(android_app.absolute_store_path, destination_file_path)
+        except FileNotFoundError as err:
+            logging.error(f"{android_app.filename}: {err}")
+            continue
+
+        process_generic_files(android_app, tmp_app_dir)
+        partition_name = android_app.absolute_store_path.split("/")[8]
+        logging.debug(f"Partition name: {partition_name} for app {android_app.id}")
+        add_module_to_meta_file(partition_name, tmp_root_dir, module_naming)

@@ -1,18 +1,32 @@
 import logging
+import os
 import shlex
 import subprocess
 
 SKIP_EXTENSION_DEFAULT = [".apk", ".dex", ".odex", ".oat", ".so", ".jar", ".class", ".java", ".png", ".jpg", ".jpeg",
                           ".gif", "w.ebp", ".bmp", ".tiff", ".tif", ".wav", ".mp3", ".ogg", ".mp4", ".3gp", ".webm",
                           ".mkv", ".flac", ".aac", ".m4a", ".flv", ".avi", ".mov", ".wmv", ".mpg", ".mpeg", ".pdf",
-                          ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", "txt", ".xml", ".json", ".html", ".htm",
+                          ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".xml", ".json", ".html", ".htm",
                           ".css", ".js", ".ts", ".tsx", ".svg", ".ttf", ".otf", ".woff", ".woff2", ".eot", ".md",
                           ".log", ".odt", ".ods", ".odp", ".odg", ".odf", ".odb", ".odc", ".odm", ".pak", ".rlib",
-                          ".mtz", ".apex", ".capex", ".vdex", ".arsc", ".pb", ".aab"]
-SKIP_MAGIC_ANDROID = ["Android", "Java", "Font"]
+                          ".mtz", ".apex", ".capex", ".vdex", ".arsc", ".pb", ".aab", ".list", ".config", ".elf",
+                          ".mbn", ".1", ".2", ".3", ".4", ".prop", ".conf", ".cfg", ".ini", ".sh", ".bat", ".cmd",
+                          ".pem", ".pk8"]
 
 
-def unblob_extract(compressed_file_path, destination_dir, depth=20, worker_count=5):
+def remove_unblob_log():
+    """
+    Remove the unblob log file.
+
+    """
+    try:
+        if os.path.exists("unblob.log"):
+            os.remove("unblob.log")
+    except Exception as err:
+        logging.warning(err)
+
+
+def unblob_extract(compressed_file_path, destination_dir, depth=25, worker_count=5):
     """
     Extract a file recursively with the unblob extraction suite.
 
@@ -28,6 +42,11 @@ def unblob_extract(compressed_file_path, destination_dir, depth=20, worker_count
     try:
         input_file = shlex.quote(compressed_file_path)
         output_dir = shlex.quote(destination_dir)
+        filename = os.path.basename(compressed_file_path)
+        file_extension = os.path.splitext(filename)[1]
+        if file_extension in SKIP_EXTENSION_DEFAULT:
+            logging.info(f"Skipping {filename} due to blacklisted extension for unblob extraction.")
+            return False
         logging.info(f"Unblob {input_file} to {output_dir}")
 
         command_array = ["unblob",
@@ -48,5 +67,5 @@ def unblob_extract(compressed_file_path, destination_dir, depth=20, worker_count
             is_success = False
         else:
             logging.warning(err)
-
+    remove_unblob_log()
     return is_success

@@ -250,3 +250,16 @@ def stream_to_json_file(file):
     json_file.save()
     return json_file
 
+
+def get_file_libmagic(file_path):
+    """
+    Get the file magic of the given file. Requires the libmagic library.
+
+    :param file_path: str - path to the file.
+
+    :return: str - file magic.
+
+    """
+    import magic
+    file_magic = magic.from_file(file_path)
+    return file_magic

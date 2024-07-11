@@ -3,8 +3,6 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 import re
-from graph.networkx_graph_wrapper import create_weighted_graph_file
-from hashing.fuzzy_hash_common import get_fuzzy_hash_documents_by_regex, filter_fuzzy_hash_documents_by_firmware
 from model import SsDeepClusterAnalysis, SsDeepHash
 from hashing.ssdeep.ssdeep_hasher import ssdeep_compare_hashs
 from context.context_creator import create_db_context
@@ -60,7 +58,7 @@ def compare_ssdeep_hashes(ssdeep_hash_list):
         for other in similar_to:
             node_b_label = other
             ssdeep_id, filename = other.split(":", 1)
-            score = ssdeep_compare_hashs(ssdeep_hash.ssdeep_digest, SsDeepHash.objects.get(pk=ssdeep_id).ssdeep_digest)
+            score = ssdeep_compare_hashs(ssdeep_hash.digest, SsDeepHash.objects.get(pk=ssdeep_id).digest)
             if score > 0:
                 matches_dict[node_a_label].add(node_b_label)
                 matches_dict[node_b_label].add(node_a_label)

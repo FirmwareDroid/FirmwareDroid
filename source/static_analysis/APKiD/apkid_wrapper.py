@@ -5,7 +5,6 @@ import json
 import os
 import logging
 import tempfile
-
 from model.Interfaces.ScanJob import ScanJob
 from model import ApkidReport, AndroidApp
 from context.context_creator import create_db_context, create_log_context
@@ -70,7 +69,10 @@ def apkid_worker_multiprocessing(android_app_id_queue):
     """
     while True:
         logging.info(f"APKiD Queue size estimate: {android_app_id_queue.qsize()}")
-        android_app_id = android_app_id_queue.get(timeout=.5)
+        try:
+            android_app_id = android_app_id_queue.get(timeout=.5)
+        except Exception as err:
+            break
         process_android_app(android_app_id)
         android_app_id_queue.task_done()
 

@@ -3,101 +3,140 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 import os
+import tempfile
 import traceback
-from firmware_handler.ext4_mount_util import is_path_mounted, exec_umount
+from queue import Empty
+from threading import Thread
+from hashing.ssdeep.ssdeep_hasher import create_ssdeep_hash
+from hashing.tlsh.tlsh_hasher import create_tlsh_hash
 from model import AndroidFirmware
-from firmware_handler.firmware_file_exporter import get_firmware_file_abs_path
-from hashing.ssdeep.ssdeep_hasher import start_ssdeep_hashing
-from hashing.tlsh.tlsh_hasher import start_tlsh_hashing
-from context.context_creator import create_db_context
-from utils.mulitprocessing_util.mp_util import start_python_interpreter
+from firmware_handler.firmware_file_exporter import extract_firmware
+from context.context_creator import create_db_context, create_log_context, create_multithread_log_context
+from model.StoreSetting import get_active_store_by_index
+from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
+
+NUMBER_OF_FUZZY_HASH_THREADS = 4
 
 
+@create_log_context
 @create_db_context
-def start_fuzzy_hasher(firmware_id_list):
+def start_fuzzy_hasher(firmware_id_list, storage_index):
     """
-    Creats a context and starts the ssdeep hasher.
+    Creates a context and starts the fuzzy hashing process.
 
+    :param storage_index: int - index of the storage.
     :param firmware_id_list: list(str) - list of class:'AndroidFirmware' object-id's.
 
     """
-    logging.info(f"Fuzzy hashing started: {len(firmware_id_list)} firmware archives")
-    start_python_interpreter(firmware_id_list, hash_firmware_files_parallel,
-                             number_of_processes=os.cpu_count(),
-                             use_id_list=False)
+    logging.info(f"Fuzzy hashing started with {len(firmware_id_list)} firmware ids.")
+    start_fuzzy_hash_multithreading(firmware_id_list, storage_index)
 
 
-def hash_firmware_files_parallel(firmware_id_queue):
+def start_fuzzy_hash_multithreading(firmware_id_list, storage_index):
+    """
+    Starts to export firmware files to the filesystem.
+
+    :return: str - path to the exported file.
+
+    """
+    firmware_id_queue = create_multi_threading_queue(firmware_id_list)
+    for i in range(NUMBER_OF_FUZZY_HASH_THREADS):
+        worker = Thread(target=fuzzy_hash_worker_multithreading, args=(firmware_id_queue, storage_index))
+        worker.setDaemon(True)
+        worker.start()
+    firmware_id_queue.join()
+
+
+@create_multithread_log_context
+@create_db_context
+def fuzzy_hash_worker_multithreading(firmware_id_queue, storage_index):
     """
     Create fuzzy hashes for all firmware files. Extracts and mounts the firmware.
 
-    :param firmware_id_queue: multiprocessing.queue - queue if class:'AndroidFirmware' object-ids
+    :param storage_index: int - index of the storage.
+    :param firmware_id_queue: class:'Queue' - queue of firmware-id's.
 
     """
-    while not firmware_id_queue.empty():
-        firmware_id = firmware_id_queue.get()
-        logging.info(f"Hasher: {firmware_id} estimated queue size {firmware_id_queue.qsize()}")
-        cache_temp_file_dir, cache_temp_mount_dir = create_temp_directories()
+    while True:
+        try:
+            firmware_id = firmware_id_queue.get(block=False, timeout=300)
+            logging.info(f"Fuzzy Hasher: Indexing firmware-id: {firmware_id} "
+                         f"estimated queue size {firmware_id_queue.qsize()}")
+        except Empty:
+            break
         try:
             firmware = AndroidFirmware.objects.get(pk=firmware_id)
-            if not firmware.has_fuzzy_hash_index:
-                logging.info(f"Starting fuzzy hashing index creation: {firmware_id}")
-                # TODO FIX THIS
-                #extract_image_files(firmware, cache_temp_file_dir.name, cache_temp_mount_dir.name)
-                fuzzy_hash_firmware(firmware, cache_temp_mount_dir.name)
-            else:
-                logging.info(f"Firmware has index already: {firmware_id}")
+            store_setting = get_active_store_by_index(storage_index)
+            if not store_setting:
+                raise ValueError(f"Store settings not found for index: {storage_index}")
+            store_paths = store_setting.get_store_paths()
+            with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as temp_dir_path:
+                firmware_file_list = extract_firmware(firmware.absolute_store_path, temp_dir_path)
+                replace_firmware_files(firmware_file_list, firmware, store_paths)
+                add_fuzzy_hashes_by_reference(firmware.firmware_file_id_list)
+                firmware.has_fuzzy_hash_index = True
+                firmware.save()
         except Exception as err:
             logging.error(err)
             traceback.print_exc()
         finally:
-            if is_path_mounted(cache_temp_mount_dir.name):
-                exec_umount(cache_temp_mount_dir.name)
+            firmware_id_queue.task_done()
 
 
-def fuzzy_hash_firmware(firmware, mount_path):
+def replace_firmware_files(firmware_file_list, firmware, store_paths):
     """
-    Create fuzzy hashes for all firmware files. Needs the firmware files to be accessible.
+    Creates missing firmware files for the given firmware in case they do not exist.
 
-    :param firmware: class:'AndroidFirmware' - Android firmware which will be indexed.
-    :param mount_path: str - path where the firmware is mounted.
+    :param store_paths: str - path to the store.
+    :param firmware_file_list: list(class:'FirmwareFile') - list of firmware files.
+    :param firmware: class:'AndroidFirmware' - firmware object.
+
+    :return: list(class:'FirmwareFile') - list of firmware files.
 
     """
-    for firmware_file_id_lazy in firmware.firmware_file_id_list:
-        firmware_file = firmware_file_id_lazy.fetch()
-        fuzzy_hash_firmware_files([firmware_file], mount_path)
+    for existing_firmware_file_lazy in firmware.firmware_file_id_list:
+        try:
+            existing_firmware_file = existing_firmware_file_lazy.fetch()
+            existing_firmware_file.delete()
+        except Exception as err:
+            logging.warning(err)
+
+    firmware.firmware_file_id_list = []
     firmware.save()
+    for firmware_file in firmware_file_list:
+        firmware_file.firmware_id_reference = firmware.id
+        firmware_file.save()
+        firmware.firmware_file_id_list.append(firmware_file.id)
+        firmware.save()
 
 
-def fuzzy_hash_firmware_files(firmware_file_list, mount_path):
+def add_fuzzy_hashes_by_reference(firmware_file_id_list):
     """
-    Create fuzzy hashes for a firmware file. Needs the firmware file to be accessible in the file system.
+    Creates fuzzy hashes for the given firmware files and stored them in the database.
 
-    :param firmware_file_list: list(class:'FirmwareFile') - Android firmware file which will be indexed.
-    :param mount_path: str - path where the firmware is accessible.
+    :param firmware_file_id_list: list(class:'FirmwareFile') - list of lazy firmware files to be hashed.
 
+    """
+    for firmware_file_lazy in firmware_file_id_list:
+        firmware_file = firmware_file_lazy.fetch()
+        if not firmware_file.is_directory:
+            logging.info(f"Creating fuzzy hashes for: {firmware_file.absolute_store_path}")
+            try:
+                create_tlsh_hash(firmware_file)
+                create_ssdeep_hash(firmware_file)
+            except Exception as err:
+                logging.error(err)
+
+
+def add_fuzzy_hashes(firmware_file_list):
+    """
+    Creates fuzzy hashes for the given firmware files and stored them in the database.
     """
     for firmware_file in firmware_file_list:
         if not firmware_file.is_directory:
-            firmware_file.absolute_store_path = get_firmware_file_abs_path(firmware_file, mount_path)
-            firmware_file.save()
-            if os.path.exists(firmware_file.absolute_store_path):
-                create_fuzzy_hashes(firmware_file)
-            else:
-                logging.error(f"Could not access file: {firmware_file.absolute_store_path}")
-
-
-def create_fuzzy_hashes(firmware_file):
-    """
-    Creates a fuzzy hash for the given file.
-
-    :param firmware_file: class:'FirmwareFile'
-
-
-    """
-    if not firmware_file.ssdeep_reference:
-        start_ssdeep_hashing(firmware_file)
-    if not firmware_file.tlsh_reference:
-        start_tlsh_hashing(firmware_file)
-    #if not firmware_file.lzjd_reference:
-    #    start_lzjd_hashing(firmware_file)
+            logging.info(f"Creating fuzzy hashes for: {firmware_file.absolute_store_path}")
+            try:
+                create_tlsh_hash(firmware_file)
+                create_ssdeep_hash(firmware_file)
+            except Exception as err:
+                logging.error(err)

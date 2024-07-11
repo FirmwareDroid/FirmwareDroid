@@ -3,15 +3,14 @@
 # See the file 'LICENSE' for copying permission.
 import base64
 from struct import unpack
-from mongoengine import StringField, ListField, IntField, LazyReferenceField, CASCADE, signals, DictField, Document
+from mongoengine import StringField, ListField, IntField, LazyReferenceField, CASCADE, signals, Document
 
 
 class SsDeepHash(Document):
     firmware_id_reference = LazyReferenceField('AndroidFirmware', reverse_delete_rule=CASCADE)
     firmware_file_reference = LazyReferenceField('FirmwareFile', reverse_delete_rule=CASCADE, required=True)
     filename = StringField(required=True)
-    ssdeep_digest = StringField(required=True)
-    sub_file_digest_dict = DictField(required=False)
+    digest = StringField(required=True)
     block_size = StringField(required=False)
     block_data = StringField(required=False)
     double_block_data = StringField(required=False)
@@ -21,7 +20,7 @@ class SsDeepHash(Document):
     @classmethod
     def pre_save(cls, sender, document, **kwargs):
         block_data, double_block_data, block_size, chunk_7_set, chunk_7_double_set \
-            = preprocess_hash(document.ssdeep_digest)
+            = preprocess_hash(document.digest)
         document.block_size = block_size
         document.block_data = block_data
         document.double_block_data = double_block_data

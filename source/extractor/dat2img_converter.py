@@ -37,7 +37,7 @@ def convert_dat2img(dat_file_path, destination_path):
         search_folder_path = path.parent.absolute()
         transfer_file_path, patch_file_path = search_transfer_list(search_folder_path, filename)
         if transfer_file_path is not None:
-            out_filename = filename.replace(".dat", "dat.conv.img")
+            out_filename = filename.replace(".new", "").replace(".dat", ".img")
             img_file_path = os.path.join(destination_path, out_filename)
             start_dat_conversion(dat_file_path, transfer_file_path, img_file_path)
             logging.info(f"Converted dat: {dat_file_path} to img: {img_file_path}")

@@ -9,17 +9,17 @@ import os
 import shutil
 from queue import Empty
 from pathlib import Path
+from hashing.fuzzy_hash_creator import add_fuzzy_hashes
 from model import AndroidFirmware, FirmwareFile, AndroidApp
 from threading import Thread
-from firmware_handler.image_importer import create_abs_image_file_path, find_image_firmware_file, extract_image_files
-from hashing.fuzzy_hash_creator import fuzzy_hash_firmware_files
+from firmware_handler.image_importer import create_abs_image_file_path, find_image_firmware_file
 from context.context_creator import create_db_context, create_log_context
 from firmware_handler.firmware_file_indexer import create_firmware_file_list, add_firmware_file_references
 from firmware_handler.const_regex_patterns import BUILD_PROP_PATTERN_LIST, EXT_IMAGE_PATTERNS_DICT
 from android_app_importer.android_app_import import store_android_apps_from_firmware
 from firmware_handler.build_prop_parser import BuildPropParser
 from hashing.standard_hash_generator import md5_from_file, sha1_from_file, sha256_from_file
-from extractor.expand_archives import extract_archive_layer
+from extractor.expand_archives import extract_first_layer, extract_second_layer
 from model.StoreSetting import get_active_store_by_index
 from utils.file_utils.file_util import get_filenames
 from firmware_handler.firmware_version_detect import detect_by_build_prop
@@ -147,7 +147,7 @@ def open_firmware(firmware_archive_file_path, temp_extract_dir):
     :return: list(class:FirmwareFile)
 
     """
-    extract_archive_layer(firmware_archive_file_path, temp_extract_dir, False)
+    extract_first_layer(firmware_archive_file_path, temp_extract_dir)
     archive_firmware_file_list = get_firmware_archive_content(temp_extract_dir)
     return archive_firmware_file_list
 
@@ -156,12 +156,10 @@ def get_partition_firmware_files(archive_firmware_file_list,
                                  temp_extract_dir,
                                  partition_name,
                                  file_pattern_list,
-                                 partition_temp_dir,
-                                 store_paths):
+                                 partition_temp_dir):
     """
     Creates a list of firmware files from known file partitions.
 
-    :param store_paths: dict(str, str) - paths of the store setting.
     :param partition_temp_dir: str - path where the partition is read from.
     :param partition_name: str - name of the partition.
     :param file_pattern_list: list(str) - a list of known name patterns for partitions.
@@ -175,18 +173,16 @@ def get_partition_firmware_files(archive_firmware_file_list,
                                                                               file_pattern_list,
                                                                               archive_firmware_file_list,
                                                                               temp_extract_dir,
-                                                                              partition_temp_dir,
-                                                                              store_paths)
+                                                                              partition_temp_dir)
     firmware_file_list.extend(partition_firmware_file_list)
     return firmware_file_list, is_successful
 
 
 def create_partition_file_index(partition_name, file_pattern_list, archive_firmware_file_list,
-                                temp_extract_dir, partition_temp_dir, store_paths):
+                                temp_extract_dir, partition_temp_dir):
     """
     Gets a list of all files found in a specific partition.
 
-    :param store_paths: dict(str, str) - paths of the store setting.
     :param partition_name: str - name of the partition.
     :param file_pattern_list: list(str) - a list of known name patterns for partitions.
     :param archive_firmware_file_list: list(class:'FirmwareFile') - a list of the root elements found in the
@@ -200,8 +196,7 @@ def create_partition_file_index(partition_name, file_pattern_list, archive_firmw
                                                                                   temp_extract_dir,
                                                                                   file_pattern_list,
                                                                                   partition_name,
-                                                                                  partition_temp_dir,
-                                                                                  store_paths)
+                                                                                  partition_temp_dir)
     return partition_firmware_file_list, is_successful
 
 
@@ -229,8 +224,7 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
                                                                                       files_dict[
                                                                                           "archive_firmware_file_list"],
                                                                                       temp_extract_dir,
-                                                                                      partition_temp_dir,
-                                                                                      store_paths)
+                                                                                      partition_temp_dir)
             if is_successful:
                 files_dict["firmware_file_list"].extend(partition_firmware_file_list)
 
@@ -245,7 +239,7 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
                     build_prop_list = extract_build_prop(partition_firmware_file_list, partition_temp_dir)
                     files_dict["build_prop_file_list"].extend(build_prop_list)
                 if create_fuzzy_hashes:
-                    fuzzy_hash_firmware_files(partition_firmware_file_list, partition_temp_dir)
+                    add_fuzzy_hashes(partition_firmware_file_list)
 
             partition_info_dict[partition_name] = {"is_import_success": is_successful,
                                                    "firmware_file_count": len(partition_firmware_file_list),
@@ -394,12 +388,10 @@ def create_partition_firmware_files(archive_firmware_file_list,
                                     extracted_archive_dir_path,
                                     file_pattern_list,
                                     partition_name,
-                                    temp_dir_path,
-                                    store_paths):
+                                    temp_dir_path):
     """
     Index all ext files of the given firmware. Creates a list of class:'FirmwareFile' from an accessible partition.
 
-    :param store_paths: dict(str, str) - paths of the store setting.
     :param file_pattern_list: list(str) - list of regex patterns to detect an image file by name.
     :param temp_dir_path: str - path to the directory in which the image files will be loaded temporarily.
     :param partition_name: str - unique identifier of the partition.
@@ -410,8 +402,8 @@ def create_partition_firmware_files(archive_firmware_file_list,
     :return: list(class:'FirmwareFile') - list of files found in the image. In case the image could not be processed the
     method returns an empty list.
     """
-    firmware_file_list = []
     is_successful = False
+    partition_firmware_files = []
     try:
         partition_folder = str(os.path.join(extracted_archive_dir_path, partition_name))
         if os.path.exists(partition_folder) and os.path.isdir(partition_folder) and any(os.scandir(partition_folder)):
@@ -419,13 +411,12 @@ def create_partition_firmware_files(archive_firmware_file_list,
         else:
             image_firmware_file = find_image_firmware_file(archive_firmware_file_list, file_pattern_list)
             image_absolute_path = create_abs_image_file_path(image_firmware_file, extracted_archive_dir_path)
-            extract_image_files(image_absolute_path, temp_dir_path, store_paths)
+            extract_second_layer(image_absolute_path, temp_dir_path)
         partition_firmware_files = create_firmware_file_list(temp_dir_path, partition_name)
-        firmware_file_list.extend(partition_firmware_files)
         is_successful = True
     except (RuntimeError, ValueError) as err:
         logging.warning(err)
-    return firmware_file_list, is_successful
+    return partition_firmware_files, is_successful
 
 
 def store_firmware_object(store_filename, original_filename, firmware_store_path, md5, sha256, sha1, android_app_list,
@@ -500,7 +491,6 @@ def extract_build_prop(firmware_file_list, mount_path):
     build_prop_file_list = []
     for firmware_file in build_prop_firmware_file_list:
         try:
-            firmware_file.absolute_store_path = os.path.join(mount_path, "." + str(firmware_file.absolute_store_path))
             build_prop_parser = BuildPropParser(firmware_file)
             build_prop_file = build_prop_parser.create_build_prop_document()
             build_prop_file_list.append(build_prop_file)

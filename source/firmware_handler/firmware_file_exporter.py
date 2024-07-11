@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
-import glob
 import logging
 import os
 import re
 import shutil
 import tempfile
+import traceback
 from queue import Empty
 from threading import Thread
 from context.context_creator import create_db_context, create_log_context, create_multithread_log_context
-from extractor.expand_archives import extract_archive_layer
+from extractor.expand_archives import extract_first_layer
 from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
 from firmware_handler.firmware_file_indexer import create_firmware_file_list
-from hashing import md5_from_file
 from model import StoreSetting, AndroidFirmware
 from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
 
@@ -42,19 +41,21 @@ def start_file_export_by_regex(filename_regex, firmware_id_list, store_setting_i
         raise ValueError("No search pattern given.")
     if not store_setting_id:
         raise ValueError("No store setting id given.")
-    start_firmware_file_export(search_pattern, firmware_id_list, store_setting_id)
+    logging.info(f"Start exporting firmware files by regex {filename_regex} for firmware {firmware_id_list}")
+    start_regex_firmware_file_export(search_pattern, firmware_id_list, store_setting_id)
 
 
-def start_firmware_file_export(search_pattern, firmware_id_list, store_setting_id):
+def start_regex_firmware_file_export(search_pattern, firmware_id_list, store_setting_id):
     """
-    Starts to export firmware files to the filesystem.
+    Starts to export firmware files to the filesystem by a regex pattern. Searches for the files in the firmware
+    by filename and exports them to the file system. Using a regex pattern to filter the files and multiple threads
+    to export the files.
 
     :return: str - path to the exported file.
 
     """
     firmware_id_queue = create_multi_threading_queue(firmware_id_list)
     for i in range(NUMBER_OF_EXPORTER_THREADS):
-        logging.debug(f"Start exporter thread {i} of {NUMBER_OF_EXPORTER_THREADS}")
         worker = Thread(target=export_worker_multithreading, args=(firmware_id_queue, store_setting_id, search_pattern))
         worker.setDaemon(True)
         worker.start()
@@ -75,8 +76,9 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
     while True:
         try:
             firmware_id = firmware_id_queue.get(block=False, timeout=300)
+            logging.debug(f"Exporting files for firmware {firmware_id}")
+            logging.debug(f"Queue size: {firmware_id_queue.qsize()}")
         except Empty:
-            logging.debug("No more files to export on. Exiting.")
             break
         try:
             firmware = AndroidFirmware.objects.get(pk=firmware_id)
@@ -84,10 +86,16 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             if not store_setting:
                 raise ValueError(f"Store settings not found for id {store_setting_id}")
             store_paths = store_setting.get_store_paths()
-            with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as temp_dir_path:
-                firmware_file_list = extract_firmware(firmware.absolute_store_path, temp_dir_path, store_paths)
+            with (tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as temp_dir_path):
+                firmware_file_list = extract_firmware(firmware.absolute_store_path, temp_dir_path)
                 for firmware_file in firmware_file_list:
-                    if re.search(search_pattern, firmware_file.name):
+                    # Excluding some Unblob specific file extensions
+                    if not firmware_file.is_directory \
+                            and re.search(search_pattern, firmware_file.name) \
+                            and ".unknown" not in firmware_file.name \
+                            and ".padding" not in firmware_file.name \
+                            and "_extract" not in firmware_file.name:
+                        logging.debug(f"Exporting firmware file {firmware_file.id} {firmware_file.name}")
                         firmware_file.firmware_id_reference = firmware.id
                         if firmware_file.partition_name == "/":
                             firmware_file.partition_name = "root"
@@ -98,15 +106,15 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             logging.info(f"Exported files from firmware {firmware.id} to {store_paths['FIRMWARE_FOLDER_FILE_EXTRACT']}")
         except Exception as e:
             logging.error(f"Could not export firmware files for firmware {firmware_id}. Error: {e}")
+            traceback.print_stack()
         finally:
             firmware_id_queue.task_done()
 
 
-def extract_firmware(firmware_archive_file_path, temp_extract_dir, store_paths):
+def extract_firmware(firmware_archive_file_path, temp_extract_dir):
     """
     Extracts a firmware to the given folder.
 
-    :param store_paths: str - path to the store settings.
     :param firmware_archive_file_path: str - path to the firmware to extract.
     :param temp_extract_dir: str - destination folder to extract the firmware to.
 
@@ -115,7 +123,8 @@ def extract_firmware(firmware_archive_file_path, temp_extract_dir, store_paths):
     """
     from firmware_handler.firmware_importer import create_partition_file_index
     firmware_file_list = []
-    extract_archive_layer(firmware_archive_file_path, temp_extract_dir, False, 2)
+    extract_first_layer(firmware_archive_file_path, temp_extract_dir)
+    logging.info(f"Extracted first layer of firmware {firmware_archive_file_path} to {temp_extract_dir}")
     top_level_firmware_file_list = create_firmware_file_list(temp_extract_dir, "/")
     for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
         logging.info(f"Attempt to index files for partition: {partition_name}")
@@ -124,10 +133,11 @@ def extract_firmware(firmware_archive_file_path, temp_extract_dir, store_paths):
                                                                                   file_pattern_list,
                                                                                   top_level_firmware_file_list,
                                                                                   temp_extract_dir,
-                                                                                  partition_temp_dir,
-                                                                                  store_paths)
+                                                                                  partition_temp_dir)
         if is_successful:
             firmware_file_list.extend(partition_firmware_file_list)
+        else:
+            logging.warning(f"Could not index files for partition: {partition_name}")
     return firmware_file_list
 
 
@@ -166,16 +176,13 @@ def get_file_export_path_abs(store_setting, firmware_file):
                   f"{firmware_file.firmware_id_reference.pk},"
                   f"{firmware_file.partition_name},"
                   f"{minimized_relative_path}")
-
     destination_folder = os.path.join(store_path_abs,
                                       NAME_EXPORT_FOLDER,
                                       str(firmware_file.firmware_id_reference.pk),
                                       firmware_file.partition_name,
                                       "." + minimized_relative_path)
-
-    logging.debug(f"Exporting firmware file {firmware_file.id} to {destination_folder}")
     destination_folder_abs = os.path.abspath(destination_folder)
-    logging.info(f"Exporting firmware file {firmware_file.id} to {destination_folder_abs}")
+    logging.debug(f"Exporting firmware file {firmware_file.id} to {destination_folder_abs}")
     return destination_folder_abs
 
 
@@ -190,16 +197,12 @@ def export_firmware_file(firmware_file, source_dir_path, destination_dir_path):
     :return: bool - flag if the export was successful.
     """
     is_successful = False
-    if os.path.exists(source_dir_path) and firmware_file:
-        firmware_file_abs_path = get_firmware_file_abs_path(firmware_file, source_dir_path)
-    else:
-        raise FileNotFoundError(f"Source directory {source_dir_path} does not exist.")
-
-    if firmware_file_abs_path:
-        copy_firmware_file(firmware_file, firmware_file_abs_path, destination_dir_path)
+    if firmware_file and firmware_file.absolute_store_path and os.path.exists(firmware_file.absolute_store_path):
+        copy_firmware_file(firmware_file, firmware_file.absolute_store_path, destination_dir_path)
         is_successful = True
     else:
-        logging.error(f"Could not find firmware file {firmware_file.id} {firmware_file.name}."
+        logging.error(f"Could not find firmware file {firmware_file.id} {firmware_file.name} "
+                      f"{firmware_file.absolute_store_path}."
                       f" Skipping file {source_dir_path}")
     return is_successful
 
@@ -232,51 +235,3 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
     if dst_file_path is None or not os.path.exists(dst_file_path):
         raise OSError(f"Could not copy firmware file {firmware_file.id} to {destination_path}")
 
-
-def find_firmware_file_abs_path(firmware_file, source_dir_path):
-    """
-    Finds a file in the extracted firmware directory by md5 matching.
-
-    :param firmware_file: class:'FirmwareFile'
-    :param source_dir_path: str - path of the mount directory.
-
-    :return: str - path of the firmware file.
-
-    """
-    file_abs_path = None
-    candidate_files = []
-    for root, dirs, files in os.walk(source_dir_path):
-        if firmware_file.name in files:
-            for file in files:
-                if file == firmware_file.name:
-                    file_abs_path = os.path.join(root, file)
-                    if os.path.exists(file_abs_path):
-                        md5 = md5_from_file(file_abs_path)
-                        if md5 == firmware_file.md5:
-                            break
-                        else:
-                            candidate_files.append(file_abs_path)
-                    else:
-                        file_abs_path = None
-    if file_abs_path is None and len(candidate_files) > 0:
-        file_abs_path = candidate_files[0]
-    return file_abs_path
-
-
-def get_firmware_file_abs_path(firmware_file, source_dir_path):
-    """
-    Creates an absolute path from the extracted firmware directory and the relative firmware file path.
-
-    :param firmware_file: class:'FirmwareFile'
-    :param source_dir_path: str - path of the mount directory.
-    :return: str - absolute path of the firmware file.
-
-    """
-    logging.info(f"Searching for firmware file {firmware_file.id} in {source_dir_path}")
-    firmware_file_abs_path = find_firmware_file_abs_path(firmware_file, source_dir_path)
-    if not firmware_file_abs_path:
-        logging.error(f"Could not find firmware file {firmware_file.id} {firmware_file.name}."
-                      f" Skipping file {source_dir_path}")
-        firmware_file_abs_path = None
-    logging.info(f"Found firmware file {firmware_file.id} at {firmware_file_abs_path}")
-    return firmware_file_abs_path

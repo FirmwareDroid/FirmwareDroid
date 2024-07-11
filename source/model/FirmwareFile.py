@@ -2,7 +2,7 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 from mongoengine import LazyReferenceField, DateTimeField, StringField, CASCADE, LongField, BooleanField, \
-    DO_NOTHING, Document, signals
+    DO_NOTHING, Document, DictField
 import datetime
 
 FUZZY_HASH_ATTRIBUTE_NAMES = ["ssdeep_reference", "tlsh_reference"]
@@ -24,3 +24,4 @@ class FirmwareFile(Document):
     md5 = StringField(required=False, unique=False, max_length=128)
     partition_name = StringField(required=False)
     file_size_bytes = LongField(required=False)
+    meta_dict = DictField(required=False, default={})

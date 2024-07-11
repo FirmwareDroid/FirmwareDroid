@@ -30,7 +30,10 @@ def androwarn_worker_multiprocessing(android_app_id_queue):
     from androwarn.warn.report.report import dump_analysis_results, generate_report
     from androwarn.warn.search.application.application import grab_application_package_name
     while True:
-        android_app_id = android_app_id_queue.get(timeout=.5)
+        try:
+            android_app_id = android_app_id_queue.get(timeout=.5)
+        except Exception as err:
+            break
         android_app = AndroidApp.objects.get(pk=android_app_id)
         logging.info(f"Androwarn scan: {android_app.filename} {android_app.id} "
                      f"estimated queue-size: {android_app_id_queue.qsize()}")

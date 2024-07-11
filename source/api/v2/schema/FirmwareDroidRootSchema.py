@@ -29,8 +29,6 @@ from api.v2.schema.ApkleaksReportSchema import ApkleaksReportQuery
 from api.v2.schema.ApkleaksStatisticsReportSchema import ApkleaksStatisticsReportQuery
 from api.v2.schema.SuperReportSchema import SuperReportQuery
 from api.v2.schema.QuarkEngineReportSchema import QuarkEngineReportQuery
-from api.v2.schema.LzjdHashSchema import LzjdHashQuery
-from api.v2.schema.SdHashSchema import SdHashQuery
 from api.v2.schema.SsDeepClusterAnalysisSchema import SsDeepClusterAnalysisQuery
 from api.v2.schema.TlshHashSchema import TlshHashQuery
 from api.v2.schema.AppCertificateSchema import AppCertificateQuery
@@ -60,8 +58,6 @@ class Query(ApplicationSettingQuery,
             ApkScannerReportQuery,
             SuperReportQuery,
             QuarkEngineReportQuery,
-            LzjdHashQuery,
-            SdHashQuery,
             SsDeepClusterAnalysisQuery,
             TlshHashQuery,
             AppCertificateQuery,

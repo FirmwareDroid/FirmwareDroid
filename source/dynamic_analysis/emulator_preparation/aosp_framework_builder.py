@@ -1,6 +1,6 @@
 import os
 import re
-from dynamic_analysis.emulator_preparation.aosp_file_exporter import (export_files,
+from dynamic_analysis.emulator_preparation.aosp_file_exporter import (export_files_by_regex,
                                                                       get_firmware_export_folder_root,
                                                                       get_subfolders)
 from string import Template
@@ -46,6 +46,7 @@ def create_template_string(format_name, file_path):
     :param file_path: str - path to the shared library module.
 
     :return: str - template string for the shared library module.
+             str - local module name for the shared library module.
 
     """
     if format_name.lower() == "mk":
@@ -53,18 +54,18 @@ def create_template_string(format_name, file_path):
     else:
         raise NotImplementedError(f"Format name {format_name} is not supported yet.")
 
+    partition_name = file_path.split("/")[9]
     in_file_name = os.path.basename(file_path)
-    local_module = in_file_name.replace(".jar", "") + "_INJECTED_PREBUILT_JAR"
+    local_module = in_file_name.replace(".jar", "") + "_INJECTED_PREBUILT_JAR" + partition_name.upper()
     out_file_name = local_module + ".jar"
     local_src_files = in_file_name
-    partition_name = file_path.split("/")[9]
     local_module_path = get_local_module_path(file_path, partition_name, in_file_name)
     template_out = Template(file_template).substitute(local_src_files=local_src_files,
                                                       local_module=local_module,
                                                       local_module_path=local_module_path,
                                                       local_scr_file_out=out_file_name,
                                                       )
-    return template_out
+    return template_out, local_module
 
 
 def process_framework_files(firmware, destination_folder, store_setting_id, format_name, skip_file_export):
@@ -82,7 +83,7 @@ def process_framework_files(firmware, destination_folder, store_setting_id, form
     filename_regex = ".jar$"
     search_pattern = re.compile(filename_regex, re.IGNORECASE)
     if not skip_file_export:
-        export_files(firmware, store_setting_id, search_pattern)
+        export_files_by_regex(firmware, store_setting_id, search_pattern)
     source_folder = get_firmware_export_folder_root(store_setting_id, firmware)
     create_modules(source_folder, destination_folder, format_name, search_pattern, create_template_string)
 

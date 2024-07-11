@@ -243,7 +243,7 @@ def add_optimized_firmware_files(android_app, optimized_firmware_file_list, firm
 
         opt_source_file_path = os.path.join(firmware_mount_path,
                                             "." + android_app.relative_firmware_path,
-                                            "." + opt_relative_root_path,
+                                            "." + str(opt_relative_root_path),
                                             optimized_firmware_file.name)
         if os.path.exists(opt_source_file_path):
             copyfile(opt_source_file_path, opt_store_path)

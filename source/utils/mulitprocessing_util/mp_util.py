@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
-import logging
 import sys
-
 sys.path.append("/var/www/source/")
 from database.query_document import get_filtered_list
 from model import AndroidApp
@@ -18,6 +16,8 @@ from multiprocessing import Manager, get_context
 from threading import Thread
 from database.connector import multiprocess_disconnect_all
 from context.context_creator import create_app_context, setup_logging
+
+MAX_PROCESS_TIME = 60 * 60 * 24
 
 
 def create_managed_mp_queue(document_obj_list, manager):

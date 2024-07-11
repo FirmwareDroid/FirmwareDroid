@@ -27,7 +27,7 @@ def extract_lz4(lz4_file_path, destination_dir):
             except Lz4FramedNoDataError as error:
                 logging.exception(str(error))
         output_file_name = os.path.basename(lz4_file_path).replace(".lz4", "")
-        output_file_path = os.path.join(destination_dir, output_file_name)
+        output_file_path = str(os.path.join(str(destination_dir), str(output_file_name)))
         with open(output_file_path, "wb") as output_file:
             for chunk in decoded:
                 output_file.write(chunk)

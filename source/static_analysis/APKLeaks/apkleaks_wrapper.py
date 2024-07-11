@@ -21,18 +21,21 @@ def apkleaks_worker_multiprocessing(android_app_id_queue):
 
     """
     while True:
-        android_app_id = android_app_id_queue.get(timeout=.5)
-        android_app = AndroidApp.objects.get(pk=android_app_id)
-        logging.info(f"APKLeaks scans: {android_app.filename} {android_app.id} "
-                     f"estimated queue-size: {android_app_id_queue.qsize()}")
         try:
+            android_app_id = android_app_id_queue.get(timeout=.5)
+        except Exception as err:
+            break
+        try:
+            android_app = AndroidApp.objects.get(pk=android_app_id)
+            logging.info(f"APKLeaks scans: {android_app.filename} {android_app.id} "
+                         f"estimated queue-size: {android_app_id_queue.qsize()}")
             tempdir = tempfile.TemporaryDirectory()
             json_results = get_apkleaks_analysis(android_app.absolute_store_path, tempdir.name)
             create_report(android_app, json_results)
             android_app_id_queue.task_done()
         except Exception as err:
             traceback.print_exc()
-            logging.error(f"APKleaks could not scan app {android_app.filename} id: {android_app.id} - "
+            logging.error(f"APKleaks could not scan app id: {android_app_id} - "
                           f"error: {err}")
 
 
