@@ -58,6 +58,6 @@ RUN chown -R www:www /opt/firmwaredroid/python/
 
 USER www
 ENV PATH="$PATH:/home/www/.local/bin/"
-ENV PYTHONPATH="/var/www/source/:${PYTHONPATH}"
+ENV PYTHONPATH="/var/www/source/:$PYTHONPATH"
 WORKDIR /var/www/source/
 RUN python3 /var/www/docker/setup_apk_scanner.py

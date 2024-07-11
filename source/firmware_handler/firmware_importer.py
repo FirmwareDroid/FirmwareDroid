@@ -491,7 +491,6 @@ def extract_build_prop(firmware_file_list, mount_path):
     build_prop_file_list = []
     for firmware_file in build_prop_firmware_file_list:
         try:
-            firmware_file.absolute_store_path = os.path.join(mount_path, "." + str(firmware_file.absolute_store_path))
             build_prop_parser = BuildPropParser(firmware_file)
             build_prop_file = build_prop_parser.create_build_prop_document()
             build_prop_file_list.append(build_prop_file)
