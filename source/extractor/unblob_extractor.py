@@ -10,7 +10,8 @@ SKIP_EXTENSION_DEFAULT = [".apk", ".dex", ".odex", ".oat", ".so", ".jar", ".clas
                           ".css", ".js", ".ts", ".tsx", ".svg", ".ttf", ".otf", ".woff", ".woff2", ".eot", ".md",
                           ".log", ".odt", ".ods", ".odp", ".odg", ".odf", ".odb", ".odc", ".odm", ".pak", ".rlib",
                           ".mtz", ".apex", ".capex", ".vdex", ".arsc", ".pb", ".aab", ".list", ".config", ".elf",
-                          ".mbn", ".1", ".2", ".3", ".4", ".prop", ".conf", ".cfg", ".ini", ".sh", ".bat", ".cmd"]
+                          ".mbn", ".1", ".2", ".3", ".4", ".prop", ".conf", ".cfg", ".ini", ".sh", ".bat", ".cmd",
+                          ".pem", ".pk8"]
 
 
 def remove_unblob_log():
