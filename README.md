@@ -65,7 +65,7 @@ FMD has only a minimal set of security features and is not a production ready so
   doi={10.1109/MOBILSoft59058.2023.00009}
 }
 ```
-  
+
 ### License:
 FirmwareDroid is a non-profit research project licenced under the GNU General Public License v3.0
 (see our [licence](https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md)).
