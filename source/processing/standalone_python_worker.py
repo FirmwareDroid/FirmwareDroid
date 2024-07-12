@@ -82,6 +82,8 @@ def start_python_interpreter(item_list,
     :param item_list: list(documents or str) - list of object instances or list of object-id (strings) to process.
 
     """
+    if worker_args_list is None:
+        worker_args_list = []
     serialized_list_str = ",".join(map(str, item_list))
     current_file = os.path.abspath(__file__)
     return subprocess.Popen([interpreter_path,
