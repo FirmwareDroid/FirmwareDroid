@@ -76,7 +76,7 @@ def create_report(android_app, exodus_results):
     # from exodus_core import __version__
     exodus_report = ExodusReport(
         android_app_id_reference=android_app.id,
-        scanner_version="1.3.9",
+        scanner_version="1.3.12",
         scanner_name="Exodus",
         results=exodus_results
     ).save()
