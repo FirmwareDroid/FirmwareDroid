@@ -14,7 +14,7 @@ from model import AndroGuardStringAnalysis, AndroGuardClassAnalysis, AndroGuardM
 from model import AppCertificate
 from model.AndroGuardReport import SCANNER_NAME
 from database.mongodb_key_replacer import filter_mongodb_dict_chars
-from utils.mulitprocessing_util.mp_util import start_python_interpreter
+from processing.standalone_python_worker import start_python_interpreter
 
 
 def add_report_crossreferences(report):

@@ -8,7 +8,7 @@ from decompiler.jadx_wrapper import decompile_with_jadx
 from model import AndroidApp, MobSFScanReport
 from model.Interfaces.ScanJob import ScanJob
 from model.StoreSetting import get_active_store_by_index
-from utils.mulitprocessing_util.mp_util import start_python_interpreter
+from processing.standalone_python_worker import start_python_interpreter
 
 
 def save_result(android_app, json_report):

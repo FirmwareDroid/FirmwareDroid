@@ -8,7 +8,7 @@ import tempfile
 from model.Interfaces.ScanJob import ScanJob
 from model import ApkidReport, AndroidApp
 from context.context_creator import create_db_context, create_log_context
-from utils.mulitprocessing_util.mp_util import start_python_interpreter
+from processing.standalone_python_worker import start_python_interpreter
 
 
 def process_android_app(android_app_id):

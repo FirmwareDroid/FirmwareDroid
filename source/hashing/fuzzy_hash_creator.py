@@ -13,7 +13,7 @@ from model import AndroidFirmware
 from firmware_handler.firmware_file_exporter import extract_firmware
 from context.context_creator import create_db_context, create_log_context, create_multithread_log_context
 from model.StoreSetting import get_active_store_by_index
-from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
+from processing.standalone_python_worker import create_multi_threading_queue
 
 NUMBER_OF_FUZZY_HASH_THREADS = 4
 

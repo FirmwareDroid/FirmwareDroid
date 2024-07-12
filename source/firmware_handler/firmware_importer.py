@@ -23,7 +23,7 @@ from extractor.expand_archives import extract_first_layer, extract_second_layer
 from model.StoreSetting import get_active_store_by_index
 from utils.file_utils.file_util import get_filenames
 from firmware_handler.firmware_version_detect import detect_by_build_prop
-from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
+from processing.standalone_python_worker import create_multi_threading_queue
 from bson import ObjectId
 
 NUMBER_OF_IMPORTER_THREADS = 10

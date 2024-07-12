@@ -21,7 +21,7 @@ Some of the tools and features included are:
   * [Androwarn](https://github.com/maaaaz/androwarn/) (deprecated, no updates by the author)
   * [SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/) (deprecated, discontinued by the author)
 * APIs:
-  * [VirusTotal](https://www.virustotal.com)
+  * [VirusTotal](https://www.virustotal.com) (Needs refactoring)
 * Fuzzy-Hashing:
   * [SSDeep](https://ssdeep-project.github.io/ssdeep/index.html)
   * [TLSH](https://tlsh.org/)

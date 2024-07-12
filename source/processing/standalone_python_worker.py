@@ -21,39 +21,6 @@ from concurrent.futures import ProcessPoolExecutor as Executor, as_completed
 MAX_PROCESS_TIME = 60 * 60 * 24
 
 
-def create_managed_mp_queue(document_obj_list, manager):
-    """
-    Creates a closed managed multiprocessing queue.
-
-    :param document_obj_list: list of elements to add to the queue.
-    :param manager: multiprocessor manager which handles the queue.
-    :return: multiprocessing manager.Queue()
-
-    """
-    queue_docs = manager.Queue()
-    for report in document_obj_list:
-        queue_docs.put(report)
-    time.sleep(0.1)
-    return queue_docs
-
-
-def create_id_mp_queue(document_list, manager):
-    """
-    Creates a multiprocessor-queue from the given list. Uses the id of the document as the queue element.
-
-    :param manager: multiprocessor manager.
-    :param document_list: list of objects to put into the queue
-
-    :return: Queue(objectID)
-
-    """
-    mp_queue = manager.Queue()
-    for obj in document_list:
-        mp_queue.put(obj.id)
-    time.sleep(1)
-    return mp_queue
-
-
 def create_multi_threading_queue(document_list):
     """
     Creates a queue for multi threading.
@@ -98,12 +65,14 @@ def start_python_interpreter(item_list,
                              use_id_list=True,
                              module_name=None,
                              report_reference_name=None,
-                             interpreter_path=None):
+                             interpreter_path=None,
+                             worker_args_list=None):
     """
     Starts this script file in a new process with the given python interpreter. Executes the main function of this
     file and passes the given arguments to the new process.
 
-    :param module_name: str -
+    :param worker_args_list: list - list of arguments to pass to the worker function.
+    :param module_name: str - Name of the fmd module to use.
     :param report_reference_name: str - Class:'AndroidApp' attribute name to store the result report.
     :param interpreter_path: string - Path to the python interpreter used for spawning the processes.
     :param use_id_list: boolean - if true: list of object-ids instead of object instances is used to create a queue
@@ -122,20 +91,21 @@ def start_python_interpreter(item_list,
                              str(number_of_processes),
                              str(use_id_list),
                              module_name,
-                             report_reference_name
+                             report_reference_name,
+                             *worker_args_list
                              ],
                             cwd="/var/www/source/")
 
 
-def start_process_pool(item_list,
-                       worker_function,
-                       number_of_processes=os.cpu_count(),
-                       create_id_list=True,
-                       worker_args_dict=None):
+def start_mp_process_pool_executor(item_list,
+                                   worker_function,
+                                   number_of_processes=os.cpu_count(),
+                                   create_id_list=True,
+                                   worker_args_list=None):
     """
     Creates a multiprocessor pool and starts the processing the items with the given function.
 
-    :param worker_args_dict: dict - dictionary of arguments to pass to the worker function.
+    :param worker_args_list: list - list of arguments to pass to the worker function.
     :param create_id_list: boolean - if true, object-id list instead of the item list is used for the queue.
         Use this only if you provide an item list of documents with an id attribute.
     :param number_of_processes: int - number of processes to start.
@@ -153,14 +123,14 @@ def start_process_pool(item_list,
         worker_task_list = item_list
 
     with Executor(max_workers=number_of_processes) as executor:
-        if worker_args_dict:
-            future_to_file = {executor.submit(worker_function, worker_task, *worker_args_dict): worker_task for
-                              worker_task in worker_task_list}
+        if worker_args_list:
+            future_generator = {executor.submit(worker_function, worker_task, *worker_args_list): worker_task for
+                                worker_task in worker_task_list}
         else:
-            future_to_file = {executor.submit(worker_function, worker_task): worker_task for
-                              worker_task in worker_task_list}
+            future_generator = {executor.submit(worker_function, worker_task): worker_task for
+                                worker_task in worker_task_list}
         result_list = []
-        for future in as_completed(future_to_file):
+        for future in as_completed(future_generator):
             result = future.result()
             result_list.append(result)
     return result_list
@@ -172,6 +142,10 @@ def multiprocess_initializer():
 
 
 def main():
+    """
+    Main function that is executed when the script is started with a new python interpreter.
+    The function starts the worker function in a new process and passes the given arguments to the new process.
+    """
     create_app_context()
     id_list = sys.argv[1].split(",")
     if len(id_list) <= 0:
@@ -184,7 +158,10 @@ def main():
     worker_function = getattr(scanner_module, worker_function_name)
     number_of_processes = int(sys.argv[3])
     use_id_list = bool(sys.argv[4])
-    start_process_pool(item_list, worker_function, number_of_processes, use_id_list)
+    worker_args_list = []
+    if len(sys.argv) > 7:
+        worker_args_list = sys.argv[7:]
+    start_mp_process_pool_executor(item_list, worker_function, number_of_processes, use_id_list, worker_args_list)
 
 
 if __name__ == "__main__":

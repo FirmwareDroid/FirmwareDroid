@@ -12,7 +12,7 @@ from pathlib import Path
 from model.Interfaces.ScanJob import ScanJob
 from model import AndroidApp, SuperReport
 from context.context_creator import create_db_context, create_log_context
-from utils.mulitprocessing_util.mp_util import start_python_interpreter
+from processing.standalone_python_worker import start_python_interpreter
 
 
 @create_log_context

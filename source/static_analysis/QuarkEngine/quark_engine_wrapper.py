@@ -9,7 +9,7 @@ from model.Interfaces.ScanJob import ScanJob
 from model import QuarkEngineReport, AndroidApp
 from context.context_creator import create_db_context, create_log_context
 from static_analysis.QuarkEngine.vuln_checkers import *
-from utils.mulitprocessing_util.mp_util import start_python_interpreter
+from processing.standalone_python_worker import start_python_interpreter
 
 MAX_WAITING_TIME = 60 * 10
 MAX_EXECUTION_TIME = 60 * 30
