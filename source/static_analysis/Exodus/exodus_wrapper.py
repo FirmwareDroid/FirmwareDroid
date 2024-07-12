@@ -11,27 +11,21 @@ from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
 @create_log_context
 @create_db_context
-def exodus_worker_multiprocessing(android_app_id_queue):
+def exodus_worker_multiprocessing(android_app_id):
     """
     Start the analysis with exodus on a multiprocessor queue.
 
-    :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
+    :param android_app_id: str - id of the android app to be analysed.
 
     """
-    while True:
-        try:
-            android_app_id = android_app_id_queue.get(timeout=.5)
-        except Exception as err:
-            break
-        android_app = AndroidApp.objects.get(pk=android_app_id)
-        logging.info(f"Exodus scans: {android_app.id}")
-        try:
-            exodus_json_report = get_exodus_analysis(android_app.absolute_store_path)
-            create_report(android_app, exodus_json_report)
-        except Exception as err:
-            logging.error(f"Exodus could not scan app {android_app.filename} id: {android_app.id} - "
-                          f"error: {err}")
-        android_app_id_queue.task_done()
+    android_app = AndroidApp.objects.get(pk=android_app_id)
+    logging.info(f"Exodus scans: {android_app.id}")
+    try:
+        exodus_json_report = get_exodus_analysis(android_app.absolute_store_path)
+        create_report(android_app, exodus_json_report)
+    except Exception as err:
+        logging.error(f"Exodus could not scan app {android_app.filename} id: {android_app.id} - "
+                      f"error: {err}")
 
 
 def get_exodus_analysis(apk_file_path):

@@ -60,21 +60,14 @@ def process_android_app(android_app_id):
 
 @create_log_context
 @create_db_context
-def apkid_worker_multiprocessing(android_app_id_queue):
+def apkid_worker_multiprocessing(android_app_id):
     """
     Starts to analyze the given android apps with apkid tool.
 
-    :param android_app_id_queue: multiprocessor queue with object-id's of class:'AndroidApp'.
+    :param android_app_id: str - object-id for document of  class:'AndroidApp'
 
     """
-    while True:
-        logging.info(f"APKiD Queue size estimate: {android_app_id_queue.qsize()}")
-        try:
-            android_app_id = android_app_id_queue.get(timeout=.5)
-        except Exception as err:
-            break
-        process_android_app(android_app_id)
-        android_app_id_queue.task_done()
+    process_android_app(android_app_id)
 
 
 def store_apkid_result(android_app, report_file_path):

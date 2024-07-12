@@ -11,25 +11,22 @@ from model import QarkReport, QarkIssue, AndroidApp
 from context.context_creator import create_db_context, create_log_context
 from utils.mulitprocessing_util.mp_util import start_python_interpreter
 
-
 @create_log_context
 @create_db_context
-def qark_worker_multiprocessing(android_app_id_queue):
+def qark_worker_multiprocessing(android_app_id):
     """
     Starts the analysis with quark.
-    :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
+
+    :param android_app_id: str: the id of the app to be scanned.
+
     """
-    while True:
-        android_app_id = android_app_id_queue.get(timeout=.5)
-        try:
-            android_app = AndroidApp.objects.get(pk=android_app_id)
-            logging.info(f"Qark scans: {android_app.filename} {android_app.id} "
-                         f"estimated queue-size: {android_app_id_queue.qsize()}")
-            report_path = start_qark_app_analysis(android_app)
-            create_qark_report(report_path, android_app)
-        except Exception as err:
-            logging.error(f"Could not analyze app {android_app.id} {android_app.filename} with qark: {err}")
-        android_app_id_queue.task_done()
+    try:
+        android_app = AndroidApp.objects.get(pk=android_app_id)
+        logging.info(f"Qark scans: {android_app.filename} {android_app.id} ")
+        report_path = start_qark_app_analysis(android_app)
+        create_qark_report(report_path, android_app)
+    except Exception as err:
+        logging.error(f"Could not analyze app {android_app_id} with qark: {err}")
 
 
 def start_qark_app_analysis(android_app):

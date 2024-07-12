@@ -124,23 +124,22 @@ def analyse_and_save(android_app):
 
 @create_db_context
 @create_log_context
-def manifest_parser_worker_multiprocessing(android_app_id_queue):
+def manifest_parser_worker_multiprocessing(android_app_id):
     """
     Worker process which will work on the given queue.
 
-    :param android_app_id_queue: str - object-id's of class:'AndroidApp'.
 
     """
-    while True:
-        try:
-            android_app_id = android_app_id_queue.get(timeout=.5)
-        except Exception as err:
-            break
-        android_app = AndroidApp.objects.get(pk=android_app_id)
-        logging.info(f"ManifestParser scans: {android_app.filename} {android_app.id} "
-                     f"estimated queue-size: {android_app_id_queue.qsize()}")
-        analyse_and_save(android_app)
-        android_app_id_queue.task_done()
+    # while True:
+    #     try:
+    #         android_app_id = android_app_id_queue.get(timeout=.5)
+    #     except Exception as err:
+    #         break
+
+    android_app = AndroidApp.objects.get(pk=android_app_id)
+    logging.info(f"ManifestParser scans: {android_app.filename} {android_app.id}")
+    analyse_and_save(android_app)
+    #android_app_id_queue.task_done()
 
 
 class ManifestParserScanJob(ScanJob):

@@ -18,7 +18,6 @@ def save_result(android_app, json_report):
     :param android_app: object of class:'AndroidApp'
     :param json_report: str - json report of the mobsfscan.
 
-    :return:
     """
     mobsfscan_version = pkg_resources.get_distribution("mobsfscan").version
     report = MobSFScanReport(android_app_id_reference=android_app.id,
@@ -54,33 +53,22 @@ def process_android_app(android_app):
 
 @create_log_context
 @create_db_context
-def mobsfscan_worker_multiprocessing(android_app_id_queue):
+def mobsfscan_worker_multiprocessing(android_app_id):
     """
     Starts to analyze the given android apps with mobsfscan tool.
 
-    :param android_app_id_queue: multiprocessor queue with object-id's of class:'AndroidApp'.
+    :param android_app_id: int - id of the android app to analyze.
 
     """
-    while True:
-        try:
-            android_app_id = android_app_id_queue.get(timeout=.5)
-        except Exception as err:
-            break
-
-        try:
-            android_app = AndroidApp.objects.get(pk=android_app_id)
-            if os.path.exists(android_app.absolute_store_path) is False:
-                logging.error(f"Android app not found in store: {android_app.filename} {android_app.id}")
-                android_app_id_queue.task_done()
-                continue
-            logging.info(f"Prepare MobSFS scan: {android_app.filename} {android_app.id} "
-                         f"estimated queue-size: {android_app_id_queue.qsize()}")
-            process_android_app(android_app)
-        except Exception as err:
-            logging.error(err)
-            traceback.print_stack()
-        finally:
-            android_app_id_queue.task_done()
+    try:
+        android_app = AndroidApp.objects(android_app_id)
+        if os.path.exists(android_app.absolute_store_path) is False:
+            raise FileNotFoundError(f"Android app not found in store: {android_app.filename} {android_app.id}")
+        logging.info(f"Prepare MobSFS scan: {android_app.filename} {android_app.id} ")
+        process_android_app(android_app)
+    except Exception as err:
+        logging.error(err)
+        traceback.print_stack()
 
 
 class MobSFScanJob(ScanJob):

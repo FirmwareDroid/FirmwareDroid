@@ -18,50 +18,47 @@ QUARK_SCAN_TIMEOUT = 60 * 2
 
 @create_log_context
 @create_db_context
-def quark_engine_worker_multiprocessing(android_app_id_queue):
+def quark_engine_worker_multiprocessing(android_app_id):
     """
     Start the analysis with quark-engine on a multiprocessor queue.
-    :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
+
+    :param android_app_id: str - id of the android app.
+
     """
 
     rule_dir_path = get_quark_engine_rules()
     if rule_dir_path is None or os.path.isdir(rule_dir_path) is False or os.path.exists(rule_dir_path) is False:
         raise RuntimeError(f"Could not get quark-engine scanning rules from {rule_dir_path}.")
 
-    while True:
-        android_app_id = android_app_id_queue.get(timeout=.5)
-        try:
-            android_app = AndroidApp.objects.get(pk=android_app_id)
-            logging.info(f"Quark-Engine scans: {android_app.filename} {android_app.id} "
-                         f"estimated queue-size: {android_app_id_queue.qsize()}")
-            if os.path.exists(android_app.absolute_store_path) is False:
-                raise FileNotFoundError(f"Android app not found in store: {android_app.filename} {android_app.id}")
-        except Exception as err:
-            logging.error(f"Quark-Engine could not get android app from queue. Error: {err}")
-            android_app_id_queue.task_done()
-            continue
+    android_app = get_android_app_by_id(android_app_id)
+    try:
+        # TODO remove this if filesize check as soon as quark-engine fixes the issue with large apk files.
+        if android_app.file_size_bytes <= 83886080:
+            scan_results_malware = get_quark_engine_scan(android_app.absolute_store_path, rule_dir_path)
+            if scan_results_malware is None:
+                raise TimeoutError(f"Quark-Engine scan for {android_app.filename} terminated due to timeout.")
+            scan_results_vulns = get_vulnerability_quark_engine_scan(android_app.absolute_store_path, rule_dir_path)
+            scan_results_vulns = {k: v for k, v in scan_results_vulns.items() if v}
+            scan_results = {"malware": scan_results_malware, "vulnerabilities": scan_results_vulns}
+            create_quark_engine_report(android_app, scan_results)
+        else:
+            logging.error(f"Skipping: Android apk is over maximal file size for quark-engine. "
+                          f"{android_app.filename} {android_app.id}")
+    except Exception as err:
+        logging.error(f"Quark-Engine could not scan app {android_app.filename} id: {android_app.id} - "
+                      f"error: {err}")
+        traceback.print_exc()
+        raise err
+    finally:
+        logging.info(f"Quark-Engine finished scanning: {android_app.filename} {android_app.id}")
+        remove_logs()
 
-        try:
-            # TODO remove this if filesize check as soon as quark-engine fixes the issue with large apk files.
-            if android_app.file_size_bytes <= 83886080:
-                scan_results_malware = get_quark_engine_scan(android_app.absolute_store_path, rule_dir_path)
-                if scan_results_malware is None:
-                    raise TimeoutError(f"Quark-Engine scan for {android_app.filename} terminated due to timeout.")
-                scan_results_vulns = get_vulnerability_quark_engine_scan(android_app.absolute_store_path, rule_dir_path)
-                scan_results_vulns = {k: v for k, v in scan_results_vulns.items() if v}
-                scan_results = {"malware": scan_results_malware, "vulnerabilities": scan_results_vulns}
-                create_quark_engine_report(android_app, scan_results)
-            else:
-                logging.error(f"Skipping: Android apk is over maximal file size for quark-engine. "
-                              f"{android_app.filename} {android_app.id}")
-        except Exception as err:
-            logging.error(f"Quark-Engine could not scan app {android_app.filename} id: {android_app.id} - "
-                          f"error: {err}")
-            traceback.print_exc()
-        finally:
-            logging.info(f"Quark-Engine finished scanning: {android_app.filename} {android_app.id}")
-            android_app_id_queue.task_done()
-            remove_logs()
+
+def get_android_app_by_id(android_app_id):
+    android_app = AndroidApp.objects.get(pk=android_app_id)
+    logging.info(f"Quark-Engine scans: {android_app.filename} {android_app.id} ")
+    if os.path.exists(android_app.absolute_store_path) is False:
+        raise FileNotFoundError(f"Android app not found in store: {android_app.filename} {android_app.id}")
 
 
 def get_quark_engine_rules():

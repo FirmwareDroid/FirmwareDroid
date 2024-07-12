@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
+import logging
 import sys
+
 sys.path.append("/var/www/source/")
 from database.query_document import get_filtered_list
 from model import AndroidApp
@@ -12,10 +14,9 @@ import subprocess
 import sys
 import threading
 import time
-from multiprocessing import Manager, get_context
 from threading import Thread
-from database.connector import multiprocess_disconnect_all
 from context.context_creator import create_app_context, setup_logging
+from concurrent.futures import ProcessPoolExecutor as Executor, as_completed
 
 MAX_PROCESS_TIME = 60 * 60 * 24
 
@@ -132,7 +133,7 @@ def start_process_pool(item_list,
                        create_id_list=True,
                        worker_args_dict=None):
     """
-    Creates a multiprocessor pool and starts the given function in parallel.
+    Creates a multiprocessor pool and starts the processing the items with the given function.
 
     :param worker_args_dict: dict - dictionary of arguments to pass to the worker function.
     :param create_id_list: boolean - if true, object-id list instead of the item list is used for the queue.
@@ -141,23 +142,28 @@ def start_process_pool(item_list,
     :param worker_function: function - which will be executed by the pool.
     :param item_list: list(object) - items to work on.
 
+    :return: list - list of results from the worker function.
+
     """
-    multiprocess_disconnect_all()
-    with Manager() as manager:
-        if create_id_list:
-            item_id_queue = create_id_mp_queue(item_list, manager)
+    worker_task_list = []
+    if create_id_list:
+        for obj in item_list:
+            worker_task_list.append(obj.id)
+    else:
+        worker_task_list = item_list
+
+    with Executor(max_workers=number_of_processes) as executor:
+        if worker_args_dict:
+            future_to_file = {executor.submit(worker_function, worker_task, *worker_args_dict): worker_task for
+                              worker_task in worker_task_list}
         else:
-            item_id_queue = create_managed_mp_queue(item_list, manager)
-        with get_context("fork").Pool(processes=number_of_processes,
-                                      #maxtasksperchild=3,
-                                      initializer=multiprocess_initializer) as pool:
-            for _ in range(number_of_processes):
-                if not worker_args_dict:
-                    pool.starmap_async(worker_function, [(item_id_queue,)])
-                else:
-                    pool.starmap_async(worker_function, [(item_id_queue, *worker_args_dict)])
-            pool.close()
-            pool.join()
+            future_to_file = {executor.submit(worker_function, worker_task): worker_task for
+                              worker_task in worker_task_list}
+        result_list = []
+        for future in as_completed(future_to_file):
+            result = future.result()
+            result_list.append(result)
+    return result_list
 
 
 def multiprocess_initializer():
