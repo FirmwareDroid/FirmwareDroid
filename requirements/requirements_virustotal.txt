@@ -1,1 +1,1 @@
-virustotal3==1.0.8
+vt-py~=0.18.2

@@ -56,7 +56,7 @@ def get_virustotal_report_list(android_app_id_list):
         try:
             android_app = AndroidApp.objects.get(pk=android_app_id)
             virustotal_report_list.append(VirusTotalReport.objects.get(
-                pk=android_app.virus_total_report_reference.fetch().id))
+                pk=android_app.virustotal_report_reference.fetch().id))
         except (DoesNotExist, AttributeError) as err:
             logging.warning(f"VirusTotal report does not exist for {android_app_id}: {err}")
     return virustotal_report_list

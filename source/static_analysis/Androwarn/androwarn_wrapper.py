@@ -11,51 +11,45 @@ from multiprocessing import Lock
 from model.Interfaces.ScanJob import ScanJob
 from model import AndrowarnReport, AndroidApp
 from context.context_creator import create_db_context, create_log_context
-from utils.mulitprocessing_util.mp_util import start_python_interpreter
+from processing.standalone_python_worker import start_python_interpreter
 
 lock = Lock()
 
 
 @create_log_context
 @create_db_context
-def androwarn_worker_multiprocessing(android_app_id_queue):
+def androwarn_worker_multiprocessing(android_app_id):
     """
     Start the analysis with androwarn. Wrapper function taken and modified from androwarn.py.
 
-    :param android_app_id_queue: multiprocessor queue with class:'AndroidApp'
+    :param android_app_id: str - Android app id
 
     """
     from androguard.misc import AnalyzeAPK
     from androwarn.warn.analysis.analysis import perform_analysis
     from androwarn.warn.report.report import dump_analysis_results, generate_report
     from androwarn.warn.search.application.application import grab_application_package_name
-    while True:
-        try:
-            android_app_id = android_app_id_queue.get(timeout=.5)
-        except Exception as err:
-            break
-        android_app = AndroidApp.objects.get(pk=android_app_id)
-        logging.info(f"Androwarn scan: {android_app.filename} {android_app.id} "
-                     f"estimated queue-size: {android_app_id_queue.qsize()}")
-        try:
-            with_playstore_lookup = False
-            display_report = False
-            report_type = 'json'
-            verbose = 3
-            with lock:
-                output = tempfile.NamedTemporaryFile()
-            a, d, x = AnalyzeAPK(android_app.absolute_store_path)
-            package_name = grab_application_package_name(a)
-            data = perform_analysis(android_app.absolute_store_path, a, d, x, with_playstore_lookup)
-            if display_report:
-                dump_analysis_results(data, sys.stdout)
-            generate_report(package_name, data, verbose, report_type, output.name)
-            report_file_path = output.name + "." + report_type
-            create_androwarn_report(report_file_path, android_app)
-        except Exception as err:
-            logging.error(f"Androwarn could not scan app {android_app.filename} id: {android_app.id} - "
-                          f"error: {str(err)}")
-        android_app_id_queue.task_done()
+
+    android_app = AndroidApp.objects.get(pk=android_app_id)
+    logging.info(f"Androwarn scan: {android_app.filename} {android_app.id} ")
+    try:
+        with_playstore_lookup = False
+        display_report = False
+        report_type = 'json'
+        verbose = 3
+        with lock:
+            output = tempfile.NamedTemporaryFile()
+        a, d, x = AnalyzeAPK(android_app.absolute_store_path)
+        package_name = grab_application_package_name(a)
+        data = perform_analysis(android_app.absolute_store_path, a, d, x, with_playstore_lookup)
+        if display_report:
+            dump_analysis_results(data, sys.stdout)
+        generate_report(package_name, data, verbose, report_type, output.name)
+        report_file_path = output.name + "." + report_type
+        create_androwarn_report(report_file_path, android_app)
+    except Exception as err:
+        logging.error(f"Androwarn could not scan app {android_app.filename} id: {android_app.id} - "
+                      f"error: {str(err)}")
 
 
 def create_androwarn_report(report_file_path, android_app):

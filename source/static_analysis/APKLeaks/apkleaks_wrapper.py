@@ -5,38 +5,32 @@ import logging
 import os
 import tempfile
 import traceback
-from Interfaces.ScanJob import ScanJob
 from model import AndroidApp, ApkleaksReport
 from context.context_creator import create_db_context, create_log_context
-from utils.mulitprocessing_util.mp_util import start_python_interpreter
+from model.Interfaces.ScanJob import ScanJob
+from processing.standalone_python_worker import start_python_interpreter
 
 
 @create_log_context
 @create_db_context
-def apkleaks_worker_multiprocessing(android_app_id_queue):
+def apkleaks_worker_multiprocessing(android_app_id):
     """
     Start the analysis on a multiprocessor queue.
 
-    :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
+    :param android_app_id: str - id of the AndroidApp to be scanned.
 
     """
-    while True:
-        try:
-            android_app_id = android_app_id_queue.get(timeout=.5)
-        except Exception as err:
-            break
-        try:
-            android_app = AndroidApp.objects.get(pk=android_app_id)
-            logging.info(f"APKLeaks scans: {android_app.filename} {android_app.id} "
-                         f"estimated queue-size: {android_app_id_queue.qsize()}")
-            tempdir = tempfile.TemporaryDirectory()
-            json_results = get_apkleaks_analysis(android_app.absolute_store_path, tempdir.name)
-            create_report(android_app, json_results)
-            android_app_id_queue.task_done()
-        except Exception as err:
-            traceback.print_exc()
-            logging.error(f"APKleaks could not scan app id: {android_app_id} - "
-                          f"error: {err}")
+
+    try:
+        android_app = AndroidApp.objects.get(pk=android_app_id)
+        logging.info(f"APKLeaks scans: {android_app.filename} {android_app.id} ")
+        tempdir = tempfile.TemporaryDirectory()
+        json_results = get_apkleaks_analysis(android_app.absolute_store_path, tempdir.name)
+        create_report(android_app, json_results)
+    except Exception as err:
+        traceback.print_exc()
+        logging.error(f"APKleaks could not scan app id: {android_app_id} - "
+                      f"error: {err}")
 
 
 def get_apkleaks_analysis(apk_file_path, result_folder_path):

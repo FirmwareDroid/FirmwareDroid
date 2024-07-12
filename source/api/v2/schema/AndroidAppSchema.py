@@ -26,7 +26,7 @@ class ScannerModules(Enum):
     QUARKENGINE = {"QuarkEngineScanJob": "static_analysis.QuarkEngine.quark_engine_wrapper"}
     QARK = {"QarkScanJob": "static_analysis.Qark.qark_wrapper"}
     SUPER = {"SuperAndroidAnalyzerScanJob": "static_analysis.SuperAndroidAnalyzer.super_android_analyzer_wrapper"}
-    VIRUSTOTAL = {"VirusTotalScanJob": "static_analysis.Virustotal.virus_total_wrapper"}
+    VIRUSTOTAL = {"VirusTotalScanJob": "external_analysis.VirusTotal.virustotal_wrapper"}
     MANIFEST = {"ManifestParserScanJob": "static_analysis.ManifestParser.android_manifest_parser"}
     MOBSF = {"MobSFScanJob": "static_analysis.MobSFScan.mobsfscan_wrapper"}
 
@@ -67,6 +67,14 @@ class AndroidAppQuery(graphene.ObjectType):
 
 
 def import_module_function(scanner_name, object_id_list):
+    """
+    Import the module and return the function to run.+
+
+    :param scanner_name: str - Name of the scanner to use.
+    :param object_id_list: list(str) - List of object ids to scan.
+
+    :return: function - a reference to the scanning function.
+    """
     if scanner_name in ScannerModules.__members__:
         meta_dict = getattr(ScannerModules, scanner_name).value
         meta_data = next(iter((meta_dict.items())))

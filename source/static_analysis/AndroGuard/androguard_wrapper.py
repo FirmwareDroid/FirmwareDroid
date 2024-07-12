@@ -14,7 +14,7 @@ from model import AndroGuardStringAnalysis, AndroGuardClassAnalysis, AndroGuardM
 from model import AppCertificate
 from model.AndroGuardReport import SCANNER_NAME
 from database.mongodb_key_replacer import filter_mongodb_dict_chars
-from utils.mulitprocessing_util.mp_util import start_python_interpreter
+from processing.standalone_python_worker import start_python_interpreter
 
 
 def add_report_crossreferences(report):
@@ -343,23 +343,16 @@ def analyse_and_save(android_app):
 
 @create_db_context
 @create_log_context
-def androguard_worker_multiprocessing(android_app_id_queue):
+def androguard_worker_multiprocessing(android_app_id):
     """
     Worker process which will work on the given queue.
 
-    :param android_app_id_queue: str - object-id's of class:'AndroidApp'.
+    :param android_app_id: str - The id of the AndroidApp to analyse.
 
     """
-    while True:
-        try:
-            android_app_id = android_app_id_queue.get(timeout=.5)
-        except Exception as err:
-            break
-        android_app = AndroidApp.objects.get(pk=android_app_id)
-        logging.info(f"AndroGuard scan: {android_app.filename} {android_app.id} "
-                     f"estimated queue-size: {android_app_id_queue.qsize()}")
-        analyse_and_save(android_app)
-        android_app_id_queue.task_done()
+    android_app = AndroidApp.objects.get(pk=android_app_id)
+    logging.info(f"AndroGuard scan: {android_app.filename} {android_app.id} ")
+    analyse_and_save(android_app)
 
 
 def androguard_worker_multithreading(android_app_queue):

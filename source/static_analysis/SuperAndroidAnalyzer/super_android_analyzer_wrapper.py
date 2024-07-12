@@ -12,29 +12,27 @@ from pathlib import Path
 from model.Interfaces.ScanJob import ScanJob
 from model import AndroidApp, SuperReport
 from context.context_creator import create_db_context, create_log_context
-from utils.mulitprocessing_util.mp_util import start_python_interpreter
+from processing.standalone_python_worker import start_python_interpreter
 
 
 @create_log_context
 @create_db_context
-def super_android_analyzer_multiprocessing(android_app_id_queue):
+def super_android_analyzer_multiprocessing(android_app_id):
     """
     Start the analysis with super on a multiprocessor queue.
-    :param android_app_id_queue: multiprocessor queue with object-ids of class:'AndroidApp'.
+
+    :param android_app_id: str - id of the android app.
+
     """
-    while True:
-        android_app_id = android_app_id_queue.get(timeout=.5)
-        android_app = AndroidApp.objects.get(pk=android_app_id)
-        logging.info(f"SUPER Android Analyzer scans: {android_app.filename} {android_app.id} "
-                     f"estimated queue-size: {android_app_id_queue.qsize()}")
-        try:
-            tempdir = tempfile.TemporaryDirectory()
-            super_json_results = get_super_android_analyzer_analysis(android_app.absolute_store_path, tempdir.name)
-            create_report(android_app, super_json_results)
-        except Exception as err:
-            logging.error(f"Super could not scan app {android_app.filename} id: {android_app.id} - "
-                          f"error: {err}")
-        android_app_id_queue.task_done()
+    android_app = AndroidApp.objects.get(pk=android_app_id)
+    logging.info(f"SUPER Android Analyzer scans: {android_app.filename} {android_app.id}")
+    try:
+        tempdir = tempfile.TemporaryDirectory()
+        super_json_results = get_super_android_analyzer_analysis(android_app.absolute_store_path, tempdir.name)
+        create_report(android_app, super_json_results)
+    except Exception as err:
+        logging.error(f"Super could not scan app {android_app.filename} id: {android_app.id} - "
+                      f"error: {err}")
 
 
 def get_super_android_analyzer_analysis(apk_file_path, result_folder_path):

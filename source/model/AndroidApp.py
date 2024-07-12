@@ -30,7 +30,7 @@ class AndroidApp(Document):
     absolute_store_path = StringField(required=False, max_length=2048, min_length=1)
     relative_store_path = StringField(required=False, max_length=1024, min_length=1)
     androguard_report_reference = LazyReferenceField('AndroGuardReport', reverse_delete_rule=DO_NOTHING)
-    virus_total_report_reference = LazyReferenceField('VirusTotalReport', reverse_delete_rule=DO_NOTHING)
+    virustotal_report_reference = LazyReferenceField('VirusTotalReport', reverse_delete_rule=DO_NOTHING)
     androwarn_report_reference = LazyReferenceField('AndrowarnReport', reverse_delete_rule=DO_NOTHING)
     qark_report_reference = LazyReferenceField('QarkReport', reverse_delete_rule=DO_NOTHING)
     apkid_report_reference = LazyReferenceField('ApkidReport', reverse_delete_rule=DO_NOTHING)

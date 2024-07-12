@@ -19,7 +19,7 @@ from dynamic_analysis.emulator_preparation.aosp_framework_builder import process
 from dynamic_analysis.emulator_preparation.aosp_shared_library_builder import process_shared_libraries
 from model import AndroidFirmware
 from model.StoreSetting import get_active_store_paths_by_uuid
-from utils.mulitprocessing_util.mp_util import start_process_pool
+from processing.standalone_python_worker import start_mp_process_pool_executor
 
 
 @create_db_context
@@ -29,11 +29,11 @@ def start_aosp_module_file_creator(format_name, firmware_id_list, skip_file_expo
     number_of_processes = len(firmware_id_list) if len(firmware_id_list) < os.cpu_count() else os.cpu_count()
     logging.info(f"Starting module build creator: format {format_name} with {len(firmware_id_list)} samples. "
                  f"Number of processes: {number_of_processes}")
-    start_process_pool(firmware_id_list,
-                       worker_process_firmware_multiprocessing,
-                       number_of_processes=number_of_processes,
-                       create_id_list=False,
-                       worker_args_dict=worker_arguments)
+    start_mp_process_pool_executor(firmware_id_list,
+                                   worker_process_firmware_multiprocessing,
+                                   number_of_processes=number_of_processes,
+                                   create_id_list=False,
+                                   worker_args_dict=worker_arguments)
 
 
 @create_db_context

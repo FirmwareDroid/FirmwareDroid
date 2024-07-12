@@ -14,7 +14,7 @@ from extractor.expand_archives import extract_first_layer
 from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
 from firmware_handler.firmware_file_indexer import create_firmware_file_list
 from model import StoreSetting, AndroidFirmware
-from utils.mulitprocessing_util.mp_util import create_multi_threading_queue
+from processing.standalone_python_worker import create_multi_threading_queue
 
 NUMBER_OF_EXPORTER_THREADS = 10
 NAME_EXPORT_FOLDER = "firmware_file_export"
