@@ -1,4 +1,4 @@
-FROM openjdk:23-jdk-slim-bullseye AS apk_scanner-worker
+FROM openjdk:23-jdk-slim-bookworm AS apk_scanner-worker
 COPY --from=firmwaredroid-base / /
 
 #####################################
@@ -9,7 +9,29 @@ RUN apt --allow-releaseinfo-change update -y
 #####################################
 # Installing exodus dependencies    #
 #####################################
-RUN apt-get install -y dexdump
+# TODO FIX DEXDUMP Installation: https://github.com/Exodus-Privacy/exodus-standalone/issues/6
+#RUN apt install -y dexdump android-libbacktrace # Debian dexdump package is broken
+# Workaround: Installation via Android sdkmanager
+RUN mkdir -p /android/sdk/cmdline-tools/latest && mkdir -p /android/sdk/avd && mkdir -p /android/sdk/platforms  \
+    && mkdir -p /android/sdk/platforms && mkdir -p /android/sdk/platform-tools && mkdir -p /android/sdk/system-images  \
+    && mkdir /android/tmp && mkdir -p /android/user_home/
+WORKDIR /android
+RUN wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
+RUN wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip
+RUN unzip commandlinetools-linux-10406996_latest.zip -d /android/tmp
+RUN unzip platform-tools-latest-linux.zip -d /android/sdk/
+RUN mv /android/tmp/cmdline-tools/* /android/sdk/cmdline-tools/latest/
+ENV ANDROID_HOME=/android/sdk
+ENV ANDROID_SDK_ROOT=/android/sdk
+ENV ANDROID_AVD_HOME=/android/sdk/avd
+ENV ANDROID_EMULATOR_HOME=/android/sdk/emulator
+ENV ANDROID_USER_HOME=/android/user_home/
+ENV PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+ENV PATH=$ANDROID_HOME/platform-tools:$PATH
+ENV PATH=$ANDROID_HOME/emulator/:$PATH
+RUN yes | /android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses ; exit 0 # Workaround against exit code 133
+RUN /android/sdk/cmdline-tools/latest/bin/sdkmanager --install "build-tools;35.0.0" ; exit 0 # Workaround against exit code 133
+ENV PATH=$ANDROID_SDK_ROOT/build-tools/35.0.0/:$PATH
 
 #####################################
 # Installing apktool                #

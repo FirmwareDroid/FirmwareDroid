@@ -3,3 +3,4 @@ gunicorn~=22.0.0
 gevent~=23.9.1
 protobuf~=3.20.1
 python-redis-lock~=4.0.0
+mongoengine~=0.27.0

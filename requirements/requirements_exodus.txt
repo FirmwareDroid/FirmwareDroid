@@ -1,1 +1,1 @@
-exodus-core==1.3.9 # On change check version in exodus_wrapper as well!
+exodus-core==1.3.12

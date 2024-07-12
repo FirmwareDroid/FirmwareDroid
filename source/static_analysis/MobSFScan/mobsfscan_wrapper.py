@@ -61,7 +61,7 @@ def mobsfscan_worker_multiprocessing(android_app_id):
 
     """
     try:
-        android_app = AndroidApp.objects(android_app_id)
+        android_app = AndroidApp.objects.get(pk=android_app_id)
         if os.path.exists(android_app.absolute_store_path) is False:
             raise FileNotFoundError(f"Android app not found in store: {android_app.filename} {android_app.id}")
         logging.info(f"Prepare MobSFS scan: {android_app.filename} {android_app.id} ")

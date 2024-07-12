@@ -1,14 +1,15 @@
 ########################################################
 # Firmwaredroid docker core                            #
 ########################################################
-FROM python:3.11-slim-bullseye AS firmwaredroid-base
+FROM python:3.11-slim-bookworm AS firmwaredroid-base
+#FROM kalilinux/kali-rolling:amd64 AS firmwaredroid-base
 
 RUN mkdir -p /var/www/tmp/ && mkdir -p /var/www/ && mkdir -p /opt/firmwaredroid/python/
 ADD ./ /var/www/
 WORKDIR /var/www/
-ENV PATH "$PATH:/home/www/.local/bin/"
-ENV PATH "$PATH:/var/www/source/"
-ENV PYTHONPATH "/var/www/source/:$PYTHONPATH"
+ENV PATH="$PATH:/home/www/.local/bin/"
+ENV PATH="$PATH:/var/www/source/"
+ENV PYTHONPATH="/var/www/source/:\$PYTHONPATH"
 ########################################################
 # Update installation                                  #
 ########################################################
@@ -27,9 +28,8 @@ RUN useradd -r -g $GROUP_ID -u $USER_ID www -s /bin/sh -m
 RUN chown $USER_ID:$GROUP_ID /var/www/
 RUN chown -R $USER_ID:$GROUP_ID /opt/firmwaredroid/
 
-#USER $USER_ID:$GROUP_ID
 USER www
-ENV PATH "$PATH:/home/www/.local/bin/"
+ENV PATH="$PATH:/home/www/.local/bin/"
 
 ########################################################
 # Install Python dependencies                          #

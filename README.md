@@ -33,6 +33,9 @@ Some of the tools and features included are:
 * Miscellaneous:
   * AndroidManifest Parsing
 
+With FMD you can not only scan Android firmware, but also extract and analyse the apps in the firmware. Moreover, it
+can be used as scanning engine for Android apps that are not part of a firmware.
+
 In this repository you will find the code for the backend of FMD. The application has a minimal React
 frontend (see https://github.com/FirmwareDroid/FMD-WebClient), but is mainly an API and database 
 that can be used for research studies.
@@ -62,7 +65,7 @@ FMD has only a minimal set of security features and is not a production ready so
   doi={10.1109/MOBILSoft59058.2023.00009}
 }
 ```
-  
+
 ### License:
 FirmwareDroid is a non-profit research project licenced under the GNU General Public License v3.0
 (see our [licence](https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md)).

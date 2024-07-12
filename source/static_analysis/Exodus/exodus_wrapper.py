@@ -72,11 +72,10 @@ def create_report(android_app, exodus_results):
     :param exodus_results: dict - results of the exodus scan.
 
     """
-    # TODO add dynamic usage for version
-    # from exodus_core import __version__
+    from exodus_core import __version__
     exodus_report = ExodusReport(
         android_app_id_reference=android_app.id,
-        scanner_version="1.3.9",
+        scanner_version=__version__,
         scanner_name="Exodus",
         results=exodus_results
     ).save()
