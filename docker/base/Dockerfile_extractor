@@ -9,7 +9,7 @@ USER root
 # Installing apt dependencies       #
 #####################################
 RUN apt update
-RUN apt install -y pkgconf simg2img liblzo2-dev fuse brotli libmagic1
+RUN apt install -y pkgconf android-sdk-libsparse-utils liblzo2-dev fuse brotli libmagic1 cmake
 
 #####################################
 # Installing unblob dependencies    #
@@ -27,12 +27,13 @@ RUN DEBIAN_FRONTEND=noninteractive apt install -y ssdeep libfuzzy-dev && apt-get
 # Install python dependencies       #
 #####################################
 USER www
+
 RUN --mount=type=cache,target=/var/www/tmp/.cache \
     pip install -r /var/www/requirements/requirements_extractor.txt
 
 RUN --mount=type=cache,target=/var/www/tmp/.cache \
     pip install -r /var/www/requirements/requirements_backend.txt
 
-ENV PATH "$PATH:/home/www/.local/bin/"
+ENV PATH="$PATH:/home/www/.local/bin/"
 
 WORKDIR /var/www/source/
