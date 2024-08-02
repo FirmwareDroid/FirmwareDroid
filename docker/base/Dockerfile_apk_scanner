@@ -7,7 +7,8 @@ COPY --from=firmwaredroid-base / /
 RUN apt --allow-releaseinfo-change update -y
 
 #####################################
-# Installing exodus dependencies    #
+# Install Exodus-core dependency (dexdump) #
+# Install Android scommand line tools and sdk #
 #####################################
 # TODO FIX DEXDUMP Installation: https://github.com/Exodus-Privacy/exodus-standalone/issues/6
 #RUN apt install -y dexdump android-libbacktrace # Debian dexdump package is broken
@@ -58,10 +59,50 @@ ENV PATH="${JADX}:${PATH}"
 RUN export PATH=$PATH
 RUN jadx --version
 
+##################################################
+# Install RUST
+##################################################
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN cargo --version
+
+##################################################
+# Install Gradle
+##################################################
+RUN mkdir -p /opt/gradle
+ENV GRADLE_VERSION=7.6.3
+RUN wget https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -P /tmp \
+    && unzip -d /opt/gradle /tmp/gradle-${GRADLE_VERSION}-bin.zip \
+    && rm /tmp/gradle-${GRADLE_VERSION}-bin.zip
+ENV GRADLE_HOME=/opt/gradle/gradle-${GRADLE_VERSION}
+ENV PATH=${GRADLE_HOME}/bin:${PATH}
+RUN gradle --version
+
+##################################################
+# Install Java decompilers for apkscan
+##################################################
+RUN mkdir -p /opt/decompilers/java/
+# Install CFR
+RUN wget https://github.com/leibnitz27/cfr/releases/download/0.152/cfr-0.152.jar -O /opt/decompilers/java/cfr.jar
+
+# Install Procyon
+RUN wget https://github.com/mstrobel/procyon/releases/download/v0.6.0/procyon-decompiler-0.6.0.jar -O /opt/decompilers/java/procyon.jar
+
+# Install Krakatau
+RUN git clone https://github.com/Storyyeller/Krakatau.git /opt/decompilers/java/krakatau
+WORKDIR /opt/decompilers/java/krakatau/
+RUN cargo build --release
+ENV PATH="${PATH}:/opt/firmwaredroid/decompilers/java/krakatau/target/release/krak2"
+
+# Install Fernflower
+# TODO find prebuilt version of fernflower or stable release jar
+#RUN git clone https://github.com/fesh0r/fernflower.git /opt/decompilers/java/fernflower
+#RUN /opt/firmwaredroid/decompilers/java/fernflower/gradlew build
+
+WORKDIR /var/www/source/
 #####################################
-# Installing RUST based tools       #
+# Install SUPER Android Analyzer   #
 #####################################
-# Install SUPER Android Analyzer
 RUN apt-get install -y default-jre-headless
 RUN wget -P /tmp/ https://github.com/SUPERAndroidAnalyzer/super/releases/download/0.5.1/super-analyzer_0.5.1_ubuntu_amd64.deb
 RUN dpkg -i /tmp/super-analyzer_0.5.1_ubuntu_amd64.deb
@@ -73,7 +114,7 @@ RUN --mount=type=cache,target=/tmp/.cache \
     pip install -r /var/www/requirements/requirements_apk_scanner.txt
 
 ##################################################
-# Installing python-based static-analysis tools  #
+# Install python-based static-analysis tools  #
 ##################################################
 USER root
 RUN chown -R www:www /opt/firmwaredroid/python/

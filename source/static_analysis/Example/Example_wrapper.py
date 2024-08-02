@@ -6,11 +6,10 @@ from model.Interfaces.ScanJob import ScanJob
 from processing.standalone_python_worker import start_python_interpreter
 
 
-def process_android_app(android_app_id):
+def process_android_app(android_app):
     # TODO: Implement the processing of the android app. Scan the apk file and retrieve the results.
     # Keep in mind to use local imports to avoid circular dependencies for your analyzers dependencies.
     import your_analyzer
-    android_app = AndroidApp.objects.get(id=android_app_id)
     apk_path = android_app.absolute_store_path
 
     # If it is a python tool just invoke it directly via python
@@ -29,7 +28,7 @@ def store_result(android_app, json_report_path):
     :return: class:'YourAnalyzerReport' object.
     """
     # TODO: Implement the storage of the analysis results in the database.
-    from your_analyzer import version
+    # from your_analyzer import the version
     with open(json_report_path, 'rb') as json_report:
         analysis_report = YourAnalyzerReport(android_app_id_reference=android_app.id,
                                              scanner_version=your_analyzer.__version__,
@@ -42,25 +41,18 @@ def store_result(android_app, json_report_path):
     return analysis_report
 
 
-
 @create_log_context
 @create_db_context
 # TODO: Change the worker function name
-def your_analyzer_worker_multiprocessing(android_app_id_queue):
+def your_analyzer_worker_multiprocessing(android_app_id):
     """
     Starts to analyze the given android apps.
 
-    :param android_app_id_queue: multiprocessor queue with object-id's of class:'AndroidApp'.
+    :param android_app_id: object-id of class:'AndroidApp'.
 
     """
-    while True:
-        logging.info(f"Queue size estimate: {android_app_id_queue.qsize()}")
-        try:
-            android_app_id = android_app_id_queue.get(timeout=.5)
-        except Exception as err:
-            break
-        process_android_app(android_app_id)
-        android_app_id_queue.task_done()
+    android_app = AndroidApp.objects.get(pk=android_app_id)
+    process_android_app(android_app)
 
 
 class YourAnalyzerJob(ScanJob):
