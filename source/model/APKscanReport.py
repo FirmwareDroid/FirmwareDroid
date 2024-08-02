@@ -2,6 +2,5 @@ from mongoengine import DictField
 from model.ApkScannerReport import ApkScannerReport
 
 
-class MobSFScanReport(ApkScannerReport):
+class APKscanReport(ApkScannerReport):
     results = DictField(required=True)
-

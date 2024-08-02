@@ -5,6 +5,7 @@ import logging
 import os
 import tempfile
 import traceback
+import pkg_resources
 from model import AndroidApp, ApkleaksReport
 from context.context_creator import create_db_context, create_log_context
 from model.Interfaces.ScanJob import ScanJob
@@ -20,7 +21,6 @@ def apkleaks_worker_multiprocessing(android_app_id):
     :param android_app_id: str - id of the AndroidApp to be scanned.
 
     """
-
     try:
         android_app = AndroidApp.objects.get(pk=android_app_id)
         logging.info(f"APKLeaks scans: {android_app.filename} {android_app.id} ")
@@ -75,9 +75,9 @@ def create_report(android_app, json_results):
     :param json_results: str - scanning results in json format.
 
     """
-    # TODO change static tool version to dynamic one
+    version = pkg_resources.get_distribution("apkleaks").version
     apkleaks_report = ApkleaksReport(android_app_id_reference=android_app.id,
-                                     scanner_version="2.6.1",
+                                     scanner_version=version, #"2.6.1",
                                      scanner_name="APKLeaks",
                                      results=json_results).save()
     android_app.apkleaks_report_reference = apkleaks_report.id

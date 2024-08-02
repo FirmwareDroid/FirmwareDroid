@@ -10,13 +10,14 @@ to automate the process of extracting and scanning pre-installed Android apps fo
 FMD is made to run in docker and includes several third party analysis tools for security analysis and extraction.
 Some of the tools and features included are:
 
-* Static-Analyzers for Android apps:
+* Static-Analyzers for Android apps (APKs):
   * [AndroGuard](https://github.com/androguard/androguard)
   * [Quark-Engine](https://github.com/quark-engine/quark-engine)
   * [APKiD](https://github.com/rednaga/APKiD/)
   * [Exodus-Core](https://github.com/Exodus-Privacy/exodus-core/)
   * [APKLeaks](https://github.com/dwisiswant0/apkleaks/)
   * [MobSFScan](https://github.com/MobSF/mobsfscan)
+  * [APKscan](https://github.com/LucasFaudman/apkscan)
   * [Qark](https://github.com/linkedin/qark/) (deprecated, no updates by the author)
   * [Androwarn](https://github.com/maaaaz/androwarn/) (deprecated, no updates by the author)
   * [SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/) (deprecated, discontinued by the author)
