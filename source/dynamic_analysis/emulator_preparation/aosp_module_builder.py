@@ -15,6 +15,7 @@ from context.context_creator import create_db_context, create_log_context
 from dynamic_analysis.emulator_preparation.aosp_apk_module_builer import create_build_files_for_apps, \
     process_android_apps
 from dynamic_analysis.emulator_preparation.aosp_executable_module_builder import process_executable_files
+from dynamic_analysis.emulator_preparation.aosp_file_exporter import export_files_by_regex
 from dynamic_analysis.emulator_preparation.aosp_framework_builder import process_framework_files
 from dynamic_analysis.emulator_preparation.aosp_shared_library_builder import process_shared_libraries
 from model import AndroidFirmware
@@ -25,7 +26,7 @@ from processing.standalone_python_worker import start_mp_process_pool_executor
 @create_db_context
 @create_log_context
 def start_aosp_module_file_creator(format_name, firmware_id_list, skip_file_export=False):
-    worker_arguments = [format_name, skip_file_export]
+    worker_argument_list = [format_name, skip_file_export]
     number_of_processes = len(firmware_id_list) if len(firmware_id_list) < os.cpu_count() else os.cpu_count()
     logging.info(f"Starting module build creator: format {format_name} with {len(firmware_id_list)} samples. "
                  f"Number of processes: {number_of_processes}")
@@ -33,35 +34,30 @@ def start_aosp_module_file_creator(format_name, firmware_id_list, skip_file_expo
                                    worker_process_firmware_multiprocessing,
                                    number_of_processes=number_of_processes,
                                    create_id_list=False,
-                                   worker_args_dict=worker_arguments)
+                                   worker_args_list=worker_argument_list)
 
 
 @create_db_context
 @create_log_context
-def worker_process_firmware_multiprocessing(firmware_id_queue, format_name, skip_file_export):
+def worker_process_firmware_multiprocessing(firmware_id, format_name, skip_file_export):
     """
     Worker process for creating build files for a given firmware.
 
-    :param firmware_id_queue: mp.Queue - Queue of firmware ids to process.
+    :param firmware_id: str - class:'AndroidFirmware' - An id for an instance of AndroidFirmware.
     :param format_name: str - 'mk' or 'bp' file format.
     :param skip_file_export: bool - flag to skip the file export.
 
     """
     logging.info(f"Worker process for format {format_name} started...")
     try:
-        firmware_id = firmware_id_queue.get(timeout=.5)
+        firmware = AndroidFirmware.objects.get(pk=firmware_id)
         logging.info(f"Processing firmware {firmware_id}; Format: {format_name}...")
-        try:
-            firmware = AndroidFirmware.objects.get(pk=firmware_id)
-            if firmware.aecs_build_file_path:
-                remove_existing_aecs_archive(firmware.aecs_build_file_path, firmware)
-            create_build_files_for_firmware(firmware, format_name, skip_file_export)
-        except Exception as err:
-            traceback.print_exc()
-            logging.error(f"Could not process firmware {firmware_id}: {err}")
-        firmware_id_queue.task_done()
+        if firmware.aecs_build_file_path:
+            remove_existing_aecs_archive(firmware.aecs_build_file_path, firmware)
+        create_build_files_for_firmware(firmware, format_name, skip_file_export)
     except Exception as err:
-        logging.warning(f"Worker process: {err}")
+        traceback.print_exc()
+        logging.error(f"Could not process firmware {firmware_id}: {err}")
     logging.info(f"Worker process finished...")
 
 
@@ -105,10 +101,13 @@ def package_build_files_for_firmware(firmware, format_name, skip_file_export):
     store_setting = firmware.get_store_setting()
     store_paths = store_setting.get_store_paths()
     with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as tmp_root_dir:
+        if not skip_file_export:
+            search_pattern = "$"
+            export_files_by_regex(firmware, store_setting.id, search_pattern)
         process_android_apps(firmware, tmp_root_dir)
-        process_shared_libraries(firmware, tmp_root_dir, store_setting.id, format_name, skip_file_export)
-        process_framework_files(firmware, tmp_root_dir, store_setting.id, format_name, skip_file_export)
-        process_executable_files(firmware, tmp_root_dir, store_setting.id, format_name, skip_file_export)
+        process_shared_libraries(firmware, tmp_root_dir, store_setting.id, format_name)
+        process_framework_files(firmware, tmp_root_dir, store_setting.id, format_name)
+        process_executable_files(firmware, tmp_root_dir, store_setting.id, format_name)
         package_files(firmware, tmp_root_dir, store_paths)
 
 

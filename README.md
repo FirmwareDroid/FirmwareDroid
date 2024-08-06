@@ -27,8 +27,13 @@ Some of the tools and features included are:
   * [SSDeep](https://ssdeep-project.github.io/ssdeep/index.html)
   * [TLSH](https://tlsh.org/)
 * Decompilers:
-  * [Apktool](https://apktool.org/)
-  * [Jadx](https://github.com/skylot/jadx)
+  * Android:
+    * [Apktool](https://apktool.org/)
+    * [Jadx](https://github.com/skylot/jadx)
+  * Java:
+    * [CFR](https://github.com/leibnitz27/cfr)
+    * [Procyon](https://github.com/mstrobel/procyon)
+    * [Krakatau](https://github.com/Storyyeller/Krakatau)
 * File Extraction:
   * [Unblob](https://github.com/onekey-sec/unblob)
 * Miscellaneous:

@@ -1,7 +1,6 @@
 import os
 import re
-from dynamic_analysis.emulator_preparation.aosp_file_exporter import (export_files_by_regex,
-                                                                      get_firmware_export_folder_root,
+from dynamic_analysis.emulator_preparation.aosp_file_exporter import (get_firmware_export_folder_root,
                                                                       get_subfolders)
 from string import Template
 from dynamic_analysis.emulator_preparation.asop_meta_writer import create_modules
@@ -68,7 +67,7 @@ def create_template_string(format_name, file_path):
     return template_out, local_module
 
 
-def process_framework_files(firmware, destination_folder, store_setting_id, format_name, skip_file_export):
+def process_framework_files(firmware, destination_folder, store_setting_id, format_name):
     """
     This function is used to process the shared libraries of a firmware. It extracts the shared libraries from the
     firmware and creates the shared library modules for AOSP firmware.
@@ -77,13 +76,10 @@ def process_framework_files(firmware, destination_folder, store_setting_id, form
     :param destination_folder: str - path to the destination folder.
     :param store_setting_id: int - id of the store setting.
     :param format_name: str - format name of the shared library module.
-    :param skip_file_export: bool - flag to skip the file export.
 
     """
     filename_regex = ".jar$"
     search_pattern = re.compile(filename_regex, re.IGNORECASE)
-    if not skip_file_export:
-        export_files_by_regex(firmware, store_setting_id, search_pattern)
     source_folder = get_firmware_export_folder_root(store_setting_id, firmware)
     create_modules(source_folder, destination_folder, format_name, search_pattern, create_template_string)
 

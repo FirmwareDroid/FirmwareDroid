@@ -2,8 +2,8 @@ import logging
 import os
 import re
 from string import Template
-from dynamic_analysis.emulator_preparation.aosp_file_exporter import (export_files_by_regex, get_firmware_export_folder_root,
-                                                                      is_top_folder, \
+from dynamic_analysis.emulator_preparation.aosp_file_exporter import (get_firmware_export_folder_root,
+                                                                      is_top_folder,
                                                                       get_subfolders)
 from dynamic_analysis.emulator_preparation.asop_meta_writer import create_modules
 from dynamic_analysis.emulator_preparation.templates.shared_library_module_template import \
@@ -102,12 +102,11 @@ def create_template_string(format_name, library_path):
     return template_out, local_module
 
 
-def process_shared_libraries(firmware, destination_folder, store_setting_id, format_name, skip_file_export):
+def process_shared_libraries(firmware, destination_folder, store_setting_id, format_name):
     """
     This function is used to process the shared libraries of a firmware. It extracts the shared libraries from the
     firmware and creates the shared library modules for AOSP firmware.
 
-    :param skip_file_export: bool - flag to skip the file export.
     :param firmware: class:'Firmware'
     :param destination_folder: str - path to the destination folder.
     :param store_setting_id: int - id of the store setting.
@@ -116,8 +115,6 @@ def process_shared_libraries(firmware, destination_folder, store_setting_id, for
     """
     filename_regex = r"\.so(\.\d+)?$"
     search_pattern = re.compile(filename_regex, re.IGNORECASE)
-    if not skip_file_export:
-        export_files_by_regex(firmware, store_setting_id, search_pattern)
     source_folder = get_firmware_export_folder_root(store_setting_id, firmware)
     logging.debug(f"Processing shared libraries in {source_folder}")
     create_modules(source_folder, destination_folder, format_name, search_pattern, create_template_string)

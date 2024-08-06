@@ -2,7 +2,7 @@ import os
 import re
 from string import Template
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import get_subfolders, replace_first_from_right, \
-    export_files_by_regex, get_firmware_export_folder_root
+    get_firmware_export_folder_root
 from dynamic_analysis.emulator_preparation.asop_meta_writer import create_modules
 from dynamic_analysis.emulator_preparation.templates.executables_module_template import \
     ANDROID_MK_EXECUTABLE_MODULE_TEMPLATE
@@ -50,10 +50,8 @@ def create_template_string(format_name, file_path):
     return template_out, local_module
 
 
-def process_executable_files(firmware, destination_folder, store_setting_id, format_name, skip_file_export):
+def process_executable_files(firmware, destination_folder, store_setting_id, format_name):
     filename_regex = "^[^./]+$|^(.*/)?[^./]+$"
     search_pattern = re.compile(filename_regex, re.IGNORECASE)
-    if not skip_file_export:
-        export_files_by_regex(firmware, store_setting_id, search_pattern)
     source_folder = get_firmware_export_folder_root(store_setting_id, firmware)
     create_modules(source_folder, destination_folder, format_name, search_pattern, create_template_string)
