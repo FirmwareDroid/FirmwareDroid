@@ -18,6 +18,7 @@ from dynamic_analysis.emulator_preparation.aosp_executable_module_builder import
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import export_files_by_regex
 from dynamic_analysis.emulator_preparation.aosp_framework_builder import process_framework_files
 from dynamic_analysis.emulator_preparation.aosp_shared_library_builder import process_shared_libraries
+from firmware_handler.firmware_file_exporter import get_file_export_path_abs, NAME_EXPORT_FOLDER
 from model import AndroidFirmware
 from model.StoreSetting import get_active_store_paths_by_uuid
 from processing.standalone_python_worker import start_mp_process_pool_executor
@@ -101,14 +102,32 @@ def package_build_files_for_firmware(firmware, format_name, skip_file_export):
     store_setting = firmware.get_store_setting()
     store_paths = store_setting.get_store_paths()
     with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as tmp_root_dir:
+        store_path_abs = os.path.abspath(store_paths["FIRMWARE_FOLDER_FILE_EXTRACT"])
+        export_destination_path = os.path.join(store_path_abs,
+                                               NAME_EXPORT_FOLDER,
+                                               str(firmware.pk))
         if not skip_file_export:
             search_pattern = "$"
             export_files_by_regex(firmware, store_setting.id, search_pattern)
+        copy_partitions(export_destination_path, tmp_root_dir)
         process_android_apps(firmware, tmp_root_dir)
         process_shared_libraries(firmware, tmp_root_dir, store_setting.id, format_name)
         process_framework_files(firmware, tmp_root_dir, store_setting.id, format_name)
         process_executable_files(firmware, tmp_root_dir, store_setting.id, format_name)
         package_files(firmware, tmp_root_dir, store_paths)
+
+
+def copy_partitions(source_path, destination_path):
+    """
+    Copy the partitions from the source path to the destination path.
+
+    :param source_path: str - path to the source folder.
+    :param destination_path: str - path to the destination folder.
+
+    """
+    logging.info(f"Copying partitions from {source_path} to {destination_path}...")
+    destination_subfolder_path = os.path.join(destination_path, "ALL_FILES/")
+    shutil.copytree(source_path, destination_subfolder_path)
 
 
 def package_files(firmware, tmp_root_dir, store_paths):
@@ -140,5 +159,3 @@ def package_files(firmware, tmp_root_dir, store_paths):
 
     firmware.aecs_build_file_path = os.path.abspath(os.path.join(aecs_output_dir, package_filename + ".zip"))
     firmware.save()
-
-

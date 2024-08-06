@@ -57,7 +57,7 @@ def start_regex_firmware_file_export(search_pattern, firmware_id_list, store_set
     firmware_id_queue = create_multi_threading_queue(firmware_id_list)
     for i in range(NUMBER_OF_EXPORTER_THREADS):
         worker = Thread(target=export_worker_multithreading, args=(firmware_id_queue, store_setting_id, search_pattern))
-        worker.setDaemon(True)
+        worker.daemon = True
         worker.start()
     firmware_id_queue.join()
 
@@ -89,7 +89,7 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             with (tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as temp_dir_path):
                 firmware_file_list = extract_firmware(firmware.absolute_store_path, temp_dir_path)
                 for firmware_file in firmware_file_list:
-                    # Excluding some Unblob specific file extensions
+                    # Excluding some Unblob specific file extensions to prevent them from being exported
                     if not firmware_file.is_directory \
                             and re.search(search_pattern, firmware_file.name) \
                             and ".unknown" not in firmware_file.name \
