@@ -79,7 +79,7 @@ ENV PATH=${GRADLE_HOME}/bin:${PATH}
 RUN gradle --version
 
 ##################################################
-# Install Java decompilers for apkscan
+# Install Java decompilers
 ##################################################
 RUN mkdir -p /opt/decompilers/java/
 # Install CFR
