@@ -13,9 +13,10 @@ class WebclientSettingType(MongoengineObjectType):
         interface = (Node,)
 
 
-class ApplicationSettingQuery(graphene.ObjectType):
+class WebclientSettingQuery(graphene.ObjectType):
     webclient_setting_list = graphene.List(WebclientSettingType,
                                            name="webclient_setting_list")
 
     def resolve_webclient_setting_list(self, info):
         return [WebclientSetting.objects.first()]
+

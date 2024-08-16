@@ -5,6 +5,7 @@ import graphene
 import graphql_jwt
 from graphene_django.debug import DjangoDebug
 from api.v2.schema.ApkScannerResultSchema import ApkScannerReportQuery
+from api.v2.schema.FirmwareImporterSettingSchema import FirmwareImporterSettingMutation, FirmwareImporterSettingQuery
 from api.v2.schema.HealthCheckSchema import HealthCheckQuery
 from api.v2.schema.RqJobsSchema import RqQueueQuery
 from api.v2.schema.UserAccountSchema import UserAccountQuery
@@ -20,7 +21,7 @@ from api.v2.schema.VirustotalSchema import VirustotalReportQuery, VirusTotalMuta
 from api.v2.schema.AndroGuardSchema import AndroGuardReportQuery
 from api.v2.schema.JsonFileSchema import JsonFileQuery
 from api.v2.schema.ImageFileSchema import ImageFileQuery
-from api.v2.schema.WebclientSettingSchema import ApplicationSettingQuery
+from api.v2.schema.WebclientSettingSchema import WebclientSettingQuery
 from api.v2.schema.StatisticsReportSchema import StatisticsReportQuery
 from api.v2.schema.SuperStatisticsReportSchema import SuperStatisticsReportQuery
 from api.v2.schema.QuarkEngineStatisticsReportSchema import QuarkEngineStatisticsReportQuery
@@ -35,7 +36,7 @@ from api.v2.schema.AppCertificateSchema import AppCertificateQuery
 from api.v2.schema.AecsJobSchema import AecsJobMutation, AecsJobQuery
 
 
-class Query(ApplicationSettingQuery,
+class Query(WebclientSettingQuery,
             StoreSettingsQuery,
             UserAccountQuery,
             AndroidFirmwareQuery,
@@ -64,6 +65,7 @@ class Query(ApplicationSettingQuery,
             RqQueueQuery,
             HealthCheckQuery,
             AecsJobQuery,
+            FirmwareImporterSettingQuery,
             graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name='_debug')
     token_auth = graphql_jwt.ObtainJSONWebToken.Field()
@@ -76,6 +78,7 @@ class Mutation(AndroidAppMutation,
                AndroidFirmwareMutation,
                FirmwareFileMutation,
                VirusTotalMutation,
+               FirmwareImporterSettingMutation,
                graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name='_debug')
     delete_token_cookie = graphql_jwt.DeleteJSONWebTokenCookie.Field()

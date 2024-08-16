@@ -2,10 +2,12 @@ import glob
 import logging
 import os
 import shutil
-
 import redis_lock
-from model import WebclientSetting
+from model import WebclientSetting, ServerSetting, FirmwareImporterSetting
+from model.FirmwareImporterSetting import create_firmware_importer_setting
+from model.ServerSetting import create_server_setting
 from model.StoreSetting import StoreSetting, create_file_store_setting, setup_storage_folders
+from model.WebclientSetting import create_webclient_setting
 from webserver.settings import MAIN_FOLDER, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT
 from redis import StrictRedis
 
@@ -73,27 +75,61 @@ def setup_store_folders(store_setting_list):
             clear_cache(store_setting)
 
 
-def setup_application_setting():
+def locked_setting_setup(setting_document_type, create_function, lock_name="fmd_app_setup"):
     """
-    Save the default settings for webclients to the database.
+    Lock the setup of a setting document type.
 
-    :return: class:'WebclientSetting'
+    :param setting_document_type: class:`Document`
+    :param create_function: function
 
-    """
-    with redis_lock.Lock(redis_con, "fmd_app_setup"):
-        application_setting = WebclientSetting.objects.first()
-        if not application_setting:
-            logging.info("First application start detected.")
-            application_setting = create_application_setting()
-    return application_setting
-
-
-def create_application_setting():
-    """
-    Creates a class:'WebclientSetting' instance and saves it to the database.
-
-    :return: class:'WebclientSetting'
+    :return: class:`Document`
 
     """
-    return WebclientSetting(is_signup_active=True,
-                            is_firmware_upload_active=True).save()
+    with redis_lock.Lock(redis_con, lock_name):
+        try:
+            setting = setting_document_type.objects.first()
+        except Exception as e:
+            logging.debug(f"Error while getting setting: {e}")
+            setting = None
+        if setting is None:
+            logging.info(f"First application start detected for {setting_document_type}.")
+            setting = create_function()
+    return setting
+
+
+def add_setting_references(server_setting, store_setting, webclient_setting, firmware_importer_setting):
+    """
+    Add the references to the setting documents.
+
+    :param server_setting: class:'ServerSetting'
+    :param store_setting: class:'StoreSetting'
+    :param webclient_setting: class:'WebclientSetting'
+    :param firmware_importer_setting: class:'FirmwareImporterSetting'
+
+    """
+    server_setting.store_setting_reference = store_setting.pk
+    server_setting.webclient_setting_reference = webclient_setting.pk
+    server_setting.firmware_importer_setting_reference = firmware_importer_setting.pk
+    server_setting.save()
+    store_setting.server_setting_reference = server_setting.pk
+    store_setting.save()
+    webclient_setting.server_setting_reference = server_setting.pk
+    webclient_setting.save()
+    firmware_importer_setting.server_setting_reference = server_setting.pk
+    firmware_importer_setting.save()
+
+
+def setup_default_settings():
+    """
+    Setup the default setting documents for FMD.
+
+    :return: class:'ServerSetting'
+
+    """
+    with redis_lock.Lock(redis_con, "fmd_default_setup"):
+        webclient_setting = locked_setting_setup(WebclientSetting, create_webclient_setting)
+        store_setting = setup_file_store_setting()
+        firmware_importer_setting = locked_setting_setup(FirmwareImporterSetting, create_firmware_importer_setting)
+        server_setting = locked_setting_setup(ServerSetting, create_server_setting)
+        add_setting_references(server_setting, store_setting, webclient_setting, firmware_importer_setting)
+    return server_setting

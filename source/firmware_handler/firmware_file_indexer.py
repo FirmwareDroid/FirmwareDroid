@@ -35,6 +35,22 @@ def create_firmware_file_list(scan_directory, partition_name):
     return result_firmware_file_list
 
 
+def normalize_and_escape_file_path(file_path):
+    """
+    Normalize and escape the file path.
+
+    :param file_path: str - path to the file.
+
+    :return: str - normalized and escaped file path.
+
+    """
+    file_path = file_path.strip()
+    file_path = os.path.normpath(file_path)
+    file_path = file_path.replace(" ", "\\ ")
+
+    return file_path
+
+
 def get_parent_name(root, scan_directory):
     """
     Get the name of the parent directory.
@@ -43,6 +59,7 @@ def get_parent_name(root, scan_directory):
     :param scan_directory: str - path to the directory to scan
 
     :return: str - name of the parent directory.
+
     """
     parent_name = os.path.basename(root) if os.path.basename(root) else "/"
     if parent_name == os.path.basename(scan_directory):
@@ -61,6 +78,7 @@ def process_directories(dir_list, root, scan_directory, partition_name, result_f
     :param result_firmware_file_list: list(class:'FirmwareFile') - list of firmware files
 
     :return: list(class:'FirmwareFile') - list of firmware files
+
     """
     for directory in dir_list:
         relative_dir_path = os.path.join(root.replace(scan_directory, ""), directory)
@@ -87,6 +105,7 @@ def process_files(file_list, root, scan_directory, partition_name, result_firmwa
     :param result_firmware_file_list: list(class:'FirmwareFile') - list of firmware files
 
     :return: list(class:'FirmwareFile') - list of firmware files
+
     """
     for filename in file_list:
         relative_file_path = os.path.join(root.replace(scan_directory, ""), filename)
@@ -98,6 +117,7 @@ def process_files(file_list, root, scan_directory, partition_name, result_firmwa
                 parent_name = get_parent_name(root, scan_directory)
                 filename_abs_path = os.path.abspath(filename_path)
                 filename_abs_path = os.path.realpath(filename_abs_path)
+                filename_abs_path = normalize_and_escape_file_path(filename_abs_path)
                 if not os.path.exists(filename_abs_path) or not os.path.isfile(filename_abs_path):
                     raise ValueError(f"Firmware File could not be created because file does not exist: "
                                      f"{filename_abs_path}")

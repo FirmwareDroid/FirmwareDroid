@@ -4,18 +4,15 @@
 import logging
 import os
 import re
-import tempfile
 from extractor.ext4_extractor import extract_dat, extract_simg_ext4, extract_ext4
 from extractor.bin_extractor.bin_extractor import extract_bin
 from extractor.nb0_extractor import extract_nb0
 from extractor.pac_extractor import extract_pac
-from extractor.ubi_extractor import extract_ubi_image
 from extractor.unblob_extractor import unblob_extract
 from extractor.unzipper import extract_tar, extract_zip, extract_gz
 from extractor.lz4_extractor import extract_lz4
 from extractor.brotli_extractor import extract_brotli
 from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
-from firmware_handler.ext4_mount_util import mount_android_image
 
 EXTRACTION_SIZE_THRESHOLD_MB = 100
 MAX_EXTRACTION_DEPTH = 20
