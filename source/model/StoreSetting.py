@@ -4,11 +4,12 @@
 import datetime
 import logging
 import os
-from mongoengine import DateTimeField, DictField, BooleanField, StringField, Document
+from mongoengine import DateTimeField, DictField, BooleanField, StringField, Document, LazyReferenceField, DO_NOTHING
 
 
 class StoreSetting(Document):
     create_date = DateTimeField(default=datetime.datetime.now)
+    server_setting_reference = LazyReferenceField('ServerSetting', reverse_delete_rule=DO_NOTHING)
     store_options_dict = DictField(required=True)
     is_active = BooleanField(required=True, default=False)
     uuid = StringField(required=True, unique=True)

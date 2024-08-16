@@ -42,4 +42,6 @@ from .GenericFile import GenericFile
 from .AecsJob import AecsJob
 from .MobSFScanReport import MobSFScanReport
 from .APKscanReport import APKscanReport
+from .FirmwareImporterSetting import FirmwareImporterSetting
+from .ServerSetting import ServerSetting
 from . import *

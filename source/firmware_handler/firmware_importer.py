@@ -20,13 +20,13 @@ from android_app_importer.android_app_import import store_android_apps_from_firm
 from firmware_handler.build_prop_parser import BuildPropParser
 from hashing.standard_hash_generator import md5_from_file, sha1_from_file, sha256_from_file
 from extractor.expand_archives import extract_first_layer, extract_second_layer
+from model.FirmwareImporterSetting import get_firmware_importer_setting
 from model.StoreSetting import get_active_store_by_index
 from utils.file_utils.file_util import get_filenames
 from firmware_handler.firmware_version_detect import detect_by_build_prop
 from processing.standalone_python_worker import create_multi_threading_queue
 from bson import ObjectId
 
-NUMBER_OF_IMPORTER_THREADS = 10
 ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar", ".gz", ".bz2", ".md5", ".lz4", ".tgz", ".rar", ".7z", "lzma", ".xz"]
 lock = threading.Lock()
 
@@ -49,7 +49,8 @@ def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0):
     if file_count <= 10:
         num_threads = file_count
     else:
-        num_threads = NUMBER_OF_IMPORTER_THREADS
+        firmware_importer_settings = get_firmware_importer_setting()
+        num_threads = firmware_importer_settings.number_of_importer_threads
 
     for i in range(num_threads):
         logging.debug(f"Start importer thread {i} of {num_threads}")
