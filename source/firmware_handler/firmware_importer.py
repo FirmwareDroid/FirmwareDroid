@@ -27,9 +27,6 @@ from firmware_handler.firmware_version_detect import detect_by_build_prop
 from processing.standalone_python_worker import create_multi_threading_queue
 from bson import ObjectId
 
-
-firmware_importer_settings = get_firmware_importer_setting()
-NUMBER_OF_IMPORTER_THREADS = firmware_importer_settings.number_of_importer_threads
 ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar", ".gz", ".bz2", ".md5", ".lz4", ".tgz", ".rar", ".7z", "lzma", ".xz"]
 lock = threading.Lock()
 
@@ -52,7 +49,8 @@ def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0):
     if file_count <= 10:
         num_threads = file_count
     else:
-        num_threads = NUMBER_OF_IMPORTER_THREADS
+        firmware_importer_settings = get_firmware_importer_setting()
+        num_threads = firmware_importer_settings.number_of_importer_threads
 
     for i in range(num_threads):
         logging.debug(f"Start importer thread {i} of {num_threads}")
