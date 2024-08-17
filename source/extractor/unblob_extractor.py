@@ -40,6 +40,9 @@ def unblob_extract(compressed_file_path, destination_dir, depth=25, worker_count
     is_success = True
     response = None
     try:
+        compressed_file_path = compressed_file_path.strip()
+        compressed_file_path = os.path.normpath(compressed_file_path)
+        compressed_file_path = str(compressed_file_path.replace(" ", "\\ "))
         input_file = shlex.quote(compressed_file_path)
         output_dir = shlex.quote(destination_dir)
         filename = os.path.basename(compressed_file_path)
