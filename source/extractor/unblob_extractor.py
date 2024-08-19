@@ -1,6 +1,5 @@
 import logging
 import os
-import shlex
 import subprocess
 
 SKIP_EXTENSION_DEFAULT = [".apk", ".dex", ".odex", ".oat", ".so", ".jar", ".class", ".java", ".png", ".jpg", ".jpeg",
@@ -40,8 +39,8 @@ def unblob_extract(compressed_file_path, destination_dir, depth=25, worker_count
     is_success = True
     response = None
     try:
-        input_file = shlex.quote(compressed_file_path)
-        output_dir = shlex.quote(destination_dir)
+        input_file = compressed_file_path
+        output_dir = destination_dir
         filename = os.path.basename(compressed_file_path)
         file_extension = os.path.splitext(filename)[1]
         if file_extension in SKIP_EXTENSION_DEFAULT:
