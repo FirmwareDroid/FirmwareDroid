@@ -34,7 +34,7 @@ EXTRACT_FUNCTION_MAP_DICT = {
 
 
 def rename_item(path):
-    new_name = "".join(c for c in path if c.isalpha() or c.isdigit())
+    new_name = "".join(c for c in path if c.isalpha() or c.isdigit() or c == "/" or c == ".")
     new_path = os.path.join(os.path.dirname(path), str(new_name))
     os.rename(path, new_path)
     return new_path
