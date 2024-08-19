@@ -13,7 +13,8 @@ PYTHON_SCANNERS = ["androguard",
                    "virustotal",
                    "manifest_parser",
                    "mobsfscan",
-                   "apkscan"]
+                   "apkscan",
+                   "flowdroid"]
 
 for scanner_name in PYTHON_SCANNERS:
     venv_dir = os.path.join(INSTALLATION_PATH, scanner_name)

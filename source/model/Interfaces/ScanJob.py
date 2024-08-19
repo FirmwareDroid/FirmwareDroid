@@ -7,7 +7,7 @@ from abc import abstractmethod
 class ScanJob:
 
     @abstractmethod
-    def __init__(self, object_id_list):
+    def __init__(self, object_id_list, kwargs):
         pass
 
     @abstractmethod

@@ -40,6 +40,7 @@ class AndroidApp(Document):
     apkleaks_report_reference = LazyReferenceField('ApkleaksReport', reverse_delete_rule=DO_NOTHING)
     mobsfscan_report_reference = LazyReferenceField('MobSFScanReport', reverse_delete_rule=DO_NOTHING)
     apkscan_report_reference = LazyReferenceField('APKscanReport', reverse_delete_rule=DO_NOTHING)
+    flowdroid_report_reference = LazyReferenceField('FlowDroidReport', reverse_delete_rule=DO_NOTHING)
     firmware_file_reference = LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING)
     opt_firmware_file_reference_list = ListField(LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING))
     app_twins_reference_list = ListField(LazyReferenceField('AndroidApp', reverse_delete_rule=DO_NOTHING))
