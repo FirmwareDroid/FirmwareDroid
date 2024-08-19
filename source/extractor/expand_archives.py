@@ -33,9 +33,39 @@ EXTRACT_FUNCTION_MAP_DICT = {
 }
 
 
+def rename_item(path):
+    new_name = "".join(c for c in path if c.isalpha() or c.isdigit())
+    new_path = os.path.join(os.path.dirname(path), str(new_name))
+    os.rename(path, new_path)
+    return new_path
+
+
+def rename_path(path):
+    if os.path.isdir(path):
+        for root, dirs, files in os.walk(path, topdown=False):
+            for name in files:
+                file_path = os.path.join(root, name)
+                rename_item(file_path)
+            for name in dirs:
+                dir_path = os.path.join(root, name)
+                rename_item(dir_path)
+        new_path = rename_item(path)
+        print(f'Renamed directory: "{path}" to "{new_path}"')
+    elif os.path.isfile(path):
+        new_path = rename_item(path)
+        print(f'Renamed file: "{path}" to "{new_path}"')
+    else:
+        print(f'The path "{path}" does not exist.')
+
+    path = path.strip()
+    path = os.path.normpath(path)
+    return path
+
+
 def normalize_file_path(file_path):
-    if not os.path.exists(file_path) and not file_path.startswith("/") and not file_path.startswith("./"):
-        file_path = "./" + file_path
+    file_path = file_path.strip()
+    file_path = os.path.normpath(file_path)
+    file_path = file_path.replace(" ", "\\ ")
     return file_path
 
 
