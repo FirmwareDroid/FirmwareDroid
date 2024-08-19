@@ -40,7 +40,7 @@ def rename_item(path):
     return new_path
 
 
-def rename_path(path):
+def normalize_file_path(path):
     if os.path.isdir(path):
         for root, dirs, files in os.walk(path, topdown=False):
             for name in files:
@@ -60,13 +60,6 @@ def rename_path(path):
     path = path.strip()
     path = os.path.normpath(path)
     return path
-
-
-def normalize_file_path(file_path):
-    file_path = file_path.strip()
-    file_path = os.path.normpath(file_path)
-    file_path = file_path.replace(" ", "\\ ")
-    return file_path
 
 
 def delete_file_safely(file_path):
@@ -244,6 +237,7 @@ def process_file(current_path,
                  destination_dir,
                  unblob_depth,
                  delete_compressed_file):
+    current_path = normalize_file_path(current_path)
     file_extension = os.path.splitext(current_path.lower())[1]
     is_success = False
     if file_extension in EXTRACT_FUNCTION_MAP_DICT.keys():
