@@ -35,7 +35,7 @@ def create_firmware_file_list(scan_directory, partition_name):
     return result_firmware_file_list
 
 
-def normalize_and_escape_file_path(file_path):
+def normalize_file_path(file_path):
     """
     Normalize and escape the file path.
 
@@ -46,8 +46,6 @@ def normalize_and_escape_file_path(file_path):
     """
     file_path = file_path.strip()
     file_path = os.path.normpath(file_path)
-    file_path = file_path.replace(" ", "\\ ")
-
     return file_path
 
 
@@ -117,7 +115,7 @@ def process_files(file_list, root, scan_directory, partition_name, result_firmwa
                 parent_name = get_parent_name(root, scan_directory)
                 filename_abs_path = os.path.abspath(filename_path)
                 filename_abs_path = os.path.realpath(filename_abs_path)
-                filename_abs_path = normalize_and_escape_file_path(filename_abs_path)
+                filename_abs_path = normalize_file_path(filename_abs_path)
                 if not os.path.exists(filename_abs_path) or not os.path.isfile(filename_abs_path):
                     raise ValueError(f"Firmware File could not be created because file does not exist: "
                                      f"{filename_abs_path}")

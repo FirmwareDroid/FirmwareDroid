@@ -18,6 +18,7 @@ Some of the tools and features included are:
   * [APKLeaks](https://github.com/dwisiswant0/apkleaks/)
   * [MobSFScan](https://github.com/MobSF/mobsfscan)
   * [APKscan](https://github.com/LucasFaudman/apkscan)
+  * [FlowDroid](https://github.com/secure-software-engineering/FlowDroid)
   * [Qark](https://github.com/linkedin/qark/) (deprecated, no updates by the author)
   * [Androwarn](https://github.com/maaaaz/androwarn/) (deprecated, no updates by the author)
   * [SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/) (deprecated, discontinued by the author)
@@ -38,9 +39,11 @@ Some of the tools and features included are:
   * [Unblob](https://github.com/onekey-sec/unblob)
 * Miscellaneous:
   * AndroidManifest Parsing
+* Dynamic Analysis:
+  * Work in progress
 
-With FMD you can not only scan Android firmware, but also extract and analyse the apps in the firmware. Moreover, it
-can be used as scanning engine for Android apps that are not part of a firmware.
+FMD can be used as scanning engine for Android apps (.apk), but it is mainly made to analyse pre-installed 
+apps extracted from Android firmware.
 
 In this repository you will find the code for the backend of FMD. The application has a minimal React
 frontend (see https://github.com/FirmwareDroid/FMD-WebClient), but is mainly an API and database 
@@ -51,7 +54,7 @@ Usage documentation can be found at: https://firmwaredroid.github.io/
 ### Contributing
 
 We are happy to accept contributions to the software and documentation. Feel free to open a pull request with your
-enhancements.
+enhancements or an issue with your suggestions. 
 
 ### Security
 

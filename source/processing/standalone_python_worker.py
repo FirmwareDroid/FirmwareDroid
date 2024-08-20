@@ -160,9 +160,10 @@ def main():
     worker_function = getattr(scanner_module, worker_function_name)
     number_of_processes = int(sys.argv[3])
     use_id_list = bool(sys.argv[4])
-    worker_args_list = []
     if len(sys.argv) > 7:
         worker_args_list = sys.argv[7:]
+    else:
+        worker_args_list = []
     start_mp_process_pool_executor(item_list, worker_function, number_of_processes, use_id_list, worker_args_list)
 
 

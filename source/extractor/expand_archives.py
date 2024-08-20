@@ -33,35 +33,6 @@ EXTRACT_FUNCTION_MAP_DICT = {
 }
 
 
-def rename_item(path):
-    new_name = "".join(c for c in path if c.isalpha() or c.isdigit() or c == "/" or c == ".")
-    new_path = os.path.join(os.path.dirname(path), str(new_name))
-    os.rename(path, new_path)
-    return new_path
-
-
-def normalize_file_path(path):
-    if os.path.isdir(path):
-        for root, dirs, files in os.walk(path, topdown=False):
-            for name in files:
-                file_path = os.path.join(root, name)
-                rename_item(file_path)
-            for name in dirs:
-                dir_path = os.path.join(root, name)
-                rename_item(dir_path)
-        new_path = rename_item(path)
-        print(f'Renamed directory: "{path}" to "{new_path}"')
-    elif os.path.isfile(path):
-        new_path = rename_item(path)
-        print(f'Renamed file: "{path}" to "{new_path}"')
-    else:
-        print(f'The path "{path}" does not exist.')
-
-    path = path.strip()
-    path = os.path.normpath(path)
-    return path
-
-
 def delete_file_safely(file_path):
     try:
         os.remove(file_path)
@@ -237,7 +208,6 @@ def process_file(current_path,
                  destination_dir,
                  unblob_depth,
                  delete_compressed_file):
-    current_path = normalize_file_path(current_path)
     file_extension = os.path.splitext(current_path.lower())[1]
     is_success = False
     if file_extension in EXTRACT_FUNCTION_MAP_DICT.keys():

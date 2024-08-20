@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
+import json
+import logging
+
 import graphene
 import django_rq
 import importlib
@@ -30,6 +33,7 @@ class ScannerModules(Enum):
     MANIFEST = {"ManifestParserScanJob": "static_analysis.ManifestParser.android_manifest_parser"}
     MOBSF = {"MobSFScanJob": "static_analysis.MobSFScan.mobsfscan_wrapper"}
     APKSCAN = {"APKScanScanJob": "static_analysis.APKscan.apkscan_wrapper"}
+    FLOWDROID = {"FlowDroidScanJob": "static_analysis.FlowDroid.flowdroid_wrapper"}
 
 
 class AndroidAppType(MongoengineObjectType):
@@ -67,10 +71,11 @@ class AndroidAppQuery(graphene.ObjectType):
         return [document.pk for document in queryset]
 
 
-def import_module_function(scanner_name, object_id_list):
+def import_module_function(scanner_name, object_id_list, init_args=None):
     """
-    Import the module and return the function to run.+
+    Import the module and return the function to run.
 
+    :param init_args: dict - Additional arguments to create an obj instance.
     :param scanner_name: str - Name of the scanner to use.
     :param object_id_list: list(str) - List of object ids to scan.
 
@@ -83,7 +88,11 @@ def import_module_function(scanner_name, object_id_list):
         module_name = meta_data[1]
         scanner_module = importlib.import_module(module_name)
         class_obj = getattr(scanner_module, class_name)
-        instance_obj = class_obj(object_id_list)
+        if init_args:
+            logging.info(f"init_args {init_args}")
+            instance_obj = class_obj(object_id_list, **init_args)
+        else:
+            instance_obj = class_obj(object_id_list)
         func_to_run = getattr(instance_obj, APK_SCAN_FUNCTION_NAME)
     else:
         raise ValueError("Invalid scanner name selected. "
@@ -102,14 +111,16 @@ class CreateApkScanJob(graphene.Mutation):
         queue_name = graphene.String(required=True, default_value="default-python")
         module_name = graphene.String(required=True)
         object_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
+        kwargs = graphene.JSONString(required=False)
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, queue_name, module_name, object_id_list):
+    def mutate(cls, root, info, queue_name, module_name, object_id_list, kwargs=None):
         """
         Enqueue a RQ job to start one of the scanners for apk files. In case the object_id_list is too large, the list
         will be split into smaller chunks and each chunk will be processed in a separate RQ job.
 
+        :param kwargs: Additional arguments passed to the scan instance.
         :param queue_name: str - Name of the rq queue to use. For instance, "high-python".
         :param module_name: str - Name of the module to use. For instance, "ANDROGUARD".
         :param object_id_list: list(str) - List of objectId to scan.
@@ -121,7 +132,11 @@ class CreateApkScanJob(graphene.Mutation):
                                                                                          MAX_OBJECT_ID_LIST_SIZE)]
         job_id_list = []
         for object_id_chunk in object_id_chunks:
-            func_to_run = import_module_function(module_name, object_id_chunk)
+            if kwargs:
+                func_to_run = import_module_function(module_name, object_id_chunk, kwargs)
+            else:
+                logging.info("No kwargs")
+                func_to_run = import_module_function(module_name, object_id_chunk)
             job = queue.enqueue(func_to_run, job_timeout=ONE_WEEK_TIMEOUT)
             job_id_list.append(job.id)
         return cls(job_id_list=job_id_list)

@@ -44,4 +44,5 @@ from .MobSFScanReport import MobSFScanReport
 from .APKscanReport import APKscanReport
 from .FirmwareImporterSetting import FirmwareImporterSetting
 from .ServerSetting import ServerSetting
+from .FlowDroidReport import FlowDroidReport
 from . import *

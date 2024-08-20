@@ -34,6 +34,9 @@ RUN yes | /android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses ; exit 0 #
 RUN /android/sdk/cmdline-tools/latest/bin/sdkmanager --install "build-tools;35.0.0" ; exit 0 # Workaround against exit code 133
 ENV PATH=$ANDROID_SDK_ROOT/build-tools/35.0.0/:$PATH
 
+USER root
+RUN chown -R www:www /android && chmod u+rwx /android
+USER wwww
 #####################################
 # Installing apktool                #
 #####################################
@@ -107,11 +110,23 @@ RUN apt-get install -y default-jre-headless
 RUN wget -P /tmp/ https://github.com/SUPERAndroidAnalyzer/super/releases/download/0.5.1/super-analyzer_0.5.1_ubuntu_amd64.deb
 RUN dpkg -i /tmp/super-analyzer_0.5.1_ubuntu_amd64.deb
 
+#####################################
+# Install FlowDroid                 #
+#####################################
+RUN mkdir -p /opt/flowdroid/rules/
+# Please, update hardcoded version in flowdroid_wrapper.py when updating here!
+RUN wget -O /opt/flowdroid/soot-infoflow-cmd-jar-with-dependencies.jar https://github.com/secure-software-engineering/FlowDroid/releases/download/v2.13/soot-infoflow-cmd-2.13.0-jar-with-dependencies.jar
+
+# Download examples source and sink rules
+RUN wget -O /opt/flowdroid/rules/SourcesAndSinks.txt https://raw.githubusercontent.com/secure-software-engineering/FlowDroid/develop/soot-infoflow-android/SourcesAndSinks.txt
+RUN wget -O /opt/flowdroid/rules/SourcesAndSinks_SharedPrefsOnly.txt https://raw.githubusercontent.com/secure-software-engineering/FlowDroid/develop/soot-infoflow-android/SourcesAndSinks_SharedPrefsOnly.txt
+
+
 ########################################################
 # Install Python requirements                          #
 ########################################################
 RUN --mount=type=cache,target=/tmp/.cache \
-    pip install -r /var/www/requirements/requirements_apk_scanner.txt
+    pip install -r /var/www/requirements/requirements_apk_scanner.txt \
 
 ##################################################
 # Install python-based static-analysis tools  #
