@@ -34,13 +34,12 @@ RUN yes | /android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses ; exit 0 #
 RUN /android/sdk/cmdline-tools/latest/bin/sdkmanager --install "build-tools;35.0.0" ; exit 0 # Workaround against exit code 133
 ENV PATH=$ANDROID_SDK_ROOT/build-tools/35.0.0/:$PATH
 
-USER root
-RUN chown -R www:www /android && chmod u+rwx /android
-USER www
 #####################################
 # Installing apktool                #
 #####################################
-RUN wget https://github.com/iBotPeaches/Apktool/releases/download/v2.9.3/apktool_2.9.3.jar -O /usr/local/bin/apktool.jar
+RUN APKTOOL_VERSION=$(curl -s "https://api.github.com/repos/iBotPeaches/Apktool/releases/latest"  \
+    | grep -Po '"tag_name": "v\K[0-9.]+')  \
+    && curl -Lo /usr/local/bin/apktool.jar "https://github.com/iBotPeaches/Apktool/releases/latest/download/apktool_${APKTOOL_VERSION}.jar"
 RUN curl -o /usr/local/bin/apktool https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool
 RUN chmod a+x /usr/local/bin/apktool.jar && chmod a+x /usr/local/bin/apktool
 RUN apktool --version
@@ -130,6 +129,7 @@ RUN --mount=type=cache,target=/tmp/.cache \
 # Install python-based static-analysis tools  #
 ##################################################
 USER root
+RUN chown -R www:www /android && chmod u+rwx /android
 RUN chown -R www:www /opt/firmwaredroid/python/
 
 USER www
