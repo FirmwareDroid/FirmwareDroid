@@ -40,9 +40,7 @@ USER www
 #####################################
 # Installing apktool                #
 #####################################
-RUN APKTOOL_VERSION=$(curl -s "https://api.github.com/repos/iBotPeaches/Apktool/releases/latest"  \
-    | grep -Po '"tag_name": "v\K[0-9.]+')  \
-    && curl -Lo /usr/local/bin/apktool.jar "https://github.com/iBotPeaches/Apktool/releases/latest/download/apktool_${APKTOOL_VERSION}.jar"
+RUN wget https://github.com/iBotPeaches/Apktool/releases/download/v2.9.3/apktool_2.9.3.jar -O /usr/local/bin/apktool.jar
 RUN curl -o /usr/local/bin/apktool https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool
 RUN chmod a+x /usr/local/bin/apktool.jar && chmod a+x /usr/local/bin/apktool
 RUN apktool --version
