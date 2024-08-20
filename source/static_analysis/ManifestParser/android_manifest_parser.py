@@ -148,7 +148,7 @@ class ManifestParserScanJob(ScanJob):
     MODULE_NAME = "static_analysis.ManifestParser.android_manifest_parser"
     INTERPRETER_PATH = "/opt/firmwaredroid/python/manifest_parser/bin/python"
 
-    def __init__(self, object_id_list):
+    def __init__(self, object_id_list, **kwargs):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 

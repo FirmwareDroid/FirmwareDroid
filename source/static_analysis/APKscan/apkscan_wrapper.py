@@ -90,7 +90,7 @@ class APKScanScanJob(ScanJob):
     MODULE_NAME = "static_analysis.APKscan.apkscan_wrapper"
     INTERPRETER_PATH = "/opt/firmwaredroid/python/apkscan/bin/python"
 
-    def __init__(self, object_id_list):
+    def __init__(self, object_id_list, **kwargs):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 

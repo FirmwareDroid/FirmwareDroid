@@ -170,7 +170,7 @@ class QuarkEngineScanJob(ScanJob):
     MODULE_NAME = "static_analysis.QuarkEngine.quark_engine_wrapper"
     INTERPRETER_PATH = "/opt/firmwaredroid/python/quark_engine/bin/python"
 
-    def __init__(self, object_id_list):
+    def __init__(self, object_id_list, **kwargs):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 

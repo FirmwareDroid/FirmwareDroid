@@ -115,7 +115,7 @@ class APKiDScanJob(ScanJob):
     MODULE_NAME = "static_analysis.APKiD.apkid_wrapper"
     INTERPRETER_PATH = "/opt/firmwaredroid/python/apkid/bin/python"
 
-    def __init__(self, object_id_list):
+    def __init__(self, object_id_list, **kwargs):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
