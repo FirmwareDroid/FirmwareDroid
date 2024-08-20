@@ -63,7 +63,7 @@ class YourAnalyzerJob(ScanJob):
     # TODO: Change the interpreter path - the setup_apk_scanner.py creates a new python environment for each scanner:
     INTERPRETER_PATH = "/opt/firmwaredroid/python/your_analyzer/bin/python"
 
-    def __init__(self, object_id_list):
+    def __init__(self, object_id_list, **kwargs):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 

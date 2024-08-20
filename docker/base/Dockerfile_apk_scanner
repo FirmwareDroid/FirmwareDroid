@@ -36,7 +36,7 @@ ENV PATH=$ANDROID_SDK_ROOT/build-tools/35.0.0/:$PATH
 
 USER root
 RUN chown -R www:www /android && chmod u+rwx /android
-USER wwww
+USER www
 #####################################
 # Installing apktool                #
 #####################################

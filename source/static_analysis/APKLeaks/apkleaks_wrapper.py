@@ -90,7 +90,7 @@ class APKLeaksScanJob(ScanJob):
     MODULE_NAME = "static_analysis.APKLeaks.apkleaks_wrapper"
     INTERPRETER_PATH = "/opt/firmwaredroid/python/apkleaks/bin/python"
 
-    def __init__(self, object_id_list):
+    def __init__(self, object_id_list, **kwargs):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
