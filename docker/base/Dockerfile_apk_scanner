@@ -123,7 +123,7 @@ RUN wget -O /opt/flowdroid/rules/SourcesAndSinks_SharedPrefsOnly.txt https://raw
 # Install Python requirements                          #
 ########################################################
 RUN --mount=type=cache,target=/tmp/.cache \
-    pip install -r /var/www/requirements/requirements_apk_scanner.txt \
+    pip install -r /var/www/requirements/requirements_apk_scanner.txt
 
 ##################################################
 # Install python-based static-analysis tools  #
