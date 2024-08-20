@@ -8,6 +8,7 @@ from dynamic_analysis.emulator_preparation.aosp_file_exporter import (get_firmwa
 from dynamic_analysis.emulator_preparation.asop_meta_writer import create_modules
 from dynamic_analysis.emulator_preparation.templates.shared_library_module_template import \
     ANDROID_MK_SHARED_LIBRARY_TEMPLATE, ANDROID_BP_SHARED_LIBRARY_TEMPLATE
+from firmware_handler.firmware_file_exporter import remove_unblob_extract_directories
 
 
 def get_lib_local_module_path(library_path, folder_name):
@@ -27,7 +28,9 @@ def get_lib_local_module_path(library_path, folder_name):
         if len(subfolder_list) == 0:
             local_module_path = f"$(TARGET_OUT)/{folder_name}/"
         else:
-            local_module_path = f"$(TARGET_OUT)/{folder_name}/{os.path.join(*subfolder_list)}"
+            path = os.path.join(*subfolder_list)
+            fixed_path = remove_unblob_extract_directories(path)
+            local_module_path = f"$(TARGET_OUT)/{folder_name}/{fixed_path}"
     return local_module_path, subfolder_list
 
 

@@ -4,6 +4,7 @@ import shutil
 from mongoengine import DoesNotExist
 from string import Template
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import get_subfolders
+from firmware_handler.firmware_file_exporter import remove_unblob_extract_directories
 from model import GenericFile
 from dynamic_analysis.emulator_preparation.asop_meta_writer import add_module_to_meta_file
 from dynamic_analysis.emulator_preparation.templates.android_app_module_template import ANDROID_MK_TEMPLATE, \
@@ -202,7 +203,9 @@ def get_apk_local_module_path(file_path, partition_name, android_app):
     elif len(subfolder_list) == 0:
         local_module_path = f"$(TARGET_OUT)/app/"
     else:
-        local_module_path = f"$(TARGET_OUT)/{os.path.join(*subfolder_list)}"
+        path = os.path.join(*subfolder_list)
+        fixed_path = remove_unblob_extract_directories(path)
+        local_module_path = f"$(TARGET_OUT)/{fixed_path}"
         local_module_path = local_module_path.replace(android_app.filename, "")
     return local_module_path
 

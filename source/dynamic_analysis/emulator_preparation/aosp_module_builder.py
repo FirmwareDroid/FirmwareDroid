@@ -14,11 +14,9 @@ import uuid
 from context.context_creator import create_db_context, create_log_context
 from dynamic_analysis.emulator_preparation.aosp_apk_module_builer import create_build_files_for_apps, \
     process_android_apps
-from dynamic_analysis.emulator_preparation.aosp_executable_module_builder import process_executable_files
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import export_files_by_regex
-from dynamic_analysis.emulator_preparation.aosp_framework_builder import process_framework_files
 from dynamic_analysis.emulator_preparation.aosp_shared_library_builder import process_shared_libraries
-from firmware_handler.firmware_file_exporter import get_file_export_path_abs, NAME_EXPORT_FOLDER
+from firmware_handler.firmware_file_exporter import NAME_EXPORT_FOLDER
 from model import AndroidFirmware
 from model.StoreSetting import get_active_store_paths_by_uuid
 from processing.standalone_python_worker import start_mp_process_pool_executor
@@ -112,8 +110,6 @@ def package_build_files_for_firmware(firmware, format_name, skip_file_export):
         copy_partitions(export_destination_path, tmp_root_dir)
         process_android_apps(firmware, tmp_root_dir)
         process_shared_libraries(firmware, tmp_root_dir, store_setting.id, format_name)
-        #process_framework_files(firmware, tmp_root_dir, store_setting.id, format_name)
-        #process_executable_files(firmware, tmp_root_dir, store_setting.id, format_name)
         package_files(firmware, tmp_root_dir, store_paths)
 
 
