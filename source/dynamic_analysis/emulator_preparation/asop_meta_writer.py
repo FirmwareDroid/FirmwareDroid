@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 
+META_BUILD_FILENAME_SYSTEM_EXT = "meta_build_system_ext.txt"
 META_BUILD_FILENAME_SYSTEM = "meta_build_system.txt"
 META_BUILD_FILENAME_VENDOR = "meta_build_vendor.txt"
 META_BUILD_FILENAME_PRODUCT = "meta_build_product.txt"
@@ -23,6 +24,8 @@ def add_module_to_meta_file(partition_name, tmp_root_dir, module_naming):
         meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_VENDOR)
     elif partition_name.lower() == "product":
         meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_PRODUCT)
+    elif partition_name.lower() == "system_ext":
+        meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_SYSTEM_EXT)
     else:
         meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_SYSTEM)
 
