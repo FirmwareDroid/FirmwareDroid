@@ -1,6 +1,9 @@
 import logging
 import os
 import subprocess
+import threading
+
+UNBLOB_SEMAPHORE = threading.Semaphore(10)
 
 SKIP_EXTENSION_DEFAULT = [".apk", ".dex", ".odex", ".oat", ".so", ".jar", ".class", ".java", ".png", ".jpg", ".jpeg",
                           ".gif", "w.ebp", ".bmp", ".tiff", ".tif", ".wav", ".mp3", ".ogg", ".mp4", ".3gp", ".webm",
@@ -16,7 +19,6 @@ SKIP_EXTENSION_DEFAULT = [".apk", ".dex", ".odex", ".oat", ".so", ".jar", ".clas
 def remove_unblob_log():
     """
     Remove the unblob log file.
-
     """
     try:
         if os.path.exists("unblob.log"):
@@ -39,13 +41,15 @@ def unblob_extract(compressed_file_path, destination_dir, depth=25, worker_count
     is_success = True
     response = None
     try:
+        UNBLOB_SEMAPHORE.acquire()
+
         input_file = compressed_file_path
         output_dir = destination_dir
         filename = os.path.basename(compressed_file_path)
         file_extension = os.path.splitext(filename)[1]
         if file_extension in SKIP_EXTENSION_DEFAULT:
             logging.info(f"Skipping {filename} due to blacklisted extension for unblob extraction.")
-            return False
+            return True
         logging.info(f"Unblob {input_file} to {output_dir}")
 
         command_array = ["unblob",
@@ -66,5 +70,10 @@ def unblob_extract(compressed_file_path, destination_dir, depth=25, worker_count
             is_success = False
         else:
             logging.warning(err)
-    remove_unblob_log()
+    except subprocess.TimeoutExpired as err:
+        logging.warning(f"Unblob Timeout expired: {err}")
+        is_success = False
+    finally:
+        UNBLOB_SEMAPHORE.release()
+        remove_unblob_log()
     return is_success
