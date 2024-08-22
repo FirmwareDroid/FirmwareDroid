@@ -235,7 +235,8 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
                                                       partition_name)
                     firmware_app_list = store_android_apps_from_firmware(partition_temp_dir,
                                                                          firmware_app_store,
-                                                                         files_dict["firmware_file_list"])
+                                                                         files_dict["firmware_file_list"],
+                                                                         partition_name)
                     files_dict["firmware_app_list"].extend(firmware_app_list)
                     build_prop_list = extract_build_prop(partition_firmware_file_list, partition_temp_dir)
                     files_dict["build_prop_file_list"].extend(build_prop_list)

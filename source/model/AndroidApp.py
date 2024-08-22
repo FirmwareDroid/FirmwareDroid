@@ -47,6 +47,7 @@ class AndroidApp(Document):
     certificate_id_list = ListField(LazyReferenceField('AppCertificate', reverse_delete_rule=DO_NOTHING))
     generic_file_list = ListField(LazyReferenceField('GenericFile', reverse_delete_rule=DO_NOTHING))
     android_manifest_dict = DictField(required=False, default={})
+    partition_name = StringField(required=False, max_length=1024, min_length=1)
     # apk_scanner_report_reference_list = ListField(GenericLazyReferenceField(
     #     choices=['AndroGuardReport',
     #              'VirusTotalReport',

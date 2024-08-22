@@ -11,17 +11,18 @@ from hashing.standard_hash_generator import sha256_from_file, md5_from_file, sha
 from model import AndroidApp
 
 
-def store_android_apps_from_firmware(search_path, firmware_app_store, firmware_file_list):
+def store_android_apps_from_firmware(search_path, firmware_app_store, firmware_file_list, partition_name):
     """
     Finds and stores android .apk files.
 
+    :param partition_name: str - name of the partition the app is stored in.
     :param firmware_file_list: list(class:'FirmwareFile') - list of firmware file that contains the android app.
     :param search_path: str - path to search for .apk files.
     :param firmware_app_store: str - path in which the .apk files will be stored.
     :return: list of class:'AndroidApp'
 
     """
-    firmware_app_list = extract_android_app(search_path, firmware_app_store, firmware_file_list)
+    firmware_app_list = extract_android_app(search_path, firmware_app_store, firmware_file_list, partition_name)
     for android_app in firmware_app_list:
         add_firmware_file_reference(android_app, firmware_file_list)
     return firmware_app_list
@@ -155,10 +156,11 @@ def is_apk_in_database(android_app):
     return existing_android_app
 
 
-def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_list):
+def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_list, partition_name):
     """
     Returns a list of class:'AndroidApp' files within the given path.
 
+    :param partition_name: str - name of the partition the app is stored in.
     :param firmware_file_list: list(class:'FirmwareFile') - list of firmware file that contains the android apps and
     it's optimized files (.odex, .vdex, ...).
     :param firmware_app_store: str - path in which the .apk files will be stored.
@@ -172,8 +174,14 @@ def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_l
         for filename in files:
             app_abs_path = os.path.join(root, filename)
             if filename.lower().endswith(".apk") and os.path.isfile(app_abs_path):
-                firmware_app_list = process_apk_file(filename, root, firmware_mount_path, firmware_app_store,
-                                                     firmware_app_list, firmware_file_list, app_abs_path)
+                firmware_app_list = process_apk_file(filename,
+                                                     root,
+                                                     firmware_mount_path,
+                                                     firmware_app_store,
+                                                     firmware_app_list,
+                                                     firmware_file_list,
+                                                     app_abs_path,
+                                                     partition_name)
 
     logging.info(f"Found .apk files in partition: {len(firmware_app_list)}")
 
@@ -182,11 +190,18 @@ def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_l
     return firmware_app_list
 
 
-def process_apk_file(filename, root, firmware_mount_path, firmware_app_store, firmware_app_list, firmware_file_list,
-                     app_abs_path):
+def process_apk_file(filename,
+                     root,
+                     firmware_mount_path,
+                     firmware_app_store,
+                     firmware_app_list,
+                     firmware_file_list,
+                     app_abs_path,
+                     partition_name):
     """
     Processes a single .apk file, and it's optimized files.
 
+    :param partition_name: str - name of the partition the app is stored in.
     :param filename: str - name of the apk file.
     :param root: str - root path of the apk file.
     :param firmware_mount_path: str - The source path in which the firmware is mounted.
@@ -200,7 +215,7 @@ def process_apk_file(filename, root, firmware_mount_path, firmware_app_store, fi
     """
     relative_firmware_path = root.replace(firmware_mount_path, "")
     try:
-        android_app = create_android_app(filename, relative_firmware_path, firmware_mount_path)
+        android_app = create_android_app(filename, relative_firmware_path, firmware_mount_path, partition_name)
         copy_apk_file(android_app, firmware_app_store, firmware_mount_path)
     except Exception:
         delete_android_apps(firmware_app_list)
@@ -261,10 +276,12 @@ def create_android_app(filename,
                        relative_firmware_path,
                        firmware_mount_path,
                        original_filename=None,
-                       apk_abs_path=None):
+                       apk_abs_path=None,
+                       partition_name="Unknown"):
     """
     Creates a class:'AndroidApp' with minimal attributes. Does not save the app in the database.
 
+    :param partition_name: str - name of the partition the app is stored in.
     :param apk_abs_path: str - absolute path of the apk file.
     :param original_filename: str - original filename of the apk file before renaming.
     :param filename: str - name of the apk file.
@@ -295,7 +312,8 @@ def create_android_app(filename,
                       sha256=sha256,
                       md5=md5,
                       sha1=sha1,
-                      file_size_bytes=file_size_bytes)
+                      file_size_bytes=file_size_bytes,
+                      partition_name=partition_name)
 
 
 def find_optimized_android_apps(search_path, search_filename, firmware_file_list):
