@@ -20,17 +20,31 @@ def add_module_to_meta_file(partition_name, tmp_root_dir, module_naming):
     :return:
     """
 
-    if partition_name.lower() == "vendor" or partition_name.lower() == "oem" or partition_name.lower() == "odm":
+    if "vendor" in partition_name.lower() or "oem" in partition_name.lower() or "odm" in partition_name.lower():
         meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_VENDOR)
-    elif partition_name.lower() == "product":
+    elif "product" in partition_name.lower():
         meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_PRODUCT)
-    elif partition_name.lower() == "system_ext":
+    elif "system_ext" in partition_name.lower():
         meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_SYSTEM_EXT)
     else:
         meta_file = os.path.join(tmp_root_dir, META_BUILD_FILENAME_SYSTEM)
 
     with open(meta_file, 'a') as fp:
         fp.write("    " + module_naming + " \\\n")
+
+
+def add_to_log_file(tmp_root_dir, log_entry, log_name):
+    """
+    Adds a log entry to the log file.
+
+    :param log_name: str - The name of the log file.
+    :param tmp_root_dir: str - A temporary directory to store the log file.
+    :param log_entry: str - A log entry to be added to the log file.
+
+    """
+    log_file = os.path.join(tmp_root_dir, log_name)
+    with open(log_file, 'a') as fp:
+        fp.write(log_entry + "\n")
 
 
 def copy_replacer_script(destination_folder):
@@ -47,15 +61,18 @@ def copy_replacer_script(destination_folder):
 
 def create_modules(source_folder, destination_folder, format_name, search_pattern, create_template_string):
     """
-    This function is used to create the shared library module for AOSP firmware.
+    This function is used to create a module for AOSP firmware. It searches for the files in the source folder based on
+    the search pattern and creates a module for each file found in the destination folder. The module is created using
+    the template string created by the create_template_string function. The module is then added to the meta file.
 
-    :param search_pattern: regex - search pattern for the shared library.
+
+    :param search_pattern: regex - search pattern for the file.
     :param source_folder: str - path to the source folder.
     :param destination_folder: str - path to the destination folder.
-    :param format_name: str - format name of the shared library module.
-    :param create_template_string: function - function to create the template string for the shared library module.
+    :param format_name: str - format name of module (e.g., MK or BP).
+    :param create_template_string: function - function to create the template string for the module.
 
-    :return: str - path to the shared library module.
+    :return: str - path to the module.
 
     """
     if source_folder and destination_folder:
@@ -69,7 +86,7 @@ def create_modules(source_folder, destination_folder, format_name, search_patter
         for file in files:
             if re.search(search_pattern, file):
                 source_file = os.path.join(root, file)
-                logging.info(f"Creating module for shared library: {source_file} to {destination_folder}")
+                logging.info(f"Creating module for: {source_file} to {destination_folder}")
                 if not os.path.exists(source_file):
                     raise Exception(f"The source file does not exist: {source_file}")
                 template_out, module_name = create_template_string(format_name, source_file)
@@ -78,16 +95,20 @@ def create_modules(source_folder, destination_folder, format_name, search_patter
                 write_template_to_file(template_out, module_folder)
                 partition_name = source_file.split("/")[7]
                 add_module_to_meta_file(partition_name, destination_folder, module_name)
+                log_entry = (f"Partition: {partition_name}"
+                             f"| Module: {module_name}"
+                             f"| File: {source_file}")
+                add_to_log_file(destination_folder, log_entry, "meta_writer.log")
 
 
 def write_template_to_file(template_out, destination_folder):
     """
     Writes the template string to a file.
 
-    :param template_out: str - template string for the shared library module.
+    :param template_out: str - template string for the module.
     :param destination_folder: str - path to the destination folder.
 
-    :return: str - path to the shared library module.
+    :return: str - path to the module.
 
     """
     file_path = os.path.join(destination_folder, "Android.mk")
