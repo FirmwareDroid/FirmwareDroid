@@ -6,7 +6,7 @@ from string import Template
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import get_subfolders
 from firmware_handler.firmware_file_exporter import remove_unblob_extract_directories
 from model import GenericFile
-from dynamic_analysis.emulator_preparation.asop_meta_writer import add_module_to_meta_file
+from dynamic_analysis.emulator_preparation.asop_meta_writer import add_module_to_meta_file, add_to_log_file
 from dynamic_analysis.emulator_preparation.templates.android_app_module_template import ANDROID_MK_TEMPLATE, \
     ANDROID_BP_TEMPLATE
 
@@ -271,3 +271,8 @@ def process_android_apps(firmware, tmp_root_dir):
         partition_name = android_app.absolute_store_path.split("/")[8]
         logging.debug(f"Partition name: {partition_name} for app {android_app.id}")
         add_module_to_meta_file(partition_name, tmp_root_dir, module_naming)
+        log_entry = (f"Partition:{partition_name} "
+                     f"| APK:{android_app.filename} "
+                     f"| ID:{android_app.id} "
+                     f"| Module:{module_naming}")
+        add_to_log_file(tmp_root_dir, log_entry, "apk_module_builder.log")
