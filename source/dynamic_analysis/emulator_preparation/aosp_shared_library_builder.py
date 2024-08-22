@@ -45,7 +45,7 @@ def get_local_module_path(file_path, partition_name):
 
     """
     subfolder_list = get_subfolders(file_path, partition_name)
-    if len(subfolder_list) == 0:
+    if len(subfolder_list) <= 1:
         local_module_path = f"$(TARGET_OUT)/"
     else:
         local_module_path = f"$(TARGET_OUT)/{os.path.join(*subfolder_list)}"
