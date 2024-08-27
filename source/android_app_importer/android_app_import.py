@@ -57,11 +57,7 @@ def copy_apk_file(android_app, destination_folder, firmware_mount_path, apk_abs_
     apk_abs_path = get_apk_abs_path(apk_abs_path, firmware_mount_path, android_app)
     app_root_folder = get_app_root_folder(destination_folder, android_app, has_relative_path)
     android_app_destination_filepath = os.path.join(app_root_folder, android_app.filename)
-    existing_android_app = is_apk_in_database(android_app)
-    if existing_android_app is None:
-        copy_and_save_new_android_app(apk_abs_path, android_app_destination_filepath, android_app, has_relative_path)
-    else:
-        update_existing_android_app(android_app, existing_android_app)
+    copy_and_save_new_android_app(apk_abs_path, android_app_destination_filepath, android_app, has_relative_path)
 
 
 def get_apk_abs_path(apk_abs_path, firmware_mount_path, android_app):
@@ -123,37 +119,6 @@ def copy_and_save_new_android_app(apk_abs_path, android_app_destination_filepath
     android_app.absolute_store_path = os.path.abspath(android_app_destination_filepath)
     android_app.save()
     logging.info(f"Exported Android app: {android_app.filename}")
-
-
-def update_existing_android_app(android_app, existing_android_app):
-    """
-    Updates the existing Android app with the new Android app.
-
-    :param android_app: Class:'AndroidApp' - The new Android app instance.
-    :param existing_android_app: Class:'AndroidApp' - The existing Android app instance.
-    """
-    android_app.relative_store_path = existing_android_app.relative_store_path
-    android_app.absolute_store_path = existing_android_app.absolute_store_path
-    android_app.app_twins_reference_list.append(existing_android_app.pk)
-    android_app.save()
-    existing_android_app.app_twins_reference_list.append(android_app.pk)
-    existing_android_app.save()
-    logging.info(f"Found twin app: {android_app.filename} / {existing_android_app.filename}")
-
-
-def is_apk_in_database(android_app):
-    """
-    Checks if an apk is already stored in the database based on querying the md5 hash of the file.
-
-    :return: true - Class:AndroidApp, false - None
-
-    """
-    existing_android_app_list = AndroidApp.objects(md5=android_app.md5).limit(1)
-    if len(existing_android_app_list) > 0:
-        existing_android_app = existing_android_app_list[0]
-    else:
-        existing_android_app = None
-    return existing_android_app
 
 
 def extract_android_app(firmware_mount_path, firmware_app_store, firmware_file_list, partition_name):
