@@ -36,10 +36,10 @@ def create_build_file_for_app(android_app, format_name):
     """
     logging.debug(f"Creating build file for app {android_app.filename}...")
     template = ANDROID_MK_TEMPLATE if format_name.lower() == "mk" else ANDROID_BP_TEMPLATE
-    create_soong_build_files(android_app, format_name, template)
+    create_make_files(android_app, format_name, template)
 
 
-def create_soong_build_files(android_app, file_format, template_string):
+def create_make_files(android_app, file_format, template_string):
     """
     Create an Android.mk or Android.bp file and stores it into the db for the given Android app. A reference to the
     newly created file will be added to the Android app and stored in the db. If an Android.mk or Android.bp file
@@ -224,9 +224,11 @@ def create_template_string(android_app, template_string):
     directory_name = android_app.filename.replace('.apk', '')
     local_module = f"{directory_name}"
     local_privileged_module = "false"
+    if os.path.exists(android_app.absolute_store_path):
+        raise FileNotFoundError(f"File not found: {android_app.absolute_store_path} | {android_app.pk}")
     partition_name = android_app.absolute_store_path.split("/")[8]
     local_module_path = get_apk_local_module_path(android_app.absolute_store_path, partition_name, android_app)
-    if "/priv-app/" in local_module_path or "/framework/" in local_module_path:
+    if "/priv-app" in local_module_path or "/framework" in local_module_path:
         local_privileged_module = "true"
 
     local_src_files = android_app.filename

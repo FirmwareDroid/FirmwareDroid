@@ -57,6 +57,7 @@ def worker_process_firmware_multiprocessing(firmware_id, format_name, skip_file_
     except Exception as err:
         traceback.print_exc()
         logging.error(f"Could not process firmware {firmware_id}: {err}")
+        raise err
     logging.info(f"Worker process finished...")
 
 
