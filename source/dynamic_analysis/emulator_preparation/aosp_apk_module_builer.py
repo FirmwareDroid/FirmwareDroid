@@ -224,7 +224,7 @@ def create_template_string(android_app, template_string):
     directory_name = android_app.filename.replace('.apk', '')
     local_module = f"{directory_name}"
     local_privileged_module = "false"
-    if os.path.exists(android_app.absolute_store_path):
+    if not os.path.exists(android_app.absolute_store_path):
         raise FileNotFoundError(f"File not found: {android_app.absolute_store_path} | {android_app.pk}")
     partition_name = android_app.absolute_store_path.split("/")[8]
     local_module_path = get_apk_local_module_path(android_app.absolute_store_path, partition_name, android_app)
