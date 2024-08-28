@@ -126,20 +126,11 @@ def analyse_and_save(android_app):
 @create_log_context
 def manifest_parser_worker_multiprocessing(android_app_id):
     """
-    Worker process which will work on the given queue.
-
-
+    Worker process which will work on the given queue to parse the AndroidManifest.xml file of the given Android app.
     """
-    # while True:
-    #     try:
-    #         android_app_id = android_app_id_queue.get(timeout=.5)
-    #     except Exception as err:
-    #         break
-
     android_app = AndroidApp.objects.get(pk=android_app_id)
     logging.info(f"ManifestParser scans: {android_app.filename} {android_app.id}")
     analyse_and_save(android_app)
-    #android_app_id_queue.task_done()
 
 
 class ManifestParserScanJob(ScanJob):

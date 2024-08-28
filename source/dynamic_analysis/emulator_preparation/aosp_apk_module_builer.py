@@ -226,7 +226,7 @@ def create_template_string(android_app, template_string):
     local_privileged_module = "false"
     partition_name = android_app.absolute_store_path.split("/")[8]
     local_module_path = get_apk_local_module_path(android_app.absolute_store_path, partition_name, android_app)
-    if "/priv-app/" in local_module_path or "/framework/" in local_module_path:
+    if "/priv-app" in local_module_path or "/framework" in local_module_path:
         local_privileged_module = "true"
 
     local_src_files = android_app.filename

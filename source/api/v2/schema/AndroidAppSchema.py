@@ -55,19 +55,21 @@ class AndroidAppQuery(graphene.ObjectType):
                                         name="android_app_id_list")
 
     @superuser_required
-    def resolve_android_app_list(self, info, object_id_list, field_filter=None):
+    def resolve_android_app_list(self, info, object_id_list=None, field_filter=None):
         return get_filtered_queryset(AndroidApp, object_id_list, field_filter)
 
     @superuser_required
-    def resolve_android_app_id_list(self, info, field_filter=None, firmware_id_list=None):
-        if firmware_id_list and len(firmware_id_list) > 0:
-            firmware_list = AndroidFirmware.objects(pk__in=firmware_id_list)
-            object_id_list = []
+    def resolve_android_app_id_list(self, info, object_id_list=None, field_filter=None):
+        if object_id_list and len(object_id_list) > 0:
+            firmware_list = AndroidFirmware.objects(pk__in=object_id_list)
+            android_app_id_list = []
             for firmware in firmware_list:
-                object_id_list.extend([app.pk for app in AndroidApp.objects(firmware_id_reference=firmware.pk)])
-            queryset = get_filtered_queryset(model=AndroidApp, query_filter=field_filter, object_id_list=object_id_list)
+                android_app_id_list.extend([app.pk for app in AndroidApp.objects(firmware_id_reference=firmware.pk)])
+            queryset = get_filtered_queryset(model=AndroidApp, query_filter=field_filter,
+                                             object_id_list=android_app_id_list)
         else:
-            queryset = get_filtered_queryset(model=AndroidApp, query_filter=field_filter, object_id_list=None)
+            queryset = get_filtered_queryset(model=AndroidApp, query_filter=field_filter,
+                                             object_id_list=None)
         return [document.pk for document in queryset]
 
 
@@ -111,7 +113,7 @@ class CreateApkScanJob(graphene.Mutation):
         queue_name = graphene.String(required=True, default_value="default-python")
         module_name = graphene.String(required=True)
         object_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
-        kwargs = graphene.JSONString(required=False)
+        kwargs = graphene.JSONString(required=True, default_value="{}")
 
     @classmethod
     @superuser_required
