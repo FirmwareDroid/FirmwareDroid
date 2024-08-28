@@ -180,7 +180,10 @@ def process_apk_file(filename,
     """
     relative_firmware_path = root.replace(firmware_mount_path, "")
     try:
-        android_app = create_android_app(filename, relative_firmware_path, firmware_mount_path, partition_name)
+        android_app = create_android_app(filename=filename,
+                                         relative_firmware_path=relative_firmware_path,
+                                         firmware_mount_path=firmware_mount_path,
+                                         partition_name=partition_name)
         copy_apk_file(android_app, firmware_app_store, firmware_mount_path)
     except Exception:
         delete_android_apps(firmware_app_list)
