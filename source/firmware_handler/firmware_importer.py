@@ -43,16 +43,16 @@ def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0):
     :return: list of string with the status (errors/success) of every file.
     """
     logging.info(f"Firmware extractor starting...Storage index: {storage_index}")
-    import_firmware_from_store(storage_index, create_fuzzy_hashes)
+    store_setting = get_active_store_by_index(storage_index)
+    import_firmware_from_store(store_setting, create_fuzzy_hashes)
 
 
-def import_firmware_from_store(storage_index, create_fuzzy_hashes):
-    store_path, firmware_archives_queue, num_threads = pre_process_firmware_import(storage_index)
+def import_firmware_from_store(store_setting, create_fuzzy_hashes):
+    store_path, firmware_archives_queue, num_threads = pre_process_firmware_import(store_setting)
     start_import_threads(num_threads, firmware_archives_queue, create_fuzzy_hashes, store_path)
 
 
-def pre_process_firmware_import(storage_index):
-    store_setting = get_active_store_by_index(storage_index)
+def pre_process_firmware_import(store_setting):
     store_path = store_setting.store_options_dict[store_setting.uuid]["paths"]
     firmware_archives_queue, file_count = create_file_import_queue(store_path)
     if file_count <= 10:
