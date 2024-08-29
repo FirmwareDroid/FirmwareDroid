@@ -52,7 +52,7 @@ class DeleteAndroidFirmwareMutation(graphene.Mutation):
     job_id = graphene.String()
 
     class Arguments:
-        firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=False)
+        firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
         queue_name = graphene.String(required=True, default_value="default-python")
 
     @classmethod

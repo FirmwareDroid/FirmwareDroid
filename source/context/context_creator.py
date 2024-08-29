@@ -4,7 +4,6 @@
 import functools
 import logging
 import sys
-import threading
 
 
 def create_db_context(f):
