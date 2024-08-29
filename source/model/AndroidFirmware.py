@@ -33,7 +33,6 @@ class AndroidFirmware(Document):
     has_file_index = BooleanField(required=False, default=False)
     has_fuzzy_hash_index = BooleanField(required=False, default=False)
     aecs_build_file_path = StringField(required=False)
-    # TODO: Rename to firmware_file_reference_list
     firmware_file_id_list = ListField(LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING),
                                       required=False)
     version_detected = IntField(required=False, default=0)

@@ -9,6 +9,7 @@ from graphql_jwt.decorators import superuser_required
 from api.v2.schema.RqJobsSchema import ONE_DAY_TIMEOUT, ONE_WEEK_TIMEOUT
 from api.v2.types.GenericDeletion import delete_queryset_background
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
+from firmware_handler.firmware_reimporter import start_firmware_reimport
 from hashing.fuzzy_hash_creator import start_fuzzy_hasher
 from model.AndroidFirmware import AndroidFirmware
 from firmware_handler.firmware_importer import start_firmware_mass_import
@@ -58,8 +59,9 @@ class DeleteAndroidFirmwareMutation(graphene.Mutation):
     @superuser_required
     def mutate(cls, root, info, firmware_id_list, queue_name):
         func_to_run = delete_queryset_background
+        model = AndroidFirmware
         queue = django_rq.get_queue(queue_name)
-        job = queue.enqueue(func_to_run, firmware_id_list, job_timeout=ONE_DAY_TIMEOUT)
+        job = queue.enqueue(func_to_run, firmware_id_list, AndroidFirmware, job_timeout=ONE_DAY_TIMEOUT)
         return cls(job_id=job.id)
 
 
@@ -90,6 +92,26 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
         queue = django_rq.get_queue(queue_name)
         func_to_run = start_firmware_mass_import
         job = queue.enqueue(func_to_run, create_fuzzy_hashes, storage_index, job_timeout=ONE_WEEK_TIMEOUT)
+        return cls(job_id=job.id)
+
+
+class CreateFirmwareReImportJob(graphene.Mutation):
+    """
+    First, copies the firmware into the importer queue. Second, deletes the firmware from the database and runs
+    the importer.
+    """
+    job_id = graphene.String()
+
+    class Arguments:
+        queue_name = graphene.String(required=True, default_value="high-python")
+        firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
+
+    @classmethod
+    @superuser_required
+    def mutate(cls, root, info, queue_name, firmware_id_list):
+        queue = django_rq.get_queue(queue_name)
+        func_to_run = start_firmware_reimport
+        job = queue.enqueue(func_to_run, firmware_id_list, job_timeout=ONE_WEEK_TIMEOUT)
         return cls(job_id=job.id)
 
 

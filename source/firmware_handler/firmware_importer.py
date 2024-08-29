@@ -43,6 +43,15 @@ def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0):
     :return: list of string with the status (errors/success) of every file.
     """
     logging.info(f"Firmware extractor starting...Storage index: {storage_index}")
+    import_firmware_from_store(storage_index, create_fuzzy_hashes)
+
+
+def import_firmware_from_store(storage_index, create_fuzzy_hashes):
+    store_path, firmware_archives_queue, num_threads = pre_process_firmware_import(storage_index)
+    start_import_threads(num_threads, firmware_archives_queue, create_fuzzy_hashes, store_path)
+
+
+def pre_process_firmware_import(storage_index):
     store_setting = get_active_store_by_index(storage_index)
     store_path = store_setting.store_options_dict[store_setting.uuid]["paths"]
     firmware_archives_queue, file_count = create_file_import_queue(store_path)
@@ -51,7 +60,10 @@ def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0):
     else:
         firmware_importer_settings = get_firmware_importer_setting()
         num_threads = firmware_importer_settings.number_of_importer_threads
+    return store_path, firmware_archives_queue, num_threads
 
+
+def start_import_threads(num_threads, firmware_archives_queue, create_fuzzy_hashes, store_path):
     for i in range(num_threads):
         logging.debug(f"Start importer thread {i} of {num_threads}")
         worker = Thread(target=prepare_firmware_import, args=(firmware_archives_queue, create_fuzzy_hashes, store_path))

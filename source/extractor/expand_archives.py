@@ -18,7 +18,8 @@ from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
 EXTRACTION_SEMAPHORE = threading.Semaphore(20)
 MAX_EXTRACTION_DEPTH = 10
 IMG_FILE_TYPE_REGEX = r".(img|dat)$"
-SUPPORTED_FILE_TYPE_REGEX = r".(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz)$"
+SUPPORTED_FILE_TYPE_REGEX = r"(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz)$"
+
 EXTRACT_FUNCTION_MAP_DICT = {
     ".zip": extract_zip,
     ".tar": extract_tar,
@@ -103,15 +104,18 @@ def has_extracted_all_supported_files(file_list):
     """
     has_all_files = True
     for file in file_list:
-        if not re.search(SUPPORTED_FILE_TYPE_REGEX, file):
+        if not os.path.isfile(file):
+            continue
+        if re.search(SUPPORTED_FILE_TYPE_REGEX, file):
             has_all_files = False
             break
+    logging.info(f"Has all files extracted: {has_all_files}")
     return has_all_files
 
 
 def filter_supported_files(file_list):
     pattern = re.compile(SUPPORTED_FILE_TYPE_REGEX)
-    filtered_list = [file for file in file_list if pattern.search(file)]
+    filtered_list = [file for file in file_list if os.path.isfile(file) and pattern.search(file)]
     return filtered_list
 
 
@@ -129,8 +133,11 @@ def extract_first_layer(firmware_archive_file_path, destination_dir):
                                       destination_dir,
                                       delete_compressed_file=False,
                                       unblob_depth=1)
-    max_depth = MAX_EXTRACTION_DEPTH
-    while max_depth > 0 or has_extracted_all_supported_files(file_list) is False:
+    logging.info(f"Extracted files count: {len(file_list)}: {file_list}")
+    file_list = filter_supported_files(file_list)
+    logging.info(f"Filtered files count: {len(file_list)}: {file_list}")
+    max_depth = 0
+    while max_depth < MAX_EXTRACTION_DEPTH and has_extracted_all_supported_files(file_list) is False:
         try:
             logging.info(f"Checking for Android partition in the first layer depth: {max_depth} | "
                          f"File count: {len(file_list)}")
@@ -138,14 +145,16 @@ def extract_first_layer(firmware_archive_file_path, destination_dir):
                                               destination_dir,
                                               delete_compressed_file=True,
                                               unblob_depth=1)
+            logging.info(f"Extracted files count: {len(file_list)}")
             filtered_file_list = filter_supported_files(file_list)
+            logging.info(f"Filtered files count: {len(filtered_file_list)}")
             if len(filtered_file_list) > 0:
                 file_list = filtered_file_list
         except Exception as err:
             logging.warning(err)
         finally:
-            max_depth = max_depth - 1
-    logging.info(f"Found Android partition in the first layer: {max_depth}")
+            max_depth = max_depth + 1
+    logging.info(f"First layer processing done. Depth: {max_depth}")
     return file_list
 
 
