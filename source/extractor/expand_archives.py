@@ -18,7 +18,7 @@ from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
 EXTRACTION_SEMAPHORE = threading.Semaphore(20)
 MAX_EXTRACTION_DEPTH = 10
 IMG_FILE_TYPE_REGEX = r".(img|dat)$"
-SUPPORTED_FILE_TYPE_REGEX = r"(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz)$"
+SUPPORTED_FILE_TYPE_REGEX = r"(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz|app)$"
 
 EXTRACT_FUNCTION_MAP_DICT = {
     ".zip": extract_zip,

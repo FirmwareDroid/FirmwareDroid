@@ -2,6 +2,7 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import re
+import stat
 import tempfile
 import threading
 import logging
@@ -307,6 +308,15 @@ def check_if_successful_import(partition_info_dict):
     return False
 
 
+def ensure_file_readable(file_path):
+    try:
+        if not os.access(file_path, os.R_OK):
+            os.chmod(file_path, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+    except PermissionError as e:
+        logging.error(f"Failed to change permissions for {file_path}: {e}")
+        raise e
+
+
 def import_firmware(original_filename, md5, firmware_archive_file_path, create_fuzzy_hashes, store_paths):
     """
     Attempts to store a firmware archive into the database.
@@ -329,6 +339,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
         try:
             sha1 = sha1_from_file(firmware_archive_file_path)
             sha256 = sha256_from_file(firmware_archive_file_path)
+            ensure_file_readable(firmware_archive_file_path)
             file_size = os.stat(firmware_archive_file_path).st_size
 
             archive_firmware_file_list = open_firmware(firmware_archive_file_path, temp_extract_dir)

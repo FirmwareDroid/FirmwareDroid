@@ -111,13 +111,53 @@ def split_into_batches(item_list, batch_size):
     for i in range(0, len(item_list), batch_size):
         yield item_list[i:i + batch_size]
 
+#
+# def start_mp_process_pool_executor(item_list,
+#                                    worker_function,
+#                                    number_of_processes=os.cpu_count()*2,
+#                                    create_id_list=True,
+#                                    worker_args_list=None,
+#                                    batch_size=25):
+#     """
+#     Creates a multiprocessor pool and starts the processing the items with the given function.
+#
+#     :param worker_args_list: list - list of arguments to pass to the worker function.
+#     :param create_id_list: boolean - if true, object-id list instead of the item list is used for the queue.
+#         Use this only if you provide an item list of documents with an id attribute.
+#     :param number_of_processes: int - number of processes to start.
+#     :param worker_function: function - which will be executed by the pool.
+#     :param item_list: list(object) - items to work on.
+#     :param batch_size: int - size of each batch for processing.
+#
+#     :return: list - list of results from the worker function.
+#     """
+#     worker_task_list = []
+#     if create_id_list:
+#         for obj in item_list:
+#             worker_task_list.append(obj.id)
+#     else:
+#         worker_task_list = item_list
+#
+#     result_list = []
+#     for batch in split_into_batches(worker_task_list, batch_size):
+#         with Executor(max_workers=number_of_processes) as executor:
+#             if worker_args_list:
+#                 future_generator = {executor.submit(worker_function, worker_task, *worker_args_list): worker_task for
+#                                     worker_task in batch}
+#             else:
+#                 future_generator = {executor.submit(worker_function, worker_task): worker_task for
+#                                     worker_task in batch}
+#             for future in as_completed(future_generator):
+#                 result = future.result()
+#                 result_list.append(result)
+#     return result_list
+
 
 def start_mp_process_pool_executor(item_list,
                                    worker_function,
-                                   number_of_processes=os.cpu_count()*2,
+                                   number_of_processes=os.cpu_count() * 2,
                                    create_id_list=True,
-                                   worker_args_list=None,
-                                   batch_size=25):
+                                   worker_args_list=None):
     """
     Creates a multiprocessor pool and starts the processing the items with the given function.
 
@@ -127,7 +167,6 @@ def start_mp_process_pool_executor(item_list,
     :param number_of_processes: int - number of processes to start.
     :param worker_function: function - which will be executed by the pool.
     :param item_list: list(object) - items to work on.
-    :param batch_size: int - size of each batch for processing.
 
     :return: list - list of results from the worker function.
     """
@@ -139,17 +178,11 @@ def start_mp_process_pool_executor(item_list,
         worker_task_list = item_list
 
     result_list = []
-    for batch in split_into_batches(worker_task_list, batch_size):
-        with Executor(max_workers=number_of_processes) as executor:
-            if worker_args_list:
-                future_generator = {executor.submit(worker_function, worker_task, *worker_args_list): worker_task for
-                                    worker_task in batch}
-            else:
-                future_generator = {executor.submit(worker_function, worker_task): worker_task for
-                                    worker_task in batch}
-            for future in as_completed(future_generator):
-                result = future.result()
-                result_list.append(result)
+    with Executor(max_workers=number_of_processes) as executor:
+        future_to_task = {executor.submit(worker_function, task, *worker_args_list): task for task in worker_task_list}
+        for future in as_completed(future_to_task):
+            result = future.result()
+            result_list.append(result)
     return result_list
 
 
