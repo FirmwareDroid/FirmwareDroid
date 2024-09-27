@@ -28,7 +28,8 @@ from firmware_handler.firmware_version_detect import detect_by_build_prop
 from processing.standalone_python_worker import create_multi_threading_queue
 from bson import ObjectId
 
-ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar", ".gz", ".bz2", ".md5", ".lz4", ".tgz", ".rar", ".7z", "lzma", ".xz"]
+ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar", ".gz", ".bz2", ".md5", ".lz4", ".tgz", ".rar", ".7z", "lzma", ".xz",
+                                   ".ozip"]
 lock = threading.Lock()
 
 
@@ -263,6 +264,22 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
     return files_dict, partition_info_dict
 
 
+def create_firmware_store_path(store_path, version_detected, md5):
+
+    firmware_archive_store_path = Path(os.path.join(str(store_path["FIRMWARE_FOLDER_STORE"]),
+                                                    version_detected,
+                                                    md5))
+    try:
+        if not firmware_archive_store_path.exists():
+            firmware_archive_store_path.mkdir(parents=True, exist_ok=True)
+        if not os.path.exists(firmware_archive_store_path):
+            os.makedirs(firmware_archive_store_path)
+    except OSError as e:
+        logging.error(f"Error creating firmware store path: {e}")
+        raise
+    return firmware_archive_store_path
+
+
 def store_firmware_archive(firmware_archive_file_path, md5, version_detected, store_path):
     """
     Renames and moves the firmware archive to the permanent storage.
@@ -274,24 +291,18 @@ def store_firmware_archive(firmware_archive_file_path, md5, version_detected, st
 
     :return: str, str - name of the firmware within the permanent storage and path to the storage.
     """
-    store_filename = md5
-    firmware_archive_store_path = Path(os.path.join(str(store_path["FIRMWARE_FOLDER_STORE"]),
-                                                    version_detected,
-                                                    md5))
-    if not firmware_archive_store_path.exists():
-        firmware_archive_store_path.mkdir(parents=True, exist_ok=True)
+    firmware_archive_store_path = create_firmware_store_path(store_path, version_detected, md5)
+    if not os.path.exists(firmware_archive_store_path):
+        raise FileNotFoundError(f"Path {firmware_archive_store_path} does not exist.")
 
-    if firmware_archive_store_path.exists():
+    store_filename = md5
+    try:
+        logging.info(f"Storing firmware archive {firmware_archive_file_path} to {firmware_archive_store_path}")
         firmware_store_path = Path(os.path.join(firmware_archive_store_path.absolute().as_posix(), store_filename))
-        shutil.copy(firmware_archive_file_path, firmware_store_path.absolute().as_posix())
-        if firmware_store_path.exists():
-            os.remove(firmware_archive_file_path)
-        else:
-            raise OSError(f"Could not copy firmware archive to destination folder: "
-                          f"{firmware_store_path.absolute().as_posix()}")
-    else:
-        raise OSError(f"Firmware store directory could not be created: "
-                      f"{firmware_archive_store_path.absolute().as_posix()}")
+        copy_and_remove_source(firmware_archive_file_path, firmware_store_path.absolute().as_posix())
+    except Exception as e:
+        logging.error(f"Error storing firmware archive: {e}")
+        raise
 
     return store_filename, firmware_store_path.absolute().as_posix()
 
@@ -317,6 +328,19 @@ def ensure_file_readable(file_path):
         raise e
 
 
+def copy_and_remove_source(src, dst):
+    try:
+        shutil.copy(src, dst)
+
+        if os.path.exists(dst) and os.path.getsize(src) == os.path.getsize(dst):
+            os.remove(src)
+            logging.info(f"File copied successfully to {dst} and source file '{src}' removed.")
+        else:
+            logging.info(f"File copy failed or size mismatch: '{src}' to '{dst}'")
+    except Exception as e:
+        logging.error(f"An error occurred coping the file {src} to {dst}: {e}")
+
+
 def import_firmware(original_filename, md5, firmware_archive_file_path, create_fuzzy_hashes, store_paths):
     """
     Attempts to store a firmware archive into the database.
@@ -340,7 +364,11 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
             sha1 = sha1_from_file(firmware_archive_file_path)
             sha256 = sha256_from_file(firmware_archive_file_path)
             ensure_file_readable(firmware_archive_file_path)
-            file_size = os.stat(firmware_archive_file_path).st_size
+            try:
+                file_size = os.stat(firmware_archive_file_path).st_size
+            except PermissionError as e:
+                file_size = -1
+                logging.warning(f"Failed to get file size for {firmware_archive_file_path}: {e}")
 
             archive_firmware_file_list = open_firmware(firmware_archive_file_path, temp_extract_dir)
             files_dict["archive_firmware_file_list"].extend(archive_firmware_file_list)
@@ -377,22 +405,26 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
         except Exception as error:
             logging.exception(f"Firmware Import failed: {original_filename} error: {str(error)}")
 
-            if files_dict["firmware_file_list"] and len(files_dict["firmware_file_list"]) > 0:
-                firmware_file_id_object_list = []
-                for firmware_file in files_dict["firmware_file_list"]:
-                    firmware_file_id_object_list.append(ObjectId(firmware_file.id))
-                FirmwareFile.objects(pk__in=firmware_file_id_object_list).delete()
-                logging.info("Cleanup: Removed firmware-files from DB")
+            try:
+                if files_dict["firmware_file_list"] and len(files_dict["firmware_file_list"]) > 0:
+                    firmware_file_id_object_list = []
+                    for firmware_file in files_dict["firmware_file_list"]:
+                        firmware_file_id_object_list.append(ObjectId(firmware_file.id))
+                    FirmwareFile.objects(pk__in=firmware_file_id_object_list).delete()
+                    logging.info("Cleanup: Removed firmware-files from DB")
 
-            if files_dict["firmware_app_list"] and len(files_dict["firmware_app_list"]) > 0:
-                android_app_id_object_list = []
-                for android_app in files_dict["firmware_app_list"]:
-                    android_app_id_object_list.append(ObjectId(android_app.id))
-                AndroidApp.objects(pk__in=android_app_id_object_list).delete()
-                logging.info("Cleanup: Removed android apps from DB")
-
-            shutil.move(firmware_archive_file_path, store_paths["FIRMWARE_FOLDER_IMPORT_FAILED"])
-            logging.info(f"Cleanup: Firmware file moved to failed folder: {original_filename}")
+                if files_dict["firmware_app_list"] and len(files_dict["firmware_app_list"]) > 0:
+                    android_app_id_object_list = []
+                    for android_app in files_dict["firmware_app_list"]:
+                        android_app_id_object_list.append(ObjectId(android_app.id))
+                    AndroidApp.objects(pk__in=android_app_id_object_list).delete()
+                    logging.info("Cleanup: Removed android apps from DB")
+            except Exception as e:
+                logging.error(f"Cleanup: Failed to remove firmware files and android apps from DB: {e}")
+            finally:
+                dst_file_path = os.path.join(store_paths["FIRMWARE_FOLDER_IMPORT_FAILED"], original_filename)
+                copy_and_remove_source(firmware_archive_file_path, dst_file_path)
+                logging.info(f"Cleanup: Firmware file moved to failed folder: {original_filename}")
 
 
 def get_firmware_archive_content(cache_temp_file_dir_path):

@@ -18,7 +18,7 @@ from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
 EXTRACTION_SEMAPHORE = threading.Semaphore(20)
 MAX_EXTRACTION_DEPTH = 10
 IMG_FILE_TYPE_REGEX = r".(img|dat)$"
-SUPPORTED_FILE_TYPE_REGEX = r"(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz|app)$"
+SUPPORTED_FILE_TYPE_REGEX = r"(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz|app|rar)$"
 
 EXTRACT_FUNCTION_MAP_DICT = {
     ".zip": extract_zip,
@@ -52,7 +52,7 @@ def get_file_list(destination_dir):
     file_list = []
     for root, dirs, files in os.walk(destination_dir):
         for file in files:
-            file_path = os.path.join(root, file)
+            file_path = str(os.path.join(root, file))
             file_path_abs = os.path.abspath(file_path)
             file_list.append(file_path_abs)
     return file_list
