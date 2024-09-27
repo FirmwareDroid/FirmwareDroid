@@ -13,7 +13,7 @@ SKIP_EXTENSION_DEFAULT = [".apk", ".dex", ".odex", ".oat", ".so", ".jar", ".clas
                           ".log", ".odt", ".ods", ".odp", ".odg", ".odf", ".odb", ".odc", ".odm", ".pak", ".rlib",
                           ".mtz", ".apex", ".capex", ".vdex", ".arsc", ".pb", ".aab", ".list", ".config", ".elf",
                           ".mbn", ".1", ".2", ".3", ".4", ".prop", ".conf", ".cfg", ".ini", ".sh", ".bat", ".cmd",
-                          ".pem", ".pk8", ".url", ".elf32"]
+                          ".pem", ".pk8", ".url", ".elf32", "._lost+found"]
 
 
 def remove_unblob_log():
@@ -62,7 +62,7 @@ def unblob_extract(compressed_file_path, destination_dir, depth=25, worker_count
             command_array.append("--skip-extension")
             command_array.append(extension)
         command_array.append(input_file)
-        response = subprocess.run(command_array, timeout=60 * 180)
+        response = subprocess.run(command_array, timeout=60 * 60 * 16)
         response.check_returncode()
     except subprocess.CalledProcessError as err:
         if response and response.returncode > 1:
@@ -71,7 +71,7 @@ def unblob_extract(compressed_file_path, destination_dir, depth=25, worker_count
         else:
             logging.warning(err)
     except subprocess.TimeoutExpired as err:
-        logging.warning(f"Unblob Timeout expired: {err}")
+        logging.error(f"Unblob Timeout expired: {err}")
         is_success = False
     finally:
         UNBLOB_SEMAPHORE.release()
