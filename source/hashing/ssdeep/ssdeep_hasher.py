@@ -2,9 +2,10 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
+from promise.utils import deprecated
 from model import SsDeepHash
 
-
+@deprecated(reason="SSDeep is not used anymore because it hasn't been updated for a long time.")
 def create_ssdeep_hash(firmware_file):
     """
     Creates a class:'SsDeepHash' object for the given firmware file.

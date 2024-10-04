@@ -1,9 +1,8 @@
 import logging
-
 from extractor.bin_extractor.extract_android_ota_payload import main
 
 
-def extract_bin(source_file_path, destination_dir):
+def ota_payload_dumper_extractor(source_file_path, destination_dir):
     """
     Extracts .bin formatted files. Wrapper for extract android ota.
 

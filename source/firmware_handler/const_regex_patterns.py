@@ -11,13 +11,13 @@ Pattern lists should always start with the most fitting one and then get slowly 
 # Partitions that are in ext or sparse format.
 ##########################################################################################
 SYSTEM_IMG_PATTERN_LIST = [
-        "system[.]img",
-        ".*system[.]img$",
-        "^system[.].*[.]img$",
-        "^system[.]img[.].*",
-        ".*system.*img_sparsechunk$",
-        ".*system.*(img|rfs|img.ext4|ext4.img)$",
-    ]
+    "system[.]img",
+    ".*system[.]img$",
+    "^system[.].*[.]img$",
+    "^system[.]img[.].*",
+    ".*system.*img_sparsechunk$",
+    ".*system.*(img|rfs|img.ext4|ext4.img)$",
+]
 
 SUPER_IMG_PATTERN_LIST = ["super[.]img",
                           ".*super[.]img$",
@@ -39,13 +39,13 @@ VBMETA_IMG_PATTERN_LIST = ["vbmeta[.]img", "vbmeta[.]*(img|rfs|bin|img.ext4|ext4
 VBMETA_SYSTEM_IMG_PATTERN_LIST = ["vbmeta_system[.]img", "vbmeta_system[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 
 EXT_IMAGE_PATTERNS_DICT = {"system": SYSTEM_IMG_PATTERN_LIST,
+                           "super": SUPER_IMG_PATTERN_LIST,
                            "system_other": SYSTEM_OTHER_IMG_PATTERN_LIST,
                            "system_ext": SYSTEM_EXT_IMG_PATTERN_LIST,
                            "vendor": VENDOR_IMG_PATTERN_LIST,
                            "oem": OEM_IMG_PATTERN_LIST,
                            "odm": ODM_IMG_PATTERN_LIST,
                            "userdata": USERDATA_IMG_PATTERN_LIST,
-                           "super": SUPER_IMG_PATTERN_LIST,
                            "super_empty": SUPER_EMPTY_PATTERN_LIST,
                            "pvmfw": PVMFW_IMG_PATTERN_LIST,
                            "product": PRODUCT_IMG_PATTERN_LIST}

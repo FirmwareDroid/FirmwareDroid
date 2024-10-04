@@ -25,7 +25,7 @@ Some of the tools and features included are:
 * APIs:
   * [VirusTotal](https://www.virustotal.com)
 * Fuzzy-Hashing:
-  * [SSDeep](https://ssdeep-project.github.io/ssdeep/index.html)
+  * [SSDeep](https://ssdeep-project.github.io/ssdeep/index.html) (deprecated, no updates by the author)
   * [TLSH](https://tlsh.org/)
 * Decompilers:
   * Android:
@@ -37,6 +37,8 @@ Some of the tools and features included are:
     * [Krakatau](https://github.com/Storyyeller/Krakatau)
 * File Extraction:
   * [Unblob](https://github.com/onekey-sec/unblob)
+  * [Extractor](https://github.com/srlabs/extractor)
+  * [Payload_Dumper](https://github.com/vm03/payload_dumper)
 * Miscellaneous:
   * AndroidManifest Parsing
 * Dynamic Analysis:

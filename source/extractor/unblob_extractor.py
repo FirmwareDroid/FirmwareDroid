@@ -27,7 +27,7 @@ def remove_unblob_log():
         logging.warning(err)
 
 
-def unblob_extract(compressed_file_path, destination_dir, depth=25, worker_count=5):
+def unblob_extract(compressed_file_path, destination_dir, depth=1, worker_count=5):
     """
     Extract a file recursively with the unblob extraction suite.
 
@@ -57,12 +57,13 @@ def unblob_extract(compressed_file_path, destination_dir, depth=25, worker_count
                          "-d", str(depth),  # Recursion depth
                          "-p", str(worker_count),  # Number of workers
                          "-v",  # Verbose
+                         "--report", output_dir + "/unblob.json",
                          ]
         for extension in SKIP_EXTENSION_DEFAULT:
             command_array.append("--skip-extension")
             command_array.append(extension)
         command_array.append(input_file)
-        response = subprocess.run(command_array, timeout=60 * 60 * 16)
+        response = subprocess.run(command_array, timeout=60 * 60 * 6)
         response.check_returncode()
     except subprocess.CalledProcessError as err:
         if response and response.returncode > 1:

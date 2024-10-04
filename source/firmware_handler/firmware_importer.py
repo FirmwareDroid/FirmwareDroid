@@ -10,6 +10,9 @@ import os
 import shutil
 from queue import Empty
 from pathlib import Path
+
+from rq.dummy import sleep
+
 from hashing.fuzzy_hash_creator import add_fuzzy_hashes
 from model import AndroidFirmware, FirmwareFile, AndroidApp
 from threading import Thread
@@ -423,7 +426,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
                 logging.error(f"Cleanup: Failed to remove firmware files and android apps from DB: {e}")
             finally:
                 dst_file_path = os.path.join(store_paths["FIRMWARE_FOLDER_IMPORT_FAILED"], original_filename)
-                copy_and_remove_source(firmware_archive_file_path, dst_file_path)
+                shutil.move(firmware_archive_file_path, str(dst_file_path))
                 logging.info(f"Cleanup: Firmware file moved to failed folder: {original_filename}")
 
 
@@ -466,11 +469,19 @@ def create_partition_firmware_files(archive_firmware_file_list,
         if os.path.exists(partition_folder) and os.path.isdir(partition_folder) and any(os.scandir(partition_folder)):
             shutil.move(partition_folder, temp_dir_path)
         else:
-            image_firmware_file = find_image_firmware_file(archive_firmware_file_list, file_pattern_list)
-            image_absolute_path = create_abs_image_file_path(image_firmware_file, extracted_archive_dir_path)
-            extract_second_layer(image_absolute_path, temp_dir_path)
-        partition_firmware_files = create_firmware_file_list(temp_dir_path, partition_name)
-        is_successful = True
+            potential_image_files = find_image_firmware_file(archive_firmware_file_list, file_pattern_list)
+            extraction_success = False
+            for image_firmware_file in potential_image_files:
+                try:
+                    image_absolute_path = create_abs_image_file_path(image_firmware_file, extracted_archive_dir_path)
+                    temp_subfolder = tempfile.mkdtemp(dir=temp_dir_path, prefix=f"{partition_name}_")
+                    extract_second_layer(image_absolute_path, temp_subfolder)
+                    extraction_success = True
+                except (RuntimeError, ValueError) as err:
+                    logging.warning(err)
+            if extraction_success:
+                partition_firmware_files = create_firmware_file_list(temp_dir_path, partition_name)
+                is_successful = True
     except (RuntimeError, ValueError) as err:
         logging.warning(err)
     return partition_firmware_files, is_successful

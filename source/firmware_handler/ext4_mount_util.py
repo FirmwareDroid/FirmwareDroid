@@ -109,7 +109,7 @@ def attempt_simg2img_mount(source, target, mount_options):
     is_mounted = False
     try:
         tempdir = tempfile.TemporaryDirectory()
-        ext4_raw_image_path = simg2img_convert_ext4(source, tempdir.name)
+        ext4_raw_image_path = run_simg2img_convert(source, tempdir.name)
         if ext4_raw_image_path:
             try:
                 exec_mount(ext4_raw_image_path, target, mount_options)
@@ -172,20 +172,20 @@ def attempt_resize_and_mount(source, target, mount_options):
     return is_mounted
 
 
-def simg2img_convert_ext4(android_ext4_path, destination_folder):
+def run_simg2img_convert(android_sparse_img_path, destination_folder):
     """
     Unwrap Android's custom ext4 to a standard ext4 format with simg2img.
 
-    :param android_ext4_path: the ext4 image-path which will be converted. For example, './somedir/system.img'
+    :param android_sparse_img_path: the ext4 image-path which will be converted. For example, './somedir/system.img'
     :param destination_folder: the path to which the outputfile will be written.
 
     """
     try:
-        output_file_name = "raw" + str(os.path.basename(android_ext4_path))
+        output_file_name = "raw" + str(os.path.basename(android_sparse_img_path))
         output_file_name = shlex.quote(output_file_name)
         output_file_path = os.path.join(destination_folder, output_file_name)
         output_file_path = shlex.quote(output_file_path)
-        response = subprocess.run(["simg2img", android_ext4_path, output_file_path], timeout=600)
+        response = subprocess.run(["simg2img", android_sparse_img_path, output_file_path], timeout=600)
         response.check_returncode()
         return output_file_path
     except subprocess.CalledProcessError as err:

@@ -2,12 +2,10 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-import os
 import tempfile
 import traceback
 from queue import Empty
 from threading import Thread
-from hashing.ssdeep.ssdeep_hasher import create_ssdeep_hash
 from hashing.tlsh.tlsh_hasher import create_tlsh_hash
 from model import AndroidFirmware
 from firmware_handler.firmware_file_exporter import extract_firmware
@@ -123,7 +121,7 @@ def add_fuzzy_hashes_by_reference(firmware_file_id_list):
             logging.info(f"Creating fuzzy hashes for: {firmware_file.absolute_store_path}")
             try:
                 create_tlsh_hash(firmware_file)
-                create_ssdeep_hash(firmware_file)
+                #create_ssdeep_hash(firmware_file)
             except Exception as err:
                 logging.error(err)
 
@@ -137,6 +135,6 @@ def add_fuzzy_hashes(firmware_file_list):
             logging.info(f"Creating fuzzy hashes for: {firmware_file.absolute_store_path}")
             try:
                 create_tlsh_hash(firmware_file)
-                create_ssdeep_hash(firmware_file)
+                #create_ssdeep_hash(firmware_file)
             except Exception as err:
                 logging.error(err)

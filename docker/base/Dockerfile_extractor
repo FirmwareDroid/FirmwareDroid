@@ -6,30 +6,52 @@ FROM firmwaredroid-base AS extractor-worker
 USER root
 
 #####################################
-# Installing apt dependencies       #
+# Install apt dependencies       #
 #####################################
 RUN apt update
-RUN apt install -y pkgconf android-sdk-libsparse-utils liblzo2-dev fuse brotli libmagic1 cmake
+RUN apt install -y pkgconf android-sdk-libsparse-utils liblzo2-dev fuse brotli libmagic1 cmake \
+    exfat-fuse e2fsprogs f2fs-tools fuse dosfstools erofs-utils wget
 
 #####################################
-# Installing unblob dependencies    #
+# Install unblob dependencies    #
 #####################################
 RUN DEBIAN_FRONTEND=noninteractive apt install -y android-sdk-libsparse-utils e2fsprogs p7zip-full unar \
     zlib1g-dev liblzo2-dev lzop lziprecover \
     libhyperscan-dev zstd lz4 && apt-get clean
 
 #####################################
-# Installing ssdeep dependencies    #
+# Install srlabs_extractor extractor #
 #####################################
-RUN DEBIAN_FRONTEND=noninteractive apt install -y ssdeep libfuzzy-dev && apt-get clean
+RUN git clone https://github.com/srlabs/extractor.git /opt/firmwaredroid/srlabs_extractor
+RUN python -m venv /opt/firmwaredroid/srlabs_extractor/venv
+RUN . /opt/firmwaredroid/srlabs_extractor/venv/bin/activate \
+    && pip install -r requirements.txt
+
+USER root
+RUN . /opt/firmwaredroid/srlabs_extractor/venv/bin/activate \
+    && apt install -y android-sdk-libsparse-utils liblz4-tool brotli p7zip-full zip rsync zlib1g-dev
+USER www
+
+#####################################
+# Install payload dumpers             #
+#####################################
+RUN git clone https://github.com/vm03/payload_dumper.git /opt/firmwaredroid/payload_dumper
+RUN python -m venv /opt/firmwaredroid/payload_dumper/venv
+RUN . /opt/firmwaredroid/payload_dumper/venv/bin/activate \
+    && pip install -r requirements.txt
+
+RUN mkdir -p /opt/firmwaredroid/payload_dumper-go/
+RUN wget https://github.com/ssut/payload-dumper-go/releases/download/1.2.2/payload-dumper-go_1.2.2_linux_amd64.tar.gz -P /opt/firmwaredroid/payload_dumper-go/
+RUN tar -xvf /opt/firmwaredroid/payload_dumper-go/payload-dumper-go_1.2.2_linux_amd64.tar.gz -C /opt/firmwaredroid/payload_dumper-go/
+RUN chmod +x /opt/firmwaredroid/payload_dumper-go/payload-dumper-go
+ENV PATH="$PATH:/opt/firmwaredroid/payload_dumper_go/payload-dumper-go"
+
 
 #####################################
 # Install python dependencies       #
 #####################################
-USER www
 
-RUN --mount=type=cache,target=/var/www/tmp/.cache \
-    pip install -r /var/www/requirements/requirements_extractor.txt
+RUN pip install -r /var/www/requirements/requirements_extractor.txt
 
 RUN --mount=type=cache,target=/var/www/tmp/.cache \
     pip install -r /var/www/requirements/requirements_backend.txt
