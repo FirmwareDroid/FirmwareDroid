@@ -8,6 +8,7 @@ import logging
 import gzip
 import shutil
 
+
 def extract_zip(zip_file_path, destination_dir):
     """
     Extract the file from a *.zip file.
@@ -22,6 +23,15 @@ def extract_zip(zip_file_path, destination_dir):
     try:
         with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
             zip_ref.extractall(destination_dir)
+
+        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+            extracted_files = zip_ref.namelist()
+            for file in extracted_files:
+                if not os.path.exists(os.path.join(destination_dir, file)):
+                    is_success = False
+                    logging.warning(f"File not found after extraction: {file}")
+                    break
+        logging.info(f"Extracted {len(extracted_files)} files from {zip_file_path} to {destination_dir}")
     except Exception as e:
         is_success = False
         logging.warning(str(e))

@@ -113,6 +113,7 @@ services:
     env_file:
       - ./.env
     command: rqworker --logging_level INFO --name extractor-worker-high-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
+    privileged: true
     networks:
       - backend
 

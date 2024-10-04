@@ -4,34 +4,41 @@
 import logging
 import os
 import re
+import shutil
+import tempfile
 import threading
+from extractor.app_extractor import app_extractor
+from extractor.bin_extractor import payload_dumper_extractor
+from extractor.bin_extractor.payload_dumper_go import payload_dumper_go_extractor
 from extractor.ext4_extractor import extract_dat, extract_simg_ext4, extract_ext4
-from extractor.bin_extractor.bin_extractor import extract_bin
 from extractor.nb0_extractor import extract_nb0
 from extractor.pac_extractor import extract_pac
+from extractor.srlabs_extractor import ssrlabs_extractor
 from extractor.unblob_extractor import unblob_extract
 from extractor.unzipper import extract_tar, extract_zip, extract_gz
 from extractor.lz4_extractor import extract_lz4
 from extractor.brotli_extractor import extract_brotli
 from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
+from firmware_handler.ext4_mount_util import run_simg2img_convert
 
 EXTRACTION_SEMAPHORE = threading.Semaphore(20)
 MAX_EXTRACTION_DEPTH = 10
-IMG_FILE_TYPE_REGEX = r".(img|dat)$"
-SUPPORTED_FILE_TYPE_REGEX = r"(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz|app|rar)$"
+SUPPORTED_FILE_TYPE_REGEX = r"(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz|app|rar|ozip|APP)$"
 
 EXTRACT_FUNCTION_MAP_DICT = {
-    ".zip": extract_zip,
-    ".tar": extract_tar,
-    ".tgz": extract_tar,
-    ".gz": extract_gz,
-    ".md5": extract_tar,
-    ".lz4": extract_lz4,
-    ".pac": extract_pac,
-    ".nb0": extract_nb0,
-    ".bin": extract_bin,
-    ".br": extract_brotli,
-    ".dat": extract_dat,
+    ".zip": [extract_zip],
+    ".tar": [extract_tar],
+    ".tgz": [extract_tar],
+    ".gz": [extract_gz],
+    ".md5": [extract_tar],
+    ".lz4": [extract_lz4],
+    ".pac": [extract_pac],
+    ".nb0": [extract_nb0],
+    ".bin": [payload_dumper_go_extractor, payload_dumper_extractor],
+    ".br": [extract_brotli],
+    ".dat": [extract_dat, ssrlabs_extractor],
+    ".ozip": [ssrlabs_extractor],
+    ".app": [app_extractor],
 }
 
 
@@ -49,6 +56,11 @@ def get_file_size_mb(file_path):
 
 
 def get_file_list(destination_dir):
+    logging.info(f"Checking files in directory: {destination_dir}")
+    if not os.path.exists(destination_dir):
+        logging.error(f"Directory does not exist: {destination_dir}")
+        return []
+
     file_list = []
     for root, dirs, files in os.walk(destination_dir):
         for file in files:
@@ -69,7 +81,7 @@ def match_filename_against_patterns(filename, patterns_dict):
     """
     for pattern_list in patterns_dict.values():
         for pattern in pattern_list:
-            file_extension = os.path.splitext(filename)[1]
+            file_extension = os.path.splitext(filename)[1].lower()
             if re.search(pattern, filename) and not re.search(SUPPORTED_FILE_TYPE_REGEX, file_extension):
                 logging.info(f"Matched pattern: {pattern} for file: {filename}")
                 return True
@@ -133,7 +145,7 @@ def extract_first_layer(firmware_archive_file_path, destination_dir):
                                       destination_dir,
                                       delete_compressed_file=False,
                                       unblob_depth=1)
-    logging.info(f"Extracted files count: {len(file_list)}: {file_list}")
+    logging.info(f"Extracted files count: {len(file_list)}")
     file_list = filter_supported_files(file_list)
     logging.info(f"Filtered files count: {len(file_list)}: {file_list}")
     max_depth = 0
@@ -173,13 +185,27 @@ def extract_second_layer(firmware_archive_file_path, destination_dir):
     return extracted_file_abs_path_list
 
 
+def attempt_sparse_img_convertion(android_sparse_img_path, destination_dir):
+    is_success = False
+    raw_image_path = None
+    try:
+        raw_image_path = run_simg2img_convert(android_sparse_img_path, destination_dir)
+        is_success = True
+    except Exception as err:
+        logging.debug(err)
+    return is_success, raw_image_path
+
+
 def extract_image_file(image_path, extract_dir_path):
+    logging.info(f"Attempt to extract image: {image_path} to: {extract_dir_path}")
     if extract_simg_ext4(image_path, extract_dir_path):
         logging.debug("Image extraction successful with simg_ext4extractor")
     elif extract_ext4(image_path, extract_dir_path):
         logging.debug("Image extraction successful with ext4extractor")
-    elif unblob_extract(image_path, extract_dir_path):
+    elif unblob_extract(image_path, extract_dir_path, depth=25):
         logging.debug("Image extraction successful with unblob extraction suite")
+    elif ssrlabs_extractor(image_path, extract_dir_path, output_as_tar=False):
+        logging.debug("Image extraction successful with srlabs extractor")
     else:
         raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
 
@@ -201,6 +227,7 @@ def extract_list_of_files(file_path_list,
     extracted_files_path_list = []
     for file_path in file_path_list:
         if not os.path.exists(file_path):
+            logging.warning(f"File not found: {file_path}")
             continue
         if os.path.isfile(file_path):
             with EXTRACTION_SEMAPHORE:
@@ -223,23 +250,47 @@ def process_file(current_path,
                  destination_dir,
                  unblob_depth,
                  delete_compressed_file):
-    file_extension = os.path.splitext(current_path.lower())[1]
+    file_extension = os.path.splitext(current_path.lower())[1].lower()
     is_success = False
     if file_extension in EXTRACT_FUNCTION_MAP_DICT.keys():
-        is_success = EXTRACT_FUNCTION_MAP_DICT[file_extension](current_path, destination_dir)
+        for extraction_function in EXTRACT_FUNCTION_MAP_DICT[file_extension]:
+            temp_extract_dir = tempfile.mkdtemp(dir=destination_dir,
+                                                prefix=f"{extraction_function.__name__}_")
+            logging.info(f"Extracting with: {extraction_function.__name__} {current_path} {temp_extract_dir} ")
+            is_success = extraction_function(current_path, temp_extract_dir)
+            if is_success:
+                break
     is_unblob_success = False
     if not is_success:
-        is_unblob_success = unblob_extract(current_path, destination_dir, unblob_depth)
+        temp_extract_dir = tempfile.mkdtemp(dir=destination_dir)
+        logging.info(f"Extracting with unblob: {current_path} {temp_extract_dir} ")
+        is_unblob_success = unblob_extract(current_path, temp_extract_dir, unblob_depth)
 
     if delete_compressed_file and (is_success or is_unblob_success):
+        logging.info(f"Success extracting. Deleting compressed file: {current_path}")
         delete_file_safely(current_path)
+    elif not is_success and not is_unblob_success:
+        logging.warning(f"Extraction failed for: {current_path}")
+        new_file_name = os.path.basename(current_path) + ".failed"
+        shutil.move(current_path, new_file_name)
+    elif is_success or is_unblob_success:
+        logging.info(f"Extraction successful for: {current_path}")
+    else:
+        logging.warning(f"Extraction failed for: {current_path}")
+        new_file_name = os.path.basename(current_path) + ".failed"
+        shutil.move(current_path, new_file_name)
 
 
 def process_single_file_path(file_path,
                              destination_dir,
                              delete_compressed_file,
                              unblob_depth=1):
+    file_path = os.path.abspath(file_path)
+    destination_dir = os.path.abspath(destination_dir)
     logging.info(f"Extracting: {file_path}, destination: {destination_dir}, delete: {delete_compressed_file}")
     process_file(file_path, destination_dir, unblob_depth, delete_compressed_file)
     logging.info(f"Extraction finished for: {file_path}")
-    return get_file_list(destination_dir)
+
+    extracted_file_list = get_file_list(destination_dir)
+    logging.info(f"Extracted files: {len(extracted_file_list)}")
+    return extracted_file_list

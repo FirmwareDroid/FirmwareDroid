@@ -4,7 +4,7 @@
 import logging
 import tempfile
 from extractor.dat2img_converter import convert_dat2img
-from firmware_handler.ext4_mount_util import simg2img_convert_ext4
+from firmware_handler.ext4_mount_util import run_simg2img_convert
 
 
 def extract_dat(dat_file_path, extract_destination_folder):
@@ -38,7 +38,7 @@ def extract_simg_ext4(simg_ext4_file_path, extract_destination_folder):
     could_extract_data = False
     try:
         temp_dir = tempfile.TemporaryDirectory(dir=extract_destination_folder)
-        ext4_image_path = simg2img_convert_ext4(simg_ext4_file_path, temp_dir.name)
+        ext4_image_path = run_simg2img_convert(simg_ext4_file_path, temp_dir.name)
         if extract_ext4(ext4_image_path, extract_destination_folder):
             could_extract_data = True
     except Exception as err:

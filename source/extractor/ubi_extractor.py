@@ -17,9 +17,11 @@
 #############################################################
 import logging
 import os
+from warnings import deprecated
+
 from utils.file_utils.file_util import create_directories
 
-
+@deprecated
 def extract_ubi_image(img_file_path, output_path):
     """
     Extracts an UBI image file to the given output path.

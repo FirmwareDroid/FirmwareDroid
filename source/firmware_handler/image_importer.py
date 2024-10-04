@@ -18,6 +18,7 @@ def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
     :return: list(class:'FirmwareFile') - potential image files that match the regex pattern.
 
     """
+    potential_image_files = []
     for firmware_file in firmware_file_list:
         filename = firmware_file.name.lower()
         for pattern in image_filename_pattern_list:
@@ -26,9 +27,11 @@ def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
                     and not filename.startswith("._")):
                 if "vbmeta" not in filename and "patch" not in filename:
                     logging.debug(f"Found potential image file:{firmware_file.name} for pattern: {pattern}")
-                    return firmware_file
-    raise ValueError(f"Continuing. Could not find any image file in the filelist based on the patterns: "
-                     f"{' '.join(image_filename_pattern_list)}")
+                    potential_image_files.append(firmware_file)
+    if not potential_image_files:
+        raise ValueError(f"Could not find image file in the filelist based on the patterns: "
+                         f"{' '.join(image_filename_pattern_list)}")
+    return potential_image_files
 
 
 def create_abs_image_file_path(image_file, cache_temp_file_dir_path):
