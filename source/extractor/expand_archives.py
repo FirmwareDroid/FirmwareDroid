@@ -197,6 +197,8 @@ def attempt_sparse_img_convertion(android_sparse_img_path, destination_dir):
 
 
 def extract_image_file(image_path, extract_dir_path):
+    image_path = os.path.abspath(image_path)
+    extract_dir_path = os.path.abspath(extract_dir_path)
     logging.info(f"Attempt to extract image: {image_path} to: {extract_dir_path}")
     if extract_simg_ext4(image_path, extract_dir_path):
         logging.debug("Image extraction successful with simg_ext4extractor")
