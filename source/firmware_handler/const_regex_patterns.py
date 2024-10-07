@@ -38,8 +38,8 @@ PVMFW_IMG_PATTERN_LIST = ["pvmfw[.]img", "pvmfw[.]*(img|rfs|bin|img.ext4|ext4.im
 VBMETA_IMG_PATTERN_LIST = ["vbmeta[.]img", "vbmeta[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 VBMETA_SYSTEM_IMG_PATTERN_LIST = ["vbmeta_system[.]img", "vbmeta_system[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 
-EXT_IMAGE_PATTERNS_DICT = {"system": SYSTEM_IMG_PATTERN_LIST,
-                           "super": SUPER_IMG_PATTERN_LIST,
+EXT_IMAGE_PATTERNS_DICT = {"super": SUPER_IMG_PATTERN_LIST,
+                           "system": SYSTEM_IMG_PATTERN_LIST,
                            "system_other": SYSTEM_OTHER_IMG_PATTERN_LIST,
                            "system_ext": SYSTEM_EXT_IMG_PATTERN_LIST,
                            "vendor": VENDOR_IMG_PATTERN_LIST,
