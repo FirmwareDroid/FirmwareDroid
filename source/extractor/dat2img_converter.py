@@ -45,7 +45,7 @@ def convert_dat2img(dat_file_path, destination_path):
             if patch_file_path is not None:
                 patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file_path)
         else:
-            raise AssertionError("Could not find *.file.list")
+            raise AssertionError("Could not find *.transfer.list")
     else:
         raise AssertionError("Skip and continue. Ignore specific dat file.")
     return img_file_path
@@ -138,8 +138,11 @@ def rangeset(src):
 def parse_transfer_list_file(transfer_list_file_path):
     """
     Parse system.transfer.file content.
-    :param transfer_list_file_path:
+
+    :param transfer_list_file_path: str - path to the transfer list file.
+
     :return: int, int, list(str) - version, number of new blocks, list of commands
+
     """
     trans_list = open(transfer_list_file_path, 'r')
 

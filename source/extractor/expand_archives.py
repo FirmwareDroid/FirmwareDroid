@@ -8,13 +8,11 @@ import shutil
 import tempfile
 import threading
 from extractor.app_extractor import app_extractor
-from extractor.bin_extractor import payload_dumper_extractor
 from extractor.bin_extractor.payload_dumper_go import payload_dumper_go_extractor
 from extractor.ext4_extractor import extract_dat, extract_simg_ext4, extract_ext4
 from extractor.lpunpack_extractor import lpunpack_extractor
 from extractor.nb0_extractor import extract_nb0
 from extractor.pac_extractor import extract_pac
-from extractor.srlabs_extractor import ssrlabs_extractor
 from extractor.unblob_extractor import unblob_extract
 from extractor.unzipper import extract_tar, extract_zip, extract_gz
 from extractor.lz4_extractor import extract_lz4
@@ -35,10 +33,9 @@ EXTRACT_FUNCTION_MAP_DICT = {
     ".lz4": [extract_lz4],
     ".pac": [extract_pac],
     ".nb0": [extract_nb0],
-    ".bin": [payload_dumper_go_extractor], #payload_dumper_extractor
+    ".bin": [payload_dumper_go_extractor],
     ".br": [extract_brotli],
-    ".dat": [extract_dat, ssrlabs_extractor],
-    ".ozip": [ssrlabs_extractor],
+    ".dat": [extract_dat],
     ".app": [app_extractor],
 }
 
@@ -148,7 +145,7 @@ def extract_first_layer(firmware_archive_file_path, destination_dir):
                                       unblob_depth=1)
     logging.info(f"Extracted files count: {len(file_list)}")
     file_list = filter_supported_files(file_list)
-    logging.info(f"Filtered files count: {len(file_list)}: {file_list}")
+    logging.info(f"Filtered files count: {len(file_list)}")
     max_depth = 0
     while max_depth < MAX_EXTRACTION_DEPTH and has_extracted_all_supported_files(file_list) is False:
         try:
@@ -223,8 +220,6 @@ def extract_image_file(image_path, extract_dir_path):
         logging.debug("Image extraction successful with ext4extractor")
     elif unblob_extract(image_path, extract_dir_path, depth=25):
         logging.debug("Image extraction successful with unblob extraction suite")
-    elif ssrlabs_extractor(image_path, extract_dir_path, output_as_tar=False):
-        logging.debug("Image extraction successful with srlabs extractor")
     else:
         raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
 
