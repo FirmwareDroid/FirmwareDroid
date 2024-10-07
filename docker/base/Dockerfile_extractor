@@ -24,12 +24,11 @@ RUN DEBIAN_FRONTEND=noninteractive apt install -y android-sdk-libsparse-utils e2
 #####################################
 RUN git clone https://github.com/srlabs/extractor.git /opt/firmwaredroid/srlabs_extractor
 RUN python -m venv /opt/firmwaredroid/srlabs_extractor/venv
-RUN . /opt/firmwaredroid/srlabs_extractor/venv/bin/activate \
-    && pip install -r requirements.txt
+RUN /opt/firmwaredroid/srlabs_extractor/venv/bin/python3 -m pip install -r requirements.txt
 
 USER root
 RUN . /opt/firmwaredroid/srlabs_extractor/venv/bin/activate \
-    && apt install -y android-sdk-libsparse-utils liblz4-tool brotli p7zip-full zip rsync zlib1g-dev
+    && apt install -y android-sdk-libsparse-utils liblz4-tool brotli p7zip-full zip rsync zlib1g-dev libffi-dev
 USER www
 
 #####################################
@@ -45,6 +44,12 @@ RUN wget https://github.com/ssut/payload-dumper-go/releases/download/1.2.2/paylo
 RUN tar -xvf /opt/firmwaredroid/payload_dumper-go/payload-dumper-go_1.2.2_linux_amd64.tar.gz -C /opt/firmwaredroid/payload_dumper-go/
 RUN chmod +x /opt/firmwaredroid/payload_dumper-go/payload-dumper-go
 ENV PATH="$PATH:/opt/firmwaredroid/payload_dumper_go/payload-dumper-go"
+
+#####################################
+# Install lpunpack                  #
+#####################################
+RUN git clone https://github.com/FirmwareDroid/lpunpack.git /opt/firmwaredroid/lpunpack
+
 
 
 #####################################

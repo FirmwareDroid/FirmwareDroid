@@ -10,9 +10,6 @@ import os
 import shutil
 from queue import Empty
 from pathlib import Path
-
-from rq.dummy import sleep
-
 from hashing.fuzzy_hash_creator import add_fuzzy_hashes
 from model import AndroidFirmware, FirmwareFile, AndroidApp
 from threading import Thread

@@ -11,6 +11,7 @@ from extractor.app_extractor import app_extractor
 from extractor.bin_extractor import payload_dumper_extractor
 from extractor.bin_extractor.payload_dumper_go import payload_dumper_go_extractor
 from extractor.ext4_extractor import extract_dat, extract_simg_ext4, extract_ext4
+from extractor.lpunpack_extractor import lpunpack_extractor
 from extractor.nb0_extractor import extract_nb0
 from extractor.pac_extractor import extract_pac
 from extractor.srlabs_extractor import ssrlabs_extractor
@@ -34,7 +35,7 @@ EXTRACT_FUNCTION_MAP_DICT = {
     ".lz4": [extract_lz4],
     ".pac": [extract_pac],
     ".nb0": [extract_nb0],
-    ".bin": [payload_dumper_go_extractor, payload_dumper_extractor],
+    ".bin": [payload_dumper_go_extractor], #payload_dumper_extractor
     ".br": [extract_brotli],
     ".dat": [extract_dat, ssrlabs_extractor],
     ".ozip": [ssrlabs_extractor],
@@ -178,9 +179,25 @@ def get_raw_image(file_path_list):
     return raw_image_path
 
 
+def find_img_files(file_path_list):
+    img_file_list = []
+    for file_path in file_path_list:
+        if os.path.basename(file_path).endswith(".img"):
+            file_path = os.path.abspath(file_path)
+            img_file_list.append(file_path)
+    return img_file_list
+
+
 def extract_second_layer(firmware_archive_file_path, destination_dir):
     logging.info(f"Extracting all layers of the firmware archive: {firmware_archive_file_path}")
-    extract_image_file(firmware_archive_file_path, destination_dir)
+
+    if "super" in firmware_archive_file_path:
+        if lpunpack_extractor(firmware_archive_file_path, destination_dir):
+            img_file_path_list = find_img_files(destination_dir)
+            for img_file_path in img_file_path_list:
+                extract_image_file(img_file_path, destination_dir)
+    else:
+        extract_image_file(firmware_archive_file_path, destination_dir)
     extracted_file_abs_path_list = get_file_list(destination_dir)
     return extracted_file_abs_path_list
 
@@ -197,6 +214,8 @@ def attempt_sparse_img_convertion(android_sparse_img_path, destination_dir):
 
 
 def extract_image_file(image_path, extract_dir_path):
+    image_path = os.path.abspath(image_path)
+    extract_dir_path = os.path.abspath(extract_dir_path)
     logging.info(f"Attempt to extract image: {image_path} to: {extract_dir_path}")
     if extract_simg_ext4(image_path, extract_dir_path):
         logging.debug("Image extraction successful with simg_ext4extractor")

@@ -28,6 +28,7 @@ def convert_dat2img(dat_file_path, destination_path):
     :return: str - path to the converted .img file.
 
     """
+    logging.info(f"Convert dat: {dat_file_path} to img: {destination_path}")
     if not dat_file_path.endswith("dat"):
         raise AssertionError(f"Only .dat file-type supported. {dat_file_path}")
 
@@ -44,7 +45,7 @@ def convert_dat2img(dat_file_path, destination_path):
             if patch_file_path is not None:
                 patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file_path)
         else:
-            raise AssertionError("Could not find system.file.list")
+            raise AssertionError("Could not find *.file.list")
     else:
         raise AssertionError("Skip and continue. Ignore specific dat file.")
     return img_file_path
@@ -105,6 +106,10 @@ def patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file
         dat_file_path = shlex.quote(str(dat_file_path))
         img_file_path = shlex.quote(str(img_file_path))
         # TODO Remove constant path and tool
+
+        if not os.path.exists(PATCH_TOOL_PATH_2022):
+            logging.error(f"Path to patch tool not found: {PATCH_TOOL_PATH_2022}")
+            return
         response = subprocess.run([PATCH_TOOL_PATH_2022,
                                    img_file_path,
                                    transfer_file_path,
