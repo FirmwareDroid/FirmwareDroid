@@ -41,6 +41,7 @@ Some of the tools and features included are:
   * [Payload-Dumper](https://github.com/vm03/payload_dumper)
   * [Payload-Dumper-Go](https://github.com/ssut/payload-dumper-go)
   * [lpunpack](https://github.com/LonelyFool/lpunpack_and_lpmake/tree/android11)
+  * [imgpatchtools](https://github.com/erfanoabdi/imgpatchtools)
 * Miscellaneous:
   * AndroidManifest Parsing
 * Dynamic Analysis:

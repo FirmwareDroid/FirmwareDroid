@@ -3,6 +3,7 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 import os
+import re
 import shlex
 import subprocess
 from pathlib import Path
@@ -11,7 +12,6 @@ from firmware_handler.const_regex_patterns import SYSTEM_TRANSFER_PATTERN_LIST, 
     SYSTEM_EXT_TRANSFER_PATTERN_LIST, SYSTEM_OTHER_TRANSFER_PATTERN_LIST, VENDOR_DAT_PATCH_PATTERN_LIST, \
     OEM_DAT_PATCH_PATTERN_LIST, USERDATA_DAT_PATCH_PATTERN_LIST, PRODUCT_DAT_PATCH_PATTERN_LIST, \
     SYSTEM_EXT_DAT_PATCH_PATTERN_LIST, SYSTEM_OTHER_DAT_PATCH_PATTERN_LIST, SYSTEM_DAT_PATCH_PATTERN_LIST
-from firmware_handler.firmware_file_search import find_file_path_by_regex
 
 
 PATCH_TOOL_PATH_V03 = "./tools/imgpatchtool/IMG_Patch_Tools_0.3/BlockImageUpdate"
@@ -29,7 +29,7 @@ def convert_dat2img(dat_file_path, destination_path):
 
     """
     logging.info(f"Convert dat: {dat_file_path} to img: {destination_path}")
-    if not dat_file_path.endswith("dat"):
+    if not dat_file_path.endswith("dat") and dat_file_path.endswith("patch.dat"):
         raise AssertionError(f"Only .dat file-type supported. {dat_file_path}")
 
     path = Path(dat_file_path)
@@ -42,10 +42,10 @@ def convert_dat2img(dat_file_path, destination_path):
             img_file_path = os.path.join(destination_path, out_filename)
             start_dat_conversion(dat_file_path, transfer_file_path, img_file_path)
             logging.info(f"Converted dat: {dat_file_path} to img: {img_file_path}")
-            if patch_file_path is not None:
+            if patch_file_path is not None and os.path.getsize(patch_file_path) > 0:
                 patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file_path)
         else:
-            raise AssertionError("Could not find *.file.list")
+            raise AssertionError("Could not find *.transfer.list")
     else:
         raise AssertionError("Skip and continue. Ignore specific dat file.")
     return img_file_path
@@ -83,8 +83,32 @@ def search_transfer_list(search_path, filename):
 
     if transfer_pattern_list is None:
         raise RuntimeError(f"Unknown transfer list for partition: {filename}")
+
     return find_file_path_by_regex(search_path, transfer_pattern_list), find_file_path_by_regex(search_path,
                                                                                                 patch_pattern_list)
+
+
+def find_file_path_by_regex(search_path, regex_list):
+    """
+    Finds the path of the given filename in the search path.
+
+    :param search_path: str - path to search through (includes sub dirs)
+    :param regex_list: list(str) - list of regex patterns for matching a filename.
+    :return: str - first filepath that matches a filename to the given regex list.
+    """
+    logging.info(f"Dat-Extract: Searching in path: {search_path}")
+    for regex_string in regex_list:
+        regex = re.compile(regex_string)
+        logging.info(f"Dat-Extract: Using regex pattern: {regex_string}")
+        for root, dirs, files in os.walk(search_path):
+            for filename in files:
+                #logging.info(f"Checking file: {filename}")
+                if re.match(regex, filename):
+                    matched_path = os.path.join(root, filename)
+                    logging.info(f"Dat-Extract: Matched file: {matched_path}")
+                    return matched_path
+    logging.warning("No matching file found.")
+    return None
 
 
 def patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file_path):
@@ -98,14 +122,14 @@ def patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file
 
 
     """
-    logging.info(f"Patch file {img_file_path} \nwith {dat_file_path} \nand {transfer_file_path} \nand "
+    logging.info(f"Patch with BlockImageUpdate file {img_file_path} \nwith {dat_file_path} \nand {transfer_file_path} "
+                 f"\nand "
                  f"{patch_file_path}")
     try:
         transfer_file_path = shlex.quote(str(transfer_file_path))
         patch_file_path = shlex.quote(str(patch_file_path))
         dat_file_path = shlex.quote(str(dat_file_path))
         img_file_path = shlex.quote(str(img_file_path))
-        # TODO Remove constant path and tool
 
         if not os.path.exists(PATCH_TOOL_PATH_2022):
             logging.error(f"Path to patch tool not found: {PATCH_TOOL_PATH_2022}")
@@ -114,10 +138,16 @@ def patch_dat_image(dat_file_path, img_file_path, transfer_file_path, patch_file
                                    img_file_path,
                                    transfer_file_path,
                                    dat_file_path,
-                                   patch_file_path], timeout=900)
+                                   patch_file_path],
+                                  timeout=60 * 60,
+                                  capture_output=True,
+                                  text=True)
         response.check_returncode()
+        logging.info(f"stdout: {response.stdout}")
         logging.info(f"BlockImageUpdate Patch successful: {img_file_path}")
     except subprocess.CalledProcessError as err:
+        logging.error(f"Command '{err.cmd}' returned non-zero exit status {err.returncode}.")
+        logging.error(f"Error output: {err.stderr}")
         raise OSError(err)
 
 
@@ -138,8 +168,11 @@ def rangeset(src):
 def parse_transfer_list_file(transfer_list_file_path):
     """
     Parse system.transfer.file content.
-    :param transfer_list_file_path:
+
+    :param transfer_list_file_path: str - path to the transfer list file.
+
     :return: int, int, list(str) - version, number of new blocks, list of commands
+
     """
     trans_list = open(transfer_list_file_path, 'r')
 

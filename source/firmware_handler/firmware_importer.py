@@ -469,12 +469,13 @@ def create_partition_firmware_files(archive_firmware_file_list,
             potential_image_files = find_image_firmware_file(archive_firmware_file_list, file_pattern_list)
             extraction_success = False
             for image_firmware_file in potential_image_files:
+                temp_subfolder = tempfile.mkdtemp(dir=temp_dir_path, prefix=f"{partition_name}_")
                 try:
                     image_absolute_path = create_abs_image_file_path(image_firmware_file, extracted_archive_dir_path)
-                    temp_subfolder = tempfile.mkdtemp(dir=temp_dir_path, prefix=f"{partition_name}_")
                     extract_second_layer(image_absolute_path, temp_subfolder)
                     extraction_success = True
                 except (RuntimeError, ValueError) as err:
+                    shutil.rmtree(temp_subfolder, ignore_errors=True)
                     logging.warning(err)
             if extraction_success:
                 partition_firmware_files = create_firmware_file_list(temp_dir_path, partition_name)
