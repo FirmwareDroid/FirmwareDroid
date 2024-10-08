@@ -10,7 +10,7 @@ USER root
 #####################################
 RUN apt update
 RUN apt install -y pkgconf android-sdk-libsparse-utils liblzo2-dev fuse brotli libmagic1 cmake \
-    exfat-fuse e2fsprogs f2fs-tools fuse dosfstools erofs-utils wget
+    exfat-fuse e2fsprogs f2fs-tools fuse dosfstools erofs-utils wget xxd
 
 #####################################
 # Install unblob dependencies    #

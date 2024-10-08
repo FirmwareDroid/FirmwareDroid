@@ -5,6 +5,7 @@ import subprocess
 
 PATH_PAYLOAD_DUMPER_GO = "/opt/firmwaredroid/payload_dumper-go/payload-dumper-go"
 
+
 def payload_dumper_go_extractor(source_file_path, destination_dir):
     """
     Start the payload dumper to extract .bin firmware.
