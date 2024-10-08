@@ -23,6 +23,7 @@ from firmware_handler.ext4_mount_util import run_simg2img_convert
 EXTRACTION_SEMAPHORE = threading.Semaphore(20)
 MAX_EXTRACTION_DEPTH = 10
 SUPPORTED_FILE_TYPE_REGEX = r"(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz|app|rar|ozip|APP)$"
+SKIP_FILE_PATTERN_LIST = ["[.]new[.]dat$", "[.]patch[.]dat$"]
 
 EXTRACT_FUNCTION_MAP_DICT = {
     ".zip": [extract_zip],
@@ -42,8 +43,10 @@ EXTRACT_FUNCTION_MAP_DICT = {
 
 def delete_file_safely(file_path):
     try:
+        file_path = os.path.abspath(file_path)
         os.remove(file_path)
     except FileNotFoundError:
+        logging.error(f"Error deleting - File not found: {file_path}")
         pass
 
 
@@ -64,7 +67,8 @@ def get_file_list(destination_dir):
         for file in files:
             file_path = str(os.path.join(root, file))
             file_path_abs = os.path.abspath(file_path)
-            file_list.append(file_path_abs)
+            if os.path.exists(file_path_abs):
+                file_list.append(file_path_abs)
     return file_list
 
 
@@ -186,6 +190,8 @@ def find_img_files(file_path_list):
 
 
 def extract_second_layer(firmware_archive_file_path, destination_dir):
+    firmware_archive_file_path = os.path.abspath(firmware_archive_file_path)
+    destination_dir = os.path.abspath(destination_dir)
     logging.info(f"Extracting all layers of the firmware archive: {firmware_archive_file_path}")
 
     if "super" in firmware_archive_file_path:
@@ -241,7 +247,7 @@ def extract_list_of_files(file_path_list,
     extracted_files_path_list = []
     for file_path in file_path_list:
         if not os.path.exists(file_path):
-            logging.warning(f"File not found: {file_path}")
+            logging.error(f"File does not exist: {file_path}")
             continue
         if os.path.isfile(file_path):
             with EXTRACTION_SEMAPHORE:
@@ -249,7 +255,10 @@ def extract_list_of_files(file_path_list,
                                                                             destination_dir,
                                                                             delete_compressed_file,
                                                                             unblob_depth)
-                extracted_files_path_list.extend(extracted_files_for_current_path)
+                for extract_file_path in extracted_files_for_current_path:
+                    if os.path.exists(extract_file_path):
+                        extracted_files_path_list.append(extract_file_path)
+
     return extracted_files_path_list
 
 
@@ -260,22 +269,49 @@ def process_directory(current_path, queue, failed_extractions, processed_files):
             queue.append(next_path)
 
 
+def move_all_files_and_folders(src_dir, dest_dir):
+    """
+    Move all files and folders from src_dir to dest_dir.
+
+    :param src_dir: str - path to the source directory.
+    :param dest_dir: str - path to the destination directory.
+    """
+    if not os.path.exists(dest_dir):
+        os.makedirs(dest_dir)
+
+    for item in os.listdir(src_dir):
+        src_item = os.path.join(src_dir, item)
+        dest_item = os.path.join(dest_dir, item)
+        logging.debug(f"Moving: {src_item} to {dest_item}")
+        try:
+            shutil.move(src_item, dest_item)
+            if not os.path.exists(dest_item):
+                logging.error(f"Move failed: {src_item} to {dest_item}")
+        except Exception as err:
+            logging.error(err)
+
+
 def process_file(current_path,
                  destination_dir,
                  unblob_depth,
                  delete_compressed_file):
+    filename = os.path.basename(current_path)
     file_extension = os.path.splitext(current_path.lower())[1].lower()
     is_success = False
     if file_extension in EXTRACT_FUNCTION_MAP_DICT.keys():
         for extraction_function in EXTRACT_FUNCTION_MAP_DICT[file_extension]:
             temp_extract_dir = tempfile.mkdtemp(dir=destination_dir,
                                                 prefix=f"{extraction_function.__name__}_")
-            logging.info(f"Extracting with: {extraction_function.__name__} {current_path} {temp_extract_dir} ")
-            is_success = extraction_function(current_path, temp_extract_dir)
-            if is_success:
-                break
+            try:
+                logging.info(f"Extracting with: {extraction_function.__name__} {current_path} {temp_extract_dir} ")
+                is_success = extraction_function(current_path, temp_extract_dir)
+                if is_success:
+                    move_all_files_and_folders(temp_extract_dir, destination_dir)
+                    break
+            finally:
+                shutil.rmtree(temp_extract_dir, ignore_errors=True)
     is_unblob_success = False
-    if not is_success:
+    if not is_success and any([filename.endswith(pattern) for pattern in SKIP_FILE_PATTERN_LIST]):
         temp_extract_dir = tempfile.mkdtemp(dir=destination_dir)
         logging.info(f"Extracting with unblob: {current_path} {temp_extract_dir} ")
         is_unblob_success = unblob_extract(current_path, temp_extract_dir, unblob_depth)

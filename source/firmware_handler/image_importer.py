@@ -31,6 +31,7 @@ def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
     if not potential_image_files:
         raise ValueError(f"Could not find image file in the filelist based on the patterns: "
                          f"{' '.join(image_filename_pattern_list)}")
+    potential_image_files = list(set(potential_image_files))
     return potential_image_files
 
 

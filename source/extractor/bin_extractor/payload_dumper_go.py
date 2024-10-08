@@ -24,7 +24,7 @@ def payload_dumper_go_extractor(source_file_path, destination_dir):
         if not os.path.exists(PATH_PAYLOAD_DUMPER_GO):
             logging.error(f"Path to payload dumper go not found: {PATH_PAYLOAD_DUMPER_GO}")
             return False
-        command = [PATH_PAYLOAD_DUMPER_GO, source_file_path, "-output", destination_dir]
+        command = [PATH_PAYLOAD_DUMPER_GO, source_file_path, "-o", destination_dir]
         response = subprocess.run(command,
                                   capture_output=True,
                                   text=True,

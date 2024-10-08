@@ -44,21 +44,7 @@ def find_file_path(search_path, search_name):
                 return os.path.join(root, filename)
 
 
-def find_file_path_by_regex(search_path, regex_list):
-    """
-    Finds the path of the given filename in the search path.
 
-    :param search_path: str - path to search through (includes sub dirs)
-    :param regex_list: list(str) - list of regex patterns for matching a filename.
-    :return: str - first filepath that matches a filename to the given regex list.
-
-    """
-    for regex_string in regex_list:
-        regex = re.compile(regex_string)
-        for root, dirs, files in os.walk(search_path):
-            for filename in files:
-                if re.match(regex, filename):
-                    return os.path.join(root, filename)
 
 
 def get_firmware_file_list_by_md5(firmware_file_list, md5):
