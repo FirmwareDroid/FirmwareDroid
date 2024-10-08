@@ -321,14 +321,14 @@ def process_file(current_path,
         delete_file_safely(current_path)
     elif not is_success and not is_unblob_success:
         logging.warning(f"Extraction failed for: {current_path}")
-        new_file_name = os.path.basename(current_path) + ".failed"
-        shutil.move(current_path, new_file_name)
+        new_file_location = current_path + ".failed"
+        shutil.move(current_path, new_file_location)
     elif is_success or is_unblob_success:
         logging.info(f"Extraction successful for: {current_path}")
     else:
         logging.warning(f"Extraction failed for: {current_path}")
-        new_file_name = os.path.basename(current_path) + ".failed"
-        shutil.move(current_path, new_file_name)
+        new_file_location = current_path + ".failed"
+        shutil.move(current_path, new_file_location)
 
 
 def process_single_file_path(file_path,
