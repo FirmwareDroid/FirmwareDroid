@@ -9,7 +9,9 @@ import tempfile
 import threading
 from extractor.app_extractor import app_extractor
 from extractor.bin_extractor.payload_dumper_go import payload_dumper_go_extractor
+from extractor.erofs_extractor import erofs_extract
 from extractor.ext4_extractor import extract_dat, extract_simg_ext4, extract_ext4
+from extractor.f2fs_extractor import f2fs_extract
 from extractor.lpunpack_extractor import lpunpack_extractor
 from extractor.nb0_extractor import extract_nb0
 from extractor.pac_extractor import extract_pac
@@ -224,6 +226,10 @@ def extract_image_file(image_path, extract_dir_path):
         logging.debug("Image extraction successful with simg_ext4extractor")
     elif extract_ext4(image_path, extract_dir_path):
         logging.debug("Image extraction successful with ext4extractor")
+    elif erofs_extract(image_path, extract_dir_path):
+        logging.debug("Image extraction successful with erofs extractor")
+    elif f2fs_extract(image_path, extract_dir_path):
+        logging.debug("Image extraction successful with f2fs extractor")
     elif unblob_extract(image_path, extract_dir_path, depth=25):
         logging.debug("Image extraction successful with unblob extraction suite")
     else:
@@ -315,6 +321,9 @@ def process_file(current_path,
         temp_extract_dir = tempfile.mkdtemp(dir=destination_dir)
         logging.info(f"Extracting with unblob: {current_path} {temp_extract_dir} ")
         is_unblob_success = unblob_extract(current_path, temp_extract_dir, unblob_depth)
+        if is_unblob_success:
+            move_all_files_and_folders(temp_extract_dir, destination_dir)
+            shutil.rmtree(temp_extract_dir, ignore_errors=True)
 
     if delete_compressed_file and (is_success or is_unblob_success):
         logging.info(f"Success extracting. Deleting compressed file: {current_path}")

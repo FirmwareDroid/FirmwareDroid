@@ -21,13 +21,18 @@ def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
     potential_image_files = []
     for firmware_file in firmware_file_list:
         filename = firmware_file.name.lower()
+        pattern_match_count = 0
         for pattern in image_filename_pattern_list:
+            pattern_match_count += 1
             if (not firmware_file.is_directory
                     and re.search(pattern, filename)
                     and not filename.startswith("._")):
                 if "vbmeta" not in filename and "patch" not in filename:
                     logging.debug(f"Found potential image file:{firmware_file.name} for pattern: {pattern}")
                     potential_image_files.append(firmware_file)
+                    # perfect match
+                    if pattern_match_count < 2:
+                        break
     if not potential_image_files:
         raise ValueError(f"Could not find image file in the filelist based on the patterns: "
                          f"{' '.join(image_filename_pattern_list)}")
@@ -44,7 +49,7 @@ def create_abs_image_file_path(image_file, cache_temp_file_dir_path):
     :return: str - absolute path of the file if it exists or none if not.
 
     """
-    image_absolute_path = os.path.abspath(os.path.join(cache_temp_file_dir_path, image_file.relative_path))
+    image_absolute_path = os.path.abspath(os.path.join(str(cache_temp_file_dir_path), str(image_file.relative_path)))
     if not os.path.exists(image_absolute_path):
         if image_file.relative_path.startswith("."):
             image_absolute_path = cache_temp_file_dir_path \

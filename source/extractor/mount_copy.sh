@@ -1,0 +1,15 @@
+#!/bin/bash
+
+FILE_PATH=$1
+MOUNT_PATH=$2
+EXTRACTED_PATH=$3
+
+echo "MOUNT_PATH: $MOUNT_PATH EXTRACTED_PATH: $EXTRACTED_PATH FILE_PATH: $FILE_PATH"
+
+mount $FILE_PATH $MOUNT_PATH
+cp -r $MOUNT_PATH/* $EXTRACTED_PATH
+chown -R www:www $EXTRACTED_PATH
+umount $MOUNT_PATH
+
+echo "Successfully extracted files from $FILE_PATH to $EXTRACTED_PATH"
+exit 0
