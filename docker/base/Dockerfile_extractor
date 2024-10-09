@@ -18,7 +18,7 @@ RUN apt install -y pkgconf android-sdk-libsparse-utils liblzo2-dev fuse brotli l
 # Add to sudoers file to be able to mount image files
 # TODO: This is a security risk, we should find a better way to do this. Basically, giving root access to www user
 # Wait until a f2fs extractor and a erofs extractor are implemented and then remove this mounting approach
-RUN echo "www ALL=(ALL) NOPASSWD: /bin/mount, /bin/umount, /bin/cp, /bin/chown" > /etc/sudoers.d/mount
+RUN echo "www ALL=(ALL) NOPASSWD: /var/www/source/extractor/mount_copy.sh * * *" > /etc/sudoers.d/mount
 
 #####################################
 # Install unblob dependencies    #

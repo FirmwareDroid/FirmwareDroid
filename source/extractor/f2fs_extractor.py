@@ -1,5 +1,5 @@
 import logging
-from extractor.mount_commands import mount_filesystem, copy_files_and_unmount
+from extractor.mount_commands import copy_files_and_unmount
 
 
 def f2fs_extract(source_file_path, destination_dir):
@@ -13,14 +13,10 @@ def f2fs_extract(source_file_path, destination_dir):
     """
     is_success = False
     try:
-        is_mount_success, mount_point = mount_filesystem(source_file_path,
-                                                         destination_dir,
-                                                         "f2fs"
-                                                         )
-        if is_mount_success:
-            is_copy_success = copy_files_and_unmount(mount_point, destination_dir)
-            if is_copy_success:
-                is_success = True
+        is_copy_success = copy_files_and_unmount(source_file_path, destination_dir)
+        if is_copy_success:
+            logging.info(f"Extracted f2fs file to {destination_dir}")
+            is_success = True
     except Exception as e:
         logging.error(f"Error while extracting f2fs file: {e}")
         is_success = False
