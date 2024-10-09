@@ -10,7 +10,15 @@ USER root
 #####################################
 RUN apt update
 RUN apt install -y pkgconf android-sdk-libsparse-utils liblzo2-dev fuse brotli libmagic1 cmake \
-    exfat-fuse e2fsprogs f2fs-tools fuse dosfstools erofs-utils wget xxd
+    exfat-fuse e2fsprogs f2fs-tools fuse dosfstools erofs-utils wget xxd sudo
+
+#####################################
+# General configuration             #
+#####################################
+# Add to sudoers file to be able to mount image files
+# TODO: This is a security risk, we should find a better way to do this. Basically, giving root access to www user
+# Wait until a f2fs extractor and a erofs extractor are implemented and then remove this mounting approach
+RUN echo "www ALL=(ALL) NOPASSWD: /bin/mount, /bin/umount, /bin/cp, /bin/chown" > /etc/sudoers.d/mount
 
 #####################################
 # Install unblob dependencies    #
