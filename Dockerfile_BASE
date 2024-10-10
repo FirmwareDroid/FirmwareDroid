@@ -36,13 +36,6 @@ ENV PATH="$PATH:/home/www/.local/bin/"
 RUN python3 -m pip install --upgrade pip && pip install -r ./requirements.txt
 RUN chown -R $USER_ID:$GROUP_ID /opt/firmwaredroid/
 
-########################################################
-# Configure permissions                                #
-########################################################
-RUN chmod +x /var/www/source/extractor/mount_copy.sh
-
-#RUN chown -R roor:root /var/www/source/
-#RUN chmod 755 /var/www/source/
 
 
 

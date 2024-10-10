@@ -203,6 +203,8 @@ def extract_second_layer(firmware_archive_file_path, destination_dir):
                 extract_image_file(img_file_path, destination_dir)
     else:
         extract_image_file(firmware_archive_file_path, destination_dir)
+
+    remove_temp_directories(destination_dir)
     extracted_file_abs_path_list = get_file_list(destination_dir)
     return extracted_file_abs_path_list
 
@@ -216,6 +218,21 @@ def attempt_sparse_img_convertion(android_sparse_img_path, destination_dir):
     except Exception as err:
         logging.debug(err)
     return is_success, raw_image_path
+
+
+def remove_temp_directories(search_path):
+    """
+    Deletes all temporary directories with a prefix of "fmd_extract_" and moves the files one level up.
+
+    :param search_path: str - path to the directory to search in.
+
+    """
+    for root, dirs, files in os.walk(search_path):
+        for directory in dirs:
+            if directory.startswith("fmd_extract_"):
+                temp_extract_dir = os.path.join(root, directory)
+                move_all_files_and_folders(temp_extract_dir, root)
+                shutil.rmtree(temp_extract_dir, ignore_errors=True)
 
 
 def extract_image_file(image_path, extract_dir_path):
@@ -307,7 +324,7 @@ def process_file(current_path,
     if file_extension in EXTRACT_FUNCTION_MAP_DICT.keys():
         for extraction_function in EXTRACT_FUNCTION_MAP_DICT[file_extension]:
             temp_extract_dir = tempfile.mkdtemp(dir=destination_dir,
-                                                prefix=f"{extraction_function.__name__}_")
+                                                prefix=f"fmd_extract_{extraction_function.__name__}_")
             try:
                 logging.info(f"Extracting with: {extraction_function.__name__} {current_path} {temp_extract_dir} ")
                 is_success = extraction_function(current_path, temp_extract_dir)
@@ -318,7 +335,7 @@ def process_file(current_path,
                 shutil.rmtree(temp_extract_dir, ignore_errors=True)
     is_unblob_success = False
     if not is_success and any([filename.endswith(pattern) for pattern in SKIP_FILE_PATTERN_LIST]):
-        temp_extract_dir = tempfile.mkdtemp(dir=destination_dir)
+        temp_extract_dir = tempfile.mkdtemp(dir=destination_dir, prefix="fmd_extract_unblob_")
         logging.info(f"Extracting with unblob: {current_path} {temp_extract_dir} ")
         is_unblob_success = unblob_extract(current_path, temp_extract_dir, unblob_depth)
         if is_unblob_success:
