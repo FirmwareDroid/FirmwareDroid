@@ -9,10 +9,9 @@ import tempfile
 import threading
 from extractor.app_extractor import app_extractor
 from extractor.bin_extractor.payload_dumper_go import payload_dumper_go_extractor
-from extractor.erofs_extractor import erofs_extract
 from extractor.ext4_extractor import extract_dat, extract_simg_ext4, extract_ext4
-from extractor.f2fs_extractor import f2fs_extract
 from extractor.lpunpack_extractor import lpunpack_extractor
+from extractor.mount_extractor import mount_extract
 from extractor.nb0_extractor import extract_nb0
 from extractor.pac_extractor import extract_pac
 from extractor.unblob_extractor import unblob_extract
@@ -21,6 +20,7 @@ from extractor.lz4_extractor import extract_lz4
 from extractor.brotli_extractor import extract_brotli
 from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
 from firmware_handler.ext4_mount_util import run_simg2img_convert
+from firmware_handler.firmware_file_indexer import create_firmware_file_list
 
 EXTRACTION_SEMAPHORE = threading.Semaphore(20)
 MAX_EXTRACTION_DEPTH = 10
@@ -182,31 +182,27 @@ def get_raw_image(file_path_list):
     return raw_image_path
 
 
-def find_img_files(file_path_list):
-    img_file_list = []
-    for file_path in file_path_list:
-        if os.path.basename(file_path).endswith(".img"):
-            file_path = os.path.abspath(file_path)
-            img_file_list.append(file_path)
-    return img_file_list
-
-
-def extract_second_layer(firmware_archive_file_path, destination_dir):
+def extract_second_layer(firmware_archive_file_path, destination_dir, extracted_archive_dir_path, partition_name):
     firmware_archive_file_path = os.path.abspath(firmware_archive_file_path)
     destination_dir = os.path.abspath(destination_dir)
+    firmware_file_list = []
     logging.info(f"Extracting all layers of the firmware archive: {firmware_archive_file_path}")
-
-    if "super" in firmware_archive_file_path:
-        if lpunpack_extractor(firmware_archive_file_path, destination_dir):
-            img_file_path_list = find_img_files(destination_dir)
-            for img_file_path in img_file_path_list:
-                extract_image_file(img_file_path, destination_dir)
-    else:
+    is_success = False
+    if partition_name == "super":
+        super_extract_dir = tempfile.mkdtemp(dir=extracted_archive_dir_path, prefix="fmd_extract_super_")
+        super_extract_dir = os.path.abspath(super_extract_dir)
+        is_success = lpunpack_extractor(firmware_archive_file_path, super_extract_dir)
+        if is_success:
+            logging.info("Successfully extracted super image.")
+            shutil.copytree(super_extract_dir, extracted_archive_dir_path, dirs_exist_ok=True)
+            dst_dir_path = os.path.join(extracted_archive_dir_path, os.path.basename(super_extract_dir))
+            logging.info(f"Extracted super image to: {dst_dir_path}")
+            firmware_file_list = create_firmware_file_list(dst_dir_path, partition_name)
+    if not is_success:
         extract_image_file(firmware_archive_file_path, destination_dir)
-
-    remove_temp_directories(destination_dir)
-    extracted_file_abs_path_list = get_file_list(destination_dir)
-    return extracted_file_abs_path_list
+        remove_temp_directories(destination_dir)
+        firmware_file_list = create_firmware_file_list(destination_dir, partition_name)
+    return firmware_file_list
 
 
 def attempt_sparse_img_convertion(android_sparse_img_path, destination_dir):
@@ -243,10 +239,8 @@ def extract_image_file(image_path, extract_dir_path):
         logging.debug("Image extraction successful with simg_ext4extractor")
     elif extract_ext4(image_path, extract_dir_path):
         logging.debug("Image extraction successful with ext4extractor")
-    elif erofs_extract(image_path, extract_dir_path):
-        logging.debug("Image extraction successful with erofs extractor")
-    elif f2fs_extract(image_path, extract_dir_path):
-        logging.debug("Image extraction successful with f2fs extractor")
+    elif mount_extract(image_path, extract_dir_path):
+        logging.debug("Image extraction successful with mount extractor")
     elif unblob_extract(image_path, extract_dir_path, depth=25):
         logging.debug("Image extraction successful with unblob extraction suite")
     else:

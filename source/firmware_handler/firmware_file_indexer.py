@@ -113,7 +113,7 @@ def process_files(file_list, root, scan_directory, partition_name, result_firmwa
                 md5_file = md5_from_file(filename_path)
                 file_size_bytes = os.path.getsize(filename_path)
                 parent_name = get_parent_name(root, scan_directory)
-                filename_abs_path = os.path.abspath(filename_path)
+                filename_abs_path = os.path.abspath(str(filename_path))
                 filename_abs_path = os.path.realpath(filename_abs_path)
                 filename_abs_path = normalize_file_path(filename_abs_path)
                 if not os.path.exists(filename_abs_path) or not os.path.isfile(filename_abs_path):

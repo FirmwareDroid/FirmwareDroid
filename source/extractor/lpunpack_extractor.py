@@ -1,6 +1,5 @@
 import logging
 import os.path
-import shlex
 import subprocess
 
 PATH_LPUNPACK = "/opt/firmwaredroid/lpunpack/lpunpack.py"
@@ -20,8 +19,6 @@ def lpunpack_extractor(source_file_path, destination_dir):
     logging.info(f"Extracting with lpunpack: {source_file_path} to {destination_dir}")
     is_success = True
     try:
-        source_file_path = shlex.quote(source_file_path)
-        destination_dir = shlex.quote(destination_dir)
         if not os.path.exists(PATH_LPUNPACK):
             logging.error(f"Path to lpunpack not found: {PATH_LPUNPACK}")
             return False
