@@ -319,6 +319,7 @@ def process_file(current_path,
         for extraction_function in EXTRACT_FUNCTION_MAP_DICT[file_extension]:
             temp_extract_dir = tempfile.mkdtemp(dir=destination_dir,
                                                 prefix=f"fmd_extract_{extraction_function.__name__}_")
+            temp_extract_dir = os.path.abspath(temp_extract_dir)
             try:
                 logging.info(f"Extracting with: {extraction_function.__name__} {current_path} {temp_extract_dir} ")
                 is_success = extraction_function(current_path, temp_extract_dir)
@@ -330,6 +331,7 @@ def process_file(current_path,
     is_unblob_success = False
     if not is_success and any([filename.endswith(pattern) for pattern in SKIP_FILE_PATTERN_LIST]):
         temp_extract_dir = tempfile.mkdtemp(dir=destination_dir, prefix="fmd_extract_unblob_")
+        temp_extract_dir = os.path.abspath(temp_extract_dir)
         logging.info(f"Extracting with unblob: {current_path} {temp_extract_dir} ")
         is_unblob_success = unblob_extract(current_path, temp_extract_dir, unblob_depth)
         if is_unblob_success:

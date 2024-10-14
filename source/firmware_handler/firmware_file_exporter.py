@@ -129,6 +129,7 @@ def extract_firmware(firmware_archive_file_path, temp_extract_dir):
     for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
         logging.info(f"Attempt to index files for partition: {partition_name}")
         partition_temp_dir = tempfile.mkdtemp(dir=temp_extract_dir, prefix=f"fmd_extract_{partition_name}_")
+        partition_temp_dir = os.path.abspath(partition_temp_dir)
         partition_firmware_file_list, is_successful = create_partition_file_index(partition_name,
                                                                                   file_pattern_list,
                                                                                   top_level_firmware_file_list,
