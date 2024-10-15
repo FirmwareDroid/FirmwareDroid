@@ -17,7 +17,7 @@ def payload_dumper_go_extractor(source_file_path, destination_dir):
 
     :return: boolean - True in case it was successfully extracted.
     """
-    logging.info("Extracting firmware with payload dumper go.")
+    logging.info(f"Extracting firmware with payload dumper go: {source_file_path} to {destination_dir}")
     is_success = True
     try:
         source_file_path = shlex.quote(source_file_path)

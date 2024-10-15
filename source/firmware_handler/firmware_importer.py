@@ -346,7 +346,9 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
                 file_size = -1
                 logging.warning(f"Failed to get file size for {firmware_archive_file_path}: {e}")
 
-            archive_firmware_file_list = open_firmware(firmware_archive_file_path, temp_extract_dir)
+            shutil.copy(firmware_archive_file_path, temp_extract_dir)
+            archive_copy_file_path = os.path.join(temp_extract_dir, original_filename)
+            archive_firmware_file_list = open_firmware(archive_copy_file_path, temp_extract_dir)
             files_dict["archive_firmware_file_list"].extend(archive_firmware_file_list)
             files_dict["firmware_file_list"].extend(archive_firmware_file_list)
             files_dict, partition_info_dict = index_partitions(temp_extract_dir,

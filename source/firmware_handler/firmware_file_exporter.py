@@ -123,8 +123,12 @@ def extract_firmware(firmware_archive_file_path, temp_extract_dir):
     """
     from firmware_handler.firmware_importer import create_partition_file_index
     firmware_file_list = []
-    extract_first_layer(firmware_archive_file_path, temp_extract_dir)
-    logging.info(f"Extracted first layer of firmware {firmware_archive_file_path} to {temp_extract_dir}")
+
+    archive_copy_file_path = os.path.join(temp_extract_dir, os.path.basename(firmware_archive_file_path))
+    shutil.copyfile(firmware_archive_file_path, archive_copy_file_path)
+
+    extract_first_layer(archive_copy_file_path, temp_extract_dir)
+    logging.info(f"Extracted first layer of firmware {archive_copy_file_path} to {temp_extract_dir}")
     top_level_firmware_file_list = create_firmware_file_list(temp_extract_dir, "/")
     for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
         logging.info(f"Attempt to index files for partition: {partition_name}")

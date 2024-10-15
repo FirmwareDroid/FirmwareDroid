@@ -73,6 +73,7 @@ def extract_pac(source_file, destination_dir):
 
     :return: boolean - True in case it was successfully extracted.
     """
+    logging.info(f"Extracting PAC: {source_file} to {destination_dir}")
     is_success = True
     if os.path.isfile(source_file) and source_file.lower().endswith(".pac"):
         try:

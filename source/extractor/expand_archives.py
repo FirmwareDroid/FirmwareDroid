@@ -11,7 +11,7 @@ from extractor.app_extractor import app_extractor
 from extractor.bin_extractor.payload_dumper_go import payload_dumper_go_extractor
 from extractor.ext4_extractor import extract_dat, extract_simg_ext4, extract_ext4
 from extractor.lpunpack_extractor import lpunpack_extractor
-from extractor.mount_extractor import mount_extract
+from extractor.mount_extractor import mount_extract, simg2img_and_mount_extract
 from extractor.nb0_extractor import extract_nb0
 from extractor.pac_extractor import extract_pac
 from extractor.unblob_extractor import unblob_extract
@@ -241,7 +241,9 @@ def extract_image_file(image_path, extract_dir_path):
         logging.debug("Image extraction successful with ext4extractor")
     elif mount_extract(image_path, extract_dir_path):
         logging.debug("Image extraction successful with mount extractor")
-    elif unblob_extract(image_path, extract_dir_path, depth=25):
+    elif simg2img_and_mount_extract(image_path, extract_dir_path):
+        logging.debug("Image extraction successful with simg2img and mount extractor")
+    elif "userdata" not in image_path and unblob_extract(image_path, extract_dir_path, depth=25):
         logging.debug("Image extraction successful with unblob extraction suite")
     else:
         raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
@@ -315,6 +317,11 @@ def process_file(current_path,
     filename = os.path.basename(current_path)
     file_extension = os.path.splitext(current_path.lower())[1].lower()
     is_success = False
+
+    if file_extension is None or file_extension == "":
+        logging.info(f"File extension is None for: {current_path}. Assuming zip file...")
+        file_extension = ".zip"
+
     if file_extension in EXTRACT_FUNCTION_MAP_DICT.keys():
         for extraction_function in EXTRACT_FUNCTION_MAP_DICT[file_extension]:
             temp_extract_dir = tempfile.mkdtemp(dir=destination_dir,
@@ -328,6 +335,7 @@ def process_file(current_path,
                     break
             finally:
                 shutil.rmtree(temp_extract_dir, ignore_errors=True)
+
     is_unblob_success = False
     if not is_success and any([filename.endswith(pattern) for pattern in SKIP_FILE_PATTERN_LIST]):
         temp_extract_dir = tempfile.mkdtemp(dir=destination_dir, prefix="fmd_extract_unblob_")
@@ -341,14 +349,10 @@ def process_file(current_path,
     if delete_compressed_file and (is_success or is_unblob_success):
         logging.info(f"Success extracting. Deleting compressed file: {current_path}")
         delete_file_safely(current_path)
-    elif not is_success and not is_unblob_success:
-        logging.warning(f"Extraction failed for: {current_path}")
-        new_file_location = current_path + ".failed"
-        shutil.move(current_path, new_file_location)
     elif is_success or is_unblob_success:
         logging.info(f"Extraction successful for: {current_path}")
     else:
-        logging.warning(f"Extraction failed for: {current_path}")
+        logging.warning(f"Expand Archive: Extraction failed for: {current_path}")
         new_file_location = current_path + ".failed"
         shutil.move(current_path, new_file_location)
 

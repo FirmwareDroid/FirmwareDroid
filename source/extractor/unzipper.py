@@ -19,6 +19,7 @@ def extract_zip(zip_file_path, destination_dir):
     :return: boolean - True in case it was successfully extracted.
 
     """
+    logging.info(f"Zip Extractor: Extracting {zip_file_path} to {destination_dir}")
     is_success = True
     try:
         with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
@@ -28,10 +29,8 @@ def extract_zip(zip_file_path, destination_dir):
             extracted_files = zip_ref.namelist()
             for file in extracted_files:
                 if not os.path.exists(os.path.join(destination_dir, file)):
-                    is_success = False
-                    logging.warning(f"File not found after extraction: {file}")
-                    break
-        logging.info(f"Extracted {len(extracted_files)} files from {zip_file_path} to {destination_dir}")
+                    raise Exception(f"Zip Extractor: File {file} was not extracted from {zip_file_path}")
+        logging.info(f"Zip Extractor: Extracted {len(extracted_files)} files from {zip_file_path} to {destination_dir}")
     except Exception as e:
         is_success = False
         logging.warning(str(e))
@@ -48,6 +47,7 @@ def extract_tar(file_path, destination_dir):
     :return: boolean - True in case it was successfully extracted.
 
     """
+    logging.info(f"Tar Extractor: Extracting {file_path} to {destination_dir}")
     is_success = True
     try:
         if os.path.isfile(file_path) and os.access(file_path, os.R_OK):

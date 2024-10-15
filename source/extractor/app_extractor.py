@@ -15,9 +15,9 @@ def app_extractor(source_file_path, destination_dir):
 
     :return: boolean - True in case it was successfully extracted.
     """
+    logging.info(f"Extracting firmware with splituapp: {source_file_path} to {destination_dir}")
     is_success = False
     try:
-        logging.info("Extracting firmware with splituapp.")
         split_app_files(source_file_path, destination_dir)
         is_success = True
     except Exception as e:

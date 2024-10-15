@@ -181,10 +181,8 @@ def run_simg2img_convert(android_sparse_img_path, destination_folder):
 
     """
     try:
-        output_file_name = "raw" + str(os.path.basename(android_sparse_img_path))
-        output_file_name = shlex.quote(output_file_name)
+        output_file_name = str(os.path.basename(android_sparse_img_path)) + ".raw"
         output_file_path = os.path.join(destination_folder, output_file_name)
-        output_file_path = shlex.quote(output_file_path)
         response = subprocess.run(["simg2img", android_sparse_img_path, output_file_path], timeout=600)
         response.check_returncode()
         return output_file_path
