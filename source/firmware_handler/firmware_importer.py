@@ -240,7 +240,6 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
                                                    "firmware_file_count": len(partition_firmware_file_list),
                                                    "android_app_count": len(firmware_app_list),
                                                    "build_prop_count": len(build_prop_list)}
-    sleep(6000)
     return files_dict, partition_info_dict
 
 
