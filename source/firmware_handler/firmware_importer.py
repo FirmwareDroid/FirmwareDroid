@@ -10,6 +10,8 @@ import os
 import shutil
 from queue import Empty
 from pathlib import Path
+from time import sleep
+
 from hashing.fuzzy_hash_creator import add_fuzzy_hashes
 from model import AndroidFirmware, FirmwareFile, AndroidApp
 from threading import Thread
@@ -31,6 +33,7 @@ from bson import ObjectId
 ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar", ".gz", ".bz2", ".md5", ".lz4", ".tgz", ".rar", ".7z", "lzma", ".xz",
                                    ".ozip"]
 lock = threading.Lock()
+
 
 
 @create_db_context
@@ -237,6 +240,7 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
                                                    "firmware_file_count": len(partition_firmware_file_list),
                                                    "android_app_count": len(firmware_app_list),
                                                    "build_prop_count": len(build_prop_list)}
+    sleep(6000)
     return files_dict, partition_info_dict
 
 

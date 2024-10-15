@@ -243,7 +243,7 @@ def extract_image_file(image_path, extract_dir_path):
         logging.debug("Image extraction successful with mount extractor")
     elif simg2img_and_mount_extract(image_path, extract_dir_path):
         logging.debug("Image extraction successful with simg2img and mount extractor")
-    elif "userdata" not in image_path and unblob_extract(image_path, extract_dir_path, depth=25):
+    elif unblob_extract(image_path, extract_dir_path, depth=25):
         logging.debug("Image extraction successful with unblob extraction suite")
     else:
         raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
@@ -303,6 +303,8 @@ def move_all_files_and_folders(src_dir, dest_dir):
         dest_item = os.path.join(dest_dir, item)
         logging.debug(f"Moving: {src_item} to {dest_item}")
         try:
+            if os.path.exists(dest_item):
+                dest_item = os.path.join(dest_dir, f"1_{item}")
             shutil.move(src_item, dest_item)
             if not os.path.exists(dest_item):
                 logging.error(f"Move failed: {src_item} to {dest_item}")

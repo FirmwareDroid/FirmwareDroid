@@ -14,7 +14,7 @@ extract_files() {
     fi
 
     # Best effort copy
-    cp -rPa --no-preserve=mode,ownership,timestamps $MOUNT_PATH/* $EXTRACTED_PATH
+    cp -r $MOUNT_PATH/* $EXTRACTED_PATH
     chown -RP www:www $EXTRACTED_PATH
 
     umount $MOUNT_PATH

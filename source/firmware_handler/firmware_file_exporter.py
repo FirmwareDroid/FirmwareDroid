@@ -10,9 +10,7 @@ import traceback
 from queue import Empty
 from threading import Thread
 from context.context_creator import create_db_context, create_log_context, create_multithread_log_context
-from extractor.expand_archives import extract_first_layer, extract_second_layer
-from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
-from firmware_handler.firmware_file_indexer import create_firmware_file_list
+from extractor.expand_archives import extract_first_layer
 from model import StoreSetting, AndroidFirmware
 from processing.standalone_python_worker import create_multi_threading_queue
 
@@ -122,6 +120,9 @@ def extract_firmware(firmware_archive_file_path, temp_extract_dir):
 
     """
     from firmware_handler.firmware_importer import create_partition_file_index
+    from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
+    from firmware_handler.firmware_file_indexer import create_firmware_file_list
+
     firmware_file_list = []
 
     archive_copy_file_path = os.path.join(temp_extract_dir, os.path.basename(firmware_archive_file_path))
