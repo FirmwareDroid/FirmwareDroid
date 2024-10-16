@@ -15,13 +15,14 @@ def app_extractor(source_file_path, destination_dir):
 
     :return: boolean - True in case it was successfully extracted.
     """
+    logging.info(f"Extracting firmware with app_extractor (splituapp): {source_file_path} to {destination_dir}")
     is_success = False
     try:
-        logging.info("Extracting firmware with splituapp.")
         split_app_files(source_file_path, destination_dir)
+        logging.info(f"Extracted firmware with app_extractor (splituapp): {source_file_path} to {destination_dir}")
         is_success = True
     except Exception as e:
-        logging.error(e)
+        logging.error(f"Failed to extract firmware with app_extractor (splituapp): {e}")
     return is_success
 
 
@@ -47,14 +48,14 @@ def split_app_files(source_file_path, destination_dir):
                     filename = ''.join(f for f in filename if f in string.printable).lower()
                 except:
                     filename = ''
-                if "/" in filename:
-                    raise ValueError(f"Potential directory traversal: {filename}")
                 input_file.seek(22, 1)
                 crc_byte_value = input_file.read(header_size - 98)
-
                 output_filename = os.path.join(destination_dir, f"{filename}.img")
-                while os.path.exists(output_filename):
-                    output_filename += ".DUPLICATE"
+                if os.path.exists(output_filename):
+                    output_filename = os.path.join(destination_dir, f"{filename}.DUPLICATE.img")
+                #while os.path.exists(output_filename):
+                #    output_filename += ".DUPLICATE"
+
                 try:
                     with open(output_filename, 'wb') as o:
                         pending_size = filesize
@@ -64,8 +65,9 @@ def split_app_files(source_file_path, destination_dir):
                             assert len(chunk_data) == current_read_size
                             o.write(chunk_data)
                             pending_size -= current_read_size
-                except:
-                    raise RuntimeError('ERROR: Failed to create ' + filename + '.img\n')
+                    logging.info(f"APP extractor wrote {output_filename}")
+                except Exception as e:
+                    raise RuntimeError(f'ERROR: Failed to create {filename} .img\n: {e}')
 
                 xbytes = bytenum - input_file.tell() % bytenum
                 if xbytes < bytenum:

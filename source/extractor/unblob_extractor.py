@@ -63,7 +63,7 @@ def unblob_extract(compressed_file_path, destination_dir, depth=1, worker_count=
             command_array.append("--skip-extension")
             command_array.append(extension)
         command_array.append(input_file)
-        response = subprocess.run(command_array, timeout=60 * 60 * 6)
+        response = subprocess.run(command_array, timeout=60 * 60 * 3)
         response.check_returncode()
     except subprocess.CalledProcessError as err:
         if response and response.returncode > 1:

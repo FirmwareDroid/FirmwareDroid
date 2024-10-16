@@ -18,6 +18,7 @@ def extract_lz4(lz4_file_path, destination_dir):
     import lz4framed
     from _lz4framed import Lz4FramedNoDataError
     is_success = True
+    logging.info(f"Extracting lz4 file: {lz4_file_path} to {destination_dir}")
     try:
         with open(lz4_file_path, 'rb') as lz4_file_bytes:
             decoded = []

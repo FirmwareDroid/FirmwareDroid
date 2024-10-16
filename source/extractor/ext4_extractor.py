@@ -16,7 +16,7 @@ def extract_dat(dat_file_path, extract_destination_folder):
 
     :return: True - if extraction was successful, false if not.
     """
-    logging.info("Attempt to extract ext with dat2img")
+    logging.info(f"Attempt to extract ext with dat2img: {dat_file_path}")
     ext4_image_path = None
     try:
         ext4_image_path = convert_dat2img(dat_file_path, extract_destination_folder)
@@ -37,7 +37,7 @@ def extract_simg_ext4(simg_ext4_file_path, extract_destination_folder):
     logging.info("Attempt to extract ext with ext4extract and simg2img")
     could_extract_data = False
     try:
-        temp_dir = tempfile.TemporaryDirectory(dir=extract_destination_folder)
+        temp_dir = tempfile.TemporaryDirectory(dir=extract_destination_folder, prefix="fmd_extract")
         ext4_image_path = run_simg2img_convert(simg_ext4_file_path, temp_dir.name)
         if extract_ext4(ext4_image_path, extract_destination_folder):
             could_extract_data = True

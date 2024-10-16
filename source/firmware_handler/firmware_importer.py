@@ -10,10 +10,12 @@ import os
 import shutil
 from queue import Empty
 from pathlib import Path
+from time import sleep
+
 from hashing.fuzzy_hash_creator import add_fuzzy_hashes
 from model import AndroidFirmware, FirmwareFile, AndroidApp
 from threading import Thread
-from firmware_handler.image_importer import create_abs_image_file_path, find_image_firmware_file
+from firmware_handler.image_importer import find_image_firmware_file
 from context.context_creator import create_db_context, create_log_context
 from firmware_handler.firmware_file_indexer import create_firmware_file_list, add_firmware_file_references
 from firmware_handler.const_regex_patterns import BUILD_PROP_PATTERN_LIST, EXT_IMAGE_PATTERNS_DICT
@@ -31,6 +33,7 @@ from bson import ObjectId
 ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar", ".gz", ".bz2", ".md5", ".lz4", ".tgz", ".rar", ".7z", "lzma", ".xz",
                                    ".ozip"]
 lock = threading.Lock()
+
 
 
 @create_db_context
@@ -167,32 +170,6 @@ def open_firmware(firmware_archive_file_path, temp_extract_dir):
     return archive_firmware_file_list
 
 
-def get_partition_firmware_files(archive_firmware_file_list,
-                                 temp_extract_dir,
-                                 partition_name,
-                                 file_pattern_list,
-                                 partition_temp_dir):
-    """
-    Creates a list of firmware files from known file partitions.
-
-    :param partition_temp_dir: str - path where the partition is read from.
-    :param partition_name: str - name of the partition.
-    :param file_pattern_list: list(str) - a list of known name patterns for partitions.
-    :param archive_firmware_file_list: list(class:FirmwareFile) - list of firmware archive firmware files.
-    :param temp_extract_dir: tempfile.TemporaryDirectory - directory where the firmware archive was extracted to.
-
-    :return: list(class:FirmwareFile) - list of found partition firmware files.
-    """
-    firmware_file_list = []
-    partition_firmware_file_list, is_successful = create_partition_file_index(partition_name,
-                                                                              file_pattern_list,
-                                                                              archive_firmware_file_list,
-                                                                              temp_extract_dir,
-                                                                              partition_temp_dir)
-    firmware_file_list.extend(partition_firmware_file_list)
-    return firmware_file_list, is_successful
-
-
 def create_partition_file_index(partition_name, file_pattern_list, archive_firmware_file_list,
                                 temp_extract_dir, partition_temp_dir):
     """
@@ -233,7 +210,7 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
         firmware_app_list = []
         build_prop_list = []
         with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"],
-                                         suffix=f"_mount_{partition_name}") as partition_temp_dir:
+                                         suffix=f"fmd_extract_root_{partition_name}") as partition_temp_dir:
             partition_firmware_file_list, is_successful = create_partition_file_index(partition_name,
                                                                                       file_pattern_list,
                                                                                       files_dict[
@@ -241,21 +218,23 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
                                                                                       temp_extract_dir,
                                                                                       partition_temp_dir)
             if is_successful:
-                files_dict["firmware_file_list"].extend(partition_firmware_file_list)
-
-                if len(partition_firmware_file_list) > 0:
-                    firmware_app_store = os.path.join(store_paths["FIRMWARE_FOLDER_APP_EXTRACT"],
-                                                      md5,
-                                                      partition_name)
-                    firmware_app_list = store_android_apps_from_firmware(partition_temp_dir,
-                                                                         firmware_app_store,
-                                                                         files_dict["firmware_file_list"],
-                                                                         partition_name)
-                    files_dict["firmware_app_list"].extend(firmware_app_list)
-                    build_prop_list = extract_build_prop(partition_firmware_file_list, partition_temp_dir)
-                    files_dict["build_prop_file_list"].extend(build_prop_list)
-                if create_fuzzy_hashes:
-                    add_fuzzy_hashes(partition_firmware_file_list)
+                if partition_name == "super":
+                    files_dict["archive_firmware_file_list"].extend(partition_firmware_file_list)
+                else:
+                    files_dict["firmware_file_list"].extend(partition_firmware_file_list)
+                    if len(partition_firmware_file_list) > 0:
+                        firmware_app_store = os.path.join(store_paths["FIRMWARE_FOLDER_APP_EXTRACT"],
+                                                          md5,
+                                                          partition_name)
+                        firmware_app_list = store_android_apps_from_firmware(partition_temp_dir,
+                                                                             firmware_app_store,
+                                                                             files_dict["firmware_file_list"],
+                                                                             partition_name)
+                        files_dict["firmware_app_list"].extend(firmware_app_list)
+                        build_prop_list = extract_build_prop(partition_firmware_file_list, partition_temp_dir)
+                        files_dict["build_prop_file_list"].extend(build_prop_list)
+                    if create_fuzzy_hashes:
+                        add_fuzzy_hashes(partition_firmware_file_list)
 
             partition_info_dict[partition_name] = {"is_import_success": is_successful,
                                                    "firmware_file_count": len(partition_firmware_file_list),
@@ -265,7 +244,6 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
 
 
 def create_firmware_store_path(store_path, version_detected, md5):
-
     firmware_archive_store_path = Path(os.path.join(str(store_path["FIRMWARE_FOLDER_STORE"]),
                                                     version_detected,
                                                     md5))
@@ -354,6 +332,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
     """
     with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"],
                                      suffix="_extract") as temp_extract_dir:
+        temp_extract_dir = os.path.abspath(temp_extract_dir)
         files_dict = {
             "firmware_app_list": [],
             "build_prop_file_list": [],
@@ -370,7 +349,9 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
                 file_size = -1
                 logging.warning(f"Failed to get file size for {firmware_archive_file_path}: {e}")
 
-            archive_firmware_file_list = open_firmware(firmware_archive_file_path, temp_extract_dir)
+            shutil.copy(firmware_archive_file_path, temp_extract_dir)
+            archive_copy_file_path = os.path.join(temp_extract_dir, original_filename)
+            archive_firmware_file_list = open_firmware(archive_copy_file_path, temp_extract_dir)
             files_dict["archive_firmware_file_list"].extend(archive_firmware_file_list)
             files_dict["firmware_file_list"].extend(archive_firmware_file_list)
             files_dict, partition_info_dict = index_partitions(temp_extract_dir,
@@ -467,17 +448,20 @@ def create_partition_firmware_files(archive_firmware_file_list,
             shutil.move(partition_folder, temp_dir_path)
         else:
             potential_image_files = find_image_firmware_file(archive_firmware_file_list, file_pattern_list)
-            extraction_success = False
             for image_firmware_file in potential_image_files:
                 try:
-                    image_absolute_path = create_abs_image_file_path(image_firmware_file, extracted_archive_dir_path)
-                    extract_second_layer(image_absolute_path, temp_dir_path)
-                    extraction_success = True
+                    logging.info(
+                        f"Extracting partition {partition_name} from {image_firmware_file.absolute_store_path}")
+                    firmware_file_list = extract_second_layer(image_firmware_file.absolute_store_path,
+                                                              temp_dir_path,
+                                                              extracted_archive_dir_path,
+                                                              partition_name)
+                    partition_firmware_files.extend(firmware_file_list)
+                    if len(firmware_file_list) > 0:
+                        is_successful = True
+                    logging.info(f"Found {len(firmware_file_list)} files in {image_firmware_file.absolute_store_path}")
                 except (RuntimeError, ValueError) as err:
                     logging.warning(err)
-            if extraction_success:
-                partition_firmware_files = create_firmware_file_list(temp_dir_path, partition_name)
-                is_successful = True
     except (RuntimeError, ValueError) as err:
         logging.warning(err)
     return partition_firmware_files, is_successful

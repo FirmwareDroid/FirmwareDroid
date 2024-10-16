@@ -11,8 +11,6 @@ from queue import Empty
 from threading import Thread
 from context.context_creator import create_db_context, create_log_context, create_multithread_log_context
 from extractor.expand_archives import extract_first_layer
-from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
-from firmware_handler.firmware_file_indexer import create_firmware_file_list
 from model import StoreSetting, AndroidFirmware
 from processing.standalone_python_worker import create_multi_threading_queue
 
@@ -122,20 +120,32 @@ def extract_firmware(firmware_archive_file_path, temp_extract_dir):
 
     """
     from firmware_handler.firmware_importer import create_partition_file_index
+    from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
+    from firmware_handler.firmware_file_indexer import create_firmware_file_list
+
     firmware_file_list = []
-    extract_first_layer(firmware_archive_file_path, temp_extract_dir)
-    logging.info(f"Extracted first layer of firmware {firmware_archive_file_path} to {temp_extract_dir}")
+
+    archive_copy_file_path = os.path.join(temp_extract_dir, os.path.basename(firmware_archive_file_path))
+    shutil.copyfile(firmware_archive_file_path, archive_copy_file_path)
+
+    extract_first_layer(archive_copy_file_path, temp_extract_dir)
+    logging.info(f"Extracted first layer of firmware {archive_copy_file_path} to {temp_extract_dir}")
     top_level_firmware_file_list = create_firmware_file_list(temp_extract_dir, "/")
+
     for partition_name, file_pattern_list in EXT_IMAGE_PATTERNS_DICT.items():
         logging.info(f"Attempt to index files for partition: {partition_name}")
         partition_temp_dir = tempfile.mkdtemp(dir=temp_extract_dir, prefix=f"fmd_extract_{partition_name}_")
+        partition_temp_dir = os.path.abspath(partition_temp_dir)
         partition_firmware_file_list, is_successful = create_partition_file_index(partition_name,
                                                                                   file_pattern_list,
                                                                                   top_level_firmware_file_list,
                                                                                   temp_extract_dir,
                                                                                   partition_temp_dir)
         if is_successful:
-            firmware_file_list.extend(partition_firmware_file_list)
+            if partition_name == "super":
+                top_level_firmware_file_list.extend(partition_firmware_file_list)
+            else:
+                firmware_file_list.extend(partition_firmware_file_list)
         else:
             logging.warning(f"Could not index files for partition: {partition_name}")
     return firmware_file_list
