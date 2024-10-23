@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
+import filecmp
 import logging
 import os
 import re
@@ -303,7 +304,7 @@ def move_all_files_and_folders(src_dir, dest_dir):
         dest_item = os.path.join(dest_dir, item)
         logging.debug(f"Moving: {src_item} to {dest_item}")
         try:
-            if os.path.exists(dest_item):
+            if os.path.exists(dest_item) and not filecmp.cmp(src_item, dest_item, shallow=False):
                 dest_item = os.path.join(dest_dir, f"1_{item}")
             shutil.move(src_item, dest_item)
             if not os.path.exists(dest_item):
