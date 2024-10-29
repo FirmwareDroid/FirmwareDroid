@@ -11,6 +11,8 @@ import tempfile
 import logging
 import traceback
 import uuid
+from os.path import exists
+
 from context.context_creator import create_db_context, create_log_context
 from dynamic_analysis.emulator_preparation.aosp_apk_module_builer import create_build_files_for_apps, \
     process_android_apps
