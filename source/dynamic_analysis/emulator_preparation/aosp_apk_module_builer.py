@@ -260,7 +260,8 @@ def process_android_apps(firmware, tmp_root_dir):
         android_app = android_app_lazy.fetch()
         module_naming = f"{android_app.filename.replace('.apk', '')}"
         tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
-        os.mkdir(tmp_app_dir)
+        if not os.path.exists(tmp_app_dir):
+            os.mkdir(tmp_app_dir)
         new_filename = android_app.filename
         destination_file_path = os.path.join(tmp_app_dir, new_filename)
         try:

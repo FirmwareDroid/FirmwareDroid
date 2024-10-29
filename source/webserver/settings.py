@@ -36,9 +36,7 @@ DOMAIN_NAME = os.environ['DOMAIN_NAME']
 HTTPS_DOMAIN_NAME = "https://" + DOMAIN_NAME
 SERVER_NAME = DOMAIN_NAME
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
-CORS_ADDITIONAL_HOST = os.environ['CORS_ADDITIONAL_HOST']
-if not CORS_ADDITIONAL_HOST.startswith("https://"):
-    CORS_ADDITIONAL_HOST = "https://" + CORS_ADDITIONAL_HOST
+
 
 # Security Settings
 ALLOWED_HOSTS = [DOMAIN_NAME,
@@ -46,16 +44,14 @@ ALLOWED_HOSTS = [DOMAIN_NAME,
                  HTTPS_DOMAIN_NAME,
                  "localhost",
                  "fmd.localhost",
-                 "fmd.localhost:4443",]
+                 "fmd.localhost:4443"]
 CSRF_TRUSTED_ORIGINS = [HTTPS_DOMAIN_NAME]
 CORS_ALLOWED_ORIGINS = [HTTPS_DOMAIN_NAME,
-                        CORS_ADDITIONAL_HOST,
                         "https://fmd.localhost",
                         "https://localhost",
                         "https://fmd.localhost:4443",
                         "https://127.0.0.1"]
 CORS_ORIGIN_WHITELIST = [DOMAIN_NAME,
-                         CORS_ADDITIONAL_HOST,
                          "fmd.localhost",
                          "localhost",
                          "127.0.0.1",
@@ -63,6 +59,46 @@ CORS_ORIGIN_WHITELIST = [DOMAIN_NAME,
                          "https://fmd.localhost:4443",
                          "https://localhost",
                          "https://127.0.0.1"]
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'origin',
+    'keep-alive',
+    'user-agent',
+    'cache-control',
+    'content-type',
+    'content-transfer-encoding',
+    'custom-header-1',
+    'x-accept-content-transfer-encoding',
+    'x-accept-response-streaming',
+    'x-user-agent',
+    'x-grpc-web',
+    'grpc-timeout',
+    'authorization'
+]
+CORS_ALLOW_METHODS = [
+'DELETE',
+'GET',
+'OPTIONS',
+'PATCH',
+'POST',
+'PUT',
+]
+
+CORS_ADDITIONAL_HOST_LIST = os.environ['CORS_ADDITIONAL_HOST'].split(";")
+for cors_host in CORS_ADDITIONAL_HOST_LIST:
+    if not cors_host.startswith("https://"):
+        cors_host = "https://" + cors_host
+    CORS_ORIGIN_WHITELIST.append(cors_host)
+    CORS_ALLOWED_ORIGINS.append(cors_host)
+
 CORS_ALLOW_CREDENTIALS = True
 
 GRAPHQL_JWT = {
