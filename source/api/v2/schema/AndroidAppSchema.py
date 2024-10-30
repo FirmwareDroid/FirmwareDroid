@@ -13,6 +13,7 @@ from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from api.v2.schema.RqJobsSchema import ONE_WEEK_TIMEOUT, MAX_OBJECT_ID_LIST_SIZE
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
+from api.v2.validators.validation import *
 from model import AndroidApp, AndroidFirmware
 from android_app_importer.standalone_importer import start_android_app_standalone_importer
 
@@ -91,7 +92,6 @@ def import_module_function(scanner_name, object_id_list, init_args=None):
         scanner_module = importlib.import_module(module_name)
         class_obj = getattr(scanner_module, class_name)
         if init_args:
-            logging.info(f"init_args {init_args}")
             instance_obj = class_obj(object_id_list, **init_args)
         else:
             instance_obj = class_obj(object_id_list)
@@ -110,14 +110,37 @@ class CreateApkScanJob(graphene.Mutation):
     job_id_list = graphene.List(graphene.String)
 
     class Arguments:
+        """
+        Arguments for the CreateApkScanJob mutation.
+        :param queue_name: str - Name of the rq queue to use. For instance, "high-python".
+        :param module_name: str - Name of the module to use. For instance, "ANDROGUARD".
+        :param object_id_list: list(str) - List of objectId to scan.
+        :param kwargs: dict - Additional arguments passed to the scan instance.
+        """
         queue_name = graphene.String(required=True, default_value="default-python")
         module_name = graphene.String(required=True)
-        object_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
+        firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=False, default_value=[])
+        object_id_list = graphene.List(graphene.NonNull(graphene.String), required=False, default_value=[])
         kwargs = graphene.JSONString(required=True, default_value="{}")
+
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, queue_name, module_name, object_id_list, kwargs=None):
+    @sanitize_and_validate(
+        validators={
+            'queue_name': validate_queue_name,
+            'module_name': validate_module_name,
+            'object_id_list': validate_object_id_list,
+            'firmware_id_list': validate_object_id_list,
+            'kwargs': validate_kwargs
+        },
+        sanitizers={
+            'queue_name': sanitize_string,
+            'module_name': sanitize_string,
+            'kwargs': sanitize_json
+        }
+    )
+    def mutate(cls, root, info, queue_name, module_name, firmware_id_list, object_id_list, kwargs=None):
         """
         Enqueue a RQ job to start one of the scanners for apk files. In case the object_id_list is too large, the list
         will be split into smaller chunks and each chunk will be processed in a separate RQ job.
@@ -125,23 +148,35 @@ class CreateApkScanJob(graphene.Mutation):
         :param kwargs: Additional arguments passed to the scan instance.
         :param queue_name: str - Name of the rq queue to use. For instance, "high-python".
         :param module_name: str - Name of the module to use. For instance, "ANDROGUARD".
-        :param object_id_list: list(str) - List of objectId to scan.
+        :param firmware_id_list: list(str) - List of firmwareId to scan. Optional if object_id_list is defined.
+        :param object_id_list: list(str) - List of objectId to scan. Optional if firmware_id_list is defined.
 
-        :return: list of unique ids of the RQ jobs.
+        :return: list of unique IDs of the RQ jobs.
         """
+        response = {}
         queue = django_rq.get_queue(queue_name)
-        object_id_chunks = [object_id_list[i:i + MAX_OBJECT_ID_LIST_SIZE] for i in range(0, len(object_id_list),
-                                                                                         MAX_OBJECT_ID_LIST_SIZE)]
-        job_id_list = []
-        for object_id_chunk in object_id_chunks:
-            if kwargs:
-                func_to_run = import_module_function(module_name, object_id_chunk, kwargs)
-            else:
-                logging.info("No kwargs")
-                func_to_run = import_module_function(module_name, object_id_chunk)
-            job = queue.enqueue(func_to_run, job_timeout=ONE_WEEK_TIMEOUT)
-            job_id_list.append(job.id)
-        return cls(job_id_list=job_id_list)
+
+        if firmware_id_list:
+            if not object_id_list:
+                object_id_list = []
+            android_app_list = AndroidApp.objects(firmware_id_reference__in=firmware_id_list).only('pk')
+            object_id_list.extend([app.pk for app in android_app_list])
+        logging.info(f"Object ID list: {object_id_list}")
+
+        if len(object_id_list) > 0:
+            object_id_chunks = [object_id_list[i:i + MAX_OBJECT_ID_LIST_SIZE] for i in range(0, len(object_id_list),
+                                                                                             MAX_OBJECT_ID_LIST_SIZE)]
+            job_id_list = []
+            for object_id_chunk in object_id_chunks:
+                if kwargs and bool(json.loads(kwargs)):
+                    func_to_run = import_module_function(module_name, object_id_chunk, kwargs)
+                else:
+                    logging.info("No kwargs")
+                    func_to_run = import_module_function(module_name, object_id_chunk)
+                job = queue.enqueue(func_to_run, job_timeout=ONE_WEEK_TIMEOUT)
+                job_id_list.append(job.id)
+                response = cls(job_id_list=job_id_list)
+        return response
 
 
 class CreateAppImportJob(graphene.Mutation):
