@@ -38,7 +38,7 @@ class AecsJobQuery(graphene.ObjectType):
         return get_filtered_queryset(AecsJob, object_id_list, field_filter)
 
 
-class ModifyAecsJob(graphene.Mutation):
+class UpdateOrCreateAECSJob(graphene.Mutation):
     """
     Create or update the aecs-job. There can only be one aecs-job in the database. In case a new
     job is created the old will be overwritten by the new. The aecs-job is used to store a
@@ -151,6 +151,6 @@ class CreateAECSBuildFilesJob(graphene.Mutation):
 
 
 class AecsJobMutation(graphene.ObjectType):
-    modify_aecs_job = ModifyAecsJob.Field()
+    update_or_create_aecs_job = UpdateOrCreateAECSJob.Field()
     delete_aecs_job = DeleteAecsJob.Field()
     create_aecs_build_files_job = CreateAECSBuildFilesJob.Field()

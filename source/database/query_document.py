@@ -3,7 +3,7 @@
 # See the file 'LICENSE' for copying permission.
 import logging
 from mongoengine import DoesNotExist
-
+from bson import ObjectId
 
 def get_all_document_ids(document_class):
     """
@@ -22,6 +22,21 @@ def get_all_document_ids(document_class):
     return id_list
 
 
+def is_valid_object_id(document_id):
+    """
+    Checks if the given document_id is a valid MongoDB ObjectId.
+
+    :param document_id: str - The document ID to check.
+
+    :return: bool - True if valid, False otherwise.
+    """
+    try:
+        ObjectId(document_id)
+        return True
+    except Exception:
+        return False
+
+
 def create_document_list_by_ids(document_id_list, document_class, attribute_filter_list=None):
     """
     Gets a list of document instances from the database.
@@ -35,14 +50,17 @@ def create_document_list_by_ids(document_id_list, document_class, attribute_filt
     """
     document_instance_list = []
     for document_id in document_id_list:
-        try:
-            if not attribute_filter_list:
-                document_instance = document_class.objects.get(pk=document_id)
-            else:
-                document_instance = document_class.objects.only(*attribute_filter_list).get(pk=document_id)
-            document_instance_list.append(document_instance)
-        except DoesNotExist:
-            logging.warning(f"ID does not exist {document_id} {document_class}")
+        if is_valid_object_id(document_id):
+            try:
+                if not attribute_filter_list:
+                    document_instance = document_class.objects.get(pk=document_id)
+                else:
+                    document_instance = document_class.objects.only(*attribute_filter_list).get(pk=document_id)
+                document_instance_list.append(document_instance)
+            except DoesNotExist:
+                logging.warning(f"ID does not exist {document_id} {document_class}")
+        else:
+            logging.warning(f"Skipping ID because is not a valid object-id {document_id}")
     return document_instance_list
 
 
