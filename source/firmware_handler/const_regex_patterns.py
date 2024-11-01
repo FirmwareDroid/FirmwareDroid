@@ -11,12 +11,12 @@ Pattern lists should always start with the most fitting one and then get slowly 
 # Partitions that are in ext or sparse format.
 ##########################################################################################
 SYSTEM_IMG_PATTERN_LIST = [
-    "system[.]img",
-    ".*system[.]img$",
-    "^system[.].*[.]img$",
-    "^system[.]img[.].*",
-    ".*system.*img_sparsechunk$",
-    ".*system.*(img|rfs|img.ext4|ext4.img)$",
+    "system[.]img(?!.*system_ext)(?!.*system_other)",
+    ".*system[.]img$(?!.*system_ext)(?!.*system_other)",
+    "^system[.].*[.]img$(?!.*system_ext)(?!.*system_other)",
+    "^system[.]img[.].*(?!.*system_ext)(?!.*system_other)",
+    ".*system.*img_sparsechunk$(?!.*system_ext)(?!.*system_other)",
+    ".*system.*(img|rfs|img.ext4|ext4.img)$(?!.*system_ext)(?!.*system_other)"
 ]
 
 SUPER_IMG_PATTERN_LIST = ["super[.]img",
