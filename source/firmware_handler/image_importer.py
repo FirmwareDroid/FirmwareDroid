@@ -2,9 +2,7 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import logging
-import os
 import re
-from firmware_handler.firmware_file_search import get_firmware_file_by_regex_list
 
 
 def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
@@ -30,8 +28,8 @@ def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
                 if "vbmeta" not in filename and "patch" not in filename:
                     logging.debug(f"Found potential image file:{firmware_file.name} for pattern: {pattern}")
                     potential_image_files.append(firmware_file)
-                    # perfect match
-                    if pattern_match_count < 2:
+                    # good match already
+                    if pattern_match_count < 3:
                         break
     if not potential_image_files:
         raise ValueError(f"Could not find image file in the filelist based on the patterns: "
