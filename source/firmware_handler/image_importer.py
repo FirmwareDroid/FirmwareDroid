@@ -5,10 +5,11 @@ import logging
 import re
 
 
-def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
+def find_image_firmware_file(firmware_file_list, image_filename_pattern_list, partition_name):
     """
     Checks within the given file list if there is a mountable system partition.
 
+    :param partition_name: str - the name of the partition.
     :param image_filename_pattern_list: str - a list of regex pattern for searching the images' filename.
     :param firmware_file_list: The files which will be checked for their names.
     :raise ValueError: Exception raised when the file could not be found.
@@ -27,6 +28,8 @@ def find_image_firmware_file(firmware_file_list, image_filename_pattern_list):
                     and not filename.startswith("._")):
                 if "vbmeta" not in filename and "patch" not in filename:
                     logging.debug(f"Found potential image file:{firmware_file.name} for pattern: {pattern}")
+                    if partition_name == "system" and ("system_other" in filename or "system_ext" in filename):
+                        continue
                     potential_image_files.append(firmware_file)
                     # good match already
                     if pattern_match_count < 3:

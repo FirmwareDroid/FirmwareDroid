@@ -447,7 +447,7 @@ def create_partition_firmware_files(archive_firmware_file_list,
         if os.path.exists(partition_folder) and os.path.isdir(partition_folder) and any(os.scandir(partition_folder)):
             shutil.move(partition_folder, temp_dir_path)
         else:
-            potential_image_files = find_image_firmware_file(archive_firmware_file_list, file_pattern_list)
+            potential_image_files = find_image_firmware_file(archive_firmware_file_list, file_pattern_list, partition_name)
             for image_firmware_file in potential_image_files:
                 try:
                     logging.info(
