@@ -128,6 +128,7 @@ def manifest_parser_worker_multiprocessing(android_app_id):
     """
     Worker process which will work on the given queue to parse the AndroidManifest.xml file of the given Android app.
     """
+
     android_app = AndroidApp.objects.get(pk=android_app_id)
     logging.info(f"ManifestParser scans: {android_app.filename} {android_app.id}")
     analyse_and_save(android_app)
