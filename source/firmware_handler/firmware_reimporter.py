@@ -9,7 +9,7 @@ from model import AndroidFirmware, StoreSetting
 
 @create_db_context
 @create_log_context
-def start_firmware_re_import(firmware_id_list):
+def start_firmware_re_import(firmware_id_list, create_fuzzy_hashes=False):
     """
     The reimporter is a function that reimports firmware files into the importer queue.
 
@@ -17,13 +17,14 @@ def start_firmware_re_import(firmware_id_list):
     Second, deletes the firmware from the database.
     Third, runs the firmware importer.
     
+    :param create_fuzzy_hashes: boolean - True: will create fuzzy hashes for all files in the firmware found.
     :param firmware_id_list: list(str) - ids of class:'AndroidFirmware'
     
     """
     logging.info(f"Starting re-import of firmware with ids: {firmware_id_list}")
 
     store_dict = bundle_firmware_to_store_dict(firmware_id_list)
-    logging.info(f"Created firmware bundle: {store_dict}")
+    logging.info(f"Created firmware bundle: {store_dict.items()}")
     for store_setting_pk, firmware_list in store_dict.items():
         store_setting = StoreSetting.objects.get(pk=store_setting_pk)
         store_path = store_setting.store_options_dict[store_setting.uuid]["paths"]
@@ -33,7 +34,7 @@ def start_firmware_re_import(firmware_id_list):
             copy_firmware_to_importer(android_firmware, importer_path)
         firmware_id_list = [firmware.pk for firmware in firmware_list]
         delete_queryset_background(firmware_id_list, AndroidFirmware)
-        import_firmware_from_store(store_setting, create_fuzzy_hashes=True)
+        import_firmware_from_store(store_setting, create_fuzzy_hashes=create_fuzzy_hashes)
 
 
 def bundle_firmware_to_store_dict(firmware_id_list):

@@ -105,13 +105,14 @@ class CreateFirmwareReImportJob(graphene.Mutation):
     class Arguments:
         queue_name = graphene.String(required=True, default_value="high-python")
         firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
+        create_fuzzy_hashes = graphene.Boolean(required=False, default_value=False)
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, queue_name, firmware_id_list):
+    def mutate(cls, root, info, queue_name, firmware_id_list, create_fuzzy_hashes):
         queue = django_rq.get_queue(queue_name)
         func_to_run = start_firmware_re_import
-        job = queue.enqueue(func_to_run, firmware_id_list, job_timeout=ONE_WEEK_TIMEOUT)
+        job = queue.enqueue(func_to_run, firmware_id_list, create_fuzzy_hashes, job_timeout=ONE_WEEK_TIMEOUT)
         return cls(job_id=job.id)
 
 
