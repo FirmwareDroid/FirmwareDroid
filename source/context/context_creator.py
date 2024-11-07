@@ -23,6 +23,25 @@ def create_db_context(f):
     return decorated
 
 
+def create_db_context_subprocess(f):
+    """
+    Decorator for creating an app context and pushing into to the Flask context stack.
+
+    :param f: function to test for basic auth.
+    :return: function
+
+    """
+    @functools.wraps(f)
+    def decorated(*args, **kwargs):
+        from database.connector import reconnect
+        from database.connector import multiprocess_disconnect_all
+        alias = "default"
+        multiprocess_disconnect_all()
+        reconnect(alias)
+        return f(*args, **kwargs)
+    return decorated
+
+
 @create_db_context
 def create_app_context():
     """

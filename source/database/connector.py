@@ -30,7 +30,7 @@ def multiprocess_disconnect_all():
     """
     from webserver.settings import MONGO_DATABASES
     #mongoengine.disconnect_all()
-    mongoengine.disconnect()
+    #mongoengine.disconnect()
     connection._connections = {}
     connection._connection_settings = {}
     connection._dbs = {}
@@ -113,6 +113,39 @@ def reconnect(alias):
     except Exception as err:
         logging.error(str(err))
     return db_connection
+
+
+def check_connection(alias='default'):
+    """
+    Check if the MongoEngine connection is active.
+
+    :param alias: str - the connection alias.
+    :return: bool - True if the connection is active, False otherwise.
+    """
+    try:
+        mongoengine.get_connection(alias)
+        return True
+    except mongoengine.connection.ConnectionError:
+        return False
+
+
+def reconnect_db_default(func):
+    """
+    Decorator to reconnect to MongoDB if the connection is closed.
+
+    :param func: function - the function to wrap.
+    :return: function - the wrapped function.
+    """
+
+    def wrapper(*args, **kwargs):
+        alias = kwargs.get('alias', 'default')
+        logging.info(f"Reconnecting to MongoDB with alias '{alias}'...")
+        from webserver.settings import MONGO_DATABASES
+        db_settings = MONGO_DATABASES["default"]
+        open_db_connection(db_settings, alias)
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 def get_connection_options(db_settings):
