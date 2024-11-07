@@ -341,7 +341,7 @@ class FmdEnvironment:
             django_superuser_email=self.django_superuser_email,
             docker_memory_limit=self.docker_memory_limit,
             docker_memory_swap_limit=self.docker_memory_swap_limit,
-
+            docker_cpu_limit=self.docker_cpu_limit
         )
         out_file_path = os.path.join(self.script_file_path, "." + ENV_FILE_NAME)
         with open(out_file_path, mode="w", encoding="utf-8") as out_file:
