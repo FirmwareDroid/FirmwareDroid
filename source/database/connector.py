@@ -9,10 +9,6 @@ from mongoengine import connection
 
 
 def test_connection():
-    """
-
-    :return:
-    """
     from model import WebclientSetting
     application_setting = WebclientSetting.objects.first()
 
@@ -51,10 +47,10 @@ def init_db(db_settings):
 
     """
     alias = uuid.uuid4()
-    register_connection(db_settings, alias='default', connect=True, maxPoolSize=100)
+    register_connection(db_settings, alias='default', connect=True, maxPoolSize=300)
     db_con = open_db_connection(db_settings, str(alias))
     register_connection(db_settings, str(alias))
-    test_connection()
+    #test_connection()
     return db_con
 
 

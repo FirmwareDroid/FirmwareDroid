@@ -92,7 +92,7 @@ def create_modules(source_folder, destination_folder, format_name, search_patter
                 template_out, module_name = create_template_string(format_name, source_file)
                 module_folder = os.path.join(destination_folder, module_name)
                 copy_file(source_file, module_folder)
-                write_template_to_file(template_out, module_folder)
+                write_template_to_file(template_out, module_folder, format_name)
                 partition_name = source_file.split("/")[7]
                 add_module_to_meta_file(partition_name, destination_folder, module_name)
                 log_entry = (f"Partition: {partition_name}"
@@ -101,17 +101,21 @@ def create_modules(source_folder, destination_folder, format_name, search_patter
                 add_to_log_file(destination_folder, log_entry, "meta_writer.log")
 
 
-def write_template_to_file(template_out, destination_folder):
+def write_template_to_file(template_out, destination_folder, format_name):
     """
     Writes the template string to a file.
 
+    :param format_name: str - format name of the module either mk or bp.
     :param template_out: str - template string for the module.
     :param destination_folder: str - path to the destination folder.
 
     :return: str - path to the module.
 
     """
-    file_path = os.path.join(destination_folder, "Android.mk")
+    if format_name.lower() == "bp":
+        file_path = os.path.join(destination_folder, "Android.bp")
+    else:
+        file_path = os.path.join(destination_folder, "Android.mk")
     with open(file_path, "w") as file:
         file.write(template_out)
     return file_path
