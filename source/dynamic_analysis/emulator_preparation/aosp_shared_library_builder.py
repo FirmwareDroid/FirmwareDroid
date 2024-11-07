@@ -5,7 +5,7 @@ from string import Template
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import (get_firmware_export_folder_root,
                                                                       is_top_folder,
                                                                       get_subfolders)
-from dynamic_analysis.emulator_preparation.asop_meta_writer import create_modules
+from dynamic_analysis.emulator_preparation.aosp_meta_writer import create_modules
 from dynamic_analysis.emulator_preparation.templates.shared_library_module_template import \
     ANDROID_MK_SHARED_LIBRARY_TEMPLATE, ANDROID_BP_SHARED_LIBRARY_TEMPLATE
 from firmware_handler.firmware_file_exporter import remove_unblob_extract_directories

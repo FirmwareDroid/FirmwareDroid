@@ -18,6 +18,7 @@ NUMBER_OF_EXPORTER_THREADS = 10
 NAME_EXPORT_FOLDER = "firmware_file_export"
 UNBLOB_WORKER_COUNT = 1
 UNBLBOB_DEPTH = 10
+FILES_TO_NOT_EXTRACT = [".unknown", ".padding", "_extract", "raw.image", ".unblob.json"]
 
 
 @create_db_context
@@ -87,12 +88,9 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             with (tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as temp_dir_path):
                 firmware_file_list = extract_firmware(firmware.absolute_store_path, temp_dir_path)
                 for firmware_file in firmware_file_list:
-                    # Excluding some Unblob specific file extensions to prevent them from being exported
                     if not firmware_file.is_directory \
                             and re.search(search_pattern, firmware_file.name) \
-                            and ".unknown" not in firmware_file.name \
-                            and ".padding" not in firmware_file.name \
-                            and "_extract" not in firmware_file.name:
+                            and not any(ext in firmware_file.name for ext in FILES_TO_NOT_EXTRACT):
                         logging.debug(f"Exporting firmware file {firmware_file.id} {firmware_file.name}")
                         firmware_file.firmware_id_reference = firmware.id
                         if firmware_file.partition_name == "/":
@@ -191,7 +189,7 @@ def get_file_export_path_abs(store_setting, firmware_file):
                                       str(firmware_file.firmware_id_reference.pk),
                                       firmware_file.partition_name,
                                       "." + minimized_relative_path)
-    destination_folder_abs = os.path.abspath(destination_folder)
+    destination_folder_abs = os.path.abspath(str(destination_folder))
     logging.debug(f"Exporting firmware file {firmware_file.id} to {destination_folder_abs}")
     return destination_folder_abs
 
@@ -236,8 +234,15 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
     create_directory(destination_path, firmware_file)
     dst_file_path = None
     try:
-        if os.path.isdir(source_path):
-            dst_file_path = shutil.copytree(source_path, destination_path)
+        if os.path.islink(source_path):
+            linkto = os.readlink(source_path)
+            os.symlink(linkto, destination_path)
+        elif os.path.isdir(source_path):
+            if not os.listdir(source_path):
+                os.makedirs(destination_path, exist_ok=True)
+                dst_file_path = destination_path
+            else:
+                dst_file_path = shutil.copytree(source_path, destination_path, dirs_exist_ok=True)
         else:
             dst_file_path = shutil.copy(source_path, destination_path)
     except OSError as e:

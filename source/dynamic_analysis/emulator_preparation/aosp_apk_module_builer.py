@@ -6,7 +6,7 @@ from string import Template
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import get_subfolders
 from firmware_handler.firmware_file_exporter import remove_unblob_extract_directories
 from model import GenericFile
-from dynamic_analysis.emulator_preparation.asop_meta_writer import add_module_to_meta_file, add_to_log_file
+from dynamic_analysis.emulator_preparation.aosp_meta_writer import add_module_to_meta_file, add_to_log_file
 from dynamic_analysis.emulator_preparation.templates.android_app_module_template import ANDROID_MK_TEMPLATE, \
     ANDROID_BP_TEMPLATE
 

@@ -11,9 +11,8 @@ import tempfile
 import logging
 import traceback
 import uuid
-from os.path import exists
-
 from context.context_creator import create_db_context, create_log_context
+from dynamic_analysis.emulator_preparation.aosp_apex_module_builder import process_apex_files
 from dynamic_analysis.emulator_preparation.aosp_apk_module_builer import create_build_files_for_apps, \
     process_android_apps
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import export_files_by_regex
@@ -108,11 +107,12 @@ def package_build_files_for_firmware(firmware, format_name, skip_file_export):
                                                NAME_EXPORT_FOLDER,
                                                str(firmware.pk))
         if not skip_file_export:
-            search_pattern = "$"
+            search_pattern = "^.*$"
             export_files_by_regex(firmware, store_setting.id, search_pattern)
         copy_partitions(export_destination_path, tmp_root_dir)
         process_android_apps(firmware, tmp_root_dir)
         process_shared_libraries(firmware, tmp_root_dir, store_setting.id, format_name)
+        process_apex_files(firmware, tmp_root_dir, store_setting.id, format_name)
         package_files(firmware, tmp_root_dir, store_paths)
 
 
