@@ -12,8 +12,8 @@ def create_template_string(format_name, file_path):
     file_template = APEX_PREBUILT_TEMPLATE
     apex_filename = str(os.path.basename(file_path))
     apex_name = apex_filename.replace(".apex", "").replace(".capex", "")
-    apex_relative_path_x86_x64 = f"packages/modules/{apex_name}"
-    apex_relative_path_arm64 = f"packages/modules/{apex_name}"
+    apex_relative_path_x86_x64 = f"{apex_filename}"
+    apex_relative_path_arm64 = f"{apex_filename}"
     template_out = Template(file_template).substitute(apex_name=apex_name,
                                                       apex_filename=apex_filename,
                                                       apex_relative_path_arm64=apex_relative_path_arm64,
