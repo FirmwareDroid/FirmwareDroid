@@ -165,8 +165,8 @@ def select_signing_key(android_app):
     if android_app.android_manifest_dict and android_app.android_manifest_dict["manifest"]:
         signing_key = get_signing_key_by_uid(android_app)
 
-    if not signing_key:
-        signing_key = get_signing_key_by_package_name(android_app)
+        if not signing_key:
+            signing_key = get_signing_key_by_package_name(android_app)
 
     if not signing_key:
         signing_key = "platform"
