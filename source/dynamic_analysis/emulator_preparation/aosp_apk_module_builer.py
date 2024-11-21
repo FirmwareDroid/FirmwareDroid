@@ -160,21 +160,46 @@ def select_signing_key(android_app):
     :return: str - The signing key for the Android app.
 
     """
-    signing_key = "platform"
+    signing_key = None
 
     if android_app.android_manifest_dict and android_app.android_manifest_dict["manifest"]:
-        if "@ns0:sharedUserId" in android_app.android_manifest_dict["manifest"]:
-            manifest = android_app.android_manifest_dict["manifest"]
-            shared_user_id = manifest["@ns0:sharedUserId"]
-            logging.debug(f"UserID found: {shared_user_id} for app {android_app.filename}")
-            if shared_user_id == "android.uid.shared" or shared_user_id == "android.shared":
-                signing_key = "shared"
-            elif shared_user_id == "android.uid.networkstack" or shared_user_id == "android.networkstack":
-                signing_key = "networkstack"
-            elif shared_user_id == "android.uid.media" or shared_user_id == "android.media":
-                signing_key = "media"
-            logging.debug(f"Selected signing key: {signing_key} for app {android_app.filename} "
-                          f"based on sharedUserId: {shared_user_id}")
+        signing_key = get_signing_key_by_uid(android_app)
+
+        if not signing_key:
+            signing_key = get_signing_key_by_package_name(android_app)
+
+    if not signing_key:
+        signing_key = "platform"
+
+    return signing_key
+
+
+def get_signing_key_by_package_name(android_app):
+    signing_key = ""
+    if "@package" in android_app.android_manifest_dict["manifest"]:
+        package_name = android_app.android_manifest_dict["manifest"]["@package"]
+        if "networkstack" in package_name or "cellbroadcast" in package_name:
+            signing_key = "networkstack"
+    return signing_key
+
+
+def get_signing_key_by_uid(android_app):
+    signing_key = None
+    if "@ns0:sharedUserId" in android_app.android_manifest_dict["manifest"]:
+        manifest = android_app.android_manifest_dict["manifest"]
+        shared_user_id = manifest["@ns0:sharedUserId"]
+        logging.debug(f"UserID found: {shared_user_id} for app {android_app.filename}")
+        if shared_user_id == "android.uid.shared" or shared_user_id == "android.shared":
+            signing_key = "shared"
+        elif shared_user_id == "android.uid.networkstack" or shared_user_id == "android.networkstack":
+            signing_key = "networkstack"
+        elif shared_user_id == "android.uid.media" or shared_user_id == "android.media":
+            signing_key = "media"
+        logging.debug(f"Selected signing key: {signing_key} for app {android_app.filename} "
+                      f"based on sharedUserId: {shared_user_id}")
+    else:
+        logging.warning(f"No sharedUserId found for app {android_app.filename}")
+
     return signing_key
 
 
