@@ -25,7 +25,8 @@ from firmware_handler.firmware_file_indexer import create_firmware_file_list
 
 EXTRACTION_SEMAPHORE = threading.Semaphore(20)
 MAX_EXTRACTION_DEPTH = 10
-SUPPORTED_FILE_TYPE_REGEX = r"(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz|app|rar|ozip|APP|apex|capex)$"
+SUPPORTED_FILE_TYPE_REGEX = r"(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz|app|rar|ozip|APP)$"
+THIRD_LAYER_SUPPORT_FILE_TYPES = [".apex", ".capex"]
 SKIP_FILE_PATTERN_LIST = ["[.]new[.]dat$", "[.]patch[.]dat$"]
 
 EXTRACT_FUNCTION_MAP_DICT = {
@@ -208,6 +209,34 @@ def extract_second_layer(firmware_archive_file_path, destination_dir, extracted_
     return firmware_file_list
 
 
+def extract_third_layer(firmware_file_list, extracted_partition_path, partition_name):
+    """
+    Extract firmware files within the firmware itself (third layer).
+
+    :param firmware_file_list: list(class:"FirmwareFile") - list of firmware files to extract.
+    :param extracted_partition_path: str - path to the directory where the extracted files are stored.
+    :param partition_name: str - name of the partition.
+
+    :return: list(class:"FirmwareFile") - list of extracted firmware files.
+    """
+    logging.info(f"Extracting third layer of the firmware archive: {len(firmware_file_list)} files")
+    all_firmware_files_extracted_list = []
+    for firmware_file in firmware_file_list:
+        if firmware_file.is_directory is False and (any([firmware_file.name.endswith(file_extension)
+                                                         for file_extension in THIRD_LAYER_SUPPORT_FILE_TYPES])):
+            logging.info(f"Extracting third layer for: {firmware_file.name}")
+            extract_dir = tempfile.mkdtemp(dir=extracted_partition_path, prefix="fmd_extract_third_layer_")
+            extract_dir = os.path.abspath(extract_dir)
+            is_success = unblob_extract(firmware_file.absolute_store_path, extract_dir, depth=MAX_EXTRACTION_DEPTH)
+            if not is_success:
+                remove_temp_directories(extract_dir)
+            else:
+                logging.info(f"Extracted success file {firmware_file.name} to: {extract_dir}")
+                extract_firmware_file_list = create_firmware_file_list(extract_dir, partition_name)
+                all_firmware_files_extracted_list.extend(extract_firmware_file_list)
+    return all_firmware_files_extracted_list
+
+
 def attempt_sparse_img_convertion(android_sparse_img_path, destination_dir):
     is_success = False
     raw_image_path = None
@@ -358,8 +387,12 @@ def process_file(current_path,
         logging.info(f"Extraction successful for: {current_path}")
     else:
         logging.warning(f"Expand Archive: Extraction failed for: {current_path}")
-        new_file_location = current_path + ".failed"
-        shutil.move(current_path, new_file_location)
+        if not current_path.endswith(".failed"):
+            new_file_location = current_path + ".failed"
+            shutil.move(current_path, new_file_location)
+        else:
+            logging.warning(f"File already marked as failed, likely some config error in "
+                            f"the extensions allowed to extract: {current_path}")
 
 
 def process_single_file_path(file_path,
