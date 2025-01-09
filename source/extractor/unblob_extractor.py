@@ -11,9 +11,10 @@ SKIP_EXTENSION_DEFAULT = [".apk", ".dex", ".odex", ".oat", ".so", ".jar", ".clas
                           ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".xml", ".json", ".html", ".htm",
                           ".css", ".js", ".ts", ".tsx", ".svg", ".ttf", ".otf", ".woff", ".woff2", ".eot", ".md",
                           ".log", ".odt", ".ods", ".odp", ".odg", ".odf", ".odb", ".odc", ".odm", ".pak", ".rlib",
-                          ".mtz", ".apex", ".capex", ".vdex", ".arsc", ".pb", ".aab", ".list", ".config", ".elf",
+                          ".mtz", ".vdex", ".arsc", ".pb", ".aab", ".list", ".config", ".elf",
                           ".mbn", ".1", ".2", ".3", ".4", ".prop", ".conf", ".cfg", ".ini", ".sh", ".bat", ".cmd",
-                          ".pem", ".pk8", ".url", ".elf32", ".elf64", "._lost+found"]
+                          ".pem", ".pk8", ".url", ".elf32", ".elf64", "._lost+found", ".art"]
+# ".apex", ".capex"
 
 
 def remove_unblob_log():
@@ -27,10 +28,15 @@ def remove_unblob_log():
         logging.warning(err)
 
 
-def unblob_extract(compressed_file_path, destination_dir, depth=1, worker_count=5):
+def unblob_extract(compressed_file_path,
+                   destination_dir,
+                   depth=1,
+                   worker_count=5,
+                   skip_extensions=SKIP_EXTENSION_DEFAULT):
     """
     Extract a file recursively with the unblob extraction suite.
 
+    :param skip_extensions: list(str) - list of extensions to skip during extraction.
     :param worker_count: int - number of workers to use.
     :param depth: int - depth of unblob extraction.
     :param destination_dir: str - path to the folder where the data is extracted to.
@@ -59,7 +65,7 @@ def unblob_extract(compressed_file_path, destination_dir, depth=1, worker_count=
                          "-v",  # Verbose
                          "--report", output_dir + "/unblob.json",
                          ]
-        for extension in SKIP_EXTENSION_DEFAULT:
+        for extension in skip_extensions:
             command_array.append("--skip-extension")
             command_array.append(extension)
         command_array.append(input_file)
