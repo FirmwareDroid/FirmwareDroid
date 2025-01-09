@@ -10,8 +10,6 @@ import os
 import shutil
 from queue import Empty
 from pathlib import Path
-from time import sleep
-
 from hashing.fuzzy_hash_creator import add_fuzzy_hashes
 from model import AndroidFirmware, FirmwareFile, AndroidApp
 from threading import Thread
@@ -22,7 +20,7 @@ from firmware_handler.const_regex_patterns import BUILD_PROP_PATTERN_LIST, EXT_I
 from android_app_importer.android_app_import import store_android_apps_from_firmware
 from firmware_handler.build_prop_parser import BuildPropParser
 from hashing.standard_hash_generator import md5_from_file, sha1_from_file, sha256_from_file
-from extractor.expand_archives import extract_first_layer, extract_second_layer
+from extractor.expand_archives import extract_first_layer, extract_second_layer, extract_third_layer
 from model.FirmwareImporterSetting import get_firmware_importer_setting
 from model.StoreSetting import get_active_store_by_index
 from utils.file_utils.file_util import get_filenames
@@ -456,7 +454,11 @@ def create_partition_firmware_files(archive_firmware_file_list,
                                                               temp_dir_path,
                                                               extracted_archive_dir_path,
                                                               partition_name)
+                    third_layer_firmware_file_list = extract_third_layer(firmware_file_list,
+                                                                         temp_dir_path,
+                                                                         partition_name)
                     partition_firmware_files.extend(firmware_file_list)
+                    partition_firmware_files.extend(third_layer_firmware_file_list)
                     if len(firmware_file_list) > 0:
                         is_successful = True
                     logging.info(f"Found {len(firmware_file_list)} files in {image_firmware_file.absolute_store_path}")
