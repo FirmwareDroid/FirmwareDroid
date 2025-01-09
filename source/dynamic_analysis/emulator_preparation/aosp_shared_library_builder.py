@@ -68,6 +68,8 @@ def select_local_module_path(file_path, file_name):
     elif "/priv-app/" in file_path:
         app_name = file_path.split("/priv-app/")[1]
         local_module_path = f"$(TARGET_OUT)/priv-app/{app_name}/lib/$(TARGET_ARCH_ABI)/"
+    elif "/apex/" in file_path:
+        local_module_path = f"$(TARGET_OUT)/system/lib64/"
     else:
         partition_name = file_path.split("/")[9]
         local_module_path = get_local_module_path(file_path, partition_name)

@@ -35,6 +35,7 @@ def map_apex_files_to_lists(apex_files):
             all_lists["prebuilts"].append(f"prebuilts: [\"{apex_file}\"]")
     return all_lists
 
+
 def create_apex_manifest_file(apex_name, apex_version):
     file_template = APEX_MANIFEST_TEMPLATE
     template_out = Template(file_template).substitute(apex_name=apex_name,

@@ -25,7 +25,7 @@ from firmware_handler.firmware_file_indexer import create_firmware_file_list
 
 EXTRACTION_SEMAPHORE = threading.Semaphore(20)
 MAX_EXTRACTION_DEPTH = 10
-SUPPORTED_FILE_TYPE_REGEX = r"(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz|app|rar|ozip|APP)$"
+SUPPORTED_FILE_TYPE_REGEX = r"(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz|app|rar|ozip|APP|apex|capex)$"
 SKIP_FILE_PATTERN_LIST = ["[.]new[.]dat$", "[.]patch[.]dat$"]
 
 EXTRACT_FUNCTION_MAP_DICT = {
@@ -41,6 +41,8 @@ EXTRACT_FUNCTION_MAP_DICT = {
     ".br": [extract_brotli],
     ".dat": [extract_dat],
     ".app": [app_extractor],
+    ".apex": [unblob_extract],
+    ".capex": [unblob_extract]
 }
 
 
