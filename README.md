@@ -6,7 +6,13 @@
 
 # FirmwareDroid (FMD)
 FirmwareDroid is a research project that aims to develop novel methods to analyse Android firmware. It is mainly made 
-to automate the process of extracting and scanning pre-installed Android apps for security research purposes. 
+to automate the process of extracting and scanning pre-installed Android apps for security research purposes. In this 
+repository you will find the code for the backend of FMD. The application has a minimal React
+frontend (see https://github.com/FirmwareDroid/FMD-WebClient), but is mainly an API and database 
+that can be used for research studies.
+
+Usage **documentation** can be found at: https://firmwaredroid.github.io/
+
 FMD is made to run in docker and includes several third party analysis tools for security analysis and extraction.
 Some of the tools and features included are:
 
@@ -47,14 +53,10 @@ Some of the tools and features included are:
 * Dynamic Analysis:
   * Work in progress
 
-FMD can be used as scanning engine for Android apps (.apk), but it is mainly made to analyse pre-installed 
-apps extracted from Android firmware.
-
-In this repository you will find the code for the backend of FMD. The application has a minimal React
-frontend (see https://github.com/FirmwareDroid/FMD-WebClient), but is mainly an API and database 
-that can be used for research studies.
-
-Usage documentation can be found at: https://firmwaredroid.github.io/
+FMD can be used as scanning engine for Android apps (.apk files), but it is mainly made to analyse pre-installed 
+apps extracted from Android firmware. It allows you to extract various types of files from firmware images and creates
+an inventory of the extracted files. The inventory can be used to scan the files with the included tools and APIs or to
+analyse the collected data with custom tooling.
 
 ### Contributing
 
