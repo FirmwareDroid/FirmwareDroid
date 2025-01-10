@@ -87,7 +87,7 @@ def convert_xmltree_to_xml(xmltree_file_path, output_dir):
 
     :return: str - path to the AndroidManifest.xml file.
     """
-    process = subprocess.Popen(["xmltree2xml", " -o", output_dir, xmltree_file_path],
+    process = subprocess.Popen(["xmltree2xml", "--output-dir", output_dir, xmltree_file_path],
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
     if stderr:
@@ -156,9 +156,8 @@ def analyse_single_apk(android_app):
     manifest_dict = {}
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
-            extract_xmltree_with_aapt2(android_app.absolute_store_path, temp_dir)
-            xmltree_file_path = search_for_manifest_file(temp_dir)
-            if xmltree_file_path:
+            xmltree_file_path = extract_xmltree_with_aapt2(android_app.absolute_store_path, temp_dir)
+            if os.path.exists(xmltree_file_path):
                 manifest_file_path = convert_xmltree_to_xml(xmltree_file_path, temp_dir)
         except Exception as err:
             try:
@@ -168,6 +167,7 @@ def analyse_single_apk(android_app):
                 logging.info(f"Falling back to apktool for {android_app.filename}")
                 extract_apk_file_with_apktool(android_app.absolute_store_path, temp_dir)
             manifest_file_path = search_for_manifest_file(temp_dir)
+
         if manifest_file_path:
             manifest_dict = get_manifest_as_dict(manifest_file_path)
         else:
