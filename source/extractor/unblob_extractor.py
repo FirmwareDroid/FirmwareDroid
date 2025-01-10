@@ -32,11 +32,11 @@ def unblob_extract(compressed_file_path,
                    destination_dir,
                    depth=1,
                    worker_count=5,
-                   skip_extensions=SKIP_EXTENSION_DEFAULT):
+                   skip_extensions_list=None):
     """
     Extract a file recursively with the unblob extraction suite.
 
-    :param skip_extensions: list(str) - list of extensions to skip during extraction.
+    :param skip_extensions_list: list(str) - list of extensions to skip during extraction.
     :param worker_count: int - number of workers to use.
     :param depth: int - depth of unblob extraction.
     :param destination_dir: str - path to the folder where the data is extracted to.
@@ -65,7 +65,10 @@ def unblob_extract(compressed_file_path,
                          "-v",  # Verbose
                          "--report", output_dir + "/unblob.json",
                          ]
-        for extension in skip_extensions:
+        if not skip_extensions_list:
+            skip_extensions_list = SKIP_EXTENSION_DEFAULT
+
+        for extension in skip_extensions_list:
             command_array.append("--skip-extension")
             command_array.append(extension)
         command_array.append(input_file)

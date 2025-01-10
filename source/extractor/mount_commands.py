@@ -30,7 +30,7 @@ def copy_files_and_unmount(source_file_path, destination_dir):
                 logging.error(f"Error while copying files from {source_file_path} to {extract_dir}")
                 logging.warning(f"stderr: {process.stderr.decode('utf-8')}")
         except subprocess.CalledProcessError as e:
-            logging.warning(f"Output: {e.cmd} {e} {process.stderr}")
+            logging.warning(f"Output: {e.cmd} {e}")
 
     return is_success
 
