@@ -13,15 +13,14 @@ from processing.standalone_python_worker import start_python_interpreter
 import tempfile
 
 
-def extract_apk_file(apk_file_path, temp_dir):
+def extract_apk_file_with_jadx(apk_file_path, temp_dir):
     """
-    Extracts the apk file to a temporary directory.
+    Extracts the apk file to a temporary directory using jadx.
 
     :param temp_dir: str - path to the temporary directory.
     :param apk_file_path: str - path to the apk file.
 
-    :return: str - path to the extracted apk file.
-
+    :raises RuntimeError: if the extraction fails.
     """
     logging.info(f"Extracting apk file: {apk_file_path}")
     process = subprocess.Popen(["jadx", "-d", temp_dir, apk_file_path],
@@ -33,11 +32,69 @@ def extract_apk_file(apk_file_path, temp_dir):
         logging.info(stdout.decode())
     if stderr:
         logging.error(stderr.decode())
-
-    if process.returncode != 0:
-        logging.error(f"Could not extract apk file: {apk_file_path}")
-        raise Exception(f"Could not extract apk file: {apk_file_path}")
+        raise RuntimeError(f"Error extracting APK with jadx: {stderr.decode()}")
     logging.info(f"Extracted apk file to: {temp_dir}")
+
+
+def extract_apk_file_with_apktool(apk_file_path, output_dir):
+    """
+    Extracts the apk file to a temporary directory. using apktool.
+
+    :param apk_file_path: str - path to the APK file.
+    :param output_dir: str - path to the output directory.
+
+    :raises RuntimeError: if the extraction fails.
+    """
+    process = subprocess.Popen(["apktool", "d", "-o", output_dir, apk_file_path],
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    if stderr:
+        logging.error(stderr.decode())
+        logging.error(f"Failed to extract manifest with apktool: {e}")
+        raise RuntimeError(f"Error extracting APK with apktool: {stderr.decode()}")
+
+
+def extract_xmltree_with_aapt2(apk_file_path, output_dir):
+    """
+    Extracts the xmltree of the AndroidManifest.xml from an apk file to a temporary directory using aapt2. Stores the
+    xmltree in a file called "AndroidManifest".
+
+    :param apk_file_path: str - path to the APK file.
+    :param output_dir: str - path to the output directory.
+
+    :raises RuntimeError: if the extraction fails.
+    """
+    command = ["aapt2", "dump", "xmltree", "--file", "AndroidManifest.xml", apk_file_path]
+    logging.info(f"Extracting xmltree with aapt2: {command}")
+    process = subprocess.Popen(command,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    if stderr or process.returncode != 0:
+        logging.error(stderr.decode())
+        logging.error(f"Failed to extract manifest with aapt2: {stderr.decode()}")
+        raise RuntimeError(f"Error extracting APK with aapt2: {stderr.decode()}")
+    with open(os.path.join(output_dir, 'AndroidManifest'), 'w') as f:
+        f.write(stdout.decode())
+    return os.path.join(output_dir, 'AndroidManifest')
+
+
+def convert_xmltree_to_xml(xmltree_file_path, output_dir):
+    """
+    Converts the xmltree file to an xml file using xmltree2xml.
+
+    :param xmltree_file_path: str - path to the xmltree file.
+    :param output_dir: str - path to the output directory.
+
+    :return: str - path to the AndroidManifest.xml file.
+    """
+    process = subprocess.Popen(["xmltree2xml", "--output-dir", output_dir, xmltree_file_path],
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = process.communicate()
+    if stderr:
+        logging.error(stderr.decode())
+        logging.error(f"Failed to convert xmltree with xmltree2xml: {stderr.decode()}")
+        raise RuntimeError(f"Error extracting APK with aapt2: {stderr.decode()}")
+    return os.path.join(output_dir, 'AndroidManifest.xml')
 
 
 def search_for_manifest_file(temp_dir):
@@ -96,13 +153,26 @@ def analyse_single_apk(android_app):
     :return: dict - the "AndroidManifest.xml" as a dictionary.
 
     """
-
     manifest_dict = {}
     with tempfile.TemporaryDirectory() as temp_dir:
-        extract_apk_file(android_app.absolute_store_path, temp_dir)
-        manifest_file_path = search_for_manifest_file(temp_dir)
+        try:
+            xmltree_file_path = extract_xmltree_with_aapt2(android_app.absolute_store_path, temp_dir)
+            if os.path.exists(xmltree_file_path):
+                manifest_file_path = convert_xmltree_to_xml(xmltree_file_path, temp_dir)
+        except Exception as err:
+            try:
+                logging.info(f"Falling back to jadx for {android_app.filename}")
+                extract_apk_file_with_jadx(android_app.absolute_store_path, temp_dir)
+            except Exception as err:
+                logging.info(f"Falling back to apktool for {android_app.filename}")
+                extract_apk_file_with_apktool(android_app.absolute_store_path, temp_dir)
+            manifest_file_path = search_for_manifest_file(temp_dir)
+
         if manifest_file_path:
             manifest_dict = get_manifest_as_dict(manifest_file_path)
+        else:
+            logging.error(f"Could not find AndroidManifest.xml for {android_app.filename}")
+            raise FileNotFoundError(f"Could not find AndroidManifest.xml for {android_app.filename}")
     return manifest_dict
 
 
@@ -128,10 +198,13 @@ def manifest_parser_worker_multiprocessing(android_app_id):
     """
     Worker process which will work on the given queue to parse the AndroidManifest.xml file of the given Android app.
     """
-
-    android_app = AndroidApp.objects.get(pk=android_app_id)
-    logging.info(f"ManifestParser scans: {android_app.filename} {android_app.id}")
-    analyse_and_save(android_app)
+    try:
+        android_app = AndroidApp.objects.get(pk=android_app_id)
+        logging.info(f"ManifestParser scans: {android_app.filename} {android_app.id}")
+        analyse_and_save(android_app)
+    except Exception as err:
+        logging.error(f"Could not scan app {android_app_id} - error: {str(err)}")
+        traceback.print_stack()
 
 
 class ManifestParserScanJob(ScanJob):
@@ -155,7 +228,7 @@ class ManifestParserScanJob(ScanJob):
         if len(android_app_id_list) > 0:
             python_process = start_python_interpreter(item_list=android_app_id_list,
                                                       worker_function=manifest_parser_worker_multiprocessing,
-                                                      number_of_processes=os.cpu_count()*4,
+                                                      number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
                                                       report_reference_name="",
