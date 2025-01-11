@@ -65,7 +65,7 @@ def unblob_extract(compressed_file_path,
                          "-v",  # Verbose
                          "--report", output_dir + "/unblob.json",
                          ]
-        if not skip_extensions_list:
+        if skip_extensions_list is None:
             skip_extensions_list = SKIP_EXTENSION_DEFAULT
 
         for extension in skip_extensions_list:
