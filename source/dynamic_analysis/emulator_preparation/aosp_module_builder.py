@@ -126,6 +126,8 @@ def copy_partitions(source_path, destination_path):
     """
     logging.info(f"Copying partitions from {source_path} to {destination_path}...")
     destination_subfolder_path = os.path.join(destination_path, "ALL_FILES/")
+    if not os.path.exists(source_path):
+        raise FileNotFoundError(f"Source path {source_path} does not exist.")
     shutil.copytree(source_path, destination_subfolder_path)
 
 
