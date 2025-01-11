@@ -56,6 +56,12 @@ def unblob_extract(compressed_file_path,
         filename = os.path.basename(compressed_file_path)
         file_extension = os.path.splitext(filename)[1]
 
+        if skip_extensions_list is None:
+            skip_extensions_list = SKIP_EXTENSION_DEFAULT
+
+        if allow_extension_list is None:
+            allow_extension_list = []
+
         for item in allow_extension_list:
             skip_extensions_list.remove(item)
 
@@ -71,8 +77,6 @@ def unblob_extract(compressed_file_path,
                          "-v",  # Verbose
                          "--report", output_dir + "/unblob.json",
                          ]
-        if skip_extensions_list is None:
-            skip_extensions_list = SKIP_EXTENSION_DEFAULT
 
         for extension in skip_extensions_list:
             command_array.append("--skip-extension")

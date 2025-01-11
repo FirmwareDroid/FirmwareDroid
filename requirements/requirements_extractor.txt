@@ -1,9 +1,9 @@
-lief~=0.16.1
+lief~=0.15.1
 py-lz4framed~=0.14.0
 python-lzo~=1.15
 rq~=1.15.0
 numpy~=1.26.4
 pymongo~=4.6.1
-unblob~=25.1.8
+unblob~=24.9.30
 python-magic~=0.4.27
 python-tlsh==4.5.0
