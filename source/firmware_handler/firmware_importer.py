@@ -454,11 +454,11 @@ def create_partition_firmware_files(archive_firmware_file_list,
                                                               temp_dir_path,
                                                               extracted_archive_dir_path,
                                                               partition_name)
-                    third_layer_firmware_file_list = extract_third_layer(firmware_file_list,
-                                                                         temp_dir_path,
-                                                                         partition_name)
+                    #third_layer_firmware_file_list = extract_third_layer(firmware_file_list,
+                    #                                                     temp_dir_path,
+                    #                                                     partition_name)
                     partition_firmware_files.extend(firmware_file_list)
-                    partition_firmware_files.extend(third_layer_firmware_file_list)
+                    #partition_firmware_files.extend(third_layer_firmware_file_list)
                     if len(firmware_file_list) > 0:
                         is_successful = True
                     logging.info(f"Found {len(firmware_file_list)} files in {image_firmware_file.absolute_store_path}")
