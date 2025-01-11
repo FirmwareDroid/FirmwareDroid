@@ -41,9 +41,7 @@ EXTRACT_FUNCTION_MAP_DICT = {
     ".bin": [payload_dumper_go_extractor],
     ".br": [extract_brotli],
     ".dat": [extract_dat],
-    ".app": [app_extractor],
-    ".apex": [unblob_extract],
-    ".capex": [unblob_extract]
+    ".app": [app_extractor]
 }
 
 
@@ -222,8 +220,8 @@ def extract_third_layer(firmware_file_list, extracted_partition_path, partition_
     logging.info(f"Extracting third layer of the firmware archive: {len(firmware_file_list)} files")
     all_firmware_files_extracted_list = []
     for firmware_file in firmware_file_list:
-        if firmware_file.is_directory is False and (any([firmware_file.name.endswith(file_extension)
-                                                         for file_extension in THIRD_LAYER_SUPPORT_FILE_TYPES])):
+        if not firmware_file.is_directory and (any([firmware_file.name.endswith(file_extension)
+                                                    for file_extension in THIRD_LAYER_SUPPORT_FILE_TYPES])):
             logging.info(f"Extracting third layer for: {firmware_file.name}")
             extract_dir = tempfile.mkdtemp(dir=extracted_partition_path, prefix="fmd_extract_third_layer_")
             extract_dir = os.path.abspath(extract_dir)

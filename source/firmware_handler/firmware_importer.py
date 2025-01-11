@@ -70,7 +70,7 @@ def start_import_threads(num_threads, firmware_archives_queue, create_fuzzy_hash
     for i in range(num_threads):
         logging.debug(f"Start importer thread {i} of {num_threads}")
         worker = Thread(target=prepare_firmware_import, args=(firmware_archives_queue, create_fuzzy_hashes, store_path))
-        worker.setDaemon(True)
+        worker.daemon = True
         worker.start()
     firmware_archives_queue.join()
 
