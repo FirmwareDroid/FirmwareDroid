@@ -165,8 +165,6 @@ def create_firmware_file(name,
     if meta_dict is None:
         meta_dict = {}
     is_link = os.path.islink(absolute_store_path)
-    if is_link:
-        is_directory = False
     return FirmwareFile(name=name,
                         parent_dir=parent_name,
                         is_directory=is_directory,
