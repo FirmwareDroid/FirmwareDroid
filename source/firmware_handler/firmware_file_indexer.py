@@ -79,16 +79,18 @@ def process_directories(dir_list, root, scan_directory, partition_name, result_f
 
     """
     for directory in dir_list:
-        relative_dir_path = os.path.join(root.replace(scan_directory, ""), directory)
-        parent_name = get_parent_name(root, scan_directory)
-        firmware_file = create_firmware_file(name=directory,
-                                             parent_name=parent_name,
-                                             is_directory=True,
-                                             relative_file_path=relative_dir_path,
-                                             absolute_store_path=os.path.join(root, directory),
-                                             partition_name=partition_name,
-                                             md5=None)
-        result_firmware_file_list.append(firmware_file)
+        absolute_path = os.path.join(root, directory)
+        if os.path.exists(absolute_path) and os.path.isdir(absolute_path):
+            relative_dir_path = os.path.join(root.replace(scan_directory, ""), directory)
+            parent_name = get_parent_name(root, scan_directory)
+            firmware_file = create_firmware_file(name=directory,
+                                                 parent_name=parent_name,
+                                                 is_directory=True,
+                                                 relative_file_path=relative_dir_path,
+                                                 absolute_store_path=absolute_path,
+                                                 partition_name=partition_name,
+                                                 md5=None)
+            result_firmware_file_list.append(firmware_file)
     return result_firmware_file_list
 
 
