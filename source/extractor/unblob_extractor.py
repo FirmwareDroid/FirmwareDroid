@@ -16,6 +16,7 @@ SKIP_EXTENSION_DEFAULT = [".apk", ".apex", ".capex", ".dex", ".odex", ".oat", ".
                           ".mbn", ".1", ".2", ".3", ".4", ".prop", ".conf", ".cfg", ".ini", ".sh", ".bat", ".cmd",
                           ".pem", ".pk8", ".url", ".elf32", ".elf64", "._lost+found", ".art"]
 
+
 def remove_unblob_log():
     """
     Remove the unblob log file.
@@ -63,7 +64,8 @@ def unblob_extract(compressed_file_path,
             allow_extension_list = []
 
         for item in allow_extension_list:
-            skip_extensions_list.remove(item)
+            if item in skip_extensions_list:
+                skip_extensions_list.remove(item)
 
         if file_extension in SKIP_EXTENSION_DEFAULT or os.path.islink(input_file):
             logging.info(f"Skipping {filename} for unblob extraction. Extension: {file_extension} or symlink.")
