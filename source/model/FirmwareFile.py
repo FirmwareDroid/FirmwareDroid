@@ -20,6 +20,7 @@ class FirmwareFile(Document):
     relative_path = StringField(required=True, max_length=4096, min_length=1)
     absolute_store_path = StringField(required=True, max_length=4096, min_length=1)
     is_directory = BooleanField(required=True)
+    is_symlink = BooleanField(required=False)
     is_on_disk = BooleanField(required=False)
     md5 = StringField(required=False, unique=False, max_length=128)
     partition_name = StringField(required=False)

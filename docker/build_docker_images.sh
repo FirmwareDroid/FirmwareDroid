@@ -31,5 +31,8 @@ for i in "${workers[@]}"; do
   echo "Building image for: ""$name"
   docker build ./docker/base/ -f ./docker/base/Dockerfile_"$name" -t "$name"-worker --platform="linux/amd64" &
 done
-
-docker-compose build
+if [ $retVal -ne 0 ]; then
+  echo "Error"
+  exit $retVal
+fi
+docker compose build

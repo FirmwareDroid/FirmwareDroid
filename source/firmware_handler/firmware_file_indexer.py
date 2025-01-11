@@ -119,6 +119,7 @@ def process_files(file_list, root, scan_directory, partition_name, result_firmwa
                 if not os.path.exists(filename_abs_path) or not os.path.isfile(filename_abs_path):
                     raise ValueError(f"Firmware File could not be created because file does not exist: "
                                      f"{filename_abs_path}")
+
                 firmware_file = create_firmware_file(name=filename,
                                                      parent_name=parent_name,
                                                      is_directory=False,
@@ -161,9 +162,11 @@ def create_firmware_file(name,
     """
     if meta_dict is None:
         meta_dict = {}
+    is_link = os.path.islink(absolute_store_path)
     return FirmwareFile(name=name,
                         parent_dir=parent_name,
                         is_directory=is_directory,
+                        is_symlink=is_link,
                         file_size_bytes=file_size_bytes,
                         absolute_store_path=absolute_store_path,
                         relative_path=relative_file_path,
