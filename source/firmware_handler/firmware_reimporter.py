@@ -70,7 +70,7 @@ def copy_firmware_to_importer(android_firmware, importer_path):
     if not os.path.exists(android_firmware.absolute_store_path):
         raise FileNotFoundError(f"File {android_firmware.absolute_store_path} not found.")
     import_file_path = os.path.join(importer_path, android_firmware.original_filename)
-    shutil.copyfile(android_firmware.absolute_store_path, import_file_path)
+    shutil.copyfile(android_firmware.absolute_store_path, import_file_path, follow_symlinks=False)
     if not os.path.exists(importer_path):
         raise FileNotFoundError(f"File {importer_path} not found.")
     logging.info(f"Copied firmware with id: {android_firmware.pk} to importer path: {import_file_path}")

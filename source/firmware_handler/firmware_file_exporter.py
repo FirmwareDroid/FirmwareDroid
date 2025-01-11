@@ -244,7 +244,7 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
             else:
                 dst_file_path = shutil.copytree(source_path, destination_path, dirs_exist_ok=True)
         else:
-            dst_file_path = shutil.copy(source_path, destination_path)
+            dst_file_path = shutil.copy(source_path, destination_path, follow_symlinks=False)
     except OSError as e:
         logging.error(f"Could not copy: {source_path} to {os.path.dirname(destination_path)} error: {e}")
     if dst_file_path is None or not os.path.exists(dst_file_path):

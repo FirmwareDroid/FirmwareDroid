@@ -163,7 +163,7 @@ def copy_file(source, target):
     :return: str - path of the copied file.
 
     """
-    shutil.copy(source, target)
+    shutil.copy(source, target, follow_symlinks=False)
     file_name = ntpath.basename(source)
     return os.path.join(target, file_name)
 

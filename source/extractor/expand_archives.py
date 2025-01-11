@@ -225,13 +225,14 @@ def extract_third_layer(firmware_file_list, extracted_partition_path, partition_
             logging.info(f"Extracting third layer for: {firmware_file.name}")
             extract_dir = tempfile.mkdtemp(dir=extracted_partition_path, prefix="fmd_extract_third_layer_")
             extract_dir = os.path.abspath(extract_dir)
-            is_success = unblob_extract(firmware_file.absolute_store_path, extract_dir, depth=2)
-            if not is_success:
-                remove_temp_directories(extract_dir)
-            else:
-                logging.info(f"Extracted success file {firmware_file.name} to: {extract_dir}")
-                extract_firmware_file_list = create_firmware_file_list(extract_dir, partition_name)
-                all_firmware_files_extracted_list.extend(extract_firmware_file_list)
+            if os.path.isfile(firmware_file.absolute_store_path):
+                is_success = unblob_extract(firmware_file.absolute_store_path, extract_dir, depth=2)
+                if not is_success:
+                    remove_temp_directories(extract_dir)
+                else:
+                    logging.info(f"Extracted success file {firmware_file.name} to: {extract_dir}")
+                    extract_firmware_file_list = create_firmware_file_list(extract_dir, partition_name)
+                    all_firmware_files_extracted_list.extend(extract_firmware_file_list)
     return all_firmware_files_extracted_list
 
 
