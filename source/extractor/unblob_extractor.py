@@ -5,7 +5,8 @@ import threading
 
 UNBLOB_SEMAPHORE = threading.Semaphore(10)
 
-SKIP_EXTENSION_DEFAULT = [".apk", ".dex", ".odex", ".oat", ".so", ".jar", ".class", ".java", ".png", ".jpg", ".jpeg",
+SKIP_EXTENSION_DEFAULT = [".apk", ".apex", ".capex", ".dex", ".odex", ".oat", ".so", ".jar", ".class", ".java", ".png",
+                          ".jpg", ".jpeg",
                           ".gif", "w.ebp", ".bmp", ".tiff", ".tif", ".wav", ".mp3", ".ogg", ".mp4", ".3gp", ".webm",
                           ".mkv", ".flac", ".aac", ".m4a", ".flv", ".avi", ".mov", ".wmv", ".mpg", ".mpeg", ".pdf",
                           ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".xml", ".json", ".html", ".htm",
@@ -14,8 +15,6 @@ SKIP_EXTENSION_DEFAULT = [".apk", ".dex", ".odex", ".oat", ".so", ".jar", ".clas
                           ".mtz", ".vdex", ".arsc", ".pb", ".aab", ".list", ".config", ".elf",
                           ".mbn", ".1", ".2", ".3", ".4", ".prop", ".conf", ".cfg", ".ini", ".sh", ".bat", ".cmd",
                           ".pem", ".pk8", ".url", ".elf32", ".elf64", "._lost+found", ".art"]
-# ".apex", ".capex"
-
 
 def remove_unblob_log():
     """
@@ -32,10 +31,13 @@ def unblob_extract(compressed_file_path,
                    destination_dir,
                    depth=1,
                    worker_count=5,
-                   skip_extensions_list=None):
+                   skip_extensions_list=None,
+                   allow_extension_list=None):
     """
     Extract a file recursively with the unblob extraction suite.
 
+    :param allow_extension_list: list(str) - list of extensions to allow during extraction.
+    Overwrites the skip extensions list.
     :param skip_extensions_list: list(str) - list of extensions to skip during extraction.
     :param worker_count: int - number of workers to use.
     :param depth: int - depth of unblob extraction.
@@ -53,8 +55,12 @@ def unblob_extract(compressed_file_path,
         output_dir = destination_dir
         filename = os.path.basename(compressed_file_path)
         file_extension = os.path.splitext(filename)[1]
-        if file_extension in SKIP_EXTENSION_DEFAULT:
-            logging.info(f"Skipping {filename} due to blacklisted extension for unblob extraction.")
+
+        for item in allow_extension_list:
+            skip_extensions_list.remove(item)
+
+        if file_extension in SKIP_EXTENSION_DEFAULT or os.path.islink(input_file):
+            logging.info(f"Skipping {filename} for unblob extraction. Extension: {file_extension} or symlink.")
             return True
         logging.info(f"Unblob {input_file} to {output_dir}")
 
