@@ -21,7 +21,7 @@ def create_firmware_file_list(scan_directory, partition_name):
 
     """
     result_firmware_file_list = []
-    for root, dir_list, file_list in os.walk(scan_directory):
+    for root, dir_list, file_list in os.walk(scan_directory, followlinks=False):
         result_firmware_file_list = process_directories(dir_list,
                                                         root,
                                                         scan_directory,
@@ -163,6 +163,8 @@ def create_firmware_file(name,
     if meta_dict is None:
         meta_dict = {}
     is_link = os.path.islink(absolute_store_path)
+    if is_link:
+        is_directory = False
     return FirmwareFile(name=name,
                         parent_dir=parent_name,
                         is_directory=is_directory,
