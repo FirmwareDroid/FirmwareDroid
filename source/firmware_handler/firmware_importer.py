@@ -306,7 +306,7 @@ def ensure_file_readable(file_path):
 
 def copy_and_remove_source(src, dst):
     try:
-        shutil.copy(src, dst)
+        shutil.copy(src, dst, follow_symlinks=False)
 
         if os.path.exists(dst) and os.path.getsize(src) == os.path.getsize(dst):
             os.remove(src)
@@ -347,7 +347,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
                 file_size = -1
                 logging.warning(f"Failed to get file size for {firmware_archive_file_path}: {e}")
 
-            shutil.copy(firmware_archive_file_path, temp_extract_dir)
+            shutil.copy(firmware_archive_file_path, temp_extract_dir, follow_symlinks=False)
             archive_copy_file_path = os.path.join(temp_extract_dir, original_filename)
             archive_firmware_file_list = open_firmware(archive_copy_file_path, temp_extract_dir)
             files_dict["archive_firmware_file_list"].extend(archive_firmware_file_list)
