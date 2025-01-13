@@ -2,6 +2,7 @@ import logging
 import os
 import subprocess
 import threading
+import time
 
 UNBLOB_SEMAPHORE = threading.Semaphore(10)
 
@@ -71,13 +72,13 @@ def unblob_extract(compressed_file_path,
             logging.info(f"Skipping {filename} for unblob extraction. Extension: {file_extension} or symlink.")
             return True
         logging.info(f"Unblob {input_file} to {output_dir}")
-
+        #time_now = time.time()
         command_array = ["unblob",
                          "-e", output_dir,
                          "-d", str(depth),  # Recursion depth
                          "-p", str(worker_count),  # Number of workers
                          "-v",  # Verbose
-                         "--report", output_dir + "/unblob.json",
+                         #"--report", output_dir + f"/unblob_{time_now}.json",
                          ]
 
         for extension in skip_extensions_list:

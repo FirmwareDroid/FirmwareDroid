@@ -152,7 +152,20 @@ def extract_first_layer(firmware_archive_file_path, destination_dir):
                                       delete_compressed_file=False,
                                       unblob_depth=1)
     logging.info(f"Extracted files count: {len(file_list)}")
-    file_list = filter_supported_files(file_list)
+    file_list = extract_support_file_types_recursively(file_list, destination_dir)
+    return file_list
+
+
+def extract_support_file_types_recursively(file_path_list, destination_dir):
+    """
+    Extract all supported file types recursively.
+
+    :param file_path_list: list(str) - paths to the files to extract.
+    :param destination_dir: str - path to the folder where the data is extracted to.
+
+    :return: list(str) - list of paths to the extracted files.
+    """
+    file_list = filter_supported_files(file_path_list)
     logging.info(f"Filtered files count: {len(file_list)}")
     max_depth = 0
     while max_depth < MAX_EXTRACTION_DEPTH and has_extracted_all_supported_files(file_list) is False:
@@ -196,23 +209,24 @@ def extract_second_layer(firmware_archive_file_path, destination_dir, extracted_
         is_success = lpunpack_extractor(firmware_archive_file_path, super_extract_dir)
         if is_success:
             logging.info("Successfully extracted super image.")
-            shutil.copytree(super_extract_dir, extracted_archive_dir_path, dirs_exist_ok=True)
+            shutil.copytree(super_extract_dir, extracted_archive_dir_path, dirs_exist_ok=True, symlinks=True)
             dst_dir_path = os.path.join(extracted_archive_dir_path, os.path.basename(super_extract_dir))
             logging.info(f"Extracted super image to: {dst_dir_path}")
             firmware_file_list = create_firmware_file_list(dst_dir_path, partition_name)
     if not is_success:
         extract_image_file(firmware_archive_file_path, destination_dir)
-        remove_temp_directories(destination_dir)
+        remove_fmd_temp_directories(destination_dir)
         firmware_file_list = create_firmware_file_list(destination_dir, partition_name)
     return firmware_file_list
 
 
-def extract_third_layer(firmware_file_list, extracted_partition_path, partition_name):
+def extract_third_layer(firmware_file_list, destination_dir, extracted_archive_dir_path, partition_name):
     """
     Extract firmware files within the firmware itself (third layer).
 
+    :param destination_dir: str - path to the directory where the data is extracted to.
     :param firmware_file_list: list(class:"FirmwareFile") - list of firmware files to extract.
-    :param extracted_partition_path: str - path to the directory where the extracted files are stored.
+    :param extracted_archive_dir_path: str - path to the directory where the extracted files are stored.
     :param partition_name: str - name of the partition.
 
     :return: list(class:"FirmwareFile") - list of extracted firmware files.
@@ -223,20 +237,36 @@ def extract_third_layer(firmware_file_list, extracted_partition_path, partition_
         if not firmware_file.is_directory and (any([firmware_file.name.endswith(file_extension)
                                                     for file_extension in THIRD_LAYER_SUPPORT_FILE_TYPES])):
             logging.info(f"Extracting third layer for: {firmware_file.name}")
-            extract_dir = tempfile.mkdtemp(dir=extracted_partition_path, prefix="fmd_extract_third_layer_")
-            extract_dir = os.path.abspath(extract_dir)
             if (os.path.isfile(firmware_file.absolute_store_path)
                     and not os.path.islink(firmware_file.absolute_store_path)):
+                apex_file_name_no_ext = os.path.basename(firmware_file.absolute_store_path).replace(".", "_")
+                apex_extract_dir = tempfile.mkdtemp(dir=destination_dir,
+                                                    prefix=f"fmd_extract_{apex_file_name_no_ext}_")
+                apex_extract_dir = os.path.abspath(apex_extract_dir)
                 is_success = unblob_extract(firmware_file.absolute_store_path,
-                                            extract_dir,
-                                            depth=2,
+                                            apex_extract_dir,
+                                            depth=1,
                                             allow_extension_list=THIRD_LAYER_SUPPORT_FILE_TYPES)
                 if not is_success:
-                    remove_temp_directories(extract_dir)
+                    remove_fmd_temp_directories(apex_extract_dir)
                 else:
-                    logging.info(f"Extracted success file {firmware_file.name} to: {extract_dir}")
-                    extract_firmware_file_list = create_firmware_file_list(extract_dir, partition_name)
-                    all_firmware_files_extracted_list.extend(extract_firmware_file_list)
+                    file_path_list = get_file_list(apex_extract_dir)
+                    for file_path in file_path_list:
+                        file_name = os.path.basename(file_path).lower()
+                        if file_name.endswith(".img"):
+                            apex_payload_extract_dir = tempfile.mkdtemp(dir=destination_dir,
+                                                                        prefix=f"fmd_extract_apex_payload_{apex_file_name_no_ext}_")
+                            subfolder_path = str(apex_file_name_no_ext) + "/"
+                            apex_payload_extract_dir = os.path.abspath(apex_payload_extract_dir)
+                            apex_payload_extract_dir = os.path.join(apex_payload_extract_dir, subfolder_path)
+                            os.makedirs(apex_payload_extract_dir, exist_ok=True)
+                            logging.info(f"Third layer extraction for: {file_name}, to: {apex_payload_extract_dir}")
+                            unblob_extract(file_path,
+                                           apex_payload_extract_dir,
+                                           depth=1)
+                            remove_fmd_temp_directories(destination_dir)
+                            firmware_file_list = create_firmware_file_list(destination_dir, partition_name)
+                            all_firmware_files_extracted_list.extend(firmware_file_list)
     return all_firmware_files_extracted_list
 
 
@@ -251,7 +281,7 @@ def attempt_sparse_img_convertion(android_sparse_img_path, destination_dir):
     return is_success, raw_image_path
 
 
-def remove_temp_directories(search_path):
+def remove_fmd_temp_directories(search_path):
     """
     Deletes all temporary directories with a prefix of "fmd_extract_" and moves the files one level up.
 

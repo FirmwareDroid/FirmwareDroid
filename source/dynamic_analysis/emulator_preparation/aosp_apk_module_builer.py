@@ -225,8 +225,8 @@ def get_apk_local_module_path(file_path, partition_name, android_app):
           or "/odm/" in android_app.absolute_store_path
           or "/oem/" in android_app.absolute_store_path):
         local_module_path = f"$(TARGET_OUT)/odm/app/"
-    elif "/apex/" in android_app.absolute_store_path:
-        local_module_path = f"$(TARGET_OUT)/priv-app/"
+    elif "_apex" in android_app.absolute_store_path:
+        local_module_path = f"$(TARGET_OUT)/app/"
     elif len(subfolder_list) <= 1:
         local_module_path = f"$(TARGET_OUT)/app/"
     else:
