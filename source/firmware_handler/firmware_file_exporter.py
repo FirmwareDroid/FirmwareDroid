@@ -245,7 +245,7 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
                 dst_file_path = shutil.copytree(source_path, destination_path,
                                                 dirs_exist_ok=True,
                                                 ignore_dangling_symlinks=True,
-                                                symlinks=False)
+                                                symlinks=True)
         else:
             dst_file_path = shutil.copy(source_path, destination_path, follow_symlinks=False)
     except OSError as e:

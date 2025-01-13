@@ -129,7 +129,7 @@ def copy_partitions(source_path, destination_path):
     if not os.path.exists(source_path):
         raise FileNotFoundError(f"Source path {source_path} does not exist.")
     shutil.copytree(source_path, destination_subfolder_path,
-                    symlinks=False,
+                    symlinks=True,
                     ignore_dangling_symlinks=True)
 
 
