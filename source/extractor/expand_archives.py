@@ -209,7 +209,9 @@ def extract_second_layer(firmware_archive_file_path, destination_dir, extracted_
         is_success = lpunpack_extractor(firmware_archive_file_path, super_extract_dir)
         if is_success:
             logging.info("Successfully extracted super image.")
-            shutil.copytree(super_extract_dir, extracted_archive_dir_path, dirs_exist_ok=True, symlinks=True)
+            shutil.copytree(super_extract_dir, extracted_archive_dir_path, dirs_exist_ok=True,
+                            symlinks=False,
+                            ignore_dangling_symlinks=True)
             dst_dir_path = os.path.join(extracted_archive_dir_path, os.path.basename(super_extract_dir))
             logging.info(f"Extracted super image to: {dst_dir_path}")
             firmware_file_list = create_firmware_file_list(dst_dir_path, partition_name)

@@ -128,7 +128,9 @@ def copy_partitions(source_path, destination_path):
     destination_subfolder_path = os.path.join(destination_path, "ALL_FILES/")
     if not os.path.exists(source_path):
         raise FileNotFoundError(f"Source path {source_path} does not exist.")
-    shutil.copytree(source_path, destination_subfolder_path, symlinks=True)
+    shutil.copytree(source_path, destination_subfolder_path,
+                    symlinks=False,
+                    ignore_dangling_symlinks=True)
 
 
 def package_files(firmware, tmp_root_dir, store_paths):
