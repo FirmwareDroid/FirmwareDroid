@@ -13,4 +13,33 @@ ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
                       "\nLOCAL_PRIVILEGED_MODULE := ${local_privileged_module}\n" \
                       "\ninclude $$(BUILD_PREBUILT)\n"
 
-ANDROID_BP_TEMPLATE = ""
+ANDROID_BP_TEMPLATE = """
+prebuilt_apk {\n
+    name: "${local_module}", \n
+    src: "${local_src_files}",\n
+    certificate: "${local_certificate}",\n
+    privileged: ${local_privileged_module},\n
+    dex_preopt: {\n
+        enabled: false,\n
+    },\n
+    optional_uses_libs: [${local_optional_uses_libraries}],\n
+    enforce_uses_libs: ${local_enforce_uses_libraries},\n
+    installable: true,\n
+    tags: ["optional"],\n
+    overrides: ["${local_overrides}"],\n
+}
+"""
+
+
+LIST_SINGLETON_APP_MODULES = [
+    "PackageInstaller",          # com.android.packageinstaller
+    "SystemUI",                  # com.android.systemui
+    "Settings",                  # com.android.settings
+    "Telecom",                   # com.android.server.telecom
+    "ContactsProvider",          # com.android.providers.contacts
+    "MediaProvider",             # com.android.providers.media
+    "PermissionController",      # com.android.permissioncontroller
+    "LatinIME",                  # com.android.inputmethod.latin
+    "Dialer",                    # com.android.dialer
+    "NetworkStack",              # com.android.networkstack
+]
