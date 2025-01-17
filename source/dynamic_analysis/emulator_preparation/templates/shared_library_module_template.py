@@ -25,7 +25,7 @@ ANDROID_MK_SHARED_LIBRARY_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
 # prebuilt and existing: These properties indicate that the module is a prebuilt shared library and that it already exists.
 # static_libs: If the shared library depends on static libraries, you can specify them here.
 ANDROID_BP_SHARED_LIBRARY_TEMPLATE = """
-prebuilt_shared_library {
+cc_prebuilt_shared_library {
     name: "${local_module}",\n
     srcs: ["${local_src_files}"],\n
     tag: "optional",\n
