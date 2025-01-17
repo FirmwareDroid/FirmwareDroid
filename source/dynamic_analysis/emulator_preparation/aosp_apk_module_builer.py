@@ -8,7 +8,7 @@ from firmware_handler.firmware_file_exporter import remove_unblob_extract_direct
 from model import GenericFile
 from dynamic_analysis.emulator_preparation.aosp_meta_writer import add_module_to_meta_file, add_to_log_file
 from dynamic_analysis.emulator_preparation.templates.android_app_module_template import ANDROID_MK_TEMPLATE, \
-    ANDROID_BP_TEMPLATE
+    ANDROID_BP_TEMPLATE, LIST_SINGLETON_APP_MODULES
 
 
 def create_build_files_for_apps(android_app_id_list, format_name):
@@ -237,6 +237,14 @@ def get_apk_local_module_path(file_path, partition_name, android_app):
     return local_module_path
 
 
+def identify_overrides(directory_name):
+    for singleton_app in LIST_SINGLETON_APP_MODULES:
+        if singleton_app in directory_name and "Overlay" not in directory_name:
+            return singleton_app
+    return ""
+
+
+
 def create_template_string(android_app, template_string):
     """
     Creates build file (Android.mk or Android.bp) as string for the AOSP image builder.
@@ -264,6 +272,7 @@ def create_template_string(android_app, template_string):
     local_certificate = select_signing_key(android_app)
     local_enforce_uses_libraries = "false"
     local_dex_preopt = "false"
+    local_overrides = identify_overrides(directory_name)
     final_template = Template(template_string).substitute(local_module=local_module,
                                                           local_module_path=local_module_path,
                                                           local_src_files=local_src_files,
@@ -271,6 +280,7 @@ def create_template_string(android_app, template_string):
                                                           local_enforce_uses_libraries=local_enforce_uses_libraries,
                                                           local_dex_preopt=local_dex_preopt,
                                                           local_privileged_module=local_privileged_module,
+                                                          local_overrides=local_overrides,
                                                           local_optional_uses_libraries=local_optional_uses_libraries)
     return final_template, local_module
 

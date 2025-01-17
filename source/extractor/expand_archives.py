@@ -67,7 +67,7 @@ def get_file_list(destination_dir):
         return []
 
     file_list = []
-    for root, dirs, files in os.walk(destination_dir):
+    for root, dirs, files in os.walk(destination_dir, followlinks=False):
         for file in files:
             file_path = str(os.path.join(root, file))
             file_path_abs = os.path.abspath(file_path)
@@ -290,7 +290,7 @@ def remove_fmd_temp_directories(search_path):
     :param search_path: str - path to the directory to search in.
 
     """
-    for root, dirs, files in os.walk(search_path):
+    for root, dirs, files in os.walk(search_path, followlinks=False):
         for directory in dirs:
             if directory.startswith("fmd_extract_"):
                 temp_extract_dir = os.path.join(root, directory)

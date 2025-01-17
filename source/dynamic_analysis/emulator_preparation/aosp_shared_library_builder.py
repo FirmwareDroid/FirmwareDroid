@@ -91,9 +91,6 @@ def create_template_string(format_name, library_path):
     file_template = ANDROID_MK_SHARED_LIBRARY_TEMPLATE if format_name.lower() == "mk" \
         else ANDROID_BP_SHARED_LIBRARY_TEMPLATE
 
-    if format_name.lower() != "mk":
-        raise NotImplementedError(f"Format name {format_name} is not supported yet.")
-
     file_name = os.path.basename(library_path)
     local_src_files = file_name
     local_module = file_name.replace(".so", "")
