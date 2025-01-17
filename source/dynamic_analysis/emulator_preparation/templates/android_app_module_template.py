@@ -14,19 +14,20 @@ ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
                       "\ninclude $$(BUILD_PREBUILT)\n"
 
 ANDROID_BP_TEMPLATE = """
-prebuilt_apk {\n
-    name: "${local_module}", \n
-    src: "${local_src_files}",\n
-    certificate: "${local_certificate}",\n
-    privileged: ${local_privileged_module},\n
-    dex_preopt: {\n
-        enabled: false,\n
-    },\n
-    optional_uses_libs: [${local_optional_uses_libraries}],\n
-    enforce_uses_libs: ${local_enforce_uses_libraries},\n
-    installable: true,\n
-    tags: ["optional"],\n
-    overrides: ["${local_overrides}"],\n
+android_app_import {
+    name: "${local_module}", 
+    apk: "${local_src_files}",
+    certificate: "${local_certificate}",
+    privileged: ${local_privileged_module},
+    presigned: false,
+    dex_preopt: {
+        enabled: false,
+    },
+    optional_uses_libs: [${local_optional_uses_libraries}],
+    enforce_uses_libs: ${local_enforce_uses_libraries},
+    installable: true,
+    tags: ["optional"],
+    overrides: ["${local_overrides}"],
 }
 """
 
