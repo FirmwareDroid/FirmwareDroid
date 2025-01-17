@@ -8,7 +8,7 @@ from firmware_handler.firmware_file_exporter import remove_unblob_extract_direct
 from model import GenericFile
 from dynamic_analysis.emulator_preparation.aosp_meta_writer import add_module_to_meta_file, add_to_log_file
 from dynamic_analysis.emulator_preparation.templates.android_app_module_template import ANDROID_MK_TEMPLATE, \
-    ANDROID_BP_TEMPLATE, LIST_SINGLETON_APP_MODULES
+    ANDROID_BP_TEMPLATE, LIST_SINGLETON_APP_MODULES, AOSP_DEFAULT_PACKAGE_NAMES
 
 
 def create_build_files_for_apps(android_app_id_list, format_name):
@@ -238,9 +238,20 @@ def get_apk_local_module_path(file_path, partition_name, android_app):
 
 
 def identify_overrides(directory_name):
+    """
+    Checks if there is an existing module that needs to be overridden.
+
+    :param directory_name: str - The name of the directory that contains the module.
+
+    :return: str - The name of the module that needs to be overridden.
+    """
     for singleton_app in LIST_SINGLETON_APP_MODULES:
         if singleton_app in directory_name and "Overlay" not in directory_name:
             return singleton_app
+
+    for default_app in AOSP_DEFAULT_PACKAGE_NAMES:
+        if default_app in directory_name and "Overlay" not in directory_name:
+            return default_app
     return ""
 
 
