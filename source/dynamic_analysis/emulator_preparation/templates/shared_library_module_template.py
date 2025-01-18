@@ -21,6 +21,7 @@ cc_prebuilt_library_shared {
     export_include_dirs: [""],
     static_libs: [""],
     apex_available: [""],
-    prefer: true
+    prefer: true,
+    overrides: ["${local_module}"],
 }
 """
