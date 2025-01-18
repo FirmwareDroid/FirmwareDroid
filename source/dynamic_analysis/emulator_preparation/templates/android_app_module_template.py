@@ -41,6 +41,7 @@ LIST_SINGLETON_APP_MODULES = [
     "LatinIME",                  # com.android.inputmethod.latin
     "Dialer",                    # com.android.dialer
     "NetworkStack",              # com.android.networkstack
+    "Tethering",                 # com.android.networkstack.tethering
 ]
 
 
@@ -185,7 +186,6 @@ AOSP_DEFAULT_PACKAGE_NAMES = ["BasicDreams",
                               "BackupEncryption",
                               "EncryptedLocalTransport",
                               "MtpDocumentsProvider",
-                              "Tethering",
                               "ModuleMetadata",
                               "ExtServices",
                               "CarrierDefaultApp",
