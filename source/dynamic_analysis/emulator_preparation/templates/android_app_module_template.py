@@ -25,8 +25,6 @@ android_app_import {
     },
     optional_uses_libs: [${local_optional_uses_libraries}],
     enforce_uses_libs: ${local_enforce_uses_libraries},
-    installable: true,
-    tags: ["optional"],
     overrides: ["${local_overrides}"],
 }
 """
