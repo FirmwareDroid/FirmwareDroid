@@ -28,13 +28,9 @@ ANDROID_BP_SHARED_LIBRARY_TEMPLATE = """
 cc_prebuilt_library_shared {
     name: "${local_module}",\n
     srcs: ["${local_src_files}"],\n
-    tag: "optional",\n
     suffix: ".so",\n
     path: "${local_module_path}",\n
     export_include_dirs: [""],
-    whole_archive: true,\n
-    prebuilt: true,\n
-    existing: true,\n
     static_libs: [""],\n 
     apex_available: [""],
 }
