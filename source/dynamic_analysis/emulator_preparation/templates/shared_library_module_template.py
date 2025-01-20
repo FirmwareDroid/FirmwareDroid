@@ -12,6 +12,7 @@ ANDROID_MK_SHARED_LIBRARY_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
                                      "\n$$(LOCAL_INSTALLED_MODULE): $$(LOCAL_MODULE_PATH)\n" \
                                      "\ninclude $$(PREBUILT_SHARED_LIBRARY)\n"
 
+# overrides: ["${local_module}"],
 ANDROID_BP_SHARED_LIBRARY_TEMPLATE = """
 cc_prebuilt_library_shared {
     name: "${local_module}",
@@ -21,7 +22,6 @@ cc_prebuilt_library_shared {
     export_include_dirs: [""],
     static_libs: [""],
     apex_available: [""],
-    prefer: true,
-    overrides: ["${local_module}"],
+    prefer: true
 }
 """
