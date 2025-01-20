@@ -45,15 +45,17 @@ def select_local_module_path(file_path, file_name, format):
     """
     if format.lower() == "mk":
         target_out = "$(TARGET_OUT)"
+        target_arch_abi = "$(TARGET_ARCH_ABI)/"
     else:
         target_out = ""
+        target_arch_abi = "arm64"
 
     if "/app/" in file_path:
         app_name = file_path.split("/app/")[1]
-        local_module_path = f"{target_out}/app/{app_name}/lib/$(TARGET_ARCH_ABI)/"
+        local_module_path = f"{target_out}/app/{app_name}/lib/{target_arch_abi}"
     elif "/priv-app/" in file_path:
         app_name = file_path.split("/priv-app/")[1]
-        local_module_path = f"{target_out}/priv-app/{app_name}/lib/$(TARGET_ARCH_ABI)/"
+        local_module_path = f"{target_out}/priv-app/{app_name}/lib/{target_arch_abi}"
     elif "_apex/" in file_path:
         local_module_path = f"{target_out}/system/lib64/"
     else:
