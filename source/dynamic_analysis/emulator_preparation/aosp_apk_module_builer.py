@@ -237,7 +237,7 @@ def get_apk_local_module_path(file_path, partition_name, android_app):
     return local_module_path
 
 
-def identify_overrides(directory_name):
+def get_overrides(directory_name):
     """
     Checks if there is an existing module that needs to be overridden.
 
@@ -283,7 +283,7 @@ def create_template_string(android_app, template_string):
     local_certificate = select_signing_key(android_app)
     local_enforce_uses_libraries = "false"
     local_dex_preopt = "false"
-    local_overrides = identify_overrides(directory_name)
+    local_overrides = get_overrides(directory_name)
     final_template = Template(template_string).substitute(local_module=local_module,
                                                           local_module_path=local_module_path,
                                                           local_src_files=local_src_files,

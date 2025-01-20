@@ -7,7 +7,7 @@ from dynamic_analysis.emulator_preparation.aosp_file_exporter import (get_firmwa
                                                                       get_subfolders)
 from dynamic_analysis.emulator_preparation.aosp_meta_writer import create_modules
 from dynamic_analysis.emulator_preparation.templates.shared_library_module_template import \
-    ANDROID_MK_SHARED_LIBRARY_TEMPLATE, ANDROID_BP_SHARED_LIBRARY_TEMPLATE
+    ANDROID_MK_SHARED_LIBRARY_TEMPLATE, ANDROID_BP_SHARED_LIBRARY_TEMPLATE, AOSP_12_SHARED_LIBRARIES
 from firmware_handler.firmware_file_exporter import remove_unblob_extract_directories
 
 
@@ -77,6 +77,13 @@ def select_local_module_path(file_path, file_name):
     return local_module_path
 
 
+def get_overrides(file_name):
+    for module_name in AOSP_12_SHARED_LIBRARIES:
+        if module_name in file_name:
+            return module_name
+    return ""
+
+
 def create_template_string(format_name, library_path):
     """
     Creates the template string for the shared library module.
@@ -96,10 +103,12 @@ def create_template_string(format_name, library_path):
     local_module = file_name.replace(".so", "")
     local_module_path = select_local_module_path(library_path, file_name)
     local_prebuilt_module_file = f"$(LOCAL_PATH)/{file_name}"
+    local_overrides = get_overrides(file_name)
     template_out = Template(file_template).substitute(local_module=local_module,
                                                       local_module_path=local_module_path,
                                                       local_src_files=local_src_files,
-                                                      local_prebuilt_module_file=local_prebuilt_module_file
+                                                      local_prebuilt_module_file=local_prebuilt_module_file,
+                                                      local_overrides=local_overrides
                                                       )
     return template_out, local_module
 
