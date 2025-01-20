@@ -46,31 +46,35 @@ def select_local_module_path(file_path, file_name, format):
     if format.lower() == "mk":
         target_out = "$(TARGET_OUT)"
         target_arch_abi = "$(TARGET_ARCH_ABI)/"
+        if "/app/" in file_path:
+            app_name = file_path.split("/app/")[1]
+            local_module_path = f"{target_out}/app/{app_name}/lib/{target_arch_abi}"
+        elif "/priv-app/" in file_path:
+            app_name = file_path.split("/priv-app/")[1]
+            local_module_path = f"{target_out}/priv-app/{app_name}/lib/{target_arch_abi}"
+        elif "_apex/" in file_path:
+            local_module_path = f"{target_out}/system/lib64/"
+        else:
+            partition_name = file_path.split("/")[9]
+            local_module_path = get_local_module_path(file_path, partition_name, format)
+        local_module_path = local_module_path.replace("//", "/").replace(file_name, "")
     else:
         target_out = "$(genDir)"
         target_arch_abi = "arm64"
-
-    if "/app/" in file_path:
-        app_name = file_path.split("/app/")[1]
-        local_module_path = f"{target_out}/app/{app_name}/lib/{target_arch_abi}"
-    elif "/priv-app/" in file_path:
-        app_name = file_path.split("/priv-app/")[1]
-        local_module_path = f"{target_out}/priv-app/{app_name}/lib/{target_arch_abi}"
-    elif "_apex/" in file_path:
-        local_module_path = f"{target_out}/system/lib64/"
-    else:
-        partition_name = file_path.split("/")[9]
-        local_module_path = get_local_module_path(file_path, partition_name, format)
-    local_module_path = local_module_path.replace("//", "/").replace(file_name, "")
+        local_module_path = ""
 
     return local_module_path
 
 
 def get_overrides(file_name):
+    overrides = ""
     for module_name in AOSP_12_SHARED_LIBRARIES:
-        if module_name in file_name:
-            return module_name
-    return ""
+        prebuilt_module_name = module_name.replace("prebuilt_", "")
+        if module_name == file_name:
+            overrides = module_name
+        elif prebuilt_module_name == file_name:
+            overrides = module_name
+    return overrides
 
 
 def create_template_string(format_name, library_path):
