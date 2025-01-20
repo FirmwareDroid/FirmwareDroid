@@ -89,10 +89,12 @@ def create_template_string(format_name, library_path):
     local_src_files = file_name
     local_module = file_name.replace(".so", "")
     local_module_path = select_local_module_path(library_path, file_name, format_name)
+    local_prebuilt_module_file = f"$(LOCAL_PATH)/{file_name}"
     local_overrides = get_overrides(file_name)
     template_out = Template(file_template).substitute(local_module=local_module,
                                                       local_module_path=local_module_path,
                                                       local_src_files=local_src_files,
+                                                      local_prebuilt_module_file=local_prebuilt_module_file,
                                                       local_overrides=local_overrides
                                                       )
     return template_out, local_module

@@ -14,7 +14,7 @@ ANDROID_MK_SHARED_LIBRARY_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
 
 ANDROID_BP_SHARED_LIBRARY_TEMPLATE = """
 genrule {
-    name: "create_directory",
+    name: "create_directory_${local_module}",
     cmd: "mkdir -p $$(genDir)/${local_module_path}",
     out: ["dummy_file"],
 }
