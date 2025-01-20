@@ -3,38 +3,13 @@ import os
 import re
 from string import Template
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import (get_firmware_export_folder_root,
-                                                                      is_top_folder,
                                                                       get_subfolders)
 from dynamic_analysis.emulator_preparation.aosp_meta_writer import create_modules
 from dynamic_analysis.emulator_preparation.templates.shared_library_module_template import \
     ANDROID_MK_SHARED_LIBRARY_TEMPLATE, ANDROID_BP_SHARED_LIBRARY_TEMPLATE, AOSP_12_SHARED_LIBRARIES
-from firmware_handler.firmware_file_exporter import remove_unblob_extract_directories
 
 
-def get_lib_local_module_path(library_path, folder_name):
-    """
-    Get the local module path for the given folder_name.
-
-    :param library_path: str - path to the shared library module.
-    :param folder_name: str - name of the lib folder on Android.
-
-    :return: str - local module path for the shared library module.
-    """
-    subfolder_list = []
-    if is_top_folder(library_path, folder_name):
-        local_module_path = f"$(TARGET_OUT)/{folder_name}/"
-    else:
-        subfolder_list = get_subfolders(library_path, folder_name)
-        if len(subfolder_list) == 0:
-            local_module_path = f"$(TARGET_OUT)/{folder_name}/"
-        else:
-            path = os.path.join(*subfolder_list)
-            fixed_path = remove_unblob_extract_directories(path)
-            local_module_path = f"$(TARGET_OUT)/{folder_name}/{fixed_path}"
-    return local_module_path, subfolder_list
-
-
-def get_local_module_path(file_path, partition_name):
+def get_local_module_path(file_path, partition_name, format="mk"):
     """
     Get the local module path for the given partition_name.
 
@@ -44,36 +19,48 @@ def get_local_module_path(file_path, partition_name):
     :return: str - local module path for the shared library module.
 
     """
+    if format.lower() == "mk":
+        target_out = "$(TARGET_OUT)"
+    else:
+        target_out = ""
+
     subfolder_list = get_subfolders(file_path, partition_name)
     if len(subfolder_list) <= 1:
-        local_module_path = f"$(TARGET_OUT)/"
+        local_module_path = f"{target_out}/"
     else:
-        local_module_path = f"$(TARGET_OUT)/{os.path.join(*subfolder_list)}"
+        local_module_path = f"{target_out}/{os.path.join(*subfolder_list)}"
     return local_module_path
 
 
-def select_local_module_path(file_path, file_name):
+def select_local_module_path(file_path, file_name, format):
     """
     Creates the local module path for the shared library module based on the input path
 
+    :param format: str - format name of the shared library module.
     :param file_path: str - path to the shared library module.
     :param file_name: str - name of the file to remove from the path.
 
     :return: str - local module path for the shared library module.
 
     """
+    if format.lower() == "mk":
+        target_out = "$(TARGET_OUT)"
+    else:
+        target_out = ""
+
     if "/app/" in file_path:
         app_name = file_path.split("/app/")[1]
-        local_module_path = f"$(TARGET_OUT)/app/{app_name}/lib/$(TARGET_ARCH_ABI)/"
+        local_module_path = f"{target_out}/app/{app_name}/lib/$(TARGET_ARCH_ABI)/"
     elif "/priv-app/" in file_path:
         app_name = file_path.split("/priv-app/")[1]
-        local_module_path = f"$(TARGET_OUT)/priv-app/{app_name}/lib/$(TARGET_ARCH_ABI)/"
+        local_module_path = f"{target_out}/priv-app/{app_name}/lib/$(TARGET_ARCH_ABI)/"
     elif "_apex/" in file_path:
-        local_module_path = f"$(TARGET_OUT)/system/lib64/"
+        local_module_path = f"{target_out}/system/lib64/"
     else:
         partition_name = file_path.split("/")[9]
-        local_module_path = get_local_module_path(file_path, partition_name)
+        local_module_path = get_local_module_path(file_path, partition_name, format)
     local_module_path = local_module_path.replace("//", "/").replace(file_name, "")
+
     return local_module_path
 
 
@@ -101,7 +88,7 @@ def create_template_string(format_name, library_path):
     file_name = os.path.basename(library_path)
     local_src_files = file_name
     local_module = file_name.replace(".so", "")
-    local_module_path = select_local_module_path(library_path, file_name)
+    local_module_path = select_local_module_path(library_path, file_name, format_name)
     local_prebuilt_module_file = f"$(LOCAL_PATH)/{file_name}"
     local_overrides = get_overrides(file_name)
     template_out = Template(file_template).substitute(local_module=local_module,
