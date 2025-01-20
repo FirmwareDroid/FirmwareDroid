@@ -13,6 +13,12 @@ ANDROID_MK_SHARED_LIBRARY_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
                                      "\ninclude $$(PREBUILT_SHARED_LIBRARY)\n"
 
 ANDROID_BP_SHARED_LIBRARY_TEMPLATE = """
+genrule {
+    name: "create_directory",
+    cmd: "mkdir -p $(genDir)/${local_module_path}",
+    out: ["dummy_file"],
+}
+
 cc_prebuilt_library_shared {
     name: "${local_module}",
     srcs: ["${local_src_files}"],
