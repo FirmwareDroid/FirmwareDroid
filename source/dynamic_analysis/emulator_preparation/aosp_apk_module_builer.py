@@ -51,7 +51,7 @@ def create_make_files(android_app, file_format, template_string):
     :param template_string: str - template string for an Android.mk or Android.bp file.
 
     """
-    template_string_complete, local_module = create_template_string(android_app, template_string)
+    template_string_complete, local_module = create_template_string(android_app, template_string, file_format)
     remove_existing_build_files(android_app, file_format)
     create_and_save_generic_file(android_app, file_format, template_string_complete)
 
@@ -203,7 +203,7 @@ def get_signing_key_by_uid(android_app):
     return signing_key
 
 
-def get_apk_local_module_path(file_path, partition_name, android_app):
+def get_apk_local_module_path(file_path, partition_name, android_app, format):
     """
     Get the local module path for the given partition_name.
 
@@ -214,25 +214,30 @@ def get_apk_local_module_path(file_path, partition_name, android_app):
     :return: str - local module path for the shared library module.
 
     """
+    if format.lower() == "mk":
+        target_out = "$(TARGET_OUT)"
+    else:
+        target_out = ""
+
     subfolder_list = get_subfolders(file_path, partition_name)
     if "/priv-app/" in android_app.absolute_store_path:
-        local_module_path = f"$(TARGET_OUT)/priv-app/"
+        local_module_path = f"{target_out}/priv-app/"
     elif ("/overlay/" in android_app.absolute_store_path
           and ("/vendor/" in android_app.absolute_store_path)
           or ("/odm/" in android_app.absolute_store_path)):
-        local_module_path = f"$(TARGET_OUT)/odm/overlay/"
+        local_module_path = f"{target_out}/odm/overlay/"
     elif ("/vendor/" in android_app.absolute_store_path
           or "/odm/" in android_app.absolute_store_path
           or "/oem/" in android_app.absolute_store_path):
-        local_module_path = f"$(TARGET_OUT)/odm/app/"
+        local_module_path = f"{target_out}/odm/app/"
     elif "_apex" in android_app.absolute_store_path:
-        local_module_path = f"$(TARGET_OUT)/app/"
+        local_module_path = f"{target_out}/app/"
     elif len(subfolder_list) <= 1:
-        local_module_path = f"$(TARGET_OUT)/app/"
+        local_module_path = f"{target_out}/app/"
     else:
         path = os.path.join(*subfolder_list)
         fixed_path = remove_unblob_extract_directories(path)
-        local_module_path = f"$(TARGET_OUT)/{fixed_path}"
+        local_module_path = f"{target_out}/{fixed_path}"
         local_module_path = local_module_path.replace(android_app.filename, "")
     return local_module_path
 
@@ -255,11 +260,11 @@ def get_overrides(directory_name):
     return ""
 
 
-
-def create_template_string(android_app, template_string):
+def create_template_string(android_app, template_string, file_format):
     """
     Creates build file (Android.mk or Android.bp) as string for the AOSP image builder.
 
+    :param file_format: str - mk or bp format.
     :param android_app: class:'AndroidApp' - App class that is used to fill in the template variables.
     :param template_string: String template where variables will be substituted.
 
@@ -273,7 +278,8 @@ def create_template_string(android_app, template_string):
     if not os.path.exists(android_app.absolute_store_path):
         raise FileNotFoundError(f"File not found: {android_app.absolute_store_path} | {android_app.pk}")
     partition_name = android_app.absolute_store_path.split("/")[8]
-    local_module_path = get_apk_local_module_path(android_app.absolute_store_path, partition_name, android_app)
+    local_module_path = get_apk_local_module_path(android_app.absolute_store_path, partition_name, android_app,
+                                                  file_format)
     if "/priv-app" in local_module_path or "/framework" in local_module_path:
         local_privileged_module = "true"
 
