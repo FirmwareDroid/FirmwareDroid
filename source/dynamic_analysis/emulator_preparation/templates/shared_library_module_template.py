@@ -19,6 +19,7 @@ cc_prebuilt_library_shared {
     prefer: true,
     overrides: ["${local_overrides}"],
     check_elf_files: false,
+    apex_available: ["//apex_available:anyapex"],
 }
 """
 
@@ -689,4 +690,17 @@ AOSP_12_SHARED_LIBRARIES = [
     "libstatssocket",
     "android.hardware.gnss-V1-ndk_platform"
     "android.hardware.power-V2-ndk_platform",
+]
+
+APEX_NATIVE_LIBS = [
+    "libnetd_resolv",
+    "libneuralnetworks",        # Apex: com.android.neuralnetworks
+    "libadb_pairing_server",    # Apex: com.android.adbd
+    "libc_malloc_hooks",        # Apex: com.android.runtime
+    "libc_malloc_debug",        # Apex: com.android.runtime
+    "libperfetto_hprof",        # Apex: com.android.art and com.android.art.debug
+    "libcodec2_hidl@1.2"        # Apex: com.android.media.swcodec
+    "libstatspull"              # Apex: com.android.os.statsd
+    "libstats_jni"              # Apex: com.android.os.statsd
+
 ]

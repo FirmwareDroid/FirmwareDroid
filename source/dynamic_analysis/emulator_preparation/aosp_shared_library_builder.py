@@ -6,7 +6,7 @@ from dynamic_analysis.emulator_preparation.aosp_file_exporter import (get_firmwa
                                                                       get_subfolders)
 from dynamic_analysis.emulator_preparation.aosp_meta_writer import create_modules
 from dynamic_analysis.emulator_preparation.templates.shared_library_module_template import \
-    ANDROID_MK_SHARED_LIBRARY_TEMPLATE, ANDROID_BP_SHARED_LIBRARY_TEMPLATE, AOSP_12_SHARED_LIBRARIES
+    ANDROID_MK_SHARED_LIBRARY_TEMPLATE, ANDROID_BP_SHARED_LIBRARY_TEMPLATE, AOSP_12_SHARED_LIBRARIES, APEX_NATIVE_LIBS
 
 
 def get_local_module_path(file_path, partition_name, format="mk"):
@@ -68,7 +68,10 @@ def select_local_module_path(file_path, file_name, format):
 
 def get_overrides(file_name):
     overrides = ""
-    for module_name in AOSP_12_SHARED_LIBRARIES:
+    module_list = [""]
+    module_list.extend(AOSP_12_SHARED_LIBRARIES)
+    module_list.extend(APEX_NATIVE_LIBS)
+    for module_name in module_list:
         prebuilt_module_name = module_name.replace("prebuilt_", "")
         if module_name == file_name:
             overrides = module_name
