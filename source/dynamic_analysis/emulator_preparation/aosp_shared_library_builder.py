@@ -47,7 +47,7 @@ def select_local_module_path(file_path, file_name, format):
         target_out = "$(TARGET_OUT)"
         target_arch_abi = "$(TARGET_ARCH_ABI)/"
     else:
-        target_out = ""
+        target_out = "$$(genDir)"
         target_arch_abi = "arm64"
 
     if "/app/" in file_path:

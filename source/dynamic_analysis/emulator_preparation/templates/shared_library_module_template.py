@@ -21,7 +21,7 @@ genrule {
 
 cc_prebuilt_library_shared {
     name: "${local_module}",
-    srcs: ["${local_src_files}"],
+    srcs: ["./${local_src_files}"],
     suffix: ".so",
     relative_install_path: "${local_module_path}",
     prefer: true,
