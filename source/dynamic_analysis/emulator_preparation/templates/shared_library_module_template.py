@@ -690,6 +690,7 @@ AOSP_12_SHARED_LIBRARIES = [
     "libstatssocket",
     "android.hardware.gnss-V1-ndk_platform"
     "android.hardware.power-V2-ndk_platform",
+    "lib_profiler"
 ]
 
 APEX_NATIVE_LIBS = [
