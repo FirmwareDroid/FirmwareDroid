@@ -67,20 +67,17 @@ def select_local_module_path(file_path, file_name, format):
 
 
 def get_overrides(file_name):
-    overrides = ""
-    module_list = [""]
-    module_list.extend(AOSP_12_SHARED_LIBRARIES)
-    module_list.extend(APEX_NATIVE_LIBS)
+    module_list = [""] + AOSP_12_SHARED_LIBRARIES + APEX_NATIVE_LIBS
     for module_name in module_list:
-        prebuilt_module_name = module_name.replace("prebuilt_", "")
-        no_lib_name = module_name.replace("lib", "")
-        if module_name == file_name:
-            overrides = module_name
-        elif prebuilt_module_name == file_name:
-            overrides = module_name
-        elif no_lib_name == file_name:
-            overrides = module_name
-    return overrides
+        variations = [
+            module_name,
+            module_name.replace("prebuilt_", ""),
+            module_name.replace("lib_", ""),
+            module_name.replace("lib_", "").replace("lib", "")
+        ]
+        if file_name in variations:
+            return module_name
+    return ""
 
 
 def create_template_string(format_name, library_path):
