@@ -14,7 +14,7 @@ ANDROID_MK_SHARED_LIBRARY_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
 
 ANDROID_BP_SHARED_LIBRARY_TEMPLATE = """
 cc_prebuilt_library_shared {
-    name: "${local_module}",
+    name: "${local_module}_fmd",
     srcs: ["./${local_src_files}"],
     prefer: true,
     overrides: ["${local_overrides}"],
