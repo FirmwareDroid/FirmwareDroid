@@ -73,9 +73,12 @@ def get_overrides(file_name):
     module_list.extend(APEX_NATIVE_LIBS)
     for module_name in module_list:
         prebuilt_module_name = module_name.replace("prebuilt_", "")
+        no_lib_name = module_name.replace("lib", "")
         if module_name == file_name:
             overrides = module_name
         elif prebuilt_module_name == file_name:
+            overrides = module_name
+        elif no_lib_name == file_name:
             overrides = module_name
     return overrides
 
