@@ -66,8 +66,15 @@ def select_local_module_path(file_path, file_name, format):
     return local_module_path
 
 
-def get_overrides(file_name):
-    module_list = [""] + AOSP_12_SHARED_LIBRARIES + APEX_NATIVE_LIBS
+def preprocess_modules(module_list):
+    """
+    Preprocess the module list to create a dictionary of variations of the module names.
+
+    :param module_list: list(str) - list of module names.
+
+    :return: dict - dictionary of variations of the module names.
+    """
+    module_dict = {}
     for module_name in module_list:
         variations = [
             module_name.strip().lower(),
@@ -75,9 +82,30 @@ def get_overrides(file_name):
             module_name.replace("lib_", "").strip().lower(),
             module_name.replace("lib", "").strip().lower()
         ]
-        if file_name.strip().lower() in variations:
-            return module_name
-    return ""
+        for variation in variations:
+            module_dict[variation] = module_name
+    return module_dict
+
+
+MODULE_LIST = [""] + AOSP_12_SHARED_LIBRARIES + APEX_NATIVE_LIBS
+MODULE_DICT = preprocess_modules(MODULE_LIST)
+
+
+def get_overrides(module_name):
+    """
+    Get the override module name for the given file name.
+
+    :param module_name: str - name of the module folder.
+
+    :return: str - override module name if found, else an empty string.
+    """
+    module_name = module_name.strip().lower()
+    if module_name in MODULE_DICT:
+        logging.info(f"Found override for {module_name} in {MODULE_DICT[module_name]}")
+        return MODULE_DICT[module_name]
+    else:
+        logging.info(f"{module_name} - no match")
+        return ""
 
 
 def create_template_string(format_name, library_path):
@@ -99,7 +127,7 @@ def create_template_string(format_name, library_path):
     local_module = file_name.replace(".so", "")
     local_module_path = select_local_module_path(library_path, file_name, format_name)
     local_prebuilt_module_file = f"$(LOCAL_PATH)/{file_name}"
-    local_overrides = get_overrides(file_name)
+    local_overrides = get_overrides(local_module)
     template_out = Template(file_template).substitute(local_module=local_module,
                                                       local_module_path=local_module_path,
                                                       local_src_files=local_src_files,
