@@ -688,9 +688,11 @@ AOSP_12_SHARED_LIBRARIES = [
     "libclang_rt.ubsan_standalone-arm-android",
     "libclang_rt.asan-arm-android",
     "libstatssocket",
-    "android.hardware.gnss-V1-ndk_platform"
+    "android.hardware.gnss-V1-ndk_platform",
     "android.hardware.power-V2-ndk_platform",
-    "lib_profiler"
+    "lib_profiler",
+    "libprofiler_support",
+    "libprofiler",
 ]
 
 APEX_NATIVE_LIBS = [
