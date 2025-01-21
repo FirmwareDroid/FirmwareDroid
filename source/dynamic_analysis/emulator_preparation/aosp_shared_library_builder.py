@@ -70,12 +70,12 @@ def get_overrides(file_name):
     module_list = [""] + AOSP_12_SHARED_LIBRARIES + APEX_NATIVE_LIBS
     for module_name in module_list:
         variations = [
-            module_name,
-            module_name.replace("prebuilt_", ""),
-            module_name.replace("lib_", ""),
-            module_name.replace("lib_", "").replace("lib", "")
+            module_name.strip().lower(),
+            module_name.replace("prebuilt_", "").strip().lower(),
+            module_name.replace("lib_", "").strip().lower(),
+            module_name.replace("lib", "").strip().lower()
         ]
-        if file_name in variations:
+        if file_name.strip().lower() in variations:
             return module_name
     return ""
 
