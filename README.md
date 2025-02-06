@@ -25,6 +25,8 @@ Some of the tools and features included are:
   * [MobSFScan](https://github.com/MobSF/mobsfscan)
   * [APKscan](https://github.com/LucasFaudman/apkscan)
   * [FlowDroid](https://github.com/secure-software-engineering/FlowDroid)
+  * [Trueseeing](https://github.com/alterakey/trueseeing)
+  * [APKScan](https://github.com/LucasFaudman/apkscan)
   * [Qark](https://github.com/linkedin/qark/) (deprecated, no updates by the author)
   * [Androwarn](https://github.com/maaaaz/androwarn/) (deprecated, no updates by the author)
   * [SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/) (deprecated, discontinued by the author)

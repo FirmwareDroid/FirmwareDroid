@@ -3,7 +3,6 @@
 # See the file 'LICENSE' for copying permission.
 import json
 import logging
-
 import graphene
 import django_rq
 import importlib
@@ -35,6 +34,7 @@ class ScannerModules(Enum):
     MOBSF = {"MobSFScanJob": "static_analysis.MobSFScan.mobsfscan_wrapper"}
     APKSCAN = {"APKScanScanJob": "static_analysis.APKscan.apkscan_wrapper"}
     FLOWDROID = {"FlowDroidScanJob": "static_analysis.FlowDroid.flowdroid_wrapper"}
+    TRUESEEING = {"TrueseeingScanJob": "static_analysis.Trueseeing.trueseeing_wrapper"}
 
 
 class AndroidAppType(MongoengineObjectType):
