@@ -8,7 +8,7 @@ RUN apt --allow-releaseinfo-change update -y
 
 #####################################
 # Install Exodus-core dependency (dexdump) #
-# Install Android scommand line tools and sdk #
+# Install Android command line tools and SDK #
 #####################################
 # TODO FIX DEXDUMP Installation: https://github.com/Exodus-Privacy/exodus-standalone/issues/6
 #RUN apt install -y dexdump android-libbacktrace # Debian dexdump package is broken
@@ -17,8 +17,16 @@ RUN mkdir -p /android/sdk/cmdline-tools/latest && mkdir -p /android/sdk/avd && m
     && mkdir -p /android/sdk/platforms && mkdir -p /android/sdk/platform-tools && mkdir -p /android/sdk/system-images  \
     && mkdir /android/tmp && mkdir -p /android/user_home/
 WORKDIR /android
-RUN wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
-RUN wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip
+
+# Retry mechanism for wget commands
+RUN set -eux; \
+    for i in $(seq 1 5); do \
+        wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip && break || sleep 15; \
+    done; \
+    for i in $(seq 1 5); do \
+        wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip && break || sleep 15; \
+    done;
+
 RUN unzip commandlinetools-linux-10406996_latest.zip -d /android/tmp
 RUN unzip platform-tools-latest-linux.zip -d /android/sdk/
 RUN mv /android/tmp/cmdline-tools/* /android/sdk/cmdline-tools/latest/
@@ -37,10 +45,16 @@ ENV PATH=$ANDROID_SDK_ROOT/build-tools/35.0.0/:$PATH
 #####################################
 # Installing apktool                #
 #####################################
-RUN APKTOOL_VERSION=$(curl -s "https://api.github.com/repos/iBotPeaches/Apktool/releases/latest"  \
-    | grep -Po '"tag_name": "v\K[0-9.]+')  \
-    && curl -Lo /usr/local/bin/apktool.jar "https://github.com/iBotPeaches/Apktool/releases/latest/download/apktool_${APKTOOL_VERSION}.jar"
-RUN curl -o /usr/local/bin/apktool https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool
+RUN set -eux; \
+    APKTOOL_VERSION=$(curl -s "https://api.github.com/repos/iBotPeaches/Apktool/releases/latest"  \
+    | grep -Po '"tag_name": "v\K[0-9.]+'); \
+    for i in $(seq 1 5); do \
+        curl -Lo /usr/local/bin/apktool.jar "https://github.com/iBotPeaches/Apktool/releases/latest/download/apktool_${APKTOOL_VERSION}.jar" && break || sleep 15; \
+    done;
+RUN set -eux; \
+    for i in $(seq 1 5); do \
+        curl -o /usr/local/bin/apktool https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool && break || sleep 15; \
+    done;
 RUN chmod a+x /usr/local/bin/apktool.jar && chmod a+x /usr/local/bin/apktool
 RUN apktool --version
 
@@ -49,9 +63,12 @@ RUN apktool --version
 #####################################
 RUN mkdir -p /tmp/jadx-temp/jadx/ && mkdir -p /opt/jadx/bin
 WORKDIR /tmp/jadx-temp/
-RUN JADX_VERSION=$(curl -s "https://api.github.com/repos/skylot/jadx/releases/latest"  \
-    | grep -Po '"tag_name": "v\K[0-9.]+')  \
-    && curl -Lo jadx.zip "https://github.com/skylot/jadx/releases/latest/download/jadx-${JADX_VERSION}.zip"
+RUN set -eux; \
+    JADX_VERSION=$(curl -s "https://api.github.com/repos/skylot/jadx/releases/latest"  \
+    | grep -Po '"tag_name": "v\K[0-9.]+'); \
+    for i in $(seq 1 5); do \
+        curl -Lo jadx.zip "https://github.com/skylot/jadx/releases/latest/download/jadx-${JADX_VERSION}.zip" && break || sleep 15; \
+    done;
 RUN unzip jadx.zip -d /tmp/jadx-temp/
 RUN mv /tmp/jadx-temp/* /opt/jadx/
 ENV JADX="/opt/jadx/bin"
@@ -62,7 +79,15 @@ RUN jadx --version
 ##################################################
 # Install RUST
 ##################################################
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+RUN set -eux; \
+    for i in $(seq 1 5); do \
+        curl -fsSL https://sh.rustup.rs -o rustup.sh && break || sleep 15; \
+    done; \
+    for i in $(seq 1 5); do \
+        sh rustup.sh -y && break || sleep 15; \
+    done; \
+    rm rustup.sh
+#RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 RUN cargo --version
 
@@ -71,9 +96,12 @@ RUN cargo --version
 ##################################################
 RUN mkdir -p /opt/gradle
 ENV GRADLE_VERSION=7.6.3
-RUN wget https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -P /tmp \
-    && unzip -d /opt/gradle /tmp/gradle-${GRADLE_VERSION}-bin.zip \
-    && rm /tmp/gradle-${GRADLE_VERSION}-bin.zip
+RUN set -eux; \
+    for i in $(seq 1 5); do \
+        wget https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -P /tmp && break || sleep 15; \
+    done; \
+    unzip -d /opt/gradle /tmp/gradle-${GRADLE_VERSION}-bin.zip; \
+    rm /tmp/gradle-${GRADLE_VERSION}-bin.zip
 ENV GRADLE_HOME=/opt/gradle/gradle-${GRADLE_VERSION}
 ENV PATH=${GRADLE_HOME}/bin:${PATH}
 RUN gradle --version
@@ -83,10 +111,16 @@ RUN gradle --version
 ##################################################
 RUN mkdir -p /opt/decompilers/java/
 # Install CFR
-RUN wget https://github.com/leibnitz27/cfr/releases/download/0.152/cfr-0.152.jar -O /opt/decompilers/java/cfr.jar
+RUN set -eux; \
+    for i in $(seq 1 5); do \
+        wget https://github.com/leibnitz27/cfr/releases/download/0.152/cfr-0.152.jar -O /opt/decompilers/java/cfr.jar && break || sleep 15; \
+    done;
 
 # Install Procyon
-RUN wget https://github.com/mstrobel/procyon/releases/download/v0.6.0/procyon-decompiler-0.6.0.jar -O /opt/decompilers/java/procyon.jar
+RUN set -eux; \
+    for i in $(seq 1 5); do \
+        wget https://github.com/mstrobel/procyon/releases/download/v0.6.0/procyon-decompiler-0.6.0.jar -O /opt/decompilers/java/procyon.jar && break || sleep 15; \
+    done;
 
 # Install Krakatau
 RUN git clone https://github.com/Storyyeller/Krakatau.git /opt/decompilers/java/krakatau
@@ -104,7 +138,10 @@ WORKDIR /var/www/source/
 # Install SUPER Android Analyzer   #
 #####################################
 RUN apt-get install -y default-jre-headless
-RUN wget -P /tmp/ https://github.com/SUPERAndroidAnalyzer/super/releases/download/0.5.1/super-analyzer_0.5.1_ubuntu_amd64.deb
+RUN set -eux; \
+    for i in $(seq 1 5); do \
+        wget -P /tmp/ https://github.com/SUPERAndroidAnalyzer/super/releases/download/0.5.1/super-analyzer_0.5.1_ubuntu_amd64.deb && break || sleep 15; \
+    done;
 RUN dpkg -i /tmp/super-analyzer_0.5.1_ubuntu_amd64.deb
 
 #####################################
@@ -112,12 +149,19 @@ RUN dpkg -i /tmp/super-analyzer_0.5.1_ubuntu_amd64.deb
 #####################################
 RUN mkdir -p /opt/flowdroid/rules/
 # Please, update hardcoded version in flowdroid_wrapper.py when updating here!
-RUN wget -O /opt/flowdroid/soot-infoflow-cmd-jar-with-dependencies.jar https://github.com/secure-software-engineering/FlowDroid/releases/download/v2.13/soot-infoflow-cmd-2.13.0-jar-with-dependencies.jar
+RUN set -eux; \
+    for i in $(seq 1 5); do \
+        wget -O /opt/flowdroid/soot-infoflow-cmd-jar-with-dependencies.jar https://github.com/secure-software-engineering/FlowDroid/releases/download/v2.13/soot-infoflow-cmd-2.13.0-jar-with-dependencies.jar && break || sleep 15; \
+    done;
 
 # Download examples source and sink rules
-RUN wget -O /opt/flowdroid/rules/SourcesAndSinks.txt https://raw.githubusercontent.com/secure-software-engineering/FlowDroid/develop/soot-infoflow-android/SourcesAndSinks.txt
-RUN wget -O /opt/flowdroid/rules/SourcesAndSinks_SharedPrefsOnly.txt https://raw.githubusercontent.com/secure-software-engineering/FlowDroid/develop/soot-infoflow-android/SourcesAndSinks_SharedPrefsOnly.txt
-
+RUN set -eux; \
+    for i in $(seq 1 5); do \
+        wget -O /opt/flowdroid/rules/SourcesAndSinks.txt https://raw.githubusercontent.com/secure-software-engineering/FlowDroid/develop/soot-infoflow-android/SourcesAndSinks.txt && break || sleep 15; \
+    done; \
+    for i in $(seq 1 5); do \
+        wget -O /opt/flowdroid/rules/SourcesAndSinks_SharedPrefsOnly.txt https://raw.githubusercontent.com/secure-software-engineering/FlowDroid/develop/soot-infoflow-android/SourcesAndSinks_SharedPrefsOnly.txt && break || sleep 15; \
+    done;
 
 ########################################################
 # Install Python requirements                          #

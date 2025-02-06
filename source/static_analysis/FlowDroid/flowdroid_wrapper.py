@@ -155,7 +155,6 @@ def store_result(android_app, result_dict):
 
     :return: class:'FlowDroid' object.
     """
-
     analysis_report = FlowDroidReport(android_app_id_reference=android_app.id,
                                       scanner_version="2.13.0",
                                       scanner_name="FlowDroid",

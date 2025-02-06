@@ -112,7 +112,7 @@ def package_build_files_for_firmware(firmware, format_name, skip_file_export):
         copy_partitions(export_destination_path, tmp_root_dir)
         process_android_apps(firmware, tmp_root_dir)
         process_shared_libraries(firmware, tmp_root_dir, store_setting.id, format_name)
-        #process_apex_files(firmware, tmp_root_dir, store_setting.id, format_name)
+        process_apex_files(firmware, tmp_root_dir, store_setting.id, format_name)
         package_files(firmware, tmp_root_dir, store_paths)
 
 
