@@ -34,7 +34,7 @@ class ScannerModules(Enum):
     MOBSF = {"MobSFScanJob": "static_analysis.MobSFScan.mobsfscan_wrapper"}
     APKSCAN = {"APKScanScanJob": "static_analysis.APKscan.apkscan_wrapper"}
     FLOWDROID = {"FlowDroidScanJob": "static_analysis.FlowDroid.flowdroid_wrapper"}
-    TRUESEEING = {"TrueseeingScanJob": "static_analysis.TrueSeeing.trueseeing_wrapper"}
+    TRUESEEING = {"TrueseeingScanJob": "static_analysis.Trueseeing.trueseeing_wrapper"}
 
 
 class AndroidAppType(MongoengineObjectType):
