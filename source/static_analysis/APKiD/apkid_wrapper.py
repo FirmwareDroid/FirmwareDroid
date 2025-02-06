@@ -5,6 +5,8 @@ import json
 import os
 import logging
 import tempfile
+import traceback
+
 from model.Interfaces.ScanJob import ScanJob
 from model import ApkidReport, AndroidApp
 from context.context_creator import create_db_context, create_log_context
@@ -47,9 +49,13 @@ def process_android_app(android_app_id):
                 for filename in filenames:
                     if filename == android_app.filename:
                         report_file_path = os.path.join(dirpath, filename)
-                        store_apkid_result(android_app, report_file_path)
-                        is_report_saved = True
-                        break
+                        if os.path.exists(report_file_path):
+                            store_apkid_result(android_app, report_file_path)
+                            is_report_saved = True
+                            break
+                        else:
+                            raise FileNotFoundError(f"APKid ERROR: Could not find report: "
+                                                    f"{android_app.filename} id: {android_app.id}")
 
             if not is_report_saved:
                 raise ValueError(f"APKid ERROR: Could not save report: {android_app.filename} id: {android_app.id}")
@@ -67,7 +73,11 @@ def apkid_worker_multiprocessing(android_app_id):
     :param android_app_id: str - object-id for document of  class:'AndroidApp'
 
     """
-    process_android_app(android_app_id)
+    try:
+        process_android_app(android_app_id)
+    except Exception as err:
+        logging.error(err)
+        traceback.print_exc()
 
 
 def store_apkid_result(android_app, report_file_path):

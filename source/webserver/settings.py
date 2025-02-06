@@ -93,7 +93,6 @@ CORS_ALLOW_METHODS = [
 ]
 
 CORS_ADDITIONAL_HOST_LIST = os.environ['CORS_ADDITIONAL_HOST'].split(";")
-logging.info("CORS_ADDITIONAL_HOST_LIST: " + str(CORS_ADDITIONAL_HOST_LIST))
 for cors_host in CORS_ADDITIONAL_HOST_LIST:
     if not cors_host.startswith("https://"):
         cors_host = "https://" + cors_host

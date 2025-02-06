@@ -1,6 +1,11 @@
+import json
 import logging
 import os
 import subprocess
+import tempfile
+import time
+import traceback
+
 from context.context_creator import create_log_context, create_db_context
 from model import AndroidApp, TrueseeingReport
 from model.Interfaces.ScanJob import ScanJob
@@ -9,43 +14,66 @@ from processing.standalone_python_worker import start_python_interpreter
 
 def process_android_app(android_app):
     apk_path = android_app.absolute_store_path
-    json_report_path = start_trueseeing_analysis(apk_path)
-    store_result(android_app, json_report_path)
+    with tempfile.NamedTemporaryFile(suffix=".json") as temp_file:
+        start_trueseeing_analysis(apk_path, temp_file.name)
+        store_result(android_app, temp_file.name)
 
 
-def start_trueseeing_analysis(apk_path, report_path="/tmp/report.json"):
+def start_trueseeing_analysis(apk_path, report_file_path):
     """
     Run the TrueSeeing scanner on the given APK.
-    :param apk_path:
-    :return:
+
+    :param report_file_path: str - path to the output file.
+    :param apk_path:    str - path to the APK file.
+
     """
-    run_trueseeing_command = ["trueseeing", "-eqc", f'as;gj {report_path}', apk_path]
+    run_trueseeing_command = [
+        "/opt/firmwaredroid/python/trueseeing/bin/trueseeing",
+        "-e",
+        "-q",
+        "-c", f"as;gj! {report_file_path}",
+        str(apk_path)
+    ]
+    logging.info(f"Running Trueseeing with command: {run_trueseeing_command}")
     try:
-        result = subprocess.run(run_trueseeing_command, check=True, capture_output=True, text=True)
-        logging.info(result.stdout)
-        if result.stderr:
-            logging.error(result.stderr)
+        result = subprocess.run(
+            run_trueseeing_command,
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=1200,
+            shell=False
+        )
     except subprocess.CalledProcessError as e:
         logging.error(f"Command '{e.cmd}' returned non-zero exit status {e.returncode}.")
         raise RuntimeError(e.stderr.strip())
-    return report_path
+
+    if not os.path.exists(report_file_path):
+        logging.error(f"Report file not found: {report_file_path}")
+        raise FileNotFoundError(f"Report file not found: {report_file_path}")
+    elif os.path.getsize(report_file_path) == 0:
+        logging.error(f"Report file is empty: {report_file_path}")
+        raise FileNotFoundError(f"Report file is empty: {report_file_path}")
 
 
 def store_result(android_app, json_report_path):
     """
     Store the results of the analysis in the database.
 
-    :param android_app: class:'AndroidApp' object.
+    :param android_app: rclass:'AndroidApp' object.
     :param json_report_path: path to the report file.
 
     :return: class:'YourAnalyzerReport' object.
     """
     import trueseeing
-    with open(json_report_path, 'rb') as json_report:
+    with open(json_report_path, 'r') as json_report:
+        data = json_report.read()
+        logging.info(f"Data: {data}")
+        results = json.loads(data)
         analysis_report = TrueseeingReport(android_app_id_reference=android_app.id,
                                            scanner_version=trueseeing.__version__,
                                            scanner_name="Trueseeing",
-                                           results=json_report.read())
+                                           results=results)
     analysis_report.save()
     android_app.trueseeing_report_reference = analysis_report.id
     android_app.save()
@@ -61,14 +89,18 @@ def trueseeing_worker_multiprocessing(android_app_id):
     :param android_app_id: object-id of class:'AndroidApp'.
 
     """
-    android_app = AndroidApp.objects.get(pk=android_app_id)
-    process_android_app(android_app)
+    try:
+        android_app = AndroidApp.objects.get(pk=android_app_id)
+        process_android_app(android_app)
+    except Exception as err:
+        logging.error(f"Error processing {android_app_id}: {err}")
+        traceback.print_exc()
 
 
 class TrueseeingScanJob(ScanJob):
     object_id_list = []
     SOURCE_DIR = "/var/www/source"
-    MODULE_NAME = "static_analysis.Trueseeing.Trueseeing_wrapper"
+    MODULE_NAME = "static_analysis.Trueseeing.trueseeing_wrapper"
     INTERPRETER_PATH = "/opt/firmwaredroid/python/trueseeing/bin/python"
 
     def __init__(self, object_id_list, **kwargs):
