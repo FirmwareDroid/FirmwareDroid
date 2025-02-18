@@ -272,7 +272,11 @@ def create_template_string(android_app, template_string, file_format):
             str - The string of the local module name
 
     """
-    directory_name = android_app.filename.replace('.apk', '')
+    is_from_apex = "_apex" in android_app.absolute_store_path
+    if is_from_apex:
+        directory_name = android_app.filename.replace('.apk', '') + "FMD_APEX"
+    else:
+        directory_name = android_app.filename.replace('.apk', '')
     local_module = f"{directory_name}"
     local_privileged_module = "false"
     if not os.path.exists(android_app.absolute_store_path):
