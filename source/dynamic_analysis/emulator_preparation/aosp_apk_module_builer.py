@@ -272,11 +272,7 @@ def create_template_string(android_app, template_string, file_format):
             str - The string of the local module name
 
     """
-    is_from_apex = "_apex" in android_app.absolute_store_path
-    if is_from_apex:
-        directory_name = android_app.filename.replace('.apk', '') + "FMD_APEX"
-    else:
-        directory_name = android_app.filename.replace('.apk', '')
+    directory_name = android_app.filename.replace(".apk", "")
     local_module = f"{directory_name}"
     local_privileged_module = "false"
     if not os.path.exists(android_app.absolute_store_path):
@@ -316,7 +312,11 @@ def process_android_apps(firmware, tmp_root_dir):
     """
     for android_app_lazy in firmware.android_app_id_list:
         android_app = android_app_lazy.fetch()
-        module_naming = f"{android_app.filename.replace('.apk', '')}"
+        is_from_apex = "_apex" in android_app.absolute_store_path
+        if is_from_apex:
+            module_naming = f"{android_app.filename.replace('.apk', '')}_FMD_APEX"
+        else:
+            module_naming = f"{android_app.filename.replace('.apk', '')}"
         tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
         if not os.path.exists(tmp_app_dir):
             os.mkdir(tmp_app_dir)
