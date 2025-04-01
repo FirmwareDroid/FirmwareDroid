@@ -241,7 +241,9 @@ def extract_third_layer(firmware_file_list, destination_dir, extracted_archive_d
             logging.info(f"Extracting third layer for: {firmware_file.name}")
             if (os.path.isfile(firmware_file.absolute_store_path)
                     and not os.path.islink(firmware_file.absolute_store_path)):
-                apex_file_name_no_ext = os.path.basename(firmware_file.absolute_store_path).replace(".", "_")
+                apex_file_name_no_ext = (os.path.basename(firmware_file.absolute_store_path)
+                                         .replace(".", "_").replace("/", "_")
+                                         .replace("\\", "_"))
                 apex_extract_dir = tempfile.mkdtemp(dir=destination_dir,
                                                     prefix=f"fmd_extract_{apex_file_name_no_ext}_")
                 apex_extract_dir = os.path.abspath(apex_extract_dir)
@@ -258,7 +260,8 @@ def extract_third_layer(firmware_file_list, destination_dir, extracted_archive_d
                         if file_name.endswith(".img"):
                             apex_payload_extract_dir = tempfile.mkdtemp(dir=destination_dir,
                                                                         prefix=f"fmd_extract_apex_payload_{apex_file_name_no_ext}_")
-                            subfolder_path = "apex_extract/" + str(apex_file_name_no_ext) + "/"
+                            subfolder_path = (f"apex_extract_{str(apex_file_name_no_ext)}/" + str(apex_file_name_no_ext)
+                                              + "/")
                             apex_payload_extract_dir = os.path.abspath(apex_payload_extract_dir)
                             apex_payload_sub_extract_dir = os.path.join(apex_payload_extract_dir, subfolder_path)
                             os.makedirs(apex_payload_sub_extract_dir, exist_ok=True)
