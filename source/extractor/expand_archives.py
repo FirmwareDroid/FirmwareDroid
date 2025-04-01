@@ -258,7 +258,7 @@ def extract_third_layer(firmware_file_list, destination_dir, extracted_archive_d
                         if file_name.endswith(".img"):
                             apex_payload_extract_dir = tempfile.mkdtemp(dir=destination_dir,
                                                                         prefix=f"fmd_extract_apex_payload_{apex_file_name_no_ext}_")
-                            subfolder_path = str(apex_file_name_no_ext) + "/"
+                            subfolder_path = "apex_extract/" + str(apex_file_name_no_ext) + "/"
                             apex_payload_extract_dir = os.path.abspath(apex_payload_extract_dir)
                             apex_payload_sub_extract_dir = os.path.join(apex_payload_extract_dir, subfolder_path)
                             os.makedirs(apex_payload_sub_extract_dir, exist_ok=True)
@@ -266,7 +266,7 @@ def extract_third_layer(firmware_file_list, destination_dir, extracted_archive_d
                             unblob_extract(file_path,
                                            apex_payload_sub_extract_dir,
                                            depth=1)
-                            shutil.copytree(apex_payload_sub_extract_dir, destination_dir, dirs_exist_ok=True)
+                            remove_fmd_temp_directories(destination_dir)
                             firmware_file_list = create_firmware_file_list(destination_dir, partition_name)
                             all_firmware_files_extracted_list.extend(firmware_file_list)
     return all_firmware_files_extracted_list
