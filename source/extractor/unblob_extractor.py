@@ -34,7 +34,8 @@ def unblob_extract(compressed_file_path,
                    depth=1,
                    worker_count=5,
                    skip_extensions_list=None,
-                   allow_extension_list=None):
+                   allow_extension_list=None,
+                   cwd=None):
     """
     Extract a file recursively with the unblob extraction suite.
 
@@ -85,7 +86,7 @@ def unblob_extract(compressed_file_path,
             command_array.append("--skip-extension")
             command_array.append(extension)
         command_array.append(input_file)
-        response = subprocess.run(command_array, timeout=60 * 60 * 3)
+        response = subprocess.run(command_array, timeout=60 * 60 * 3, cwd=cwd)
         response.check_returncode()
     except subprocess.CalledProcessError as err:
         if response and response.returncode > 1:
