@@ -260,13 +260,13 @@ def extract_third_layer(firmware_file_list, destination_dir, extracted_archive_d
                                                                         prefix=f"fmd_extract_apex_payload_{apex_file_name_no_ext}_")
                             subfolder_path = str(apex_file_name_no_ext) + "/"
                             apex_payload_extract_dir = os.path.abspath(apex_payload_extract_dir)
-                            apex_payload_extract_dir = os.path.join(apex_payload_extract_dir, subfolder_path)
-                            os.makedirs(apex_payload_extract_dir, exist_ok=True)
-                            logging.info(f"Third layer extraction for: {file_name}, to: {apex_payload_extract_dir}")
+                            apex_payload_sub_extract_dir = os.path.join(apex_payload_extract_dir, subfolder_path)
+                            os.makedirs(apex_payload_sub_extract_dir, exist_ok=True)
+                            logging.info(f"Third layer extraction for: {file_name}, to: {apex_payload_sub_extract_dir}")
                             unblob_extract(file_path,
-                                           apex_payload_extract_dir,
+                                           apex_payload_sub_extract_dir,
                                            depth=1)
-                            remove_fmd_temp_directories(destination_dir)
+                            shutil.copytree(apex_payload_sub_extract_dir, destination_dir, dirs_exist_ok=True)
                             firmware_file_list = create_firmware_file_list(destination_dir, partition_name)
                             all_firmware_files_extracted_list.extend(firmware_file_list)
     return all_firmware_files_extracted_list
