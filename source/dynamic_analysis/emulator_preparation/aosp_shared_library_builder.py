@@ -101,10 +101,10 @@ def get_overrides(module_name):
     """
     module_name = module_name.strip().lower()
     if module_name in MODULE_DICT:
-        logging.info(f"Found override for {module_name} in {MODULE_DICT[module_name]}")
+        logging.info(f"Found override for module: {module_name} in {MODULE_DICT[module_name]}")
         return MODULE_DICT[module_name]
     else:
-        logging.info(f"{module_name} - no match")
+        logging.info(f"Module name: {module_name} - no match")
         return ""
 
 

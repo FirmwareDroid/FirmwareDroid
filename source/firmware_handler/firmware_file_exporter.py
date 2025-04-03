@@ -88,8 +88,11 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             if not store_setting:
                 raise ValueError(f"Store settings not found for id {store_setting_id}")
             store_paths = store_setting.get_store_paths()
+            clear_export_folder(store_paths, firmware.id)
+
             with (tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as temp_dir_path):
                 firmware_file_list = extract_firmware(firmware.absolute_store_path, temp_dir_path)
+
                 for firmware_file in firmware_file_list:
                     if not firmware_file.is_directory \
                             and re.search(search_pattern, firmware_file.name) \
@@ -109,6 +112,22 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             traceback.print_stack()
         finally:
             firmware_id_queue.task_done()
+
+
+def clear_export_folder(store_paths, firmware_id):
+    """
+    Deleted the export folder for the given firmware id.
+
+    :param store_paths: dict - paths to the store settings.
+    :param firmware_id: str - id of the firmware to delete the export folder for.
+
+    """
+    store_path_abs = str(os.path.abspath(store_paths["FIRMWARE_FOLDER_FILE_EXTRACT"]))
+    firmware_file_export_path = os.path.join(store_path_abs, NAME_EXPORT_FOLDER, str(firmware_id))
+    logging.info(f"Cleaning export folder: {firmware_file_export_path}")
+    if os.path.exists(firmware_file_export_path):
+        logging.info(f"Deleting export folder {firmware_file_export_path}")
+        shutil.rmtree(firmware_file_export_path)
 
 
 def extract_firmware(firmware_archive_file_path, temp_extract_dir):
