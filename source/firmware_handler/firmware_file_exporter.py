@@ -79,6 +79,9 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             logging.debug(f"Queue size: {firmware_id_queue.qsize()}")
         except Empty:
             break
+        except Exception as e:
+            logging.error(f"Could not get firmware id from queue. Error: {e}")
+            break
         try:
             firmware = AndroidFirmware.objects.get(pk=firmware_id)
             store_setting = StoreSetting.objects.get(pk=store_setting_id, is_active=True)
@@ -95,8 +98,9 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
                         firmware_file.firmware_id_reference = firmware.id
                         if firmware_file.partition_name == "/":
                             firmware_file.partition_name = "root"
-                        destination_path_abs = get_file_export_path_abs(store_setting, firmware_file)
-                        is_successful = export_firmware_file(firmware_file, temp_dir_path, destination_path_abs)
+                        destination_dir_path_abs = get_file_export_path_abs(store_setting, firmware_file)
+                        os.makedirs(destination_dir_path_abs, exist_ok=True)
+                        is_successful = export_firmware_file(firmware_file, temp_dir_path, destination_dir_path_abs)
                         if not is_successful:
                             raise ValueError(f"Could not export firmware file {firmware_file.id} {firmware_file.name}")
             logging.info(f"Exported files from firmware {firmware.id} to {store_paths['FIRMWARE_FOLDER_FILE_EXTRACT']}")
@@ -176,7 +180,8 @@ def get_file_export_path_abs(store_setting, firmware_file):
     """
     store_paths = store_setting.store_options_dict[store_setting.uuid]["paths"]
     logging.debug(f"Normalize path: {firmware_file.relative_path}")
-    minimized_relative_path = remove_unblob_extract_directories(firmware_file.relative_path)
+    relative_file_path = firmware_file.relative_path.replace(firmware_file.name, "")
+    minimized_relative_path = remove_unblob_extract_directories(relative_file_path)
     logging.debug(f"Minimized path: {minimized_relative_path}")
     store_path_abs = os.path.abspath(store_paths["FIRMWARE_FOLDER_FILE_EXTRACT"])
     logging.debug(f"{store_path_abs},"
@@ -239,17 +244,21 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
             os.symlink(linkto, destination_path)
         elif os.path.isdir(source_path):
             if not os.listdir(source_path):
-                os.makedirs(destination_path, exist_ok=True)
+                if destination_path.endswith(os.sep):
+                    os.makedirs(destination_path, exist_ok=True)
                 dst_file_path = destination_path
             else:
                 dst_file_path = shutil.copytree(source_path, destination_path,
                                                 dirs_exist_ok=True,
                                                 ignore_dangling_symlinks=True,
                                                 symlinks=True)
-        else:
+        elif os.path.isfile(source_path) and not destination_path.endswith("/"):
             dst_file_path = shutil.copy(source_path, destination_path, follow_symlinks=False)
+        else:
+            raise ValueError(f"Unknown file type to copy: {source_path}")
+
     except OSError as e:
         logging.error(f"Could not copy: {source_path} to {os.path.dirname(destination_path)} error: {e}")
+
     if dst_file_path is None or not os.path.exists(dst_file_path):
         raise OSError(f"Could not copy firmware file {firmware_file.id} to {destination_path}")
-
