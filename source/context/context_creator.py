@@ -8,7 +8,7 @@ import sys
 
 def create_db_context(f):
     """
-    Decorator for creating an app context and pushing into to the Flask context stack.
+    Decorator for creating an app context and pushing into to the context stack.
 
     :param f: function to test for basic auth.
     :return: function
@@ -25,7 +25,7 @@ def create_db_context(f):
 
 def create_db_context_subprocess(f):
     """
-    Decorator for creating an app context and pushing into to the Flask context stack.
+    Decorator for creating an app context and pushing into to the context stack.
 
     :param f: function to test for basic auth.
     :return: function

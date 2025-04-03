@@ -243,31 +243,36 @@ def extract_third_layer(firmware_file_list, destination_dir, extracted_archive_d
                     and not os.path.islink(firmware_file.absolute_store_path)):
                 apex_file_name_no_ext = os.path.basename(firmware_file.absolute_store_path).replace(".", "_")
 
-                apex_extract_dir = tempfile.mkdtemp(dir=destination_dir,
-                                                    prefix=str(apex_file_name_no_ext))
+                sub_extract_folder = str(os.path.join(str(destination_dir), str(apex_file_name_no_ext)))
+                os.makedirs(sub_extract_folder, exist_ok=True)
+
+                apex_extract_dir = tempfile.mkdtemp(dir=sub_extract_folder,
+                                                    prefix=f"fmd_extract_{apex_file_name_no_ext}_")
                 apex_extract_dir = os.path.abspath(apex_extract_dir)
                 is_success = unblob_extract(firmware_file.absolute_store_path,
                                             apex_extract_dir,
                                             depth=1,
-                                            allow_extension_list=THIRD_LAYER_SUPPORT_FILE_TYPES,
-                                            cwd=apex_extract_dir)
+                                            allow_extension_list=THIRD_LAYER_SUPPORT_FILE_TYPES)
                 if is_success:
                     file_path_list = get_file_list(apex_extract_dir)
                     for file_path in file_path_list:
                         file_name = os.path.basename(file_path).lower()
                         if file_name.endswith(".img"):
-                            apex_payload_extract_dir = tempfile.mkdtemp(dir=apex_extract_dir,
-                                                                        prefix=f"apex_payload_{apex_file_name_no_ext}_")
+                            apex_payload_extract_dir = tempfile.mkdtemp(dir=sub_extract_folder,
+                                                                        prefix=f"fmd_extract_apex_payload_{apex_file_name_no_ext}_")
+                            subfolder_path = str(apex_file_name_no_ext) + "/"
+                            apex_payload_extract_dir = os.path.abspath(apex_payload_extract_dir)
+                            apex_payload_extract_dir = os.path.join(apex_payload_extract_dir, subfolder_path)
                             os.makedirs(apex_payload_extract_dir, exist_ok=True)
                             logging.info(f"Third layer extraction for: {file_name}, to: {apex_payload_extract_dir}")
                             unblob_extract(file_path,
                                            apex_payload_extract_dir,
                                            depth=1,
-                                           cwd=apex_extract_dir
                                            )
-                            firmware_file_list = create_firmware_file_list(destination_dir, partition_name)
-                            all_firmware_files_extracted_list.extend(firmware_file_list)
-                #remove_fmd_temp_directories(apex_extract_dir)
+
+                remove_fmd_temp_directories(destination_dir)
+                firmware_file_list = create_firmware_file_list(destination_dir, partition_name)
+                all_firmware_files_extracted_list.extend(firmware_file_list)
     return all_firmware_files_extracted_list
 
 
@@ -291,9 +296,12 @@ def remove_fmd_temp_directories(search_path):
     """
     for root, dirs, files in os.walk(search_path, followlinks=False):
         for directory in dirs:
-            if directory.startswith("fmd_extract_"):
+            if directory.startswith("fmd_extract_") \
+                    and os.path.isdir(os.path.join(root, directory)) \
+                    and os.path.isdir(root):
                 temp_extract_dir = os.path.join(root, directory)
                 move_all_files_and_folders(temp_extract_dir, root)
+                logging.info(f"Removing temporary directory: {temp_extract_dir}")
                 shutil.rmtree(temp_extract_dir, ignore_errors=True)
 
 
@@ -363,6 +371,12 @@ def move_all_files_and_folders(src_dir, dest_dir):
     """
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
+
+    if not os.path.isdir(dest_dir) or not os.path.isdir(src_dir):
+        raise ValueError(f"Destination and source must be a directory. Src: {src_dir}, Dest: {dest_dir}")
+
+    if not dest_dir.endswith(os.sep):
+        dest_dir += os.sep
 
     for item in os.listdir(src_dir):
         src_item = os.path.join(src_dir, item)

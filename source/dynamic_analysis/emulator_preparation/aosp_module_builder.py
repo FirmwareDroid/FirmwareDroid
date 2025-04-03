@@ -106,6 +106,7 @@ def package_build_files_for_firmware(firmware, format_name, skip_file_export):
         export_destination_path = os.path.join(store_path_abs,
                                                NAME_EXPORT_FOLDER,
                                                str(firmware.pk))
+        os.makedirs(export_destination_path, exist_ok=True)
         if not skip_file_export:
             search_pattern = "^.*$"
             export_files_by_regex(firmware, store_setting.id, search_pattern)
