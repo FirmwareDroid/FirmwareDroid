@@ -6,6 +6,7 @@ import django_rq
 import graphene
 from api.v2.schema.RqJobsSchema import ONE_WEEK_TIMEOUT
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
+from api.v2.validators.chunking import create_object_id_chunks
 from dynamic_analysis.emulator_preparation.aecs import update_or_create_aecs_job
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
@@ -120,7 +121,7 @@ class CreateAECSBuildFilesJob(graphene.Mutation):
     files can be used in the Android Open Source Project to create custom firmware that includes the specific apk files.
 
     """
-    job_id = graphene.String()
+    job_id_list = graphene.List(graphene.String)
 
     class Arguments:
         """
@@ -142,12 +143,16 @@ class CreateAECSBuildFilesJob(graphene.Mutation):
     @superuser_required
     def mutate(cls, root, info, format_name, firmware_id_list, queue_name="high-python", skip_file_export=False):
         queue = django_rq.get_queue(queue_name)
-        job = queue.enqueue(start_aosp_module_file_creator,
-                            format_name,
-                            firmware_id_list,
-                            skip_file_export,
-                            job_timeout=ONE_WEEK_TIMEOUT)
-        return cls(job_id=job.id)
+        object_id_chunks = create_object_id_chunks(firmware_id_list, chunk_size=5)
+        job_id_list = []
+        for object_id_chunk_list in object_id_chunks:
+            job = queue.enqueue(start_aosp_module_file_creator,
+                                format_name,
+                                object_id_chunk_list,
+                                skip_file_export,
+                                job_timeout=ONE_WEEK_TIMEOUT)
+            job_id_list.append(job.id)
+        return cls(job_id_list=job_id_list)
 
 
 class AecsJobMutation(graphene.ObjectType):
