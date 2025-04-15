@@ -12,6 +12,7 @@ from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from api.v2.schema.RqJobsSchema import ONE_WEEK_TIMEOUT, MAX_OBJECT_ID_LIST_SIZE
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
+from api.v2.validators.chunking import create_object_id_chunks
 from api.v2.validators.validation import *
 from model import AndroidApp, AndroidFirmware
 from android_app_importer.standalone_importer import start_android_app_standalone_importer
@@ -164,8 +165,7 @@ class CreateApkScanJob(graphene.Mutation):
         logging.info(f"Object ID list: {object_id_list}")
 
         if len(object_id_list) > 0:
-            object_id_chunks = [object_id_list[i:i + MAX_OBJECT_ID_LIST_SIZE] for i in range(0, len(object_id_list),
-                                                                                             MAX_OBJECT_ID_LIST_SIZE)]
+            object_id_chunks = create_object_id_chunks(object_id_list, chunk_size=MAX_OBJECT_ID_LIST_SIZE)
             job_id_list = []
             for object_id_chunk in object_id_chunks:
                 if kwargs and bool(json.loads(kwargs)):
