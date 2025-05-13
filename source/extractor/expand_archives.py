@@ -249,14 +249,21 @@ def extract_third_layer(firmware_file_list, destination_dir, extracted_archive_d
                 apex_extract_dir = tempfile.mkdtemp(dir=sub_extract_folder,
                                                     prefix=f"fmd_extract_{apex_file_name_no_ext}_")
                 apex_extract_dir = os.path.abspath(apex_extract_dir)
-                is_success = unblob_extract(firmware_file.absolute_store_path,
-                                            apex_extract_dir,
-                                            depth=1,
-                                            allow_extension_list=THIRD_LAYER_SUPPORT_FILE_TYPES)
+                file_extension = os.path.splitext(firmware_file.absolute_store_path)[1].lower()
+                if file_extension == ".capex":
+                    is_success = unblob_extract(firmware_file.absolute_store_path,
+                                                apex_extract_dir,
+                                                depth=2,
+                                                allow_extension_list=THIRD_LAYER_SUPPORT_FILE_TYPES)
+                else:
+                    is_success = unblob_extract(firmware_file.absolute_store_path,
+                                                apex_extract_dir,
+                                                depth=1,
+                                                allow_extension_list=THIRD_LAYER_SUPPORT_FILE_TYPES)
                 if is_success:
                     file_path_list = get_file_list(apex_extract_dir)
                     for file_path in file_path_list:
-                        file_name = os.path.basename(file_path).lower()
+                        file_name = os.path.basename(file_path).lower().strip()
                         if file_name.endswith(".img"):
                             apex_payload_extract_dir = tempfile.mkdtemp(dir=sub_extract_folder,
                                                                         prefix=f"fmd_extract_apex_payload_{apex_file_name_no_ext}_")
