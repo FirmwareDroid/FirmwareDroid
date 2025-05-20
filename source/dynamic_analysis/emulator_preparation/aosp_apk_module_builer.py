@@ -316,7 +316,7 @@ def process_android_apps(firmware, tmp_root_dir):
         if is_from_apex:
             module_naming = f"{android_app.filename.replace('.apk', '')}_FMD_APEX"
         else:
-            module_naming = f"{android_app.filename.replace('.apk', '_fmd')}"
+            module_naming = f"{android_app.filename.replace('.apk', '')}"
         tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
         if not os.path.exists(tmp_app_dir):
             os.mkdir(tmp_app_dir)
