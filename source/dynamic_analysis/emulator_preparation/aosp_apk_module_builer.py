@@ -68,7 +68,10 @@ def remove_existing_build_files(android_app, file_format):
         try:
             existing_generic_file = existing_generic_file_reference.fetch()
             if existing_generic_file.filename.lower() == "android." + file_format.lower() \
-                    or existing_generic_file.filename == "Android.MK":
+                    or existing_generic_file.filename == "Android.MK" \
+                    or existing_generic_file.filename == "Android.mk" \
+                    or existing_generic_file.filename == "Android.BP" \
+                    or existing_generic_file.filename == "Android.bp":
                 logging.debug(f"Deleting existing {file_format} file for app {android_app.filename}...")
                 existing_generic_file.delete()
                 android_app.generic_file_list.remove(existing_generic_file_reference)
