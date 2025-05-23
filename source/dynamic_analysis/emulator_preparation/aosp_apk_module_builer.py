@@ -276,7 +276,7 @@ def create_template_string(android_app, template_string, file_format):
 
     """
     directory_name = android_app.filename.replace(".apk", "")
-    local_module = f"prebuilt_{directory_name}"
+    local_module = f"{directory_name}"
     local_privileged_module = "false"
     if not os.path.exists(android_app.absolute_store_path):
         raise FileNotFoundError(f"File not found: {android_app.absolute_store_path} | {android_app.pk}")
