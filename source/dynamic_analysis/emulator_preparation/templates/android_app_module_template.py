@@ -15,7 +15,7 @@ ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
 
 ANDROID_BP_TEMPLATE = """
 android_app_import {
-    name: "prebuilt_${local_module}", 
+    name: "${local_module}", 
     apk: "${local_src_files}",
     certificate: "${local_certificate}",
     privileged: ${local_privileged_module},
