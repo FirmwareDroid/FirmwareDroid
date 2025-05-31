@@ -276,7 +276,7 @@ def create_template_string(android_app, template_string, file_format):
 
     """
     directory_name = android_app.filename.replace(".apk", "")
-    local_module = f"prebuilt_{directory_name}"
+    local_module = f"fmd_{directory_name}"
     local_privileged_module = "false"
     if not os.path.exists(android_app.absolute_store_path):
         raise FileNotFoundError(f"File not found: {android_app.absolute_store_path} | {android_app.pk}")
@@ -301,6 +301,7 @@ def create_template_string(android_app, template_string, file_format):
                                                           local_dex_preopt=local_dex_preopt,
                                                           local_privileged_module=local_privileged_module,
                                                           local_overrides=local_overrides,
+                                                          local_filename=android_app.filename,
                                                           local_optional_uses_libraries=local_optional_uses_libraries)
     return final_template, local_module
 
@@ -319,7 +320,7 @@ def process_android_apps(firmware, tmp_root_dir):
         if is_from_apex:
             module_naming = f"{android_app.filename.replace('.apk', '')}_FMD_APEX"
         else:
-            module_naming = f"prebuilt_{android_app.filename.replace('.apk', '')}"
+            module_naming = f"fmd_{android_app.filename.replace('.apk', '')}"
         tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
         if not os.path.exists(tmp_app_dir):
             os.mkdir(tmp_app_dir)
