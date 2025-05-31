@@ -20,6 +20,7 @@ android_app_import {
     certificate: "${local_certificate}",
     privileged: ${local_privileged_module},
     filename: "${local_filename}",
+    relative_install_path: "${local_module_path}",
     presigned: false,
     dex_preopt: {
         enabled: false,
