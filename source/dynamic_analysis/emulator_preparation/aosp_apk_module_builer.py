@@ -37,9 +37,9 @@ def create_build_file_for_app(android_app, format_name):
 
     """
     logging.debug(f"Creating build file for app {android_app.filename}...")
-    # TODO: Support Android.bp files for later Android versions.
-    #template = ANDROID_MK_TEMPLATE if format_name.lower() == "mk" else ANDROID_BP_TEMPLATE
-    template = ANDROID_MK_TEMPLATE
+    #TODO: Support Android.bp files for later Android versions.
+    template = ANDROID_MK_TEMPLATE if format_name.lower() == "mk" else ANDROID_BP_TEMPLATE
+    #template = ANDROID_MK_TEMPLATE
     create_make_files(android_app, format_name, template)
 
 
@@ -94,8 +94,8 @@ def create_and_save_generic_file(android_app, file_format, template_string):
 
     """
     # TODO: Support Android.bp files for later Android versions.
-    # filename=f"Android.{file_format.lower()}"
-    generic_file = GenericFile(filename="Android.mk",
+    build_filename = f"Android.{file_format.lower()}"
+    generic_file = GenericFile(filename=build_filename,
                                file=bytes(template_string, 'utf-8'),
                                document_reference=android_app)
     generic_file.save()
@@ -281,7 +281,9 @@ def create_template_string(android_app, template_string, file_format):
 
     """
     directory_name = android_app.filename.replace(".apk", "")
-    local_module = f"fmd_{directory_name}"
+    local_module = f"{directory_name}"
+    local_overrides_packages = directory_name
+    local_module_relative_path = ""
     local_privileged_module = "false"
     if not os.path.exists(android_app.absolute_store_path):
         raise FileNotFoundError(f"File not found: {android_app.absolute_store_path} | {android_app.pk}")
@@ -307,14 +309,15 @@ def create_template_string(android_app, template_string, file_format):
                                                           local_privileged_module=local_privileged_module,
                                                           local_overrides=local_overrides,
                                                           local_filename=android_app.filename,
-                                                          local_module_relative_path=directory_name,
+                                                          local_module_relative_path=local_module_relative_path,
+                                                          local_overrides_packages=local_overrides_packages,
                                                           local_optional_uses_libraries=local_optional_uses_libraries)
     return final_template, local_module
 
 
 def process_android_apps(firmware, tmp_root_dir):
     """
-    Processes the Android apps of a given firmware and creates build files for them.
+    Processes the Android apps of the given firmware and creates build files for them.
 
     :param firmware: class:'AndroidFirmware' - An instance of AndroidFirmware.
     :param tmp_root_dir: tempfile.TemporaryDirectory - A temporary directory to store the build files.
@@ -326,7 +329,7 @@ def process_android_apps(firmware, tmp_root_dir):
         if is_from_apex:
             module_naming = f"{android_app.filename.replace('.apk', '')}_FMD_APEX"
         else:
-            module_naming = f"fmd_{android_app.filename.replace('.apk', '')}"
+            module_naming = f"{android_app.filename.replace('.apk', '')}"
         tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
         if not os.path.exists(tmp_app_dir):
             os.mkdir(tmp_app_dir)

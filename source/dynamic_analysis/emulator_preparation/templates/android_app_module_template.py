@@ -12,6 +12,7 @@ ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
                       "\nLOCAL_DEX_PREOPT := ${local_dex_preopt}\n" \
                       "\nLOCAL_PRIVILEGED_MODULE := ${local_privileged_module}\n" \
                       "\nLOCAL_MODULE_RELATIVE_PATH := ${local_module_relative_path}\n" \
+                      "\nLOCAL_OVERRIDES_PACKAGES := ${local_overrides_packages}\n" \
                       "\ninclude $$(BUILD_PREBUILT)\n"
 
 ANDROID_BP_TEMPLATE = """
