@@ -1,6 +1,8 @@
 import logging
 import os
 import shutil
+from fileinput import filename
+
 from mongoengine import DoesNotExist
 from string import Template
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import get_subfolders
@@ -93,7 +95,7 @@ def create_and_save_generic_file(android_app, file_format, template_string):
     """
     # TODO: Support Android.bp files for later Android versions.
     # filename=f"Android.{file_format.lower()}"
-    generic_file = GenericFile("Android.mk",
+    generic_file = GenericFile(filename="Android.mk",
                                file=bytes(template_string, 'utf-8'),
                                document_reference=android_app)
     generic_file.save()
