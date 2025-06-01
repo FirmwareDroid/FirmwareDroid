@@ -223,9 +223,8 @@ def get_apk_local_module_path(file_path, partition_name, android_app, format):
     :return: str - local module path for the shared library module.
 
     """
-    if format.lower() == "mk":
-        target_out = "$(TARGET_OUT)"
-    else:
+    target_out = "$(TARGET_OUT)"
+    if format.lower() == "bp":
         target_out = ""
 
     subfolder_list = get_subfolders(file_path, partition_name)
