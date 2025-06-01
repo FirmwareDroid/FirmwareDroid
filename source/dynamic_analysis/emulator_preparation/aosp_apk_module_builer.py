@@ -91,7 +91,9 @@ def create_and_save_generic_file(android_app, file_format, template_string):
     :param template_string: str - template string for an Android.mk or Android.bp file.
 
     """
-    generic_file = GenericFile(filename=f"Android.{file_format.lower()}",
+    # TODO: Support Android.bp files for later Android versions.
+    # filename=f"Android.{file_format.lower()}"
+    generic_file = GenericFile("Android.mk",
                                file=bytes(template_string, 'utf-8'),
                                document_reference=android_app)
     generic_file.save()
