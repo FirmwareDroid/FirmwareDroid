@@ -11,6 +11,7 @@ ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
                       "\nLOCAL_ENFORCE_USES_LIBRARIES := ${local_enforce_uses_libraries}\n" \
                       "\nLOCAL_DEX_PREOPT := ${local_dex_preopt}\n" \
                       "\nLOCAL_PRIVILEGED_MODULE := ${local_privileged_module}\n" \
+                      "\nLOCAL_MODULE_RELATIVE_PATH := ${local_module_relative_path}\n" \
                       "\ninclude $$(BUILD_PREBUILT)\n"
 
 ANDROID_BP_TEMPLATE = """
@@ -20,7 +21,7 @@ android_app_import {
     certificate: "${local_certificate}",
     privileged: ${local_privileged_module},
     filename: "${local_filename}",
-    relative_install_path: "${local_module_path}",
+    relative_install_path: "${local_module_relative_path}",
     presigned: false,
     dex_preopt: {
         enabled: false,
@@ -28,6 +29,7 @@ android_app_import {
     optional_uses_libs: [${local_optional_uses_libraries}],
     enforce_uses_libs: ${local_enforce_uses_libraries},
     overrides: ["${local_overrides}"],
+    prefer: true,
 }
 """
 
