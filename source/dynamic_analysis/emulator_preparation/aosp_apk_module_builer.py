@@ -304,6 +304,7 @@ def create_template_string(android_app, template_string, file_format):
                                                           local_privileged_module=local_privileged_module,
                                                           local_overrides=local_overrides,
                                                           local_filename=android_app.filename,
+                                                          local_module_relative_path=directory_name,
                                                           local_optional_uses_libraries=local_optional_uses_libraries)
     return final_template, local_module
 
