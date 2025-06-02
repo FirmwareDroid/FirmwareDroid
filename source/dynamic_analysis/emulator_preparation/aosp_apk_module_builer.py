@@ -1,6 +1,7 @@
 import logging
 import os
 import shutil
+import re
 from fileinput import filename
 
 from mongoengine import DoesNotExist
