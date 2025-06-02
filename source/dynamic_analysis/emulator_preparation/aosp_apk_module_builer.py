@@ -301,6 +301,9 @@ def create_template_string(android_app, template_string, file_format):
     local_enforce_uses_libraries = "false"
     local_dex_preopt = "false"
     local_overrides = get_overrides(directory_name)
+    product_specific = "true" if "/product" in android_app.absolute_store_path else "false"
+    proprietary = "true" if "/vendor" in android_app.absolute_store_path or "/odm" in android_app.absolute_store_path else "false"
+    is_vendor_app = proprietary
     final_template = Template(template_string).substitute(local_module=local_module,
                                                           local_module_path=local_module_path,
                                                           local_src_files=local_src_files,
@@ -312,7 +315,9 @@ def create_template_string(android_app, template_string, file_format):
                                                           local_filename=android_app.filename,
                                                           local_module_relative_path=local_module_relative_path,
                                                           local_overrides_packages=local_overrides_packages,
-                                                          local_optional_uses_libraries=local_optional_uses_libraries)
+                                                          local_optional_uses_libraries=local_optional_uses_libraries,
+                                                          product_specific=product_specific,
+                                                          proprietary=proprietary)
     return final_template, local_module
 
 
