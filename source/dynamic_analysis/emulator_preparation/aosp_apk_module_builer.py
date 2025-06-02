@@ -263,7 +263,7 @@ def get_overrides(directory_name):
             return singleton_app
 
     for default_app in AOSP_DEFAULT_PACKAGE_NAMES:
-        if default_app in directory_name and "Overlay" not in directory_name:
+        if re.search(rf'\b{re.escape(default_app)}\b', directory_name) and "Overlay" not in directory_name:
             return default_app
     return ""
 
