@@ -34,6 +34,7 @@ from api.v2.schema.SsDeepClusterAnalysisSchema import SsDeepClusterAnalysisQuery
 from api.v2.schema.TlshHashSchema import TlshHashQuery
 from api.v2.schema.AppCertificateSchema import AppCertificateQuery
 from api.v2.schema.AecsJobSchema import AecsJobMutation, AecsJobQuery
+from api.v2.schema.BuildPropFileSchema import BuildPropFileQuery
 
 
 class Query(WebclientSettingQuery,
@@ -66,6 +67,7 @@ class Query(WebclientSettingQuery,
             HealthCheckQuery,
             AecsJobQuery,
             FirmwareImporterSettingQuery,
+            BuildPropFileQuery,
             graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name='_debug')
     token_auth = graphql_jwt.ObtainJSONWebToken.Field()
