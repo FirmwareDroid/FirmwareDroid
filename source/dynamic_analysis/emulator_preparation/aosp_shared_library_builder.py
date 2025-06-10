@@ -128,9 +128,11 @@ def create_template_string(format_name, library_path):
     local_module_path = select_local_module_path(library_path, file_name, format_name)
     local_prebuilt_module_file = f"$(LOCAL_PATH)/{file_name}"
     local_overrides = get_overrides(local_module)
+    stem_name = os.path.splitext(file_name)[0]
     template_out = Template(file_template).substitute(local_module=local_module,
                                                       local_module_path=local_module_path,
                                                       local_src_files=local_src_files,
+                                                      stem_name=stem_name,
                                                       local_prebuilt_module_file=local_prebuilt_module_file,
                                                       local_overrides=local_overrides
                                                       )

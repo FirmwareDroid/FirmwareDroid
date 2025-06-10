@@ -16,7 +16,7 @@ ANDROID_BP_SHARED_LIBRARY_TEMPLATE = """
 cc_prebuilt_library_shared {
     name: "${local_module}",
     srcs: ["${local_src_files}"],
-    stem: "${local_src_files}",
+    stem: "${stem_name}",
     prefer: true,
     overrides: ["${local_overrides}"],
     check_elf_files: false,
