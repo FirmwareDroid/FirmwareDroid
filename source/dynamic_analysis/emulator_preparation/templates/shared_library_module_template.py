@@ -20,6 +20,8 @@ cc_prebuilt_library_shared {
     prefer: true,
     overrides: ["${local_overrides}"],
     check_elf_files: false,
+    stl: "none",
+    system_shared_libs: [],
     apex_available: ["//apex_available:anyapex", "//apex_available:platform"],
 }
 """
