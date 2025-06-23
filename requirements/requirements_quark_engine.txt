@@ -1,2 +1,2 @@
-quark-engine==24.6.1
+quark-engine==24.11.2
 psutil~=6.0.0
