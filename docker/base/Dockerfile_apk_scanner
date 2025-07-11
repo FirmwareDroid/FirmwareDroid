@@ -46,8 +46,7 @@ ENV PATH=$ANDROID_SDK_ROOT/build-tools/35.0.0/:$PATH
 # Installing apktool                #
 #####################################
 RUN set -eux; \
-    APKTOOL_VERSION=$(curl -s "https://api.github.com/repos/iBotPeaches/Apktool/releases/latest"  \
-    | grep -Po '"tag_name": "v\K[0-9.]+'); \
+    APKTOOL_VERSION="2.12.0"; \
     for i in $(seq 1 5); do \
         curl -Lo /usr/local/bin/apktool.jar "https://github.com/iBotPeaches/Apktool/releases/latest/download/apktool_${APKTOOL_VERSION}.jar" && break || sleep 15; \
     done;
@@ -56,7 +55,7 @@ RUN set -eux; \
         curl -o /usr/local/bin/apktool https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool && break || sleep 15; \
     done;
 RUN chmod a+x /usr/local/bin/apktool.jar && chmod a+x /usr/local/bin/apktool
-RUN apktool --version
+RUN apktool v
 
 #####################################
 # Installing jadx                   #
@@ -64,8 +63,7 @@ RUN apktool --version
 RUN mkdir -p /tmp/jadx-temp/jadx/ && mkdir -p /opt/jadx/bin
 WORKDIR /tmp/jadx-temp/
 RUN set -eux; \
-    JADX_VERSION=$(curl -s "https://api.github.com/repos/skylot/jadx/releases/latest"  \
-    | grep -Po '"tag_name": "v\K[0-9.]+' | sed 's/^v//'); \
+    JADX_VERSION="1.5.2"; \
     for i in $(seq 1 5); do \
         curl -Lo jadx.zip "https://github.com/skylot/jadx/releases/latest/download/jadx-${JADX_VERSION}.zip" && break || sleep 15; \
     done;
