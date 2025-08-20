@@ -188,7 +188,8 @@ INSTALLED_APPS = [
     "setup",
     "django_rq",
     'rest_framework',
-    "file_download.apps"
+    "file_download.apps",
+    "firmware_upload.apps"
 ]
 
 MIDDLEWARE = [
