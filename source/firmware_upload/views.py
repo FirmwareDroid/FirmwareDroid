@@ -37,12 +37,27 @@ class FirmwareUploadView(ViewSet):
                 )
             
             firmware_file = request.FILES['firmware_file']
-            storage_index = int(request.data.get('storage_index', 0))
+            
+            # Parse storage index with validation
+            try:
+                storage_index = int(request.data.get('storage_index', 0))
+            except (ValueError, TypeError):
+                return Response(
+                    {'error': 'Invalid storage_index. Must be a valid integer.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             
             # Validate file
             if firmware_file.size == 0:
                 return Response(
                     {'error': 'Uploaded file is empty.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validate filename
+            if not firmware_file.name or len(firmware_file.name.strip()) == 0:
+                return Response(
+                    {'error': 'Invalid filename.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
@@ -88,9 +103,16 @@ class FirmwareUploadView(ViewSet):
                 )
             
             # Write file
-            with open(file_path, 'wb') as destination:
-                for chunk in firmware_file.chunks():
-                    destination.write(chunk)
+            try:
+                with open(file_path, 'wb') as destination:
+                    for chunk in firmware_file.chunks():
+                        destination.write(chunk)
+            except IOError as e:
+                logging.error(f"Error writing file {file_path}: {e}")
+                return Response(
+                    {'error': f'Failed to save file: {str(e)}'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
             
             # Log successful upload
             logging.info(f"Firmware file uploaded successfully: {firmware_file.name} to {file_path}")
