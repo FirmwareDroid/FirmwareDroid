@@ -512,6 +512,7 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
     logging.debug(f"Stored firmware with id {str(firmware.id)} in database.")
     add_firmware_file_references(firmware, firmware_file_list)
     add_app_firmware_references(firmware, android_app_list)
+    add_build_prop_references(firmware, build_prop_file_id_list)
     return firmware
 
 
@@ -526,6 +527,19 @@ def add_app_firmware_references(firmware, android_app_list):
     for app in android_app_list:
         app.firmware_id_reference = firmware.id
         app.save()
+
+
+def add_build_prop_references(firmware, build_prop_file_list):
+    """
+    Adds the firmware reference to the build prop files.
+
+    :param firmware: class:'AndroidFirmware'
+    :param build_prop_file_list: list - class:'BuildPropFile'
+
+    """
+    for build_prop_file in build_prop_file_list:
+        build_prop_file.firmware_id_reference = firmware.id
+        build_prop_file.save()
 
 
 def extract_build_prop(firmware_file_list, mount_path):
