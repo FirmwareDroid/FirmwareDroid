@@ -9,6 +9,9 @@ from graphql_jwt.decorators import superuser_required
 from api.v2.schema.RqJobsSchema import ONE_DAY_TIMEOUT, ONE_WEEK_TIMEOUT
 from api.v2.types.GenericDeletion import delete_queryset_background
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
+from api.v2.validators.validation import (
+    sanitize_and_validate, validate_object_id_list, validate_queue_name
+)
 from firmware_handler.firmware_reimporter import start_firmware_re_import
 from hashing.fuzzy_hash_creator import start_fuzzy_hasher
 from model.AndroidFirmware import AndroidFirmware
@@ -57,6 +60,13 @@ class DeleteAndroidFirmwareMutation(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={
+            'firmware_id_list': validate_object_id_list,
+            'queue_name': validate_queue_name
+        },
+        sanitizers={}
+    )
     def mutate(cls, root, info, firmware_id_list, queue_name):
         func_to_run = delete_queryset_background
         model = AndroidFirmware
@@ -79,6 +89,10 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={'queue_name': validate_queue_name},
+        sanitizers={}
+    )
     def mutate(cls, root, info, queue_name, create_fuzzy_hashes, storage_index):
         """
         Create a job to import firmware.
@@ -109,6 +123,13 @@ class CreateFirmwareReImportJob(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={
+            'queue_name': validate_queue_name,
+            'firmware_id_list': validate_object_id_list
+        },
+        sanitizers={}
+    )
     def mutate(cls, root, info, queue_name, firmware_id_list, create_fuzzy_hashes):
         queue = django_rq.get_queue(queue_name)
         func_to_run = start_firmware_re_import
@@ -130,6 +151,13 @@ class CreateFuzzyHashesJob(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={
+            'queue_name': validate_queue_name,
+            'firmware_id_list': validate_object_id_list
+        },
+        sanitizers={}
+    )
     def mutate(cls, root, info, queue_name, firmware_id_list, storage_index):
         queue = django_rq.get_queue(queue_name)
         func_to_run = start_fuzzy_hasher

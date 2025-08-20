@@ -7,6 +7,10 @@ import graphene
 from api.v2.schema.RqJobsSchema import ONE_WEEK_TIMEOUT
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
 from api.v2.validators.chunking import create_object_id_chunks
+from api.v2.validators.validation import (
+    sanitize_and_validate, validate_object_id_list, validate_queue_name,
+    sanitize_string, validate_format_name
+)
 from dynamic_analysis.emulator_preparation.aecs import update_or_create_aecs_job
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
@@ -141,6 +145,16 @@ class CreateAECSBuildFilesJob(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={
+            'format_name': validate_format_name,
+            'firmware_id_list': validate_object_id_list,
+            'queue_name': validate_queue_name
+        },
+        sanitizers={
+            'format_name': sanitize_string
+        }
+    )
     def mutate(cls, root, info, format_name, firmware_id_list, queue_name="high-python", skip_file_export=False):
         queue = django_rq.get_queue(queue_name)
         object_id_chunks = create_object_id_chunks(firmware_id_list, chunk_size=5)
