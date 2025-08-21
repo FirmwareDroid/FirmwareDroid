@@ -20,13 +20,13 @@ class FirmwareUploadTestCase(unittest.TestCase):
         
     def test_file_extension_validation(self):
         """Test that file extension validation works correctly"""
-        from firmware_upload.views import ALLOWED_FIRMWARE_EXTENSIONS
+        from file_upload.views import ALLOWED_EXTENSIONS
         
         # Test valid extensions
         valid_files = ["firmware.zip", "system.tar.gz", "boot.lz4"]
         for filename in valid_files:
             found_ext = None
-            for ext in ALLOWED_FIRMWARE_EXTENSIONS:
+            for ext in ALLOWED_EXTENSIONS:
                 if filename.lower().endswith(ext.lower()):
                     found_ext = ext
                     break
@@ -36,7 +36,7 @@ class FirmwareUploadTestCase(unittest.TestCase):
         invalid_files = ["firmware.txt", "system.exe", "boot.img"]
         for filename in invalid_files:
             found_ext = None
-            for ext in ALLOWED_FIRMWARE_EXTENSIONS:
+            for ext in ALLOWED_EXTENSIONS:
                 if filename.lower().endswith(ext.lower()):
                     found_ext = ext
                     break
@@ -68,7 +68,7 @@ class FirmwareUploadTestCase(unittest.TestCase):
         mock_request.data = {'storage_index': '0'}
         
         # Import and test the view
-        from firmware_upload.views import FirmwareUploadView
+        from file_upload.views import FirmwareUploadView
         view = FirmwareUploadView()
         
         response = view.upload(mock_request)
@@ -85,13 +85,13 @@ class FirmwareUploadTestCase(unittest.TestCase):
         
     def test_constants_match_importer(self):
         """Test that allowed extensions match the firmware importer"""
-        from firmware_upload.views import ALLOWED_FIRMWARE_EXTENSIONS
+        from file_upload.views import ALLOWED_EXTENSIONS
         
         # Expected extensions from firmware_importer.py
         expected_extensions = [".zip", ".tar", ".gz", ".bz2", ".md5", ".lz4", ".tgz", ".rar", ".7z", ".lzma", ".xz", ".ozip"]
         
         # Convert to sets for comparison (order doesn't matter)
-        self.assertEqual(set(ALLOWED_FIRMWARE_EXTENSIONS), set(expected_extensions))
+        self.assertEqual(set(ALLOWED_EXTENSIONS), set(expected_extensions))
 
 
 if __name__ == '__main__':

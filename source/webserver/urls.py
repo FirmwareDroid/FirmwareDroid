@@ -10,5 +10,5 @@ urlpatterns = [
     path("django-rq/", include('django_rq.urls')),
     path('api-auth/', include('rest_framework.urls')),
     path("", include("file_download.urls")),
-    path("", include("firmware_upload.urls")),
+    path("", include("file_upload.urls")),
 ]

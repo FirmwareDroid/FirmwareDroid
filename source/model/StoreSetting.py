@@ -51,6 +51,8 @@ def create_file_store_setting(docker_root_folder, storage_folder, is_active):
     store_options_dict[uuid_str]["paths"]["FILE_STORAGE_FOLDER"] = file_storage_folder
     store_options_dict[uuid_str]["paths"]["FIRMWARE_FOLDER_IMPORT"] = file_storage_folder \
                                                                       + "firmware_import/"
+    store_options_dict[uuid_str]["paths"]["UPLOADS"] = file_storage_folder \
+                                                       + "uploads/"
     store_options_dict[uuid_str]["paths"]["FIRMWARE_FOLDER_IMPORT_FAILED"] = file_storage_folder \
                                                                              + "firmware_import_failed/"
     store_options_dict[uuid_str]["paths"]["FIRMWARE_FOLDER_STORE"] = file_storage_folder \
@@ -111,7 +113,3 @@ def get_active_store_by_index(storage_index):
         raise ValueError(f"No active store setting found for index {storage_index}")
 
     return store_setting
-
-
-
-

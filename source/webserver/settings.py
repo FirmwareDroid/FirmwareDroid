@@ -188,8 +188,9 @@ INSTALLED_APPS = [
     "setup",
     "django_rq",
     'rest_framework',
-    "file_download.apps",
-    "firmware_upload.apps"
+    'rest_framework.authtoken',
+    "file_download",
+    "file_upload"
 ]
 
 MIDDLEWARE = [
@@ -308,4 +309,14 @@ RQ_QUEUES = {
         'DEFAULT_TIMEOUT': 60 * 60 * 24 * 14,
         'DEFAULT_RESULT_TTL': 60 * 60 * 24 * 3,
     },
+}
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'webserver.authentication.GraphQLJWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
 }

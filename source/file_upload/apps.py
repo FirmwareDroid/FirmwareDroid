@@ -6,4 +6,4 @@ from django.apps import AppConfig
 
 class FirmwareUploadConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "firmware_upload"
+    name = "file_upload"
