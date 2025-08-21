@@ -2,8 +2,8 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 from django.urls import path
-from .views import DownloadGraphQLSchemaView
+from .views import FileUploadView
 
 urlpatterns = [
-    path("download/graphql/schema", DownloadGraphQLSchemaView.as_view({'get': 'get_schema'}))
+    path("upload/file", FileUploadView.as_view({'post': 'upload'}))
 ]
