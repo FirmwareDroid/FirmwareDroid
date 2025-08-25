@@ -329,22 +329,34 @@ def process_android_apps(firmware, tmp_root_dir):
     :param tmp_root_dir: tempfile.TemporaryDirectory - A temporary directory to store the build files.
 
     """
+    counter = 0
     for android_app_lazy in firmware.android_app_id_list:
-        android_app = android_app_lazy.fetch()
-        partition_name = android_app.absolute_store_path.split("/")[8]
-        is_from_apex = "_apex" in android_app.absolute_store_path
-        if is_from_apex:
-            module_naming = f"{android_app.filename.replace('.apk', '')}_FMD_APEX"
-        else:
-            module_naming = f"{android_app.filename.replace('.apk', '')}"
-        tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
-        if not os.path.exists(tmp_app_dir):
-            os.mkdir(tmp_app_dir)
-        new_filename = android_app.filename
-        destination_file_path = os.path.join(tmp_app_dir, new_filename)
+        module_naming = None
+        android_app = None
+        partition_name = None
         try:
+            android_app = android_app_lazy.fetch()
+            partition_name = android_app.absolute_store_path.split("/")[8]
+            is_from_apex = "_apex" in android_app.absolute_store_path
+            if is_from_apex:
+                module_naming = f"{android_app.filename.replace('.apk', '')}_FMD_APEX"
+            else:
+                module_naming = f"{android_app.filename.replace('.apk', '')}"
+            tmp_app_dir = os.path.join(tmp_root_dir, module_naming)
+            if not os.path.exists(tmp_app_dir):
+                os.mkdir(tmp_app_dir)
+            new_filename = android_app.filename
+            destination_file_path = os.path.join(tmp_app_dir, new_filename)
             shutil.copy(android_app.absolute_store_path, destination_file_path)
-        except FileNotFoundError as err:
+            process_generic_files(android_app, tmp_app_dir)
+            logging.debug(f"Partition name: {partition_name} for app {android_app.id}")
+            add_module_to_meta_file(partition_name, tmp_root_dir, module_naming)
+            log_entry = (f"Partition:{partition_name} "
+                         f"| APK:{android_app.filename} "
+                         f"| ID:{android_app.id} "
+                         f"| Module:{module_naming}")
+            add_to_log_file(tmp_root_dir, log_entry, "meta_apk_module_builder.log")
+        except Exception as err:
             logging.error(f"{android_app.filename}: {err}")
             log_entry = (f"ERROR | {err}"
                          f"Partition:{partition_name} "
@@ -353,12 +365,9 @@ def process_android_apps(firmware, tmp_root_dir):
                          f"| Module:{module_naming}")
             add_to_log_file(tmp_root_dir, log_entry, "meta_apk_module_builder.log")
             continue
-
-        process_generic_files(android_app, tmp_app_dir)
-        logging.debug(f"Partition name: {partition_name} for app {android_app.id}")
-        add_module_to_meta_file(partition_name, tmp_root_dir, module_naming)
-        log_entry = (f"Partition:{partition_name} "
-                     f"| APK:{android_app.filename} "
-                     f"| ID:{android_app.id} "
-                     f"| Module:{module_naming}")
-        add_to_log_file(tmp_root_dir, log_entry, "meta_apk_module_builder.log")
+        finally:
+            counter += 1
+    log_entry = f"Number of apps processed: {counter}"
+    add_to_log_file(tmp_root_dir, log_entry, "meta_apk_module_builder.log")
+    log_entry = f"Number of apps total: {len(firmware.android_app_id_list)}"
+    add_to_log_file(tmp_root_dir, log_entry, "meta_apk_module_builder.log")
