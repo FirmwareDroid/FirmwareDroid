@@ -25,6 +25,11 @@ class AndroidFirmwareType(MongoengineObjectType):
         interfaces = (relay.Node,)
 
 
+class AndroidFirmwareConnection(relay.Connection):
+    class Meta:
+        node = AndroidFirmwareType
+
+
 class AndroidFirmwareQuery(graphene.ObjectType):
     android_firmware_list = graphene.List(AndroidFirmwareType,
                                           object_id_list=graphene.List(graphene.String),
@@ -35,6 +40,12 @@ class AndroidFirmwareQuery(graphene.ObjectType):
                                              name="android_firmware_id_list",
                                              field_filter=graphene.Argument(ModelFilter),
                                              )
+    android_firmware_connection = relay.ConnectionField(
+        AndroidFirmwareConnection,
+        object_id_list=graphene.List(graphene.String),
+        field_filter=graphene.Argument(ModelFilter),
+        name="android_firmware_connection"
+    )
 
     @superuser_required
     def resolve_android_firmware_list(self, info, object_id_list=None, field_filter=None):
@@ -46,6 +57,15 @@ class AndroidFirmwareQuery(graphene.ObjectType):
     def resolve_android_firmware_id_list(self, info, field_filter=None):
         queryset = get_filtered_queryset(model=AndroidFirmware, query_filter=field_filter, object_id_list=None)
         return [document.pk for document in queryset]
+
+    @superuser_required
+    def resolve_android_firmware_connection(self, info, object_id_list=None, field_filter=None, **kwargs):
+        if object_id_list is None and field_filter is None:
+            # Return empty connection if no filters provided
+            queryset = AndroidFirmware.objects.none()
+        else:
+            queryset = get_filtered_queryset(AndroidFirmware, object_id_list, field_filter)
+        return queryset
 
 
 class DeleteAndroidFirmwareMutation(graphene.Mutation):
