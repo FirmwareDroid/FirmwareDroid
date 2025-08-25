@@ -95,10 +95,9 @@ def create_modules(source_folder, destination_folder, format_name, search_patter
                 write_template_to_file(template_out, module_folder, format_name)
                 partition_name = source_file.split("/")[7]
                 add_module_to_meta_file(partition_name, destination_folder, module_name)
-                log_entry = (f"Partition: {partition_name}"
-                             f"| Module: {module_name}"
+                log_entry = (f"Module: {module_name}"
                              f"| File: {source_file}")
-                add_to_log_file(destination_folder, log_entry, "meta_writer.log")
+                add_to_log_file(destination_folder, log_entry, "meta_module_builder.log")
 
 
 def write_template_to_file(template_out, destination_folder, format_name):
