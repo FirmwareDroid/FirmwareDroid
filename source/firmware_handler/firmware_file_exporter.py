@@ -271,8 +271,13 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
                                                 dirs_exist_ok=True,
                                                 ignore_dangling_symlinks=True,
                                                 symlinks=True)
-        elif os.path.isfile(source_path) and not destination_path.endswith("/"):
-            dst_file_path = shutil.copy(source_path, destination_path, follow_symlinks=False)
+        elif os.path.isfile(source_path):
+            if os.path.isdir(destination_path):
+                dst_file_path = shutil.copy(source_path,
+                                            str(os.path.join(destination_path, os.path.basename(source_path))),
+                                            follow_symlinks=False)
+            else:
+                dst_file_path = shutil.copy(source_path, destination_path, follow_symlinks=False)
         else:
             raise ValueError(f"Unknown file type to copy: {source_path}")
 
