@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
+import logging
+
 import django_rq
 import graphene
 from graphene import relay
 from graphene_mongo import MongoengineObjectType
+from graphql import GraphQLError
 from graphql_jwt.decorators import superuser_required
 from api.v2.schema.RqJobsSchema import ONE_DAY_TIMEOUT, ONE_WEEK_TIMEOUT
 from api.v2.types.GenericDeletion import delete_queryset_background
@@ -19,6 +22,7 @@ ModelFilter = generate_filter(AndroidFirmware)
 
 class AndroidFirmwareType(MongoengineObjectType):
     pk = graphene.String(source='pk')
+    file_size_bytes = graphene.Float()
 
     class Meta:
         model = AndroidFirmware
@@ -60,11 +64,7 @@ class AndroidFirmwareQuery(graphene.ObjectType):
 
     @superuser_required
     def resolve_android_firmware_connection(self, info, object_id_list=None, field_filter=None, **kwargs):
-        if object_id_list is None and field_filter is None:
-            # Return empty connection if no filters provided
-            queryset = AndroidFirmware.objects.none()
-        else:
-            queryset = get_filtered_queryset(AndroidFirmware, object_id_list, field_filter)
+        queryset = get_filtered_queryset(AndroidFirmware, object_id_list, field_filter)
         return queryset
 
 
