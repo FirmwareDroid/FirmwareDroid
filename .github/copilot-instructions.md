@@ -52,7 +52,7 @@ Build all worker images:
 - **Time:** 45+ minutes. NEVER CANCEL. Set timeout to 90+ minutes.
 - **Note:** Builds frontend, backend, and multiple worker containers in parallel
 
-Build with docker-compose:
+Build with docker-compose (not recommended, but possible):
 ```bash
 docker compose build
 ```
@@ -86,22 +86,22 @@ python manage.py runserver 0.0.0.0:5000
 
 1. **Health Check:** Verify basic application startup
    ```bash
-   curl http://localhost/api/health/
+   curl http://fmd.localhost/graphql/
    ```
 
 2. **Django Admin Access:** Test admin interface
-   - Navigate to `http://localhost/admin/`
+   - Navigate to `http://fmd.localhost/admin/`
    - Use credentials from `.env` file (`DJANGO_SUPERUSER_USERNAME`/`DJANGO_SUPERUSER_PASSWORD`)
 
 3. **API Endpoints:** Test core REST and GraphQL APIs
    ```bash
-   curl http://localhost/api/
-   curl http://localhost/graphql/
+   curl http://fmd.localhost/api/
+   curl http://fmd.localhost/graphql/
    ```
 
 4. **Worker Status:** Check Redis queues are working
    ```bash
-   curl http://localhost/django-rq/
+   curl http://fmd.localhost/django-rq/
    ```
 
 ### Test Suite
@@ -115,7 +115,7 @@ python -m unittest source/setup/tests.py
 ## Common Issues & Workarounds
 
 ### Setup Issues
-- **Frontend directory missing:** Run `mkdir -p firmware-droid-client/src` before setup
+- **Use 'git clone --recurse-submodules':** Ensure submodules are initialized
 - **'.env file already exists':** Delete `.env` and re-run setup
 
 ### Build Issues  
@@ -160,11 +160,11 @@ FirmwareDroid includes these static analysis tools:
 ## Development Guidelines
 
 ### Making Code Changes
-1. **ALWAYS validate setup works first:** Run setup.py and verify .env creation
-2. **Install dependencies:** Core requirements + backend requirements  
-3. **Test Django commands:** Verify `python manage.py check` works
-4. **Manual validation:** Test API endpoints and admin interface
-5. **Docker validation:** Build and run full stack if possible
+1. **Validate setup works first:** Run setup.py and verify .env creation
+2. **Install dependencies:** Core requirements + backend requirements
+3. **Manual validation:** Test API endpoints and admin interface
+4. **Docker validation:** Build and run full stack if possible
+5. **Code Adjustments:** Optimize code for performance, security, and maintainability
 
 ### Timeout Guidelines
 - **Setup commands:** 5+ minutes timeout
