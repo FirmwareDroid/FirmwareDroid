@@ -9,6 +9,7 @@ from graphene.relay import Node
 from graphql_jwt.decorators import superuser_required
 
 from api.v2.schema.RqJobsSchema import ONE_HOUR_TIMEOUT
+from api.v2.validators.validation import sanitize_and_validate, validate_queue_name
 from model.FirmwareImporterSetting import FirmwareImporterSetting, update_firmware_importer_setting
 
 
@@ -37,6 +38,10 @@ class UpdateFirmwareImportSetting(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={'queue_name': validate_queue_name},
+        sanitizers={}
+    )
     def mutate(cls, root, info, queue_name, number_of_importer_threads):
         queue = django_rq.get_queue(queue_name)
         func_to_run = update_firmware_importer_setting

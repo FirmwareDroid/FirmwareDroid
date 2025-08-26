@@ -188,6 +188,10 @@ class CreateAppImportJob(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={'queue_name': validate_queue_name},
+        sanitizers={}
+    )
     def mutate(cls, root, info, queue_name, storage_index):
         """
         Create a job to import android apps without a firmware.
