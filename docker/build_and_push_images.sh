@@ -47,6 +47,20 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Check Docker registry authentication before building images if push is requested
+if [ "$PUSH_IMAGES" = true ]; then
+    if [ -z "$GITHUB_TOKEN" ]; then
+        echo "Error: GITHUB_TOKEN environment variable not set. Cannot push images."
+        exit 1
+    fi
+    echo "$GITHUB_TOKEN" | docker login "$REGISTRY" -u "$USER" --password-stdin
+    if [ $? -ne 0 ]; then
+        echo "Error: Docker login to $REGISTRY failed. Check your token and permissions."
+        exit 1
+    fi
+    echo "Docker login to $REGISTRY succeeded."
+fi
+
 echo "Building FirmwareDroid Docker images..."
 echo "Registry: $REGISTRY"
 echo "Image name: $IMAGE_NAME"
@@ -99,26 +113,36 @@ fi
 workers=(./docker/base/Dockerfile_*)
 echo "Building worker images. This may take some time..."
 
-declare -A worker_images
+# Instead of declare -A worker_images
+worker_names=()
+worker_tags=()
+
 for dockerfile in "${workers[@]}"; do
-    # Extract worker name from filename (e.g., Dockerfile_backend -> backend)
     worker_name=$(basename "$dockerfile" | sed 's/Dockerfile_//')
-    
-    echo "Building image for: $worker_name"
     local_tag="${worker_name}-worker"
     registry_tag="${REGISTRY}/${IMAGE_NAME}-${worker_name}:${IMAGE_TAG}"
-    
-    # Build the image
+
     docker build ./docker/base/ -f "./docker/base/Dockerfile_${worker_name}" -t "$local_tag" --platform="linux/amd64"
     docker tag "$local_tag" "$registry_tag"
-    
-    worker_images["$worker_name"]="$registry_tag"
-    
+
+    worker_names+=("$worker_name")
+    worker_tags+=("$registry_tag")
+
     if [ "$PUSH_IMAGES" = true ]; then
         echo "Pushing $worker_name worker image..."
         docker push "$registry_tag"
     fi
 done
+
+# When printing built images:
+for i in "${!worker_names[@]}"; do
+    echo "  ${worker_names[$i]^} Worker: ${worker_tags[$i]}"
+done
+
+# When generating manifest:
+for i in "${!worker_names[@]}"; do
+    echo "    \"${worker_names[$i]}\": \"${worker_tags[$i]}\","
+done | sed '$ s/,$//'
 
 #####################################
 # Build docker-compose images      #
