@@ -18,15 +18,14 @@ Some of the tools and features included are:
 
 * Static-Analyzers for Android apps (APKs):
   * [AndroGuard](https://github.com/androguard/androguard)
-  * [Quark-Engine](https://github.com/quark-engine/quark-engine)
   * [APKiD](https://github.com/rednaga/APKiD/)
-  * [Exodus-Core](https://github.com/Exodus-Privacy/exodus-core/)
   * [APKLeaks](https://github.com/dwisiswant0/apkleaks/)
-  * [MobSFScan](https://github.com/MobSF/mobsfscan)
   * [APKscan](https://github.com/LucasFaudman/apkscan)
+  * [Exodus-Core](https://github.com/Exodus-Privacy/exodus-core/)
   * [FlowDroid](https://github.com/secure-software-engineering/FlowDroid)
+  * [MobSFScan](https://github.com/MobSF/mobsfscan)
   * [Trueseeing](https://github.com/alterakey/trueseeing)
-  * [APKScan](https://github.com/LucasFaudman/apkscan)
+  * [Quark-Engine](https://github.com/quark-engine/quark-engine)
   * [Qark](https://github.com/linkedin/qark/) (deprecated, no updates by the author)
   * [Androwarn](https://github.com/maaaaz/androwarn/) (deprecated, no updates by the author)
   * [SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/) (deprecated, discontinued by the author)

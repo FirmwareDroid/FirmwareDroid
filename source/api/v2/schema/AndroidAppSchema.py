@@ -55,6 +55,8 @@ class AndroidAppQuery(graphene.ObjectType):
                                         object_id_list=graphene.List(graphene.String),
                                         field_filter=graphene.Argument(ModelFilter),
                                         name="android_app_id_list")
+    scanner_module_name_list = graphene.List(graphene.String,
+                                             name="scanner_module_name_list")
 
     @superuser_required
     def resolve_android_app_list(self, info, object_id_list=None, field_filter=None):
@@ -73,6 +75,10 @@ class AndroidAppQuery(graphene.ObjectType):
             queryset = get_filtered_queryset(model=AndroidApp, query_filter=field_filter,
                                              object_id_list=None)
         return [document.pk for document in queryset]
+
+    @superuser_required
+    def resolve_scanner_module_name_list(self, info):
+        return [member.name for member in ScannerModules]
 
 
 def import_module_function(scanner_name, object_id_list, init_args=None):
@@ -188,6 +194,10 @@ class CreateAppImportJob(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={'queue_name': validate_queue_name},
+        sanitizers={}
+    )
     def mutate(cls, root, info, queue_name, storage_index):
         """
         Create a job to import android apps without a firmware.

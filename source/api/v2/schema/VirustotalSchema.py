@@ -9,6 +9,10 @@ from graphql_jwt.decorators import superuser_required
 from api.v2.schema.AndroidAppSchema import import_module_function
 from api.v2.schema.RqJobsSchema import MAX_OBJECT_ID_LIST_SIZE, ONE_WEEK_TIMEOUT
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
+from api.v2.validators.validation import (
+    sanitize_and_validate, sanitize_api_key, validate_api_key,
+    validate_object_id_list, validate_queue_name
+)
 from model.VirusTotalReport import VirusTotalReport
 
 ModelFilter = generate_filter(VirusTotalReport)
@@ -40,6 +44,16 @@ class CreateVirusTotalScanJob(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={
+            'queue_name': validate_queue_name,
+            'vt_api_key': validate_api_key,
+            'object_id_list': validate_object_id_list
+        },
+        sanitizers={
+            'vt_api_key': sanitize_api_key
+        }
+    )
     def mutate(cls, root, info, queue_name, object_id_list, vt_api_key):
         module_name = "VIRUSTOTAL"
         queue = django_rq.get_queue(queue_name)

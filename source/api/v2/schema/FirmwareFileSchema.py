@@ -8,6 +8,10 @@ from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from api.v2.schema.RqJobsSchema import ONE_DAY_TIMEOUT
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
+from api.v2.validators.validation import (
+    sanitize_and_validate, validate_object_id_list, validate_queue_name,
+    validate_regex_pattern, validate_object_id
+)
 from firmware_handler.firmware_file_exporter import start_file_export_by_regex
 from model.FirmwareFile import FirmwareFile
 
@@ -43,9 +47,17 @@ class ExportFirmwareFileByRegexMutation(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={
+            'firmware_id_list': validate_object_id_list,
+            'filename_regex': validate_regex_pattern,
+            'queue_name': validate_queue_name,
+            'store_setting_id': validate_object_id  # Single ObjectId
+        },
+        sanitizers={}
+    )
     def mutate(cls, root, info, firmware_id_list, filename_regex, store_setting_id, queue_name):
-        # TODO - Add a security check (whitelist) for the given regex to prevent ReDos attacks.
-        # See: https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS
+        # Security check implemented via validate_regex_pattern to prevent ReDoS attacks
         func_to_run = start_file_export_by_regex
         queue = django_rq.get_queue(queue_name)
         job = queue.enqueue(func_to_run, filename_regex, firmware_id_list, store_setting_id, job_timeout=ONE_DAY_TIMEOUT)

@@ -501,3 +501,8 @@ firmware-droid-client/
 
 /env/
 __MACOSX/
+# Test files
+/tmp/test_*.py
+/tmp/firmware_import_demo/
+*.pyc
+__pycache__/

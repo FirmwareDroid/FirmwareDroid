@@ -1,14 +1,21 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
+import logging
+
 import django_rq
 import graphene
 from graphene import relay
+from graphql import GraphQLError
 from graphene_mongo import MongoengineObjectType
+from graphql import GraphQLError
 from graphql_jwt.decorators import superuser_required
 from api.v2.schema.RqJobsSchema import ONE_DAY_TIMEOUT, ONE_WEEK_TIMEOUT
 from api.v2.types.GenericDeletion import delete_queryset_background
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
+from api.v2.validators.validation import (
+    sanitize_and_validate, validate_object_id_list, validate_queue_name
+)
 from firmware_handler.firmware_reimporter import start_firmware_re_import
 from hashing.fuzzy_hash_creator import start_fuzzy_hasher
 from model.AndroidFirmware import AndroidFirmware
@@ -19,10 +26,16 @@ ModelFilter = generate_filter(AndroidFirmware)
 
 class AndroidFirmwareType(MongoengineObjectType):
     pk = graphene.String(source='pk')
+    file_size_bytes = graphene.Float()
 
     class Meta:
         model = AndroidFirmware
         interfaces = (relay.Node,)
+
+
+class AndroidFirmwareConnection(relay.Connection):
+    class Meta:
+        node = AndroidFirmwareType
 
 
 class AndroidFirmwareQuery(graphene.ObjectType):
@@ -35,17 +48,28 @@ class AndroidFirmwareQuery(graphene.ObjectType):
                                              name="android_firmware_id_list",
                                              field_filter=graphene.Argument(ModelFilter),
                                              )
+    android_firmware_connection = relay.ConnectionField(
+        AndroidFirmwareConnection,
+        object_id_list=graphene.List(graphene.String),
+        field_filter=graphene.Argument(ModelFilter),
+        name="android_firmware_connection"
+    )
 
     @superuser_required
     def resolve_android_firmware_list(self, info, object_id_list=None, field_filter=None):
         if object_id_list is None and field_filter is None:
-            return "Please provide at least one filter."
+            raise GraphQLError("Please provide at least one filter or an object-id.")
         return get_filtered_queryset(AndroidFirmware, object_id_list, field_filter)
 
     @superuser_required
     def resolve_android_firmware_id_list(self, info, field_filter=None):
         queryset = get_filtered_queryset(model=AndroidFirmware, query_filter=field_filter, object_id_list=None)
         return [document.pk for document in queryset]
+
+    @superuser_required
+    def resolve_android_firmware_connection(self, info, object_id_list=None, field_filter=None, **kwargs):
+        queryset = get_filtered_queryset(AndroidFirmware, object_id_list, field_filter)
+        return queryset
 
 
 class DeleteAndroidFirmwareMutation(graphene.Mutation):
@@ -57,6 +81,13 @@ class DeleteAndroidFirmwareMutation(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={
+            'firmware_id_list': validate_object_id_list,
+            'queue_name': validate_queue_name
+        },
+        sanitizers={}
+    )
     def mutate(cls, root, info, firmware_id_list, queue_name):
         func_to_run = delete_queryset_background
         model = AndroidFirmware
@@ -79,6 +110,10 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={'queue_name': validate_queue_name},
+        sanitizers={}
+    )
     def mutate(cls, root, info, queue_name, create_fuzzy_hashes, storage_index):
         """
         Create a job to import firmware.
@@ -109,6 +144,13 @@ class CreateFirmwareReImportJob(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={
+            'queue_name': validate_queue_name,
+            'firmware_id_list': validate_object_id_list
+        },
+        sanitizers={}
+    )
     def mutate(cls, root, info, queue_name, firmware_id_list, create_fuzzy_hashes):
         queue = django_rq.get_queue(queue_name)
         func_to_run = start_firmware_re_import
@@ -130,6 +172,13 @@ class CreateFuzzyHashesJob(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={
+            'queue_name': validate_queue_name,
+            'firmware_id_list': validate_object_id_list
+        },
+        sanitizers={}
+    )
     def mutate(cls, root, info, queue_name, firmware_id_list, storage_index):
         queue = django_rq.get_queue(queue_name)
         func_to_run = start_fuzzy_hasher

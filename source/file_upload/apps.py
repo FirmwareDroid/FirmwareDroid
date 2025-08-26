@@ -4,6 +4,6 @@
 from django.apps import AppConfig
 
 
-class GraphQLSchemaDownloadConfig(AppConfig):
+class FirmwareUploadConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "get_schema"
+    name = "file_upload"

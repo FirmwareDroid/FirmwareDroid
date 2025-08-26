@@ -5,6 +5,10 @@ import graphene
 from graphql_jwt.decorators import superuser_required
 from setup.models import User
 from graphene_django import DjangoObjectType
+from api.v2.validators.validation import (
+    sanitize_and_validate, sanitize_email, sanitize_username,
+    validate_email, validate_username, validate_password
+)
 
 
 class UserType(DjangoObjectType):
@@ -42,6 +46,17 @@ class CreateUser(graphene.Mutation):
 
     @classmethod
     @superuser_required
+    @sanitize_and_validate(
+        validators={
+            'username': validate_username,
+            'password': validate_password,
+            'email': validate_email
+        },
+        sanitizers={
+            'username': sanitize_username,
+            'email': sanitize_email
+        }
+    )
     def mutate(cls, root, info, username, password, email, is_superuser):
         user = User(
             username=username,
@@ -60,6 +75,10 @@ class DeleteUser(graphene.Mutation):
         username = graphene.String(required=True)
 
     @classmethod
+    @sanitize_and_validate(
+        validators={'username': validate_username},
+        sanitizers={'username': sanitize_username}
+    )
     def mutate(cls, root, info, username):
         obj = User.objects.get(username=username)
         obj.delete()
