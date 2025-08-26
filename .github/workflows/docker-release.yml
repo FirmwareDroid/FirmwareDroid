@@ -1,0 +1,190 @@
+name: Build and Push Docker Images to GitHub Container Registry
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to use for the images (defaults to release tag or "latest")'
+        required: false
+        default: 'latest'
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: firmwaredroid/firmwaredroid
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Determine image tag
+      id: meta
+      run: |
+        if [[ "${{ github.event_name }}" == "release" ]]; then
+          TAG="${{ github.event.release.tag_name }}"
+        elif [[ "${{ github.event.inputs.tag }}" != "" ]]; then
+          TAG="${{ github.event.inputs.tag }}"
+        else
+          TAG="latest"
+        fi
+        echo "tag=${TAG}" >> $GITHUB_OUTPUT
+        echo "Using tag: ${TAG}"
+
+    - name: Build base image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile_BASE
+        platforms: linux/amd64
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-base:${{ steps.meta.outputs.tag }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-base:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./firmware-droid-client
+        file: ./firmware-droid-client/Dockerfile
+        platforms: linux/amd64
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ steps.meta.outputs.tag }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push nginx image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile_NGINX
+        platforms: linux/amd64
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-nginx:${{ steps.meta.outputs.tag }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-nginx:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push backend worker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./docker/base/Dockerfile_backend
+        platforms: linux/amd64
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ steps.meta.outputs.tag }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push extractor worker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./docker/base/Dockerfile_extractor
+        platforms: linux/amd64
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-extractor:${{ steps.meta.outputs.tag }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-extractor:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push apk scanner worker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./docker/base/Dockerfile_apk_scanner
+        platforms: linux/amd64
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk-scanner:${{ steps.meta.outputs.tag }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk-scanner:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Generate image manifest
+      run: |
+        cat << EOF > image-manifest.json
+        {
+          "version": "${{ steps.meta.outputs.tag }}",
+          "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "images": {
+            "base": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-base:${{ steps.meta.outputs.tag }}",
+            "frontend": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ steps.meta.outputs.tag }}",
+            "nginx": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-nginx:${{ steps.meta.outputs.tag }}",
+            "backend": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ steps.meta.outputs.tag }}",
+            "extractor": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-extractor:${{ steps.meta.outputs.tag }}",
+            "apk-scanner": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk-scanner:${{ steps.meta.outputs.tag }}"
+          },
+          "description": "FirmwareDroid Docker image bundle for version ${{ steps.meta.outputs.tag }}. All images in this bundle are designed to work together."
+        }
+        EOF
+        echo "Generated image manifest:"
+        cat image-manifest.json
+
+    - name: Upload image manifest as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: image-manifest-${{ steps.meta.outputs.tag }}
+        path: image-manifest.json
+
+    - name: Print deployment summary
+      run: |
+        echo "## 🐳 Docker Images Published" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "All FirmwareDroid Docker images have been successfully built and pushed to GitHub Container Registry:" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Component | Image | Tag |" >> $GITHUB_STEP_SUMMARY
+        echo "|-----------|-------|-----|" >> $GITHUB_STEP_SUMMARY
+        echo "| Base | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-base\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| Frontend | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| Nginx | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-nginx\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| Backend | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| Extractor | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-extractor\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| APK Scanner | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk-scanner\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Note:** These images are designed to work together as a complete FirmwareDroid deployment." >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Usage with Docker Compose" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "To use these images, update your \`docker-compose.yml\` to reference the published images:" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`yaml" >> $GITHUB_STEP_SUMMARY
+        echo "services:" >> $GITHUB_STEP_SUMMARY
+        echo "  web:" >> $GITHUB_STEP_SUMMARY
+        echo "    image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ steps.meta.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+        echo "  nginx:" >> $GITHUB_STEP_SUMMARY
+        echo "    image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-nginx:${{ steps.meta.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+        echo "  extractor-worker-high-1:" >> $GITHUB_STEP_SUMMARY
+        echo "    image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-extractor:${{ steps.meta.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+        echo "  apk_scanner-worker-1:" >> $GITHUB_STEP_SUMMARY
+        echo "    image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk-scanner:${{ steps.meta.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+        echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
