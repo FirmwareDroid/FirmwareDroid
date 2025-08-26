@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
+import logging
+
 import django_rq
 import graphene
 from graphene import relay
 from graphql import GraphQLError
 from graphene_mongo import MongoengineObjectType
+from graphql import GraphQLError
 from graphql_jwt.decorators import superuser_required
 from api.v2.schema.RqJobsSchema import ONE_DAY_TIMEOUT, ONE_WEEK_TIMEOUT
 from api.v2.types.GenericDeletion import delete_queryset_background
@@ -23,10 +26,16 @@ ModelFilter = generate_filter(AndroidFirmware)
 
 class AndroidFirmwareType(MongoengineObjectType):
     pk = graphene.String(source='pk')
+    file_size_bytes = graphene.Float()
 
     class Meta:
         model = AndroidFirmware
         interfaces = (relay.Node,)
+
+
+class AndroidFirmwareConnection(relay.Connection):
+    class Meta:
+        node = AndroidFirmwareType
 
 
 class AndroidFirmwareQuery(graphene.ObjectType):
@@ -39,6 +48,12 @@ class AndroidFirmwareQuery(graphene.ObjectType):
                                              name="android_firmware_id_list",
                                              field_filter=graphene.Argument(ModelFilter),
                                              )
+    android_firmware_connection = relay.ConnectionField(
+        AndroidFirmwareConnection,
+        object_id_list=graphene.List(graphene.String),
+        field_filter=graphene.Argument(ModelFilter),
+        name="android_firmware_connection"
+    )
 
     @superuser_required
     def resolve_android_firmware_list(self, info, object_id_list=None, field_filter=None):
@@ -50,6 +65,11 @@ class AndroidFirmwareQuery(graphene.ObjectType):
     def resolve_android_firmware_id_list(self, info, field_filter=None):
         queryset = get_filtered_queryset(model=AndroidFirmware, query_filter=field_filter, object_id_list=None)
         return [document.pk for document in queryset]
+
+    @superuser_required
+    def resolve_android_firmware_connection(self, info, object_id_list=None, field_filter=None, **kwargs):
+        queryset = get_filtered_queryset(AndroidFirmware, object_id_list, field_filter)
+        return queryset
 
 
 class DeleteAndroidFirmwareMutation(graphene.Mutation):
