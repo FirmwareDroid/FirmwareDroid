@@ -13,7 +13,7 @@ services:
     working_dir: /var/www/
     restart: unless-stopped
     env_file:
-      - ./.env
+      - ${ENV_FILE:-./default.env}
     expose:
       - 5000
     volumes:
@@ -59,7 +59,7 @@ services:
     restart: unless-stopped
     user: 1000:1000
     env_file:
-      - ./.env
+      - ${ENV_FILE:-./default.env}
     ports:
       - "27017:27017"
     volumes:
@@ -109,7 +109,7 @@ services:
       - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
       - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
     env_file:
-      - ./.env
+      - ${ENV_FILE:-./default.env}
     command: rqworker --logging_level INFO --name extractor-worker-high-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
     privileged: true
     networks:
@@ -136,7 +136,7 @@ services:
       - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
       - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
     env_file:
-      - ./.env
+      - ${ENV_FILE:-./default.env}
     cpus: ${DOCKER_CPU_LIMIT}
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}

@@ -10,22 +10,22 @@ services:
     working_dir: /var/www/
     restart: unless-stopped
     env_file:
-      - ./.env
+      - ${ENV_FILE:-./default.env}
     expose:
       - 5000
     volumes:
       - .:/var/www/
-      - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
-      - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
-      - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
-      - ${LOCAL_STORAGE_PATH_03}:/var/www/file_store/03_file_storage
-      - ${LOCAL_STORAGE_PATH_04}:/var/www/file_store/04_file_storage
-      - ${LOCAL_STORAGE_PATH_05}:/var/www/file_store/05_file_storage
-      - ${LOCAL_STORAGE_PATH_06}:/var/www/file_store/06_file_storage
-      - ${LOCAL_STORAGE_PATH_07}:/var/www/file_store/07_file_storage
-      - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
-      - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
-      - ${DJANGO_SQLITE_DATABASE_MOUNT_PATH}:${DJANGO_SQLITE_DATABASE_PATH}
+      - ${LOCAL_STORAGE_PATH_00:-./data/00_file_storage}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_01:-./data/01_file_storage}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_02:-./data/02_file_storage}:/var/www/file_store/02_file_storage
+      - ${LOCAL_STORAGE_PATH_03:-./data/03_file_storage}:/var/www/file_store/03_file_storage
+      - ${LOCAL_STORAGE_PATH_04:-./data/04_file_storage}:/var/www/file_store/04_file_storage
+      - ${LOCAL_STORAGE_PATH_05:-./data/05_file_storage}:/var/www/file_store/05_file_storage
+      - ${LOCAL_STORAGE_PATH_06:-./data/06_file_storage}:/var/www/file_store/06_file_storage
+      - ${LOCAL_STORAGE_PATH_07:-./data/07_file_storage}:/var/www/file_store/07_file_storage
+      - ${LOCAL_STORAGE_PATH_08:-./data/08_file_storage}:/var/www/file_store/08_file_storage
+      - ${LOCAL_STORAGE_PATH_09:-./data/09_file_storage}:/var/www/file_store/09_file_storage
+      - ${DJANGO_SQLITE_DATABASE_MOUNT_PATH:-./data/django_database/}:${DJANGO_SQLITE_DATABASE_PATH:-/var/www/data/django_database/}
     depends_on:
       - mongo-db-1
       - redis
@@ -58,14 +58,14 @@ services:
     restart: unless-stopped
     user: 1000:1000
     env_file:
-      - ./.env
+      - ${ENV_FILE:-./default.env}
     ports:
       - "27017:27017"
     volumes:
       - ./env/mongo/init/:/docker-entrypoint-initdb.d/
       - ./env/mongo/auth/cluster.key:/etc/mongodb/cluster.key
-      - ${LOCAL_MONGO_DB_PATH_NODE1}:/data/db
-    command: mongod --bind_ip_all --auth --port 27017 --replSet ${MONGODB_REPLICA_SET} --keyFile /etc/mongodb/cluster.key --dbpath /data/db
+      - ${LOCAL_MONGO_DB_PATH_NODE1:-./data/mongo_database}:/data/db
+    command: mongod --bind_ip_all --auth --port 27017 --replSet ${MONGODB_REPLICA_SET:-mongo_cluster_1} --keyFile /etc/mongodb/cluster.key --dbpath /data/db
     networks:
       - backend
     healthcheck:
@@ -80,9 +80,9 @@ services:
     platform: "linux/amd64"
     image: redis:7.2.0
     container_name: redis
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server --requirepass ${REDIS_PASSWORD:-firmwaredroid-default-redis-password}
     volumes:
-      - ${REDIS_CONFIG_PATH}:/usr/local/etc/redis/redis.conf
+      - ${REDIS_CONFIG_PATH:-./env/redis/redis.conf}:/usr/local/etc/redis/redis.conf
     ports:
       - "127.0.0.1:6379:6379"
     networks:
@@ -100,19 +100,19 @@ services:
       - redis
     volumes:
       - .:/var/www/
-      - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
-      - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
-      - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
-      - ${LOCAL_STORAGE_PATH_03}:/var/www/file_store/03_file_storage
-      - ${LOCAL_STORAGE_PATH_04}:/var/www/file_store/04_file_storage
-      - ${LOCAL_STORAGE_PATH_05}:/var/www/file_store/05_file_storage
-      - ${LOCAL_STORAGE_PATH_06}:/var/www/file_store/06_file_storage
-      - ${LOCAL_STORAGE_PATH_07}:/var/www/file_store/07_file_storage
-      - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
-      - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
+      - ${LOCAL_STORAGE_PATH_00:-./data/00_file_storage}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_01:-./data/01_file_storage}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_02:-./data/02_file_storage}:/var/www/file_store/02_file_storage
+      - ${LOCAL_STORAGE_PATH_03:-./data/03_file_storage}:/var/www/file_store/03_file_storage
+      - ${LOCAL_STORAGE_PATH_04:-./data/04_file_storage}:/var/www/file_store/04_file_storage
+      - ${LOCAL_STORAGE_PATH_05:-./data/05_file_storage}:/var/www/file_store/05_file_storage
+      - ${LOCAL_STORAGE_PATH_06:-./data/06_file_storage}:/var/www/file_store/06_file_storage
+      - ${LOCAL_STORAGE_PATH_07:-./data/07_file_storage}:/var/www/file_store/07_file_storage
+      - ${LOCAL_STORAGE_PATH_08:-./data/08_file_storage}:/var/www/file_store/08_file_storage
+      - ${LOCAL_STORAGE_PATH_09:-./data/09_file_storage}:/var/www/file_store/09_file_storage
     env_file:
-      - ./.env
-    command: rqworker --logging_level INFO --name extractor-worker-high-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
+      - ${ENV_FILE:-./default.env}
+    command: rqworker --logging_level INFO --name extractor-worker-high-1 --url redis://:${REDIS_PASSWORD:-firmwaredroid-default-redis-password}@redis:6379/0 high-python
     privileged: true
     networks:
       - backend
@@ -129,22 +129,22 @@ services:
       - redis
     volumes:
       - .:/var/www/
-      - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
-      - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
-      - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
-      - ${LOCAL_STORAGE_PATH_03}:/var/www/file_store/03_file_storage
-      - ${LOCAL_STORAGE_PATH_04}:/var/www/file_store/04_file_storage
-      - ${LOCAL_STORAGE_PATH_05}:/var/www/file_store/05_file_storage
-      - ${LOCAL_STORAGE_PATH_06}:/var/www/file_store/06_file_storage
-      - ${LOCAL_STORAGE_PATH_07}:/var/www/file_store/07_file_storage
-      - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
-      - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
+      - ${LOCAL_STORAGE_PATH_00:-./data/00_file_storage}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_01:-./data/01_file_storage}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_02:-./data/02_file_storage}:/var/www/file_store/02_file_storage
+      - ${LOCAL_STORAGE_PATH_03:-./data/03_file_storage}:/var/www/file_store/03_file_storage
+      - ${LOCAL_STORAGE_PATH_04:-./data/04_file_storage}:/var/www/file_store/04_file_storage
+      - ${LOCAL_STORAGE_PATH_05:-./data/05_file_storage}:/var/www/file_store/05_file_storage
+      - ${LOCAL_STORAGE_PATH_06:-./data/06_file_storage}:/var/www/file_store/06_file_storage
+      - ${LOCAL_STORAGE_PATH_07:-./data/07_file_storage}:/var/www/file_store/07_file_storage
+      - ${LOCAL_STORAGE_PATH_08:-./data/08_file_storage}:/var/www/file_store/08_file_storage
+      - ${LOCAL_STORAGE_PATH_09:-./data/09_file_storage}:/var/www/file_store/09_file_storage
     env_file:
-      - ./.env
-    cpus: ${DOCKER_CPU_LIMIT}
-    mem_limit: ${DOCKER_MEMORY_LIMIT}
-    memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    command: rqworker --logging_level INFO --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
+      - ${ENV_FILE:-./default.env}
+    cpus: ${DOCKER_CPU_LIMIT:-0.5}
+    mem_limit: ${DOCKER_MEMORY_LIMIT:-10GB}
+    memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT:-10GB}
+    command: rqworker --logging_level INFO --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD:-firmwaredroid-default-redis-password}@redis:6379/0 default-python
     networks:
       - backend
 
@@ -165,4 +165,3 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.driver.mtu: 1450
-
