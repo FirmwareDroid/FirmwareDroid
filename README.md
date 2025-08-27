@@ -13,6 +13,53 @@ that can be used for research studies.
 
 Usage **documentation** can be found at: https://firmwaredroid.github.io/
 
+## Quick Start
+
+FirmwareDroid now supports streamlined setup for faster deployment:
+
+### Option 1: Instant Start (Recommended)
+```bash
+git clone --recurse-submodules https://github.com/FirmwareDroid/FirmwareDroid.git
+cd FirmwareDroid
+docker compose up
+```
+
+This will automatically:
+- Create default configuration files
+- Set up storage directories  
+- Generate SSL certificates
+- Start all services
+
+Access FirmwareDroid at: `https://fmd.localhost`  
+Default credentials: `fmd-admin` / `admin`
+
+### Option 2: Quick Setup Script
+```bash
+git clone --recurse-submodules https://github.com/FirmwareDroid/FirmwareDroid.git
+cd FirmwareDroid
+./quick_setup.sh
+docker compose up
+```
+
+### Option 3: Custom Configuration
+```bash
+git clone --recurse-submodules https://github.com/FirmwareDroid/FirmwareDroid.git
+cd FirmwareDroid
+python setup.py  # Interactive configuration
+docker compose up
+```
+
+### Using Published Images
+For production or if you prefer pre-built images:
+```bash
+git clone --recurse-submodules https://github.com/FirmwareDroid/FirmwareDroid.git
+cd FirmwareDroid
+./quick_setup.sh  # Create configuration
+docker compose -f docker-compose-release.yml up
+```
+
+## Included Tools and Features
+
 FMD is made to run in docker and includes several third party analysis tools for security analysis and extraction.
 Some of the tools and features included are:
 
