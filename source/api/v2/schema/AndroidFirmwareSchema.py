@@ -20,6 +20,7 @@ from firmware_handler.firmware_reimporter import start_firmware_re_import
 from hashing.fuzzy_hash_creator import start_fuzzy_hasher
 from model.AndroidFirmware import AndroidFirmware
 from firmware_handler.firmware_importer import start_firmware_mass_import
+from firmware_handler.firmware_os_detect import update_firmware_vendor_by_build_prop
 
 ModelFilter = generate_filter(AndroidFirmware)
 
@@ -186,8 +187,48 @@ class CreateFuzzyHashesJob(graphene.Mutation):
         return cls(job_id=job.id)
 
 
+class UpdateFirmwareVendorMutation(graphene.Mutation):
+    """
+    Updates OS vendor information for firmware based on build.prop files.
+    This mutation analyzes build.prop files to detect and set the os_vendor field.
+    """
+    job_id = graphene.String()
+    
+    class Arguments:
+        queue_name = graphene.String(required=True,
+                                     default_value="default-python")
+        firmware_id_list = graphene.List(graphene.String,
+                                         required=False,
+                                         description="Specific firmware IDs to update. "
+                                                     "If not provided, updates all firmware with 'Unknown' vendor")
+    
+    @classmethod
+    @superuser_required
+    @sanitize_and_validate(
+        validators={
+            'queue_name': validate_queue_name,
+            'firmware_id_list': validate_object_id_list
+        },
+        sanitizers={}
+    )
+    def mutate(cls, root, info, queue_name, firmware_id_list=None):
+        """
+        Create a job to update firmware vendor information.
+        
+        :param queue_name: str - name of the RQ queue to use
+        :param firmware_id_list: list(str) - Optional list of firmware IDs to update
+        
+        :return: str - job-id of the background task
+        """
+        queue = django_rq.get_queue(queue_name)
+        func_to_run = update_firmware_vendor_by_build_prop
+        job = queue.enqueue(func_to_run, firmware_id_list, job_timeout=ONE_DAY_TIMEOUT)
+        return cls(job_id=job.id)
+
+
 class AndroidFirmwareMutation(graphene.ObjectType):
     delete_android_firmware = DeleteAndroidFirmwareMutation.Field()
     create_firmware_extractor_job = CreateFirmwareExtractorJob.Field()
     create_fuzzy_hashes_job = CreateFuzzyHashesJob.Field()
     create_firmware_re_import_job = CreateFirmwareReImportJob.Field()
+    update_firmware_vendor = UpdateFirmwareVendorMutation.Field()

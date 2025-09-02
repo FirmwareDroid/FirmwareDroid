@@ -98,3 +98,13 @@ PRODUCT_MODEL_LIST = ["ro_product_model", "ro_product_odm_model"]
 SYSTEM_BUILD_VERSION_RELEASE_LIST = ["ro_system_build_version_release", "ro_odm_build_version_release"]
 SYSTEM_BUILD_TAGS_LIST = ["ro_system_build_tags", "ro_odm_build_tags"]
 SYSTEM_BUILD_FINGERPRINT_LIST = ["ro_system_build_fingerprint", "ro_odm_build_fingerprint"]
+
+##########################################################################################
+# OS Vendor detection properties - for detecting firmware manufacturer/brand
+##########################################################################################
+OS_VENDOR_PROPERTY_LIST = [
+    "ro_product_manufacturer", "ro_product_odm_manufacturer",
+    "ro_product_brand", "ro_product_odm_brand",
+    "ro_system_build_fingerprint", "ro_odm_build_fingerprint",
+    "ro_build_fingerprint"
+]

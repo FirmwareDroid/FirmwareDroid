@@ -41,11 +41,12 @@ class BuildPropFileQuery(graphene.ObjectType):
     build_prop_file_id_list = graphene.List(BuildPropFileType,
                                             object_id_list=graphene.List(graphene.String),
                                             field_filter=graphene.Argument(ModelFilter),
+                                            distinct_on=graphene.String(description="Return distinct records based on the specified field (e.g., 'firmware_id_reference')"),
                                             name="build_prop_file_id_list"
                                             )
 
     @superuser_required
-    def resolve_build_prop_file_id_list(self, info, object_id_list=None, field_filter=None):
+    def resolve_build_prop_file_id_list(self, info, object_id_list=None, field_filter=None, distinct_on=None):
         filter_dict = {}
         key_list = None
         value_list = None
@@ -69,5 +70,27 @@ class BuildPropFileQuery(graphene.ObjectType):
                 return any(val in doc.properties.values() for val in value_list)
 
             queryset = [doc for doc in queryset if has_matching_value(doc)]
+
+        # Apply distinct functionality if requested
+        if distinct_on:
+            seen_values = set()
+            distinct_queryset = []
+            
+            for doc in queryset:
+                # Get the value for the distinct_on field
+                if distinct_on == 'firmware_id_reference':
+                    distinct_value = str(doc.firmware_id_reference.pk) if doc.firmware_id_reference else None
+                elif hasattr(doc, distinct_on):
+                    distinct_value = getattr(doc, distinct_on)
+                else:
+                    logging.warning(f"Unknown distinct_on field: {distinct_on}")
+                    distinct_value = None
+                
+                # Only add if we haven't seen this value before
+                if distinct_value is not None and distinct_value not in seen_values:
+                    seen_values.add(distinct_value)
+                    distinct_queryset.append(doc)
+            
+            queryset = distinct_queryset
 
         return queryset

@@ -43,8 +43,8 @@ Some of the tools and features included are:
     * [Procyon](https://github.com/mstrobel/procyon)
     * [Krakatau](https://github.com/Storyyeller/Krakatau)
 * File and Firmware Extraction:
+  * [Binwalk](https://github.com/ReFirmLabs/binwalk)
   * [Unblob](https://github.com/onekey-sec/unblob)
-  * [SRLabs extractor](https://github.com/srlabs/extractor)
   * [Payload-Dumper](https://github.com/vm03/payload_dumper)
   * [Payload-Dumper-Go](https://github.com/ssut/payload-dumper-go)
   * [lpunpack](https://github.com/LonelyFool/lpunpack_and_lpmake/tree/android11)

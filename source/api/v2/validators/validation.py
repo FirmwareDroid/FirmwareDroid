@@ -1,5 +1,6 @@
 import json
 import re
+import inspect
 from bson import ObjectId
 from functools import wraps
 
@@ -13,7 +14,8 @@ def sanitize_and_validate(validators, sanitizers):
                 if arg in kwargs:
                     kwargs[arg] = sanitizer(kwargs[arg])
 
-            # Validate arguments
+            # Get function signature for default values
+            sig = inspect.signature(func)
             missing_validations = []
             for arg, validator in validators.items():
                 if arg in kwargs:
@@ -22,7 +24,10 @@ def sanitize_and_validate(validators, sanitizers):
                     except ValueError as e:
                         raise ValueError(f"Validation failed for {arg}: {e}")
                 else:
-                    missing_validations.append(arg)
+                    # Only require validation if no default or default is not None
+                    param = sig.parameters.get(arg)
+                    if param is None or param.default is inspect.Parameter.empty or param.default is not None:
+                        missing_validations.append(arg)
             if missing_validations:
                 raise ValueError(f"Missing validations for: {', '.join(missing_validations)}")
             return func(*args, **kwargs)

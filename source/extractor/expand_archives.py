@@ -10,6 +10,7 @@ import tempfile
 import threading
 from extractor.app_extractor import app_extractor
 from extractor.bin_extractor.payload_dumper_go import payload_dumper_go_extractor
+from extractor.binwalk_extractor import binwalk_extract
 from extractor.ext4_extractor import extract_dat, extract_simg_ext4, extract_ext4
 from extractor.lpunpack_extractor import lpunpack_extractor
 from extractor.mount_extractor import mount_extract, simg2img_and_mount_extract
@@ -42,6 +43,11 @@ EXTRACT_FUNCTION_MAP_DICT = {
     ".br": [extract_brotli],
     ".dat": [extract_dat],
     ".app": [app_extractor]
+}
+
+GENERIC_EXTRACT_FUNC_DICT = {
+    "unblob": unblob_extract,
+    "binwalk": binwalk_extract
 }
 
 
@@ -324,6 +330,8 @@ def extract_image_file(image_path, extract_dir_path):
         logging.debug("Image extraction successful with mount extractor")
     elif simg2img_and_mount_extract(image_path, extract_dir_path):
         logging.debug("Image extraction successful with simg2img and mount extractor")
+    elif binwalk_extract(image_path, extract_dir_path):
+        logging.debug("Image extraction successful with binwalk extraction suite")
     elif unblob_extract(image_path, extract_dir_path, depth=25):
         logging.debug("Image extraction successful with unblob extraction suite")
     else:
@@ -347,7 +355,7 @@ def extract_list_of_files(file_path_list,
     extracted_files_path_list = []
     for file_path in file_path_list:
         if not os.path.exists(file_path):
-            logging.error(f"File does not exist: {file_path}")
+            logging.warning(f"File does not exist: {file_path}")
             continue
         if os.path.isfile(file_path):
             with EXTRACTION_SEMAPHORE:
@@ -425,20 +433,30 @@ def process_file(current_path,
             finally:
                 shutil.rmtree(temp_extract_dir, ignore_errors=True)
 
-    is_unblob_success = False
+    is_generic_extract_success = False
     if not is_success and any([filename.endswith(pattern) for pattern in SKIP_FILE_PATTERN_LIST]):
         temp_extract_dir = tempfile.mkdtemp(dir=destination_dir, prefix="fmd_extract_unblob_")
         temp_extract_dir = os.path.abspath(temp_extract_dir)
-        logging.info(f"Extracting with unblob: {current_path} {temp_extract_dir} ")
-        is_unblob_success = unblob_extract(current_path, temp_extract_dir, unblob_depth)
-        if is_unblob_success:
-            move_all_files_and_folders(temp_extract_dir, destination_dir)
-            shutil.rmtree(temp_extract_dir, ignore_errors=True)
+        for name, generic_extraction_function in GENERIC_EXTRACT_FUNC_DICT.items():
+            if name == "binwalk":
+                logging.info(f"Extracting with binwalk: {current_path} {temp_extract_dir} ")
+                args = {"compressed_file_path": current_path,
+                        "destination_dir": temp_extract_dir}
+            else:
+                logging.info(f"Extracting with unblob: {current_path} {temp_extract_dir} ")
+                args = {"compressed_file_path": current_path,
+                        "destination_dir": temp_extract_dir,
+                        "depth": unblob_depth}
+            is_generic_extract_success = generic_extraction_function(**args)
+            if is_generic_extract_success:
+                move_all_files_and_folders(temp_extract_dir, destination_dir)
+                shutil.rmtree(temp_extract_dir, ignore_errors=True)
+                break
 
-    if delete_compressed_file and (is_success or is_unblob_success):
+    if delete_compressed_file and (is_success or is_generic_extract_success):
         logging.info(f"Success extracting. Deleting compressed file: {current_path}")
         delete_file_safely(current_path)
-    elif is_success or is_unblob_success:
+    elif is_success or is_generic_extract_success:
         logging.info(f"Extraction successful for: {current_path}")
     else:
         logging.warning(f"Expand Archive: Extraction failed for: {current_path}")

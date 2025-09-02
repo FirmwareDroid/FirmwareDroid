@@ -27,8 +27,39 @@ RUN useradd -r -g $GROUP_ID -u $USER_ID www -s /bin/sh -m
 RUN chown $USER_ID:$GROUP_ID /var/www/
 RUN chown -R $USER_ID:$GROUP_ID /opt/firmwaredroid/
 
+##################################################
+# Install RUST for root user                       #
+##################################################
+RUN set -eux; \
+    for i in $(seq 1 5); do \
+        curl -fsSL https://sh.rustup.rs -o rustup.sh && break || sleep 15; \
+    done; \
+    for i in $(seq 1 5); do \
+        sh rustup.sh -y && break || sleep 15; \
+    done; \
+    rm rustup.sh
+#RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN cargo --version
+
+##################################################
+# Install RUST for www user                       #
+##################################################
 USER www
-ENV PATH="$PATH:/home/www/.local/bin/"
+WORKDIR /home/www
+RUN set -eux; \
+    for i in $(seq 1 5); do \
+        curl -fsSL https://sh.rustup.rs -o rustup.sh && break || sleep 15; \
+    done; \
+    for i in $(seq 1 5); do \
+        sh rustup.sh -y && break || sleep 15; \
+    done; \
+    rm rustup.sh
+ENV PATH="/home/www/.cargo/bin:${PATH}"
+
+################################################
+WORKDIR /var/www/
+ENV PATH="/home/www/.local/bin/:$PATH"
 
 ########################################################
 # Install Python dependencies                          #
