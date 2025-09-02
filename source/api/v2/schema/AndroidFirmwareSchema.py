@@ -195,9 +195,12 @@ class UpdateFirmwareVendorMutation(graphene.Mutation):
     job_id = graphene.String()
     
     class Arguments:
-        queue_name = graphene.String(required=True, default_value="default-python")
-        firmware_id_list = graphene.List(graphene.String, required=False, 
-                                        description="Specific firmware IDs to update. If not provided, updates all firmware with 'Unknown' vendor")
+        queue_name = graphene.String(required=True,
+                                     default_value="default-python")
+        firmware_id_list = graphene.List(graphene.String,
+                                         required=False,
+                                         description="Specific firmware IDs to update. "
+                                                     "If not provided, updates all firmware with 'Unknown' vendor")
     
     @classmethod
     @superuser_required

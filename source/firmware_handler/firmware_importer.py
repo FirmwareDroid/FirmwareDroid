@@ -27,6 +27,7 @@ from utils.file_utils.file_util import get_filenames
 from firmware_handler.firmware_version_detect import detect_by_build_prop
 from processing.standalone_python_worker import create_multi_threading_queue
 from bson import ObjectId
+from firmware_handler.firmware_os_detect import detect_vendor_by_build_prop
 
 ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar", ".gz", ".bz2", ".md5", ".lz4", ".tgz", ".rar", ".7z", "lzma", ".xz",
                                    ".ozip"]
@@ -359,9 +360,6 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
                                                                store_paths)
 
             version_detected = detect_by_build_prop(files_dict["build_prop_file_list"])
-            
-            # Detect OS vendor from build.prop files
-            from firmware_handler.firmware_os_detect import detect_vendor_by_build_prop
             os_vendor = detect_vendor_by_build_prop(files_dict["build_prop_file_list"])
 
             if not check_if_successful_import(partition_info_dict):
