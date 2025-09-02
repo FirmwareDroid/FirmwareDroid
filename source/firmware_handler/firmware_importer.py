@@ -359,6 +359,10 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
                                                                store_paths)
 
             version_detected = detect_by_build_prop(files_dict["build_prop_file_list"])
+            
+            # Detect OS vendor from build.prop files
+            from firmware_handler.firmware_os_detect import detect_vendor_by_build_prop
+            os_vendor = detect_vendor_by_build_prop(files_dict["build_prop_file_list"])
 
             if not check_if_successful_import(partition_info_dict):
                 raise ValueError("No partition was successfully imported.")
@@ -377,6 +381,7 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
                                   file_size=file_size,
                                   build_prop_file_id_list=files_dict["build_prop_file_list"],
                                   version_detected=version_detected,
+                                  os_vendor=os_vendor,
                                   firmware_file_list=files_dict["firmware_file_list"],
                                   has_fuzzy_hash_index=create_fuzzy_hashes,
                                   partition_info_dict=partition_info_dict)
@@ -471,7 +476,7 @@ def create_partition_firmware_files(archive_firmware_file_list,
 
 
 def store_firmware_object(store_filename, original_filename, firmware_store_path, md5, sha256, sha1, android_app_list,
-                          file_size, build_prop_file_id_list, version_detected, firmware_file_list,
+                          file_size, build_prop_file_id_list, version_detected, os_vendor, firmware_file_list,
                           has_fuzzy_hash_index, partition_info_dict):
     """
     Creates class:'AndroidFirmware' object and saves it to the database. Creates references to other documents.
@@ -479,6 +484,7 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
     :param partition_info_dict: dict(str, dict(str, str)) - status of the partition import.
     :param has_fuzzy_hash_index: bool - true if fuzzy hash index was created. False if fuzzy hash index was not created.
     :param version_detected: str - detected version of the firmware.
+    :param os_vendor: str - detected OS vendor/manufacturer of the firmware.
     :param store_filename: str - Name of the file within the file store.
     :param original_filename: str - original filename before renaming.
     :param firmware_store_path: str - relative path within the filesystem
@@ -504,12 +510,13 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
                                android_app_id_list=map(lambda x: x.id, android_app_list),
                                file_size_bytes=file_size,
                                version_detected=version_detected,
+                               os_vendor=os_vendor,
                                has_file_index=True,
                                has_fuzzy_hash_index=has_fuzzy_hash_index,
                                build_prop_file_id_list=build_prop_file_id_list,
                                partition_info_dict=partition_info_dict)
     firmware.save()
-    logging.debug(f"Stored firmware with id {str(firmware.id)} in database.")
+    logging.debug(f"Stored firmware with id {str(firmware.id)} and vendor '{os_vendor}' in database.")
     add_firmware_file_references(firmware, firmware_file_list)
     add_app_firmware_references(firmware, android_app_list)
     add_build_prop_references(firmware, build_prop_file_id_list)
