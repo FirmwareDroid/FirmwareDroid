@@ -75,21 +75,6 @@ RUN export PATH=$PATH
 RUN jadx --version
 
 ##################################################
-# Install RUST
-##################################################
-RUN set -eux; \
-    for i in $(seq 1 5); do \
-        curl -fsSL https://sh.rustup.rs -o rustup.sh && break || sleep 15; \
-    done; \
-    for i in $(seq 1 5); do \
-        sh rustup.sh -y && break || sleep 15; \
-    done; \
-    rm rustup.sh
-#RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
-RUN cargo --version
-
-##################################################
 # Install Gradle
 ##################################################
 RUN mkdir -p /opt/gradle
@@ -123,6 +108,7 @@ RUN set -eux; \
 # Install Krakatau
 RUN git clone https://github.com/Storyyeller/Krakatau.git /opt/decompilers/java/krakatau
 WORKDIR /opt/decompilers/java/krakatau/
+ENV PATH="/home/www/.cargo/bin:${PATH}"
 RUN cargo build --release
 ENV PATH="${PATH}:/opt/firmwaredroid/decompilers/java/krakatau/target/release/krak2"
 
