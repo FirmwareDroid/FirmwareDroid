@@ -5,8 +5,12 @@
 FROM firmwaredroid-base AS extractor-worker
 USER root
 
+######################################
+# SET ENV Variables                  #
+######################################
+ENV PATH="/home/www/.cargo/bin:${PATH}"
 #####################################
-# Install apt dependencies       #
+# Install apt dependencies          #
 #####################################
 RUN apt update
 RUN apt install -y pkgconf android-sdk-libsparse-utils liblzo2-dev fuse brotli libmagic1 cmake \
@@ -27,17 +31,6 @@ RUN chmod +x /var/www/source/extractor/mount_copy.sh
 RUN DEBIAN_FRONTEND=noninteractive apt install -y android-sdk-libsparse-utils e2fsprogs p7zip-full unar \
     zlib1g-dev liblzo2-dev lzop lziprecover \
     libhyperscan-dev zstd lz4 && apt-get clean
-
-#####################################
-# Install srlabs_extractor extractor #
-#####################################
-RUN git clone https://github.com/srlabs/extractor.git /opt/firmwaredroid/srlabs_extractor
-RUN python -m venv /opt/firmwaredroid/srlabs_extractor/venv
-RUN /opt/firmwaredroid/srlabs_extractor/venv/bin/python3 -m pip install -r requirements.txt
-
-USER root
-RUN . /opt/firmwaredroid/srlabs_extractor/venv/bin/activate \
-    && apt install -y android-sdk-libsparse-utils liblz4-tool brotli p7zip-full zip rsync zlib1g-dev libffi-dev
 USER www
 
 #####################################
@@ -59,8 +52,14 @@ ENV PATH="$PATH:/opt/firmwaredroid/payload_dumper_go/payload-dumper-go"
 #####################################
 RUN git clone https://github.com/FirmwareDroid/lpunpack.git /opt/firmwaredroid/lpunpack
 
-
-
+#####################################
+# Install binwalk3                  #
+#####################################
+USER root
+RUN apt-get update && apt-get install -y libfontconfig1-dev
+RUN cargo install binwalk
+USER www
+RUN cargo install binwalk
 #####################################
 # Install python dependencies       #
 #####################################

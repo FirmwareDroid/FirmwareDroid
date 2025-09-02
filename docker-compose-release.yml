@@ -118,7 +118,7 @@ services:
   apk_scanner-worker-1:
     platform: "linux/amd64"
     user: www
-    image: ghcr.io/firmwaredroid/firmwaredroid-apk-scanner:latest
+    image: ghcr.io/firmwaredroid/firmwaredroid-apk_scanner:latest
     container_name: apk_scanner-worker-1
     restart: unless-stopped
     depends_on:

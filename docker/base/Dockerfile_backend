@@ -2,7 +2,7 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 FROM firmwaredroid-base AS firmwaredroid-backend-worker
-
+ENV PATH="/home/www/.cargo/bin:${PATH}"
 ########################################################
 # Copy Source Files                                    #
 ########################################################
