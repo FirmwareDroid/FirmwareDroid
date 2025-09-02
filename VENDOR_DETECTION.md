@@ -12,7 +12,7 @@ The OS vendor detection feature analyzes build.prop files contained within firmw
 - **Intelligent Mapping**: Maps various manufacturer names to standardized vendor names (e.g., "samsung", "Samsung Electronics" → "Samsung")
 - **Comprehensive Coverage**: Supports 30+ common Android manufacturers including Samsung, Google, Xiaomi, LG, HTC, Huawei, and more
 - **Fallback Handling**: Uses raw manufacturer names for unknown vendors, returns "Unknown" if no vendor info found
-- **Retroactive Updates**: Management command to update existing firmware records
+- **Manual Updates**: GraphQL mutation to update existing firmware records
 - **GraphQL Integration**: Full filtering and querying support via GraphQL API
 
 ## How It Works
@@ -33,23 +33,30 @@ Vendor detection happens automatically during firmware import. No additional con
 
 ### Updating Existing Firmware
 
-Use the Django management command to update existing firmware:
+Use the GraphQL mutation to update existing firmware:
 
-```bash
+```graphql
 # Update all firmware with "Unknown" vendor (recommended)
-python manage.py update_firmware_vendor
+mutation {
+  updateFirmwareVendor(queueName: "default-python") {
+    jobId
+  }
+}
 
 # Update specific firmware by ID
-python manage.py update_firmware_vendor --firmware-ids 507f1f77bcf86cd799439011 507f1f77bcf86cd799439012
-
-# Update all firmware regardless of current vendor
-python manage.py update_firmware_vendor --all
-
-# Dry run to see what would be updated
-python manage.py update_firmware_vendor --dry-run
+mutation {
+  updateFirmwareVendor(
+    queueName: "default-python"
+    firmwareIdList: ["507f1f77bcf86cd799439011", "507f1f77bcf86cd799439012"]
+  ) {
+    jobId
+  }
+}
 ```
 
-### GraphQL Queries
+The mutation returns a job ID that can be used to track the background processing status.
+
+### GraphQL Queries and Mutations
 
 Filter firmware by vendor using GraphQL:
 
@@ -77,6 +84,28 @@ query {
 query {
   samsungCount: androidFirmwareConnection(fieldFilter: {osVendor: "Samsung"}) {
     totalCount
+  }
+}
+
+# Update firmware vendor information
+mutation {
+  updateFirmwareVendor(queueName: "default-python") {
+    jobId
+  }
+}
+```
+
+For build prop file queries with distinct functionality:
+
+```graphql
+# Get build.prop files with distinct firmware references
+query {
+  buildPropFileIdList(distinctOn: "firmware_id_reference") {
+    firmwareIdReference {
+      pk
+      id
+    }
+    properties
   }
 }
 ```
@@ -153,7 +182,8 @@ python demo_vendor_detection.py
 - `source/firmware_handler/const_regex_patterns.py` - Added OS_VENDOR_PROPERTY_LIST
 - `source/firmware_handler/firmware_os_detect.py` - Added vendor detection functions
 - `source/firmware_handler/firmware_importer.py` - Integrated vendor detection into import process
-- `source/setup/management/commands/update_firmware_vendor.py` - Management command for updates
+- `source/api/v2/schema/AndroidFirmwareSchema.py` - Added GraphQL mutation for manual vendor updates
+- `source/api/v2/schema/BuildPropFileSchema.py` - Added distinct functionality for build prop queries
 
 ## Troubleshooting
 
