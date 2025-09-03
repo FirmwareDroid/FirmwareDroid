@@ -4,10 +4,14 @@ import logging
 
 
 def binwalk_extract(compressed_file_path,
-                    destination_dir):
+                    destination_dir,
+                    recursive_extraction=False):
     os.makedirs(destination_dir, exist_ok=True)
     try:
-        command = ['binwalk', '-C', destination_dir, '-M', '-e', compressed_file_path]
+        if recursive_extraction:
+            command = ['binwalk', '-C', destination_dir, '-e', '-M', compressed_file_path]
+        else:
+            command = ['binwalk', '-C', destination_dir, '-e', compressed_file_path]
         logging.debug(f"Running Binwalk with command: {command}")
         response = subprocess.run(command, timeout=60 * 60 * 3)
         response.check_returncode()

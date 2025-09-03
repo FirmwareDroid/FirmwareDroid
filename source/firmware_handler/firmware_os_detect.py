@@ -4,6 +4,8 @@
 import logging
 
 from model import AndroidFirmware
+from mongoengine import Document
+from mongoengine.base.datastructures import LazyReference
 from context.context_creator import create_db_context
 
 
@@ -64,7 +66,13 @@ def detect_vendor_by_build_prop(build_prop_file_id_list):
     detected_vendor = "Unknown"
     for build_prop_file_ref in build_prop_file_id_list:
         try:
-            build_prop_file = build_prop_file_ref.fetch()
+            if isinstance(build_prop_file_ref, LazyReference):
+                build_prop_file = build_prop_file_ref.fetch()
+            elif isinstance(build_prop_file_ref, Document):
+                build_prop_file = build_prop_file_ref
+            else:
+                logging.debug(f"Invalid type in build_prop_file_id_list: {type(build_prop_file_ref)}")
+                continue
             logging.info(f"Build profile file: {build_prop_file.pk}")
             for property_name in OS_VENDOR_PROPERTY_LIST:
                 property_value = build_prop_file.properties.get(property_name)
