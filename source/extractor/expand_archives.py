@@ -330,10 +330,10 @@ def extract_image_file(image_path, extract_dir_path):
         logging.debug("Image extraction successful with mount extractor")
     elif simg2img_and_mount_extract(image_path, extract_dir_path):
         logging.debug("Image extraction successful with simg2img and mount extractor")
-    elif binwalk_extract(image_path, extract_dir_path):
-        logging.debug("Image extraction successful with binwalk extraction suite")
     elif unblob_extract(image_path, extract_dir_path, depth=25):
         logging.debug("Image extraction successful with unblob extraction suite")
+    elif binwalk_extract(image_path, extract_dir_path, recursive_extraction=True):
+        logging.debug("Image extraction successful with binwalk extraction suite")
     else:
         raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
 
@@ -441,7 +441,8 @@ def process_file(current_path,
             if name == "binwalk":
                 logging.info(f"Extracting with binwalk: {current_path} {temp_extract_dir} ")
                 args = {"compressed_file_path": current_path,
-                        "destination_dir": temp_extract_dir}
+                        "destination_dir": temp_extract_dir,
+                        "recursive_extraction": False}
             else:
                 logging.info(f"Extracting with unblob: {current_path} {temp_extract_dir} ")
                 args = {"compressed_file_path": current_path,
