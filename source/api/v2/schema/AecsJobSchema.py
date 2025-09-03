@@ -83,7 +83,7 @@ class UpdateOrCreateAECSJob(graphene.Mutation):
         firmware_id_list = cls.get_firmware_list(firmware_id_list)
         if len(firmware_id_list) == 0:
             logging.error("No firmware ids found with AECS build files.")
-            response = "No firmware ids found."
+            response = "No firmware ids found or AECS files missing."
         else:
             job = queue.enqueue(update_or_create_aecs_job,
                                 firmware_id_list,
