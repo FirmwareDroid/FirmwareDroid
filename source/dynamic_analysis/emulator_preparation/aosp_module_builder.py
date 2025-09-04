@@ -12,7 +12,6 @@ import logging
 import traceback
 import uuid
 from context.context_creator import create_db_context, create_log_context
-from dynamic_analysis.emulator_preparation.aosp_apex_module_builder import process_apex_files
 from dynamic_analysis.emulator_preparation.aosp_apk_module_builer import create_build_files_for_apps, \
     process_android_apps
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import export_files_by_regex

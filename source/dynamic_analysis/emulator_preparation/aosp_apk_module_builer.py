@@ -2,8 +2,6 @@ import logging
 import os
 import shutil
 import re
-from fileinput import filename
-
 from mongoengine import DoesNotExist
 from string import Template
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import get_subfolders
