@@ -47,29 +47,34 @@ def generate_filter(model):
     return type(f"{model.__name__}Filter", (InputObjectType,), attrs)
 
 
-def get_filtered_queryset(model=None, object_id_list=None, query_filter=None, batch_size=1000):
+def get_filtered_queryset(model=None, object_id_list=None, query_filter=None, batch_size=1000, only_fields=None):
     """
     Get a filtered queryset (or generator of querysets) for a given model.
     Efficient for large collections by batching large object_id_list queries.
+    Loads only specified fields if only_fields is provided.
 
     :param model: document class - a subclass of mongoengine.Document
     :param object_id_list: list(str) - a list of object ids to filter by
     :param query_filter: dict - dictionary of field names/values to filter by
     :param batch_size: int - maximum number of IDs per $in query (default: 1000)
+    :param only_fields: list(str) - fields to load from MongoDB
 
     :return: QuerySet (if small set of IDs) or generator yielding QuerySets (if batched)
     """
     filter_dict = {k: v for k, v in (query_filter or {}).items() if v is not None}
 
+    def apply_only(qs):
+        return qs.only(*only_fields) if only_fields else qs
+
     if not object_id_list:
-        return model.objects(**filter_dict)
+        return apply_only(model.objects(**filter_dict))
 
     if len(object_id_list) <= batch_size:
-        return model.objects(pk__in=object_id_list, **filter_dict)
+        return apply_only(model.objects(pk__in=object_id_list, **filter_dict))
 
     def queryset_generator():
         for i in range(0, len(object_id_list), batch_size):
             batch_ids = object_id_list[i:i + batch_size]
-            yield model.objects(pk__in=batch_ids, **filter_dict)
+            yield apply_only(model.objects(pk__in=batch_ids, **filter_dict))
 
     return queryset_generator()

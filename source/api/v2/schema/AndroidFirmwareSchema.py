@@ -62,7 +62,8 @@ class AndroidFirmwareQuery(graphene.ObjectType):
 
     @superuser_required
     def resolve_android_firmware_id_list(self, info, field_filter=None):
-        queryset = get_filtered_queryset(model=AndroidFirmware, query_filter=field_filter, object_id_list=None)
+        fields = ['pk']
+        queryset = get_filtered_queryset(model=AndroidFirmware, query_filter=field_filter, object_id_list=None, only_fields=fields)
         return [document.pk for document in queryset]
 
     @superuser_required

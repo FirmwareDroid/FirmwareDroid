@@ -69,11 +69,15 @@ class AndroidAppQuery(graphene.ObjectType):
             android_app_id_list = []
             for firmware in firmware_list:
                 android_app_id_list.extend([app.pk for app in AndroidApp.objects(firmware_id_reference=firmware.pk)])
-            queryset = get_filtered_queryset(model=AndroidApp, query_filter=field_filter,
-                                             object_id_list=android_app_id_list)
+            queryset = get_filtered_queryset(model=AndroidApp,
+                                             query_filter=field_filter,
+                                             object_id_list=android_app_id_list,
+                                             only_fields=['pk'])
         else:
-            queryset = get_filtered_queryset(model=AndroidApp, query_filter=field_filter,
-                                             object_id_list=None)
+            queryset = get_filtered_queryset(model=AndroidApp,
+                                             query_filter=field_filter,
+                                             object_id_list=None,
+                                             only_fields=['pk'])
         return [document.pk for document in queryset]
 
     @superuser_required
