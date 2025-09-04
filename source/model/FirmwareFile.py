@@ -9,6 +9,12 @@ FUZZY_HASH_ATTRIBUTE_NAMES = ["ssdeep_reference", "tlsh_reference"]
 
 
 class FirmwareFile(Document):
+    meta = {
+        'indexes': ['name',
+                    'firmware_id_reference',
+                    'md5'
+                    ]
+    }
     indexed_date = DateTimeField(default=datetime.datetime.now)
     firmware_id_reference = LazyReferenceField('AndroidFirmware', reverse_delete_rule=CASCADE)
     ssdeep_reference = LazyReferenceField('SsDeepHash', reverse_delete_rule=DO_NOTHING)
