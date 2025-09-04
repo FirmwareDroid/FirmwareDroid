@@ -1,7 +1,7 @@
 import os
 import subprocess
 import logging
-from source.extractor.unblob_extractor import SKIP_EXTENSION_DEFAULT
+from extractor.unblob_extractor import SKIP_EXTENSION_DEFAULT
 
 def binwalk_extract(compressed_file_path,
                     destination_dir,

@@ -15,6 +15,10 @@ class AndroidFirmware(Document):
     meta = {
         'indexes': ['version_detected',
                     'os_vendor',
+                    "md5",
+                    "sha1",
+                    "sha256",
+                    "filename"
                     ]
     }
     indexed_date = DateTimeField(default=datetime.datetime.now)

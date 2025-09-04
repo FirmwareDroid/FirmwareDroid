@@ -11,10 +11,10 @@ from api.v2.validators.validation import (
     sanitize_and_validate, validate_object_id_list, validate_queue_name,
     sanitize_string, validate_format_name
 )
+from dynamic_analysis.emulator_preparation.aosp_module_builder import start_aosp_module_file_creator
 from dynamic_analysis.emulator_preparation.aecs import update_or_create_aecs_job
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
-from dynamic_analysis.emulator_preparation.aosp_module_builder import start_aosp_module_file_creator
 from model import AndroidFirmware
 from model.AecsJob import AecsJob
 from graphene.relay import Node
@@ -160,6 +160,7 @@ class CreateAECSBuildFilesJob(graphene.Mutation):
         object_id_chunks = create_object_id_chunks(firmware_id_list, chunk_size=5)
         job_id_list = []
         for object_id_chunk_list in object_id_chunks:
+            logging.info(f"Format Name: {format_name}, Firmware IDs: {object_id_chunk_list}, Object ID Chunks: {object_id_chunks}, skip_file_export: {skip_file_export}")
             job = queue.enqueue(start_aosp_module_file_creator,
                                 format_name,
                                 object_id_chunk_list,
