@@ -9,14 +9,7 @@ SCANNER_NAME = "AndroGuard"
 
 class AndroGuardReport(ApkScannerReport):
     meta = {
-        'indexes': ['packagename',  # '$packagename', '#packagename',
-                    # 'app_name', '$app_name', '#app_name',
-                    # 'permissions', '$permissions', '#permissions',
-                    # 'permission_details', '$permission_details', '#permission_details',
-                    # 'permissions_declared', '$permissions_declared', '#permissions_declared',
-                    # 'permissions_requested_third_party', '$permissions_requested_third_party',
-                    # '#permissions_requested_third_party',
-                    ]
+        'indexes': ['packagename']
     }
     packagename = StringField(required=True)
     app_name = StringField(required=False)

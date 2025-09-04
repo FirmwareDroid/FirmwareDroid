@@ -47,28 +47,29 @@ def generate_filter(model):
     return type(f"{model.__name__}Filter", (InputObjectType,), attrs)
 
 
-def get_filtered_queryset(model=None, object_id_list=None, query_filter=None):
+def get_filtered_queryset(model=None, object_id_list=None, query_filter=None, batch_size=1000):
     """
-    Get a filtered queryset for a given model. The queryset will be filtered by the object_id_list and the filter. The
-    object_id_list is a list of object ids. The filter is a dictionary of field names and values to filter by. The
-    queryset will be filtered by the object_id_list first, then by the filter. If the object_id_list is empty, the
-    queryset will only be filtered by the filter. If the filter is empty, the queryset will only be filtered by the
-    object_id_list.
+    Get a filtered queryset (or generator of querysets) for a given model.
+    Efficient for large collections by batching large object_id_list queries.
 
     :param model: document class - a subclass of mongoengine.Document
     :param object_id_list: list(str) - a list of object ids to filter by
-    :param query_filter: dict - a dictionary of field names and values to filter by
+    :param query_filter: dict - dictionary of field names/values to filter by
+    :param batch_size: int - maximum number of IDs per $in query (default: 1000)
 
-    :return: queryset - a queryset of the model filtered by the object_id_list and the filter
+    :return: QuerySet (if small set of IDs) or generator yielding QuerySets (if batched)
     """
-    queryset = model.objects()
-    if query_filter and object_id_list:
-        filter_dict = {key: value for key, value in query_filter.items() if value is not None}
-        queryset = queryset.filter(pk__in=object_id_list, **filter_dict)
-    elif object_id_list and not query_filter:
-        queryset = queryset.filter(pk__in=object_id_list)
-    elif query_filter and not object_id_list:
-        filter_dict = {key: value for key, value in query_filter.items() if value is not None}
-        queryset = queryset.filter(**filter_dict)
+    filter_dict = {k: v for k, v in (query_filter or {}).items() if v is not None}
 
-    return queryset
+    if not object_id_list:
+        return model.objects(**filter_dict)
+
+    if len(object_id_list) <= batch_size:
+        return model.objects(pk__in=object_id_list, **filter_dict)
+
+    def queryset_generator():
+        for i in range(0, len(object_id_list), batch_size):
+            batch_ids = object_id_list[i:i + batch_size]
+            yield model.objects(pk__in=batch_ids, **filter_dict)
+
+    return queryset_generator()
