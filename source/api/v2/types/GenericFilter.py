@@ -61,14 +61,35 @@ def get_filtered_queryset(model=None, object_id_list=None, query_filter=None):
 
     :return: queryset - a queryset of the model filtered by the object_id_list and the filter
     """
+    # Start with base queryset
     queryset = model.objects()
-    if query_filter and object_id_list:
-        filter_dict = {key: value for key, value in query_filter.items() if value is not None}
-        queryset = queryset.filter(pk__in=object_id_list, **filter_dict)
-    elif object_id_list and not query_filter:
-        queryset = queryset.filter(pk__in=object_id_list)
-    elif query_filter and not object_id_list:
-        filter_dict = {key: value for key, value in query_filter.items() if value is not None}
-        queryset = queryset.filter(**filter_dict)
-
+    
+    # Build combined filter dictionary for efficient single query
+    combined_filter = {}
+    
+    # Add query_filter parameters (excluding None values)
+    if query_filter:
+        combined_filter.update({key: value for key, value in query_filter.items() if value is not None})
+    
+    # Handle object_id_list with optimization for large lists
+    if object_id_list:
+        # Import chunking constant here to avoid circular imports
+        from api.v2.schema.RqJobsSchema import MAX_OBJECT_ID_LIST_SIZE
+        
+        # For very large object ID lists, we need to be careful about MongoDB $in performance
+        # MongoDB $in queries can become slow with very large arrays (>1000 elements)
+        if len(object_id_list) > MAX_OBJECT_ID_LIST_SIZE:
+            # Log performance warning for very large lists
+            import logging
+            logging.warning(f"Processing large object_id_list with {len(object_id_list)} items. "
+                          f"Consider using pagination or smaller chunks for better performance.")
+        
+        # Always use the object_id_list directly - MongoDB can handle large $in arrays
+        # The chunking approach was adding complexity without significant benefit
+        combined_filter['pk__in'] = object_id_list
+    
+    # Apply all filters in a single query for optimal performance
+    if combined_filter:
+        queryset = queryset.filter(**combined_filter)
+    
     return queryset
