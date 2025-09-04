@@ -72,13 +72,15 @@ class AndroidAppQuery(graphene.ObjectType):
             queryset = get_filtered_queryset(model=AndroidApp,
                                              query_filter=field_filter,
                                              object_id_list=android_app_id_list,
-                                             only_fields=['pk'])
+                                             only_fields=['pk'],
+                                             no_dereference=True)
         else:
             queryset = get_filtered_queryset(model=AndroidApp,
                                              query_filter=field_filter,
                                              object_id_list=None,
-                                             only_fields=['pk'])
-        return [document.pk for document in queryset]
+                                             only_fields=['pk'],
+                                             no_dereference=True)
+        return list(queryset)
 
     @superuser_required
     def resolve_scanner_module_name_list(self, info):
