@@ -128,6 +128,7 @@ def clear_export_folder(store_paths, firmware_id):
     if os.path.exists(firmware_file_export_path):
         logging.info(f"Deleting export folder {firmware_file_export_path}")
         shutil.rmtree(firmware_file_export_path)
+        os.makedirs(firmware_file_export_path, exist_ok=True)
 
 
 def extract_firmware(firmware_archive_file_path, temp_extract_dir):

@@ -46,11 +46,16 @@ def generate_filter(model):
 
     return type(f"{model.__name__}Filter", (InputObjectType,), attrs)
 
+def generator_to_list(generator):
+    result = []
+    for qs in generator:
+        result.extend(list(qs))
+    return result
 
 def get_filtered_queryset(model=None,
                           object_id_list=None,
                           query_filter=None,
-                          batch_size=1000,
+                          batch_size=50,
                           only_fields=None,
                           no_dereference=False):
     """
@@ -74,8 +79,8 @@ def get_filtered_queryset(model=None,
             qs = qs.only(*only_fields)
             if no_dereference:
                 qs = qs.no_dereference()
-            if len(only_fields) == 1:
-                return qs.scalar(only_fields[0])
+            #if len(only_fields) == 1:
+             #   return qs.scalar(only_fields[0])
         return qs
 
     if not object_id_list:
@@ -89,4 +94,6 @@ def get_filtered_queryset(model=None,
             batch_ids = object_id_list[i:i + batch_size]
             yield apply_optimizations(model.objects(pk__in=batch_ids, **filter_dict))
 
-    return queryset_generator()
+    generator = queryset_generator()
+    return generator_to_list(generator)
+

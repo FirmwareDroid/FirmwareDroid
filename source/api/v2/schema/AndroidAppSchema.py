@@ -45,7 +45,6 @@ class AndroidAppType(MongoengineObjectType):
         model = AndroidApp
         interfaces = (Node,)
 
-
 class AndroidAppQuery(graphene.ObjectType):
     android_app_list = graphene.List(AndroidAppType,
                                      object_id_list=graphene.List(graphene.String),
@@ -80,7 +79,8 @@ class AndroidAppQuery(graphene.ObjectType):
                                              object_id_list=None,
                                              only_fields=['pk'],
                                              no_dereference=True)
-        return list(queryset)
+
+        return [document.pk for document in queryset]
 
     @superuser_required
     def resolve_scanner_module_name_list(self, info):
