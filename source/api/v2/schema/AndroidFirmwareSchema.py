@@ -68,7 +68,7 @@ class AndroidFirmwareQuery(graphene.ObjectType):
                                          object_id_list=None,
                                          only_fields=fields,
                                          no_dereference=True)
-        return list(queryset)
+        return [document.pk for document in queryset]
 
     @superuser_required
     def resolve_android_firmware_connection(self, info, object_id_list=None, field_filter=None, **kwargs):
