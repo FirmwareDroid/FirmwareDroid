@@ -11,4 +11,5 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     path("", include("file_download.urls")),
     path("", include("file_upload.urls")),
+    path("mcp/", include("mcp_server.urls")),
 ]
