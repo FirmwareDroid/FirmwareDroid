@@ -203,6 +203,9 @@ def get_signing_key_by_uid(android_app):
             signing_key = "networkstack"
         elif shared_user_id == "android.uid.media" or shared_user_id == "android.media":
             signing_key = "media"
+        elif shared_user_id == "android.uid.bluetooth" or shared_user_id == "android.bluetooth":
+            signing_key = "bluetooth"
+
         logging.debug(f"Selected signing key: {signing_key} for app {android_app.filename} "
                       f"based on sharedUserId: {shared_user_id}")
     else:
