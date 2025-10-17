@@ -21,7 +21,7 @@ NGINX_CONFIG_PATH = "env/nginx/"
 ENV_FILE_NAME = "env"
 REPLICA_SET_SCRIPT_NAME = "mongo_replica_set_setup.sh"
 BLOB_STORAGE_NAME = "blob_storage/"
-FMD_WEB_CLIENT_ENV_FILE_NAME = "EnvConfig.js"
+FMD_WEB_CLIENT_ENV_FILE_NAME = "envconfig.ts"
 FMD_WEB_CLIENT_ENV_PATH = "firmware-droid-client/src/"
 
 
