@@ -1,4 +1,4 @@
-FROM nginx:1.29.1-alpine
+FROM nginx:1.29.3-alpine
 # Copy latest build from frontend
 COPY --from=firmwaredroid-frontend /usr/src/app/build /usr/share/nginx/html
 
