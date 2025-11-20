@@ -50,12 +50,10 @@ RUN set -eux; \
     for i in $(seq 1 5); do \
         curl -Lo /usr/local/bin/apktool.jar "https://github.com/iBotPeaches/Apktool/releases/latest/download/apktool_${APKTOOL_VERSION}.jar" && break || sleep 15; \
     done; \
-RUN if [ ! -s /usr/local/bin/apktool.jar ]; then echo "apktool.jar download failed" >&2; exit 1; fi;
 RUN set -eux; \
     for i in $(seq 1 5); do \
         curl -o /usr/local/bin/apktool https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool && break || sleep 15; \
     done; \
-RUN if [ ! -s /usr/local/bin/apktool ]; then echo "apktool wrapper download failed" >&2; exit 1; fi;
 RUN chmod a+x /usr/local/bin/apktool.jar && chmod a+x /usr/local/bin/apktool
 RUN apktool v
 
@@ -71,7 +69,6 @@ RUN set -eux; \
     done; \
 RUN unzip jadx.zip -d /tmp/jadx-temp/
 RUN mv /tmp/jadx-temp/* /opt/jadx/
-RUN if [ ! -f /opt/jadx/bin/jadx ]; then echo "/opt/jadx/bin/jadx not found" >&2; exit 1; fi
 ENV JADX="/opt/jadx/bin"
 ENV PATH="${JADX}:${PATH}"
 RUN export PATH=$PATH
@@ -165,6 +162,6 @@ RUN chown -R www:www /opt/firmwaredroid/python/
 
 USER www
 ENV PATH="$PATH:/home/www/.local/bin/"
-ENV PYTHONPATH="/var/www/source/:$PYTHONPATH"
+ENV PYTHONPATH="/var/www/source:${PYTHONPATH}"
 WORKDIR /var/www/source/
 RUN python3 /var/www/docker/setup_apk_scanner.py
