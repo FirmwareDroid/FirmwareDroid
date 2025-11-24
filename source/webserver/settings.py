@@ -45,6 +45,9 @@ ALLOWED_HOSTS = [DOMAIN_NAME,
                  "localhost",
                  "fmd.localhost",
                  "fmd.localhost:4443"]
+CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = "Strict"
 CSRF_TRUSTED_ORIGINS = [HTTPS_DOMAIN_NAME]
 CORS_ALLOWED_ORIGINS = [HTTPS_DOMAIN_NAME,
                         "https://fmd.localhost",
@@ -103,8 +106,12 @@ CORS_ALLOW_CREDENTIALS = True
 
 GRAPHQL_JWT = {
     'JWT_COOKIE_NAME': 'jwt-session',
-    'JWT_COOKIE_SECURE': False,
-    'JWT_COOKIE_SAMESITE': "Lax"
+    'JWT_COOKIE_SECURE': True,
+    'JWT_COOKIE_SAMESITE': "Strict",
+    "JWT_COOKIE_PATH": "/",
+    "JWT_COOKIE_DOMAIN": os.getenv("DOMAIN_NAME", None),
+    "JWT_CSRF_ROTATION": True,
+    "JWT_HIDE_TOKEN_FIELDS": True,
 }
 
 # Folder Config

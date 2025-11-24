@@ -1,4 +1,4 @@
-FROM openjdk:23-jdk-slim-bookworm AS apk_scanner-worker
+FROM eclipse-temurin:23 AS apk_scanner-worker
 COPY --from=firmwaredroid-base / /
 
 #####################################
@@ -46,7 +46,7 @@ ENV PATH=$ANDROID_SDK_ROOT/build-tools/35.0.0/:$PATH
 # Installing apktool                #
 #####################################
 RUN set -eux; \
-    APKTOOL_VERSION="2.12.0"; \
+    APKTOOL_VERSION="2.12.1"; \
     for i in $(seq 1 5); do \
         curl -Lo /usr/local/bin/apktool.jar "https://github.com/iBotPeaches/Apktool/releases/latest/download/apktool_${APKTOOL_VERSION}.jar" && break || sleep 15; \
     done;
@@ -63,9 +63,9 @@ RUN apktool v
 RUN mkdir -p /tmp/jadx-temp/jadx/ && mkdir -p /opt/jadx/bin
 WORKDIR /tmp/jadx-temp/
 RUN set -eux; \
-    JADX_VERSION="1.5.2"; \
+    JADX_VERSION="1.5.3"; \
     for i in $(seq 1 5); do \
-        curl -Lo jadx.zip "https://github.com/skylot/jadx/releases/latest/download/jadx-${JADX_VERSION}.zip" && break || sleep 15; \
+        curl -Lo jadx.zip "https://github.com/skylot/jadx/releases/download/v1.5.3/jadx-${JADX_VERSION}.zip" && break || sleep 15; \
     done;
 RUN unzip jadx.zip -d /tmp/jadx-temp/
 RUN mv /tmp/jadx-temp/* /opt/jadx/
@@ -162,6 +162,6 @@ RUN chown -R www:www /opt/firmwaredroid/python/
 
 USER www
 ENV PATH="$PATH:/home/www/.local/bin/"
-ENV PYTHONPATH="/var/www/source/:$PYTHONPATH"
+ENV PYTHONPATH="/var/www/source:${PYTHONPATH}"
 WORKDIR /var/www/source/
 RUN python3 /var/www/docker/setup_apk_scanner.py
