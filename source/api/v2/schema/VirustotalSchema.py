@@ -5,15 +5,15 @@ import django_rq
 import graphene
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
-
 from api.v2.schema.AndroidAppSchema import import_module_function
 from api.v2.schema.RqJobsSchema import MAX_OBJECT_ID_LIST_SIZE, ONE_WEEK_TIMEOUT
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
 from api.v2.validators.validation import (
     sanitize_and_validate, sanitize_api_key, validate_api_key,
-    validate_object_id_list, validate_queue_name
+    validate_object_id_list, validate_queue_name, validate_queue_extractor_task
 )
 from model.VirusTotalReport import VirusTotalReport
+from webserver.settings import RQ_QUEUES
 
 ModelFilter = generate_filter(VirusTotalReport)
 
@@ -38,7 +38,7 @@ class CreateVirusTotalScanJob(graphene.Mutation):
     job_id_list = graphene.List(graphene.String)
 
     class Arguments:
-        queue_name = graphene.String(required=True, default_value="default-python")
+        queue_name = graphene.String(required=True, default_value=list(RQ_QUEUES.keys())[1])
         vt_api_key = graphene.String(required=True)
         object_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
 

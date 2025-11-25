@@ -88,11 +88,11 @@ services:
     networks:
       - backend
 
-  extractor-worker-high-1:
+  extractor-worker-1:
     platform: "linux/amd64"
     user: www
     image: ghcr.io/firmwaredroid/firmwaredroid-extractor:latest
-    container_name: extractor-worker-high-1
+    container_name: extractor-worker-1
     restart: unless-stopped
     depends_on:
       - redis
@@ -110,7 +110,7 @@ services:
       - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
     env_file:
       - ./.env
-    command: rqworker --logging_level INFO --name extractor-worker-high-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
+    command: rqworker --logging_level INFO --name extractor-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 extractor
     privileged: true
     networks:
       - backend
@@ -140,7 +140,7 @@ services:
     cpus: ${DOCKER_CPU_LIMIT}
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    command: rqworker --logging_level INFO --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 default-python
+    command: rqworker --logging_level INFO --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 scanner
     networks:
       - backend
 

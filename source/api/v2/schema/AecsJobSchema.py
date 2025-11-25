@@ -9,7 +9,7 @@ from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
 from api.v2.validators.chunking import create_object_id_chunks
 from api.v2.validators.validation import (
     sanitize_and_validate, validate_object_id_list, validate_queue_name,
-    sanitize_string, validate_format_name
+    sanitize_string, validate_format_name, validate_queue_extractor_task
 )
 from dynamic_analysis.emulator_preparation.aosp_module_builder import start_aosp_module_file_creator
 from dynamic_analysis.emulator_preparation.aecs import update_or_create_aecs_job
@@ -18,7 +18,7 @@ from graphql_jwt.decorators import superuser_required
 from model import AndroidFirmware
 from model.AecsJob import AecsJob
 from graphene.relay import Node
-
+from webserver.settings import RQ_QUEUES
 
 ModelFilter = generate_filter(AecsJob)
 
@@ -53,7 +53,7 @@ class UpdateOrCreateAECSJob(graphene.Mutation):
 
     class Arguments:
         firmware_id_list = graphene.List(graphene.String)
-        queue_name = graphene.String(required=False, default_value="default-python")
+        queue_name = graphene.String(required=False, default_value=list(RQ_QUEUES.keys())[1])
         aces_job_id = graphene.String(required=False)
         arch = graphene.String(required=False)
 
@@ -78,7 +78,16 @@ class UpdateOrCreateAECSJob(graphene.Mutation):
 
     @classmethod
     @superuser_required
-    def mutate(cls, root, info, firmware_id_list, queue_name="default-python", aces_job_id=None, arch=None):
+    @sanitize_and_validate(
+        validators={
+            'queue_name': validate_queue_name,
+            'firmware_id_list': validate_object_id_list,
+        },
+        sanitizers={
+            'queue_name': sanitize_string,
+        }
+    )
+    def mutate(cls, root, info, firmware_id_list, queue_name=list(RQ_QUEUES.keys())[1], aces_job_id=None, arch=None):
         queue = django_rq.get_queue(queue_name)
         firmware_id_list = cls.get_firmware_list(firmware_id_list)
         if len(firmware_id_list) == 0:
@@ -140,7 +149,7 @@ class CreateAECSBuildFilesJob(graphene.Mutation):
         """
         format_name = graphene.String(required=True)
         firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=False)
-        queue_name = graphene.String(required=True, default_value="high-python")
+        queue_name = graphene.String(required=True, default_value=list(RQ_QUEUES.keys())[0])
         skip_file_export = graphene.Boolean(required=False, default_value=False)
 
     @classmethod
@@ -149,13 +158,13 @@ class CreateAECSBuildFilesJob(graphene.Mutation):
         validators={
             'format_name': validate_format_name,
             'firmware_id_list': validate_object_id_list,
-            'queue_name': validate_queue_name
+            'queue_name': [validate_queue_name, validate_queue_extractor_task],
         },
         sanitizers={
             'format_name': sanitize_string
         }
     )
-    def mutate(cls, root, info, format_name, firmware_id_list, queue_name="high-python", skip_file_export=False):
+    def mutate(cls, root, info, format_name, firmware_id_list, queue_name=list(RQ_QUEUES.keys())[0], skip_file_export=False):
         queue = django_rq.get_queue(queue_name)
         object_id_chunks = create_object_id_chunks(firmware_id_list, chunk_size=5)
         job_id_list = []

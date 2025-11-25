@@ -5,33 +5,55 @@ from bson import ObjectId
 from functools import wraps
 
 
-def sanitize_and_validate(validators, sanitizers):
+def sanitize_and_validate(validators=None, sanitizers=None):
+    """
+    Decorator that sanitizes and validates function arguments.
+
+    Args:
+        validators: Dict mapping argument names to validator functions (or lists of validators)
+        sanitizers: Dict mapping argument names to sanitizer functions
+
+    Validator functions should raise ValueError on validation failure.
+    Sanitizer functions should return the sanitized value.
+    """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # Sanitize arguments
-            for arg, sanitizer in sanitizers.items():
-                if arg in kwargs:
-                    kwargs[arg] = sanitizer(kwargs[arg])
+            errors = []
 
-            # Get function signature for default values
-            sig = inspect.signature(func)
-            missing_validations = []
-            for arg, validator in validators.items():
-                if arg in kwargs:
-                    try:
-                        validator(kwargs[arg])
-                    except ValueError as e:
-                        raise ValueError(f"Validation failed for {arg}: {e}")
+            # Sanitize arguments first
+            for field, sanitizer in (sanitizers or {}).items():
+                if field in kwargs:
+                    kwargs[field] = sanitizer(kwargs[field])
+
+            # Validate arguments (supports single validator or list of validators)
+            for field, validator_list in (validators or {}).items():
+                if field in kwargs:
+                    value = kwargs[field]
+                    # Support single validator or list of validators
+                    validators_to_run = validator_list if isinstance(validator_list, list) else [validator_list]
+                    for validator in validators_to_run:
+                        try:
+                            # Chain validators - each gets output of previous
+                            value = validator(value)
+                            kwargs[field] = value
+                        except ValueError as e:
+                            errors.append(f"Validation failed for {field}: {str(e)}")
                 else:
-                    # Only require validation if no default or default is not None
-                    param = sig.parameters.get(arg)
-                    if param is None or param.default is inspect.Parameter.empty or param.default is not None:
-                        missing_validations.append(arg)
-            if missing_validations:
-                raise ValueError(f"Missing validations for: {', '.join(missing_validations)}")
+                    # Check if field is required (no default or default is not None)
+                    sig = inspect.signature(func)
+                    param = sig.parameters.get(field)
+                    if param and (param.default is inspect.Parameter.empty or param.default is not None):
+                        errors.append(f"Missing required field: {field}")
+
+            if errors:
+                raise ValueError("; ".join(errors))
+
             return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -88,6 +110,13 @@ def validate_queue_name(queue_name):
     if queue_name not in RQ_QUEUES.keys():
         raise ValueError(f"Invalid queue name: {queue_name}. Must be one of {list(RQ_QUEUES.keys())}")
     return queue_name
+
+
+def validate_queue_extractor_task(queue_name):
+    if "extractor" not in queue_name:
+        raise ValueError(f"Invalid queue name for extractor task: {queue_name}. Must contain 'extractor'")
+    return queue_name
+
 
 
 def validate_email(email):
@@ -198,3 +227,12 @@ def sanitize_api_key(api_key):
     return api_key
 
 
+def validate_importer_threads(value):
+    """Validate number of importer threads (1-30)."""
+    if not isinstance(value, int):
+        raise ValueError("Number of threads must be an integer")
+    if value < 1:
+        raise ValueError("Number of threads must be at least 1")
+    if value > 30:
+        raise ValueError("Number of threads cannot exceed 30")
+    return value

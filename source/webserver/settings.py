@@ -312,8 +312,7 @@ REDIS_HOST = "redis"  # "localhost" if DEBUG else "redis"
 
 # RQ Config
 RQ_QUEUES = {
-
-    'high-python': {
+    'extractor': {
         'HOST': REDIS_HOST,
         'PORT': 6379,
         'DB': 0,
@@ -321,7 +320,7 @@ RQ_QUEUES = {
         'DEFAULT_TIMEOUT': 60 * 60 * 24 * 14,
         'DEFAULT_RESULT_TTL': 60 * 60 * 24 * 3,
     },
-    'default-python': {
+    'scanner': {
         'HOST': REDIS_HOST,
         'PORT': 6379,
         'DB': 0,
