@@ -61,10 +61,10 @@ def process_android_app(android_app):
             raise ValueError(f"Could not scan {android_app.id}:{android_app.filename}")
 
         results = json_file_to_dict(json_report_path)
-        store_result(android_app, results)
+        return results
 
 
-def store_result(android_app, results):
+def store_result(android_app, results, scan_status):
     """
     Store the results of the analysis in the database.
 
@@ -77,6 +77,7 @@ def store_result(android_app, results):
     analysis_report = APKscanReport(android_app_id_reference=android_app.id,
                                     scanner_version=version,
                                     scanner_name="APKscan",
+                                    scan_status=scan_status,
                                     results=results)
     analysis_report.save()
     android_app.apkscan_report_reference = analysis_report.id
@@ -93,12 +94,27 @@ def apkscan_worker_multiprocessing(android_app_id):
     :param android_app_id: object-id's of class:'AndroidApp'.
 
     """
+    android_app = None
+    original_cwd = os.getcwd()
+
     try:
         android_app = AndroidApp.objects.get(pk=android_app_id)
-        process_android_app(android_app)
+
+        with tempfile.TemporaryDirectory() as temp_work_dir:
+            os.chdir(temp_work_dir)
+            logging.info(f"Changed working directory to: {temp_work_dir}")
+
+            results = process_android_app(android_app)
+            store_result(android_app, results, scan_status="completed")
+
     except Exception as err:
+        if android_app:
+            store_result(android_app, results={}, scan_status="failed")
         logging.error(f"Error processing {android_app_id}: {err}")
         raise err
+    finally:
+        os.chdir(original_cwd)
+        logging.info(f"Restored working directory to: {original_cwd}")
 
 
 class APKScanScanJob(ScanJob):

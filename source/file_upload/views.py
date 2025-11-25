@@ -14,7 +14,8 @@ from rest_framework.permissions import IsAuthenticated
 from model.StoreSetting import get_active_store_by_index
 from django.conf import settings
 
-ALLOWED_EXTENSIONS = [".zip", ".tar", ".gz", ".bz2", ".md5", ".lz4", ".tgz", ".rar", ".7z", ".lzma", ".xz", ".ozip", ".apk"]
+ALLOWED_EXTENSIONS = [".zip", ".tar", ".gz", ".bz2", ".md5", ".lz4", ".tgz", ".rar", ".7z", ".lzma", ".xz", ".ozip",
+                      ".apk"]
 ALLOWED_TYPES = ["firmware", "apk"]
 MAX_FILE_SIZE = 1024 * 1024 * 1024 * 10 # 10GB
 

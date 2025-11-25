@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import logging
+from datetime import timedelta
+
 import environ
 import os
 from pathlib import Path
@@ -49,6 +51,8 @@ CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = "Strict"
 CSRF_TRUSTED_ORIGINS = [HTTPS_DOMAIN_NAME]
+CSRF_COOKIE_AGE = 86400
+
 CORS_ALLOWED_ORIGINS = [HTTPS_DOMAIN_NAME,
                         "https://fmd.localhost",
                         "https://localhost",
@@ -104,14 +108,23 @@ for cors_host in CORS_ADDITIONAL_HOST_LIST:
 
 CORS_ALLOW_CREDENTIALS = True
 
+
+SESSION_COOKIE_NAME = "sessionid"
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = "Strict"
+SESSION_COOKIE_AGE = 86400
+
 GRAPHQL_JWT = {
-    'JWT_COOKIE_NAME': 'jwt-session',
+    'JWT_COOKIE_NAME': 'jwt_session',
     'JWT_COOKIE_SECURE': True,
     'JWT_COOKIE_SAMESITE': "Strict",
     "JWT_COOKIE_PATH": "/",
-    "JWT_COOKIE_DOMAIN": os.getenv("DOMAIN_NAME", None),
+    #"JWT_COOKIE_DOMAIN": os.getenv("DOMAIN_NAME", None),
     "JWT_CSRF_ROTATION": True,
     "JWT_HIDE_TOKEN_FIELDS": True,
+    'JWT_EXPIRATION_DELTA': timedelta(days=1),
+    'JWT_REFRESH_EXPIRATION_DELTA': timedelta(days=7),
 }
 
 # Folder Config
@@ -321,7 +334,7 @@ RQ_QUEUES = {
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'webserver.authentication.GraphQLJWTAuthentication',
+        'webserver.authentication.JWTCookieAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',

@@ -22,8 +22,9 @@ def exodus_worker_multiprocessing(android_app_id):
     logging.info(f"Exodus scans: {android_app.id}")
     try:
         exodus_json_report = get_exodus_analysis(android_app.absolute_store_path)
-        create_report(android_app, exodus_json_report)
+        store_result(android_app, results=exodus_json_report, scan_status="completed")
     except Exception as err:
+        store_result(android_app, results={}, scan_status="failed")
         logging.error(f"Exodus could not scan app {android_app.filename} id: {android_app.id} - "
                       f"error: {err}")
 
@@ -64,12 +65,13 @@ def get_exodus_analysis(apk_file_path):
     return analysis.create_json_report()
 
 
-def create_report(android_app, exodus_results):
+def store_result(android_app, results, scan_status):
     """
     Create a exodus report in the database.
 
     :param android_app: class:'AndroidApp'
-    :param exodus_results: dict - results of the exodus scan.
+    :param results: dict - results of the exodus scan.
+    :param scan_status: str - status of the scan.
 
     """
     from exodus_core import __version__
@@ -77,7 +79,8 @@ def create_report(android_app, exodus_results):
         android_app_id_reference=android_app.id,
         scanner_version=__version__,
         scanner_name="Exodus",
-        results=exodus_results
+        results=results,
+        scan_status=scan_status
     ).save()
     android_app.exodus_report_reference = exodus_report.id
     android_app.save()

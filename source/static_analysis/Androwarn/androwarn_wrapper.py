@@ -46,40 +46,35 @@ def androwarn_worker_multiprocessing(android_app_id):
             dump_analysis_results(data, sys.stdout)
         generate_report(package_name, data, verbose, report_type, output.name)
         report_file_path = output.name + "." + report_type
-        create_androwarn_report(report_file_path, android_app)
+        results = parse_json_report(report_file_path)
+        store_result(android_app, results=results, scan_status="completed")
     except Exception as err:
+        store_result(android_app, results={}, scan_status="failed")
         logging.error(f"Androwarn could not scan app {android_app.filename} id: {android_app.id} - "
                       f"error: {str(err)}")
 
 
-def create_androwarn_report(report_file_path, android_app):
+def store_result(android_app, results, scan_status):
     """
     Create an androwarn report object class:'AndrowarnReport'.
 
-    :param report_file_path: str file path to Androwarn report json file.
-    :param android_app: class:'AndroidApp'
+    :param android_app: str - Android app object
+    :param results: str - androwarn report file path
+    :param scan_status: str - scan status
+
     :return class:'AndrowarnReport'
 
     """
     from androwarn import androwarn
-    analysis_result = parse_json_report(report_file_path)
-    with open(report_file_path, 'rb') as report_file:
-        androwarn_report = AndrowarnReport(report_file_json=report_file,
-                                           scanner_version=androwarn.VERSION,
-                                           scanner_name="Androwarn",
-                                           android_app_id_reference=android_app.id,
-                                           telephony_identifiers_leakage=analysis_result[0][1],
-                                           device_settings_harvesting=analysis_result[1][1],
-                                           location_lookup=analysis_result[2][1],
-                                           connection_interfaces_exfiltration=analysis_result[3][1],
-                                           telephony_services_abuse=analysis_result[4][1],
-                                           audio_video_eavesdropping=analysis_result[5][1],
-                                           suspicious_connection_establishment=analysis_result[6][1],
-                                           PIM_data_leakage=analysis_result[7][1],
-                                           code_execution=analysis_result[8][1])
-        androwarn_report.save()
-        android_app.androwarn_report_reference = androwarn_report.id
-        android_app.save()
+    androwarn_report = AndrowarnReport(scanner_version=androwarn.VERSION,
+                                       scanner_name="Androwarn",
+                                       android_app_id_reference=android_app.id,
+                                       results=results,
+                                       scan_status=scan_status,
+                                       )
+    androwarn_report.save()
+    android_app.androwarn_report_reference = androwarn_report.id
+    android_app.save()
 
 
 def parse_json_report(report_file_path):

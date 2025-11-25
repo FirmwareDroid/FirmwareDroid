@@ -20,12 +20,22 @@ def qark_worker_multiprocessing(android_app_id):
     :param android_app_id: str: the id of the app to be scanned.
 
     """
+    android_app = None
     try:
         android_app = AndroidApp.objects.get(pk=android_app_id)
         logging.info(f"Qark scans: {android_app.filename} {android_app.id} ")
         report_path = start_qark_app_analysis(android_app)
-        create_qark_report(report_path, android_app)
+        logging.info("Create qark report for " + report_path)
+        with open(report_path, 'rb') as report_file:
+            json_text = json.load(report_file)
+            store_results(android_app,
+                          results=json_text,
+                          scan_status="completed",
+                          report_file=report_file,
+                          report_file_path=report_path)
     except Exception as err:
+        if android_app:
+            store_results(android_app, results={}, scan_status="completed", report_file=None, report_file_path=None)
         logging.error(f"Could not analyze app {android_app_id} with qark: {err}")
 
 
@@ -63,20 +73,20 @@ def start_qark_app_analysis(android_app):
     return report_path
 
 
-def create_qark_report(report_file_path, android_app):
+def store_results(android_app, results, scan_status, report_file, report_file_path):
     """
     Creates a qark report db object (class:'QarkReport')
     :param report_file_path: the path to the json file to be stored in the database.
     :param android_app: class:'AndroidApp'.
     """
-    logging.info("Create qark report for " + report_file_path)
-    with open(report_file_path, 'rb') as report_file:
-        qark_report = QarkReport(report_file_json=report_file,
-                                 android_app_id_reference=android_app.id,
-                                 scanner_name="Qark",
-                                 scanner_version="4.0.0")
-        create_qark_issue_list(qark_report, report_file_path, android_app)
-        qark_report.save()
+    qark_report = QarkReport(report_file_json=report_file,
+                             results=results,
+                             scan_status=scan_status,
+                             android_app_id_reference=android_app.id,
+                             scanner_name="Qark",
+                             scanner_version="4.0.0")
+    create_qark_issue_list(qark_report, report_file_path, android_app)
+    qark_report.save()
     android_app.qark_report_reference = qark_report.id
     android_app.save()
     return qark_report

@@ -1,2 +1,2 @@
-apkleaks==2.6.1
+apkleaks==2.6.3
 requests~=2.26.0

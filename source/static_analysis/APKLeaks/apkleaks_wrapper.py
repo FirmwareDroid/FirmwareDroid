@@ -21,13 +21,16 @@ def apkleaks_worker_multiprocessing(android_app_id):
     :param android_app_id: str - id of the AndroidApp to be scanned.
 
     """
+    android_app = None
     try:
         android_app = AndroidApp.objects.get(pk=android_app_id)
         logging.info(f"APKLeaks scans: {android_app.filename} {android_app.id} ")
         tempdir = tempfile.TemporaryDirectory()
         json_results = get_apkleaks_analysis(android_app.absolute_store_path, tempdir.name)
-        create_report(android_app, json_results)
+        store_result(android_app, results=json_results, scan_status="completed")
     except Exception as err:
+        if android_app:
+            store_result(android_app, results={}, scan_status="failed")
         traceback.print_exc()
         logging.error(f"APKleaks could not scan app id: {android_app_id} - "
                       f"error: {err}")
@@ -67,19 +70,21 @@ def get_apkleaks_analysis(apk_file_path, result_folder_path):
     return json_result
 
 
-def create_report(android_app, json_results):
+def store_result(android_app, results, scan_status):
     """
     Create a class:'ApkleaksReport' and save the scan results in the database.
 
     :param android_app: class:'AndroidApp' - app that was scanned.
-    :param json_results: str - scanning results in json format.
+    :param results: str - scanning results in json format.
+    :param scan_status: str - status of the scan.
 
     """
     version = pkg_resources.get_distribution("apkleaks").version
     apkleaks_report = ApkleaksReport(android_app_id_reference=android_app.id,
-                                     scanner_version=version, #"2.6.1",
+                                     scanner_version=version,
                                      scanner_name="APKLeaks",
-                                     results=json_results).save()
+                                     scan_status=scan_status,
+                                     results=results).save()
     android_app.apkleaks_report_reference = apkleaks_report.id
     android_app.save()
 

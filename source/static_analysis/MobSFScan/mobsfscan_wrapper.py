@@ -11,19 +11,21 @@ from model.StoreSetting import get_active_store_by_index
 from processing.standalone_python_worker import start_python_interpreter
 
 
-def save_result(android_app, json_report):
+def store_result(android_app, results, scan_status):
     """
     Stores the results of the mobsfscan in the database.
 
     :param android_app: object of class:'AndroidApp'
-    :param json_report: str - json report of the mobsfscan.
+    :param results: str - json report of the mobsfscan.
+    :param scan_status: str - status of the scan ('completed' or 'failed').
 
     """
     mobsfscan_version = pkg_resources.get_distribution("mobsfscan").version
     report = MobSFScanReport(android_app_id_reference=android_app.id,
                              scanner_version=mobsfscan_version,
                              scanner_name="MobSFScan",
-                             results=json_report)
+                             scan_status=scan_status,
+                             results=results)
     report.save()
     android_app.mobsfscan_report_reference = report.id
     android_app.save()
@@ -45,10 +47,14 @@ def process_android_app(android_app):
         if not is_success:
             raise RuntimeError("Could not extract apk file with jadx.")
         logging.info(f"Now scanning: {android_app.filename} {android_app.id} with mobsfscan.")
-        scanner = MobSFScan([temp_dir], json=True)
-        json_report = scanner.scan()
-        save_result(android_app, json_report)
-        logging.info(f"MobSFScan finished: {android_app.filename} {android_app.id}")
+        try:
+            scanner = MobSFScan([temp_dir], json=True)
+            json_report = scanner.scan()
+            store_result(android_app, results=json_report, scan_status="completed")
+            logging.info(f"MobSFScan finished: {android_app.filename} {android_app.id}")
+        except Exception as err:
+            store_result(android_app, results={}, scan_status="failed")
+            logging.error(f"MobSFScan failed: {android_app.filename} {android_app.id} Error: {err}")
 
 
 @create_log_context

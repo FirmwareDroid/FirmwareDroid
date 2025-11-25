@@ -44,7 +44,7 @@ services:
     volumes:
       - ./env/nginx:/etc/nginx/conf.d
       - ./env/nginx/live/:/etc/letsencrypt/live/
-      #- ./firmware-droid-client/build:/usr/share/nginx/html # Dev-Route
+      - ./firmware-droid-client/build:/usr/share/nginx/html # Dev-Route
       - ./source/static:/usr/share/nginx/django_static
     ports:
       - "80:80"

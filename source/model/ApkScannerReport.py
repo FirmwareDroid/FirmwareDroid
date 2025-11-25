@@ -12,3 +12,4 @@ class ApkScannerReport(Document):
     android_app_id_reference = LazyReferenceField(AndroidApp, reverse_delete_rule=CASCADE, required=True)
     scanner_version = StringField(required=True)
     scanner_name = StringField(required=True)
+    scan_status = StringField(required=True, default="completed")

@@ -15,8 +15,17 @@ from processing.standalone_python_worker import start_python_interpreter
 def process_android_app(android_app):
     apk_path = android_app.absolute_store_path
     with tempfile.NamedTemporaryFile(suffix=".json") as temp_file:
-        start_trueseeing_analysis(apk_path, temp_file.name)
-        store_result(android_app, temp_file.name)
+        try:
+            start_trueseeing_analysis(apk_path, temp_file.name)
+            with open(temp_file.name, 'r') as json_report:
+                data = json_report.read()
+                logging.info(f"Data: {data}")
+                results = json.loads(data)
+            store_result(android_app, results, scan_status="completed")
+        except Exception as e:
+            store_result(android_app, results={}, scan_status="failed")
+            logging.error(f"Error processing {apk_path}: {e}")
+            traceback.print_exc()
 
 
 def start_trueseeing_analysis(apk_path, report_file_path):
@@ -56,24 +65,22 @@ def start_trueseeing_analysis(apk_path, report_file_path):
         raise FileNotFoundError(f"Report file is empty: {report_file_path}")
 
 
-def store_result(android_app, json_report_path):
+def store_result(android_app, results, scan_status):
     """
     Store the results of the analysis in the database.
 
-    :param android_app: rclass:'AndroidApp' object.
-    :param json_report_path: path to the report file.
+    :param android_app: class:'AndroidApp' object.
+    :param results: dict - results of the analysis.
+    :param scan_status: str - status of the scan ('completed' or 'failed').
 
     :return: class:'YourAnalyzerReport' object.
     """
     import trueseeing
-    with open(json_report_path, 'r') as json_report:
-        data = json_report.read()
-        logging.info(f"Data: {data}")
-        results = json.loads(data)
-        analysis_report = TrueseeingReport(android_app_id_reference=android_app.id,
-                                           scanner_version=trueseeing.__version__,
-                                           scanner_name="Trueseeing",
-                                           results=results)
+    analysis_report = TrueseeingReport(android_app_id_reference=android_app.id,
+                                       scanner_version=trueseeing.__version__,
+                                       scanner_name="Trueseeing",
+                                       scan_status=scan_status,
+                                       results=results)
     analysis_report.save()
     android_app.trueseeing_report_reference = analysis_report.id
     android_app.save()

@@ -23,18 +23,23 @@ def process_android_app(android_app, flowdroid_cmd_arg_list, rule_filename=DEFAU
 
     with tempfile.NamedTemporaryFile(suffix=".xml", delete=True) as temp_file:
         xml_file_path = temp_file.name
-        start_flowdroid_analysis(apk_path,
-                                 rules_file_path,
-                                 xml_file_path,
-                                 flowdroid_cmd_arg_list)
-        with open(xml_file_path, "r") as file:
-            lines = file.readlines()
-            xml_data = ''.join(lines)
-            if not xml_data == "":
-                data_dict = xmltodict.parse(xml_data)
-            else:
-                data_dict = {"NoMatch": "No taints matched!"}
-        store_result(android_app, data_dict)
+        try:
+            start_flowdroid_analysis(apk_path,
+                                     rules_file_path,
+                                     xml_file_path,
+                                     flowdroid_cmd_arg_list)
+            with open(xml_file_path, "r") as file:
+                lines = file.readlines()
+                xml_data = ''.join(lines)
+                if not xml_data == "":
+                    data_dict = xmltodict.parse(xml_data)
+                else:
+                    data_dict = {"NoMatch": "No taints matched!"}
+            store_result(android_app, results=data_dict, scan_status="completed")
+        except Exception as err:
+            store_result(android_app, results={}, scan_status="failed")
+            logging.error(f"FlowDroid analysis failed for app id {android_app.id}: {str(err)}")
+
 
 
 def check_android_platform_sdk_exists(android_api_version):
@@ -146,19 +151,21 @@ def start_flowdroid_analysis(apk_path,
         raise RuntimeError(e.stderr.strip())
 
 
-def store_result(android_app, result_dict):
+def store_result(android_app, results, scan_status):
     """
     Store the results of the analysis in the database.
 
     :param android_app: class:'AndroidApp' object.
-    :param result_dict: dict - result of the analysis.
+    :param results: dict - result of the analysis.
+    :param scan_status: str - status of the scan.
 
     :return: class:'FlowDroid' object.
     """
     analysis_report = FlowDroidReport(android_app_id_reference=android_app.id,
                                       scanner_version="2.13.0",
                                       scanner_name="FlowDroid",
-                                      results=result_dict)
+                                      scan_status=scan_status,
+                                      results=results)
     analysis_report.save()
     android_app.flowdroid_report_reference = analysis_report.id
     android_app.save()
@@ -180,8 +187,11 @@ def flowdroid_worker_multiprocessing(android_app_id,
     :param android_app_id: str - object-id of class:'AndroidApp'.
 
     """
-    logging.info(
-        f"Flowdroid worker started {android_app_id}|{android_api_version}|{flowdroid_cmd_arg_list}|{rule_filename}")
+    logging.info(f"Flowdroid worker started "
+                 f"{android_app_id}"
+                 f"|{android_api_version}"
+                 f"|{flowdroid_cmd_arg_list}"
+                 f"|{rule_filename}")
     android_api_version = int(android_api_version)
     if flowdroid_cmd_arg_list is None:
         flowdroid_cmd_arg_list = []

@@ -39,9 +39,10 @@ def quark_engine_worker_multiprocessing(android_app_id):
                 raise TimeoutError(f"Quark-Engine scan for {android_app.filename} terminated due to timeout.")
             scan_results_vulns = get_vulnerability_quark_engine_scan(android_app.absolute_store_path, rule_dir_path)
             scan_results_vulns = {k: v for k, v in scan_results_vulns.items() if v}
-            scan_results = {"malware": scan_results_malware, "vulnerabilities": scan_results_vulns}
-            create_quark_engine_report(android_app, scan_results)
+            results = {"malware": scan_results_malware, "vulnerabilities": scan_results_vulns}
+            store_results(android_app, results, scan_status="completed")
         else:
+            store_results(android_app, {}, scan_status="failed")
             logging.error(f"Skipping: Android apk is over maximal file size for quark-engine. "
                           f"{android_app.filename} {android_app.id}")
     except Exception as err:
@@ -146,9 +147,10 @@ def remove_logs():
             os.remove(os.path.join(directory_path, filename))
 
 
-def create_quark_engine_report(android_app, scan_results):
+def store_results(android_app, scan_results, scan_status):
     """
     Create a quark engine report in the database.
+    :param scan_status: str - status of the scan.
     :param android_app: class:'AndroidApp'
     :param scan_results: dict - results of the quark-engine scan.
     """
@@ -157,6 +159,7 @@ def create_quark_engine_report(android_app, scan_results):
         android_app_id_reference=android_app.id,
         scanner_version=__version__,
         scanner_name="QuarkEngine",
+        scan_status=scan_status,
         results=scan_results
     ).save()
     android_app.quark_engine_report_reference = report.id

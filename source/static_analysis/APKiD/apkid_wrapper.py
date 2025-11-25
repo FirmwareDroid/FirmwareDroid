@@ -21,6 +21,7 @@ def process_android_app(android_app_id):
 
     """
     from apkid.apkid import Options, Scanner
+    android_app = None
     try:
         android_app = AndroidApp.objects.get(pk=android_app_id)
         logging.info(f"APKid scans app: {android_app.filename} id: {android_app.id}")
@@ -44,23 +45,19 @@ def process_android_app(android_app_id):
             scanner = Scanner(rules, options)
             scanner.scan(android_app.absolute_store_path)
 
-            is_report_saved = False
-            for dirpath, dirnames, filenames in os.walk(output_dir):
-                for filename in filenames:
-                    if filename == android_app.filename:
-                        report_file_path = os.path.join(dirpath, filename)
-                        if os.path.exists(report_file_path):
-                            store_apkid_result(android_app, report_file_path)
-                            is_report_saved = True
-                            break
-                        else:
-                            raise FileNotFoundError(f"APKid ERROR: Could not find report: "
-                                                    f"{android_app.filename} id: {android_app.id}")
+            report_file_path = os.path.join(output_dir, android_app.filename)
+            if not os.path.exists(report_file_path):
+                raise FileNotFoundError(
+                    f"APKid ERROR: Could not find report: {android_app.filename} id: {android_app.id}"
+                )
 
-            if not is_report_saved:
-                raise ValueError(f"APKid ERROR: Could not save report: {android_app.filename} id: {android_app.id}")
+            with open(report_file_path, 'r') as json_file:
+                results = json.load(json_file)
+                store_result(android_app, results=results, scan_status="completed")
 
     except Exception as err:
+        if android_app:
+            store_result(android_app, results={}, scan_status="failed")
         logging.error(err)
 
 
@@ -80,43 +77,27 @@ def apkid_worker_multiprocessing(android_app_id):
         traceback.print_exc()
 
 
-def store_apkid_result(android_app, report_file_path):
+def store_result(android_app, results, scan_status):
     """
     Creates and APKiD report.
 
     :param android_app: class:'AndroidApp'
-    :param report_file_path: path to the apkid report (json).
+    :param results: dict - results from the apkid scan
+    :param scan_status: str - status of the scan (completed, failed)
+
     :return: class:'ApkidReport'
 
     """
     import apkid
-    with open(report_file_path, 'rb') as report_file:
-        apkid_report = ApkidReport(android_app_id_reference=android_app.id,
-                                   scanner_version=apkid.__version__,
-                                   scanner_name="APKiD",
-                                   report_file_json=report_file)
-    parse_apkid_report(report_file_path, apkid_report)
+    apkid_report = ApkidReport(android_app_id_reference=android_app.id,
+                               scanner_version=apkid.__version__,
+                               scanner_name="APKiD",
+                               scan_status=scan_status,
+                               results=results)
     apkid_report.save()
     android_app.apkid_report_reference = apkid_report.id
     android_app.save()
     return apkid_report
-
-
-def parse_apkid_report(report_file_path, apkid_report):
-    """
-    Parses an apkid report.
-
-    :param apkid_report: class:'ApkidReport'
-    :param report_file_path: path to the apkid report (json).
-
-
-    """
-    with open(report_file_path, 'r') as json_file:
-        data = json.load(json_file)
-        if data and len(data) > 0:
-            apkid_report.apkid_version = data.get("apkid_version")
-            apkid_report.rules_sha256 = data.get("rules_sha256")
-            apkid_report.files = data.get("files")
 
 
 class APKiDScanJob(ScanJob):

@@ -29,8 +29,9 @@ def super_android_analyzer_multiprocessing(android_app_id):
     try:
         tempdir = tempfile.TemporaryDirectory()
         super_json_results = get_super_android_analyzer_analysis(android_app.absolute_store_path, tempdir.name)
-        create_report(android_app, super_json_results)
+        store_result(android_app, results=super_json_results, scan_status="completed")
     except Exception as err:
+        store_result(android_app, results={}, scan_status="completed")
         logging.error(f"Super could not scan app {android_app.filename} id: {android_app.id} - "
                       f"error: {err}")
 
@@ -62,17 +63,18 @@ def get_super_android_analyzer_analysis(apk_file_path, result_folder_path):
     return json.loads(open(result_file_path).read())
 
 
-def create_report(android_app, super_json_results):
+def store_result(android_app, results, scan_status):
     """
     Create a class:'SuperReport' and save the super android analyzer scan results in the database.
     :param android_app: class:'AndroidApp' - app that was scanned with super.
-    :param super_json_results: str - super scanning result in json format.
+    :param results: str - super scanning result in json format.
     :return: class:'SuperReport'
     """
     # TODO remove static version and replace with dynamic one
     super_report = SuperReport(android_app_id_reference=android_app.id,
                                super_version="0.5.1",
-                               results=super_json_results).save()
+                               scan_status=scan_status,
+                               results=results).save()
     android_app.super_report_reference = super_report.id
     android_app.save()
     return super_report
