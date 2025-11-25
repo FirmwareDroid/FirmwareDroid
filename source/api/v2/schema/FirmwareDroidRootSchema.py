@@ -4,10 +4,15 @@
 import graphene
 import graphql_jwt
 from graphene_django.debug import DjangoDebug
+
+from api.v2.schema.APKscanSchema import APKscanReportQuery
 from api.v2.schema.ApkScannerResultSchema import ApkScannerReportQuery
 from api.v2.schema.FirmwareImporterSettingSchema import FirmwareImporterSettingMutation, FirmwareImporterSettingQuery
+from api.v2.schema.FlowDroidReportSchema import FlowDroidReportQuery
 from api.v2.schema.HealthCheckSchema import HealthCheckQuery
+from api.v2.schema.MobsfscanSchema import MobSFScanReportQuery
 from api.v2.schema.RqJobsSchema import RqQueueQuery
+from api.v2.schema.TrueseeingReportSchema import TrueseeingReportQuery
 from api.v2.schema.UserAccountSchema import UserAccountQuery
 from api.v2.schema.StoreSettingsSchema import StoreSettingsQuery
 from api.v2.schema.AndroidFirmwareSchema import AndroidFirmwareQuery, AndroidFirmwareMutation
@@ -35,6 +40,7 @@ from api.v2.schema.TlshHashSchema import TlshHashQuery
 from api.v2.schema.AppCertificateSchema import AppCertificateQuery
 from api.v2.schema.AecsJobSchema import AecsJobMutation, AecsJobQuery
 from api.v2.schema.BuildPropFileSchema import BuildPropFileQuery
+from model import FlowDroidReport
 
 
 class Query(WebclientSettingQuery,
@@ -68,6 +74,10 @@ class Query(WebclientSettingQuery,
             AecsJobQuery,
             FirmwareImporterSettingQuery,
             BuildPropFileQuery,
+            APKscanReportQuery,
+            FlowDroidReportQuery,
+            MobSFScanReportQuery,
+            TrueseeingReportQuery,
             graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name='_debug')
     token_auth = graphql_jwt.ObtainJSONWebToken.Field()

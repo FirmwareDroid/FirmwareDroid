@@ -5,24 +5,24 @@ import graphene
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
-from model.APKscanReport import APKscanReport
+from model import MobSFScanReport
 
-ModelFilter = generate_filter(APKscanReport)
+ModelFilter = generate_filter(MobSFScanReport)
 
 
-class APKscanReportType(MongoengineObjectType):
+class MobSFScanReportType(MongoengineObjectType):
     class Meta:
-        model = APKscanReport
+        model = MobSFScanReport
 
 
-class APKscanReportQuery(graphene.ObjectType):
-    apkscan_report_list = graphene.List(APKscanReportType,
+class MobSFScanReportQuery(graphene.ObjectType):
+    mobsfscan_report_list = graphene.List(MobSFScanReportType,
                                         object_id=graphene.List(graphene.String),
                                         field_filter=graphene.Argument(ModelFilter),
-                                        name="apkscan_report_list"
+                                        name="mobsfscan_report_list"
                                         )
 
     @superuser_required
-    def resolve_apkscan_report_list(self, info, object_id_list=None, field_filter=None):
-        return get_filtered_queryset(APKscanReport, object_id_list, filter)
+    def resolve_mobsfscan_report_list(self, info, object_id_list=None, field_filter=None):
+        return get_filtered_queryset(MobSFScanReport, object_id_list, filter)
 
