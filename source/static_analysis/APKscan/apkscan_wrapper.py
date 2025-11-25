@@ -37,13 +37,30 @@ def process_android_app(android_app):
             "-d",
             apk_path
         ]
-        subprocess.run(command)
-        if not os.path.exists(json_report_path) \
-                or not os.path.isfile(json_report_path):
-            raise ValueError(f"Could not scan {android_app.id}:{android_app.filename}:{json_report_path} "
-                             f"- Error: Scan result file does not exist or is empty.")
+        process = subprocess.Popen(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            bufsize=1
+        )
+
+        for line in process.stdout:
+            logging.info(f"APKscan: {line.strip()}")
+
+        process.wait(timeout=60 * 60)
+        stderr = process.stderr.read()
+
+        if process.returncode != 0:
+            raise subprocess.CalledProcessError(process.returncode, command, stderr=stderr)
+
+        if stderr:
+            logging.warning(f"APKscan stderr: {stderr}")
+
+        if not os.path.exists(json_report_path) or not os.path.isfile(json_report_path):
+            raise ValueError(f"Could not scan {android_app.id}:{android_app.filename}")
+
         results = json_file_to_dict(json_report_path)
-        logging.info(f"Results: {results}")
         store_result(android_app, results)
 
 
@@ -54,7 +71,7 @@ def store_result(android_app, results):
     :param android_app: class:'AndroidApp' object.
     :param results: dict - results of the analysis.
 
-    :return: class:'YourAnalyzerReport' object.
+    :return: class:'APKscanReport' object.
     """
     version = pkg_resources.get_distribution("apkscan").version
     analysis_report = APKscanReport(android_app_id_reference=android_app.id,
