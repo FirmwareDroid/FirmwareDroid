@@ -1,4 +1,5 @@
 import json
+import logging
 import re
 import inspect
 from bson import ObjectId
@@ -20,34 +21,11 @@ def sanitize_and_validate(validators=None, sanitizers=None):
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            errors = []
-
-            # Sanitize arguments first
-            for field, sanitizer in (sanitizers or {}).items():
-                if field in kwargs:
-                    kwargs[field] = sanitizer(kwargs[field])
-
-            # Validate arguments (supports single validator or list of validators)
-            for field, validator_list in (validators or {}).items():
-                if field in kwargs:
-                    value = kwargs[field]
-                    # Support single validator or list of validators
-                    validators_to_run = validator_list if isinstance(validator_list, list) else [validator_list]
-                    for validator in validators_to_run:
-                        try:
-                            # Chain validators - each gets output of previous
-                            value = validator(value)
-                            kwargs[field] = value
-                        except ValueError as e:
-                            errors.append(f"Validation failed for {field}: {str(e)}")
-                else:
-                    # Check if field is required (no default or default is not None)
-                    sig = inspect.signature(func)
-                    param = sig.parameters.get(field)
-                    if param and (param.default is inspect.Parameter.empty or param.default is not None):
-                        errors.append(f"Missing required field: {field}")
+            logging.debug(f"Validators applied: {validators}")
+            errors = _collect_validation_errors(func, kwargs, validators, sanitizers)
 
             if errors:
+                logging.debug(f"Validation errors: {errors}", )
                 raise ValueError("; ".join(errors))
 
             return func(*args, **kwargs)
@@ -57,10 +35,64 @@ def sanitize_and_validate(validators=None, sanitizers=None):
     return decorator
 
 
+def _collect_validation_errors(func, kwargs, validators, sanitizers):
+    """Collect all validation and sanitization errors."""
+    errors = []
+
+    _apply_sanitizers(kwargs, sanitizers)
+    _apply_validators(kwargs, validators, errors)
+    _check_missing_required_fields(func, validators, kwargs, errors)
+
+    return errors
+
+
+def _apply_sanitizers(kwargs, sanitizers):
+    """Apply sanitizer functions to keyword arguments."""
+    for field, sanitizer in (sanitizers or {}).items():
+        logging.debug(f"Applying sanitizer function: {sanitizer} to field: {field}")
+        if field in kwargs:
+            kwargs[field] = sanitizer(kwargs[field])
+
+
+def _apply_validators(kwargs, validators, errors):
+    """Apply validator functions to keyword arguments and collect errors."""
+    for field, validator_list in (validators or {}).items():
+        logging.debug(f"Applying validator function: {validator_list} to field: {field}")
+        if field in kwargs:
+            _validate_field(field, kwargs, validator_list, errors)
+
+
+def _validate_field(field, kwargs, validator_list, errors):
+    """Validate a single field with one or more validators."""
+    value = kwargs[field]
+    validators_to_run = validator_list if isinstance(validator_list, list) else [validator_list]
+
+    for validator in validators_to_run:
+        logging.debug(f"Validating {field}: {validator}")
+        try:
+            value = validator(value)
+            kwargs[field] = value
+        except ValueError as e:
+            errors.append(f"Validation failed for {field}: {str(e)}")
+
+
+def _check_missing_required_fields(func, validators, kwargs, errors):
+    """Check for missing required fields based on function signature."""
+    sig = inspect.signature(func)
+
+    for field in (validators or {}).keys():
+        if field not in kwargs:
+            param = sig.parameters.get(field)
+            if param and param.default is inspect.Parameter.empty:
+                errors.append(f"Missing required field: {field}")
+
+
 def sanitize_string(value):
+    logging.debug(f"Sanitizing string: {value}")
     if isinstance(value, str):
         # Allow only numbers, characters, and special symbols like []
         sanitized_value = re.sub(r'[^a-zA-Z0-9\[\],\-_]', '', value)
+        logging.debug(f"Sanitized string: {sanitized_value}")
         return sanitized_value.strip()
     return value
 
@@ -73,10 +105,32 @@ def sanitize_json(value):
 
 
 def validate_module_name(module_name):
+    """Validate module name against ScannerModules enum members."""
+    logging.debug(f"Validating module name: {module_name}")
     from api.v2.schema.AndroidAppSchema import ScannerModules
-    valid_modules = list(ScannerModules.__members__.keys())
-    if module_name not in valid_modules:
+
+    validated_name = _get_validated_module_name(module_name, ScannerModules)
+
+    if validated_name is None:
+        valid_modules = list(ScannerModules.__members__.keys())
+        logging.info(f"Invalid module name: {module_name}")
         raise ValueError(f"Invalid module name: {module_name}. Must be one of {valid_modules}")
+
+    return validated_name
+
+
+def _get_validated_module_name(module_name, scanner_modules):
+    """Get validated module name from ScannerModules enum."""
+    # Check if it's a valid enum member name (key)
+    if module_name in scanner_modules.__members__:
+        return module_name
+
+    # Check if it's an enum value and return corresponding member name
+    for member_name, member in scanner_modules.__members__.items():
+        if member.value == module_name:
+            return member_name
+
+    return None
 
 
 def validate_object_id(object_id):
@@ -116,8 +170,6 @@ def validate_queue_extractor_task(queue_name):
     if "extractor" not in queue_name:
         raise ValueError(f"Invalid queue name for extractor task: {queue_name}. Must contain 'extractor'")
     return queue_name
-
-
 
 def validate_email(email):
     """Validate email format using regex pattern."""
