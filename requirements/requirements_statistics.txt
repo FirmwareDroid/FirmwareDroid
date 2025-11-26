@@ -1,2 +1,2 @@
 matplotlib~=3.6.0
-networkx~=2.8.7
+networkx~=3.6.0
