@@ -15,6 +15,11 @@ ModelFilter = generate_filter(ApkScannerReport)
 
 class ApkScannerReportInterface(graphene.Interface):
     _cls = graphene.String()
+    pk = graphene.String(source='pk')
+    report_date = graphene.DateTime()
+    scan_status = graphene.String()
+    scanner_name = graphene.String()
+    scanner_version = graphene.String()
 
     @classmethod
     def resolve_type(cls, instance, info):
@@ -60,6 +65,8 @@ class ApkScannerReportInterface(graphene.Interface):
 
 
 class ApkScannerReportType(MongoengineObjectType):
+
+
     class Meta:
         model = ApkScannerReport
         interfaces = (ApkScannerReportInterface, Node)

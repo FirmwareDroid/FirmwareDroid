@@ -22,7 +22,6 @@ from api.v2.schema.ApkidSchema import ApkidReportQuery
 from api.v2.schema.ExodusSchema import ExodusReportQuery
 from api.v2.schema.QarkSchema import QarkReportQuery
 from api.v2.schema.VirustotalSchema import VirustotalReportQuery, VirusTotalMutation
-from api.v2.schema.AndroGuardSchema import AndroGuardReportQuery
 from api.v2.schema.JsonFileSchema import JsonFileQuery
 from api.v2.schema.ImageFileSchema import ImageFileQuery
 from api.v2.schema.WebclientSettingSchema import WebclientSettingQuery
@@ -39,6 +38,7 @@ from api.v2.schema.TlshHashSchema import TlshHashQuery
 from api.v2.schema.AppCertificateSchema import AppCertificateQuery
 from api.v2.schema.AecsJobSchema import AecsJobMutation, AecsJobQuery
 from api.v2.schema.BuildPropFileSchema import BuildPropFileQuery
+from api.v2.schema.AndroGuardSchema import AndroGuardReportQuery
 from api.v2.schema.ApkScannerReportSchema import ApkScannerReportQuery
 
 
