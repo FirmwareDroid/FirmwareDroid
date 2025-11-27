@@ -6,7 +6,7 @@ import graphql_jwt
 from graphene_django.debug import DjangoDebug
 
 from api.v2.schema.APKscanSchema import APKscanReportQuery
-from api.v2.schema.ApkScannerResultSchema import ApkScannerReportQuery
+from api.v2.schema.ApkScannerReportSchema import ApkScannerReportQuery
 from api.v2.schema.FirmwareImporterSettingSchema import FirmwareImporterSettingMutation, FirmwareImporterSettingQuery
 from api.v2.schema.FlowDroidReportSchema import FlowDroidReportQuery
 from api.v2.schema.HealthCheckSchema import HealthCheckQuery
@@ -40,7 +40,6 @@ from api.v2.schema.TlshHashSchema import TlshHashQuery
 from api.v2.schema.AppCertificateSchema import AppCertificateQuery
 from api.v2.schema.AecsJobSchema import AecsJobMutation, AecsJobQuery
 from api.v2.schema.BuildPropFileSchema import BuildPropFileQuery
-from model import FlowDroidReport
 
 
 class Query(WebclientSettingQuery,

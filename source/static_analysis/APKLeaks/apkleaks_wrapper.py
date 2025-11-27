@@ -7,12 +7,12 @@ import tempfile
 import traceback
 import pkg_resources
 from model import AndroidApp, ApkleaksReport
-from context.context_creator import create_db_context, create_log_context
+from context.context_creator import create_db_context, create_apk_scanner_log_context
 from model.Interfaces.ScanJob import ScanJob
 from processing.standalone_python_worker import start_python_interpreter
 
 
-@create_log_context
+@create_apk_scanner_log_context
 @create_db_context
 def apkleaks_worker_multiprocessing(android_app_id):
     """
@@ -30,7 +30,7 @@ def apkleaks_worker_multiprocessing(android_app_id):
         store_result(android_app, results=json_results, scan_status="completed")
     except Exception as err:
         if android_app:
-            store_result(android_app, results={}, scan_status="failed")
+            store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
         traceback.print_exc()
         logging.error(f"APKleaks could not scan app id: {android_app_id} - "
                       f"error: {err}")
@@ -85,7 +85,7 @@ def store_result(android_app, results, scan_status):
                                      scanner_name="APKLeaks",
                                      scan_status=scan_status,
                                      results=results).save()
-    android_app.apkleaks_report_reference = apkleaks_report.id
+    android_app.apk_scanner_report_reference_list.append(apkleaks_report.id)
     android_app.save()
 
 
@@ -99,7 +99,7 @@ class APKLeaksScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
-    @create_log_context
+    @create_apk_scanner_log_context
     @create_db_context
     def start_scan(self):
         """
@@ -113,6 +113,5 @@ class APKLeaksScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="apkleaks_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH)
             python_process.wait()

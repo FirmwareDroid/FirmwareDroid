@@ -41,10 +41,12 @@ class ScannerModules(Enum):
 
 class AndroidAppType(MongoengineObjectType):
     pk = graphene.String(source='pk')
+    apk_scanner_report_reference_list = graphene.List(graphene.String)
 
     class Meta:
         model = AndroidApp
         interfaces = (Node,)
+
 
 class AndroidAppQuery(graphene.ObjectType):
     android_app_list = graphene.List(AndroidAppType,
@@ -167,7 +169,6 @@ class CreateApkScanJob(graphene.Mutation):
 
         :return: list of unique IDs of the RQ jobs.
         """
-        logging.info(f"Test: {module_name}")
         response = {}
         queue = django_rq.get_queue(queue_name)
 
@@ -182,22 +183,12 @@ class CreateApkScanJob(graphene.Mutation):
             object_id_chunks = create_object_id_chunks(object_id_list, chunk_size=MAX_OBJECT_ID_LIST_SIZE)
             job_id_list = []
             for object_id_chunk in object_id_chunks:
-                job_name = f"apk_scan:{module_name}:{len(object_id_chunk)}"
-                enqueue_kwargs = {
-                    "job_timeout": ONE_WEEK_TIMEOUT,
-                    "job_id": job_name,
-                    "description": f"APK scan {module_name}",
-                    "meta": {
-                        "module": module_name,
-                        "object_count": len(object_id_chunk),
-                    }
-                }
                 if kwargs and bool(json.loads(kwargs)):
                     func_to_run = import_module_function(module_name, object_id_chunk, kwargs)
                 else:
-                    logging.debug(f"No kwargs provided.")
+                    logging.info("No kwargs")
                     func_to_run = import_module_function(module_name, object_id_chunk)
-                job = queue.enqueue(func_to_run, **enqueue_kwargs)
+                job = queue.enqueue(func_to_run, job_timeout=ONE_WEEK_TIMEOUT)
                 job_id_list.append(job.id)
                 response = cls(job_id_list=job_id_list)
         return response

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
+import logging
 import sys
-
-
+import concurrent.futures
 sys.path.append("/var/www/source/")
-from database.query_document import get_filtered_list
+from database.query_document import get_filtered_list, fetch_document_by_id_list
 from model import AndroidApp
 import importlib
 import os
@@ -16,8 +16,8 @@ import threading
 import time
 from threading import Thread
 from context.context_creator import create_app_context, setup_logging
-from concurrent.futures import ProcessPoolExecutor as Executor, as_completed
-from database.connector import multiprocess_disconnect_db_connection
+import multiprocessing
+from logging.handlers import QueueHandler, QueueListener
 
 MAX_PROCESS_TIME = 60 * 60 * 24
 
@@ -65,7 +65,6 @@ def start_python_interpreter(item_list,
                              number_of_processes=os.cpu_count(),
                              use_id_list=True,
                              module_name=None,
-                             report_reference_name=None,
                              interpreter_path=None,
                              worker_args_list=None):
     """
@@ -74,7 +73,6 @@ def start_python_interpreter(item_list,
 
     :param worker_args_list: list - list of arguments to pass to the worker function.
     :param module_name: str - Name of the fmd module to use.
-    :param report_reference_name: str - Class:'AndroidApp' attribute name to store the result report.
     :param interpreter_path: string - Path to the python interpreter used for spawning the processes.
     :param use_id_list: boolean - if true: list of object-ids instead of object instances is used to create a queue
     for processing. Set to false in case you provide an instance list of documents that have an id attribute.
@@ -87,17 +85,35 @@ def start_python_interpreter(item_list,
         worker_args_list = []
     serialized_list_str = ",".join(map(str, item_list))
     current_file = os.path.abspath(__file__)
-    return subprocess.Popen([interpreter_path,
-                             current_file,
-                             serialized_list_str,
-                             worker_function.__name__,
-                             str(number_of_processes),
-                             str(use_id_list),
-                             module_name,
-                             report_reference_name,
-                             *worker_args_list
-                             ],
-                            cwd="/var/www/source/")
+    # Starting the python interpreter with the given script and arguments
+    command = [interpreter_path,
+               current_file,
+               serialized_list_str,
+               worker_function.__name__,
+               str(number_of_processes),
+               str(use_id_list),
+               module_name,
+               *worker_args_list
+               ]
+    process = subprocess.Popen(command,
+                               cwd="/var/www/source/",
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE,
+                               text=True,
+                               bufsize=1
+                               )
+
+    def log_stream(stream, log_level):
+        for line in iter(stream.readline, ''):
+            if line:
+                logging.log(log_level, line.strip())
+        stream.close()
+
+    stdout_thread = threading.Thread(target=log_stream, args=(process.stdout, logging.INFO), daemon=True)
+    stderr_thread = threading.Thread(target=log_stream, args=(process.stderr, logging.ERROR), daemon=True)
+    stdout_thread.start()
+    stderr_thread.start()
+    return process
 
 
 def split_into_batches(item_list, batch_size):
@@ -111,6 +127,15 @@ def split_into_batches(item_list, batch_size):
     """
     for i in range(0, len(item_list), batch_size):
         yield item_list[i:i + batch_size]
+
+
+def worker_init(log_queue):
+    # Each worker sends logs to the queue
+    queue_handler = QueueHandler(log_queue)
+    logger = logging.getLogger()
+    logger.handlers = []
+    logger.addHandler(queue_handler)
+    logger.setLevel(logging.DEBUG)
 
 
 def start_mp_process_pool_executor(item_list,
@@ -130,19 +155,32 @@ def start_mp_process_pool_executor(item_list,
 
     :return: list - list of results from the worker function.
     """
-    worker_task_list = []
-    if create_id_list:
-        for obj in item_list:
-            worker_task_list.append(obj.id)
-    else:
-        worker_task_list = item_list
+    if len(item_list) < number_of_processes:
+        number_of_processes = len(item_list)
 
+    worker_task_list = [obj.id for obj in item_list] if create_id_list else item_list
     result_list = []
-    with Executor(max_workers=number_of_processes) as executor:
-        future_to_task = {executor.submit(worker_function, task, *worker_args_list): task for task in worker_task_list}
-        for future in as_completed(future_to_task):
+
+    # Set up logging queue and listener in the main process
+    log_queue = multiprocessing.Queue(-1)
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(processName)s/%(process)d - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    listener = QueueListener(log_queue, handler)
+    listener.start()
+
+    def wrapped_worker(*args, **kwargs):
+        worker_init(log_queue)
+        return worker_function(*args, **kwargs)
+
+    logging.info(f"Starting multiprocessing pool with {number_of_processes} processes for function {worker_function}.")
+    with concurrent.futures.ProcessPoolExecutor(max_workers=number_of_processes, initializer=worker_init, initargs=(log_queue,)) as executor:
+        future_to_task = {executor.submit(worker_function, task, *(worker_args_list or [])): task for task in worker_task_list}
+        for future in concurrent.futures.as_completed(future_to_task):
             result = future.result()
             result_list.append(result)
+
+    listener.stop()
     return result_list
 
 
@@ -156,13 +194,19 @@ def main():
     Main function that is executed when the script is started with a new python interpreter.
     The function starts the worker function in a new process and passes the given arguments to the new process.
     """
+    pid = os.getpid()
+    setup_logging()
     create_app_context()
+    logging.info(f"Starting standalone python worker - PID: {pid}")
     id_list = sys.argv[1].split(",")
     if len(id_list) <= 0:
         sys.exit(-1)
     module_name = sys.argv[5]
-    report_reference_name = sys.argv[6]
-    item_list = get_filtered_list(id_list, AndroidApp, report_reference_name)
+    item_list = fetch_document_by_id_list(id_list, AndroidApp)
+    if len(item_list) <= 0:
+        logging.info("No items to process. Exiting.")
+        sys.exit(0)
+
     worker_function_name = sys.argv[2]
     scanner_module = importlib.import_module(module_name)
     worker_function = getattr(scanner_module, worker_function_name)

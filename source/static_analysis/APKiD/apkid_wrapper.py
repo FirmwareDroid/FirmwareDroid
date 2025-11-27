@@ -6,30 +6,42 @@ import os
 import logging
 import tempfile
 import traceback
-
 from model.Interfaces.ScanJob import ScanJob
 from model import ApkidReport, AndroidApp
-from context.context_creator import create_db_context, create_log_context
+from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from processing.standalone_python_worker import start_python_interpreter
+from typing import List, Optional
 
 
-def process_android_app(android_app_id):
+def find_files(root_dir: str, target_filename: str, max_results: Optional[int] = None) -> List[str]:
+    """
+    Walk `root_dir` and return a list of full paths to files named `target_filename`.
+    Set `max_results` to stop early (useful for large trees).
+    """
+    matches: List[str] = []
+    for dirpath, _, files in os.walk(root_dir):
+        if target_filename in files:
+            matches.append(os.path.join(dirpath, target_filename))
+            if max_results is not None and len(matches) >= max_results:
+                break
+    return matches
+
+
+def process_android_app(android_app):
     """
     Scans an Android app with the APKiD scanner and stores the results in the database.
 
-    :param android_app_id: str - object-id for document of  class:'AndroidApp'
+    :param android_app: class:'AndroidApp'
 
     """
-    from apkid.apkid import Options, Scanner
-    android_app = None
+    LOGGER = setup_apk_scanner_logger()
+    logging.info(f"Processing Android app with APKiD: {android_app.id}")
     try:
-        android_app = AndroidApp.objects.get(pk=android_app_id)
-        logging.info(f"APKid scans app: {android_app.filename} id: {android_app.id}")
-
+        from apkid.apkid import Options, Scanner
+        LOGGER.info(f"APKid Scans app: {android_app.filename} id: {android_app.id}", extra={'ip': '127.0.0.1'})
         with tempfile.TemporaryDirectory() as output_dir:
             if not os.path.exists(output_dir):
                 raise OSError(f"Could not create temp dir for apkid: {output_dir}")
-
             options = Options(
                 timeout=600,
                 verbose=True,
@@ -44,24 +56,28 @@ def process_android_app(android_app_id):
             rules = options.rules_manager.load()
             scanner = Scanner(rules, options)
             scanner.scan(android_app.absolute_store_path)
-
-            report_file_path = os.path.join(output_dir, android_app.filename)
-            if not os.path.exists(report_file_path):
+            matches = find_files(output_dir, android_app.filename)
+            if matches and len(matches) == 1:
+                report_file_path = matches[0]
+            else:
                 raise FileNotFoundError(
-                    f"APKid ERROR: Could not find report: {android_app.filename} id: {android_app.id}"
+                    f"APKid ERROR: Could not find report: "
+                    f"{android_app.filename} id: {android_app.id}"
                 )
-
             with open(report_file_path, 'r') as json_file:
                 results = json.load(json_file)
                 store_result(android_app, results=results, scan_status="completed")
-
+        LOGGER.info(f"APKid completed for app: {android_app.filename} id: {android_app.id}")
     except Exception as err:
+        LOGGER.error(f"APKid Scan failed. ERROR: {err}")
         if android_app:
-            store_result(android_app, results={}, scan_status="failed")
-        logging.error(err)
+            LOGGER.error(f"APKid Scan failed. ERROR for app: {android_app.filename} id: {android_app.id} - {err}")
+            try:
+                store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
+            except Exception as err2:
+                pass
 
 
-@create_log_context
 @create_db_context
 def apkid_worker_multiprocessing(android_app_id):
     """
@@ -70,8 +86,10 @@ def apkid_worker_multiprocessing(android_app_id):
     :param android_app_id: str - object-id for document of  class:'AndroidApp'
 
     """
+    logging.debug(f"APKiD sub-process worker started for app id: {android_app_id}")
     try:
-        process_android_app(android_app_id)
+        android_app = AndroidApp.objects.get(pk=android_app_id)
+        process_android_app(android_app)
     except Exception as err:
         logging.error(err)
         traceback.print_exc()
@@ -95,7 +113,7 @@ def store_result(android_app, results, scan_status):
                                scan_status=scan_status,
                                results=results)
     apkid_report.save()
-    android_app.apkid_report_reference = apkid_report.id
+    android_app.apk_scanner_report_reference_list.append(apkid_report)
     android_app.save()
     return apkid_report
 
@@ -117,13 +135,16 @@ class APKiDScanJob(ScanJob):
         Starts multiple instances of the scanner to analyse a list of Android apps on multiple processors.
         """
         android_app_id_list = self.object_id_list
-        logging.info(f"APKiD analysis started! With {str(len(android_app_id_list))} apps.")
+        logging.info(f"APKiD analysis started! With {str(len(android_app_id_list))} apps. ID List: {android_app_id_list}")
         if len(android_app_id_list) > 0:
             python_process = start_python_interpreter(item_list=android_app_id_list,
                                                       worker_function=apkid_worker_multiprocessing,
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="apkid_report_reference",
-                                                      interpreter_path=self.INTERPRETER_PATH)
+                                                      interpreter_path=self.INTERPRETER_PATH
+                                                      )
             python_process.wait()
+        else:
+            logging.warning("No Android apps to analyse with APKiD.")
+        logging.info("APKiD analysis completed.")

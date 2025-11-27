@@ -7,7 +7,7 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from model.Interfaces.ScanJob import ScanJob
 from model import QuarkEngineReport, AndroidApp
-from context.context_creator import create_db_context, create_log_context
+from context.context_creator import create_db_context, create_apk_scanner_log_context
 from static_analysis.QuarkEngine.vuln_checkers import *
 from processing.standalone_python_worker import start_python_interpreter
 
@@ -16,8 +16,8 @@ MAX_EXECUTION_TIME = 60 * 30
 QUARK_SCAN_TIMEOUT = 60 * 2
 
 
-@create_log_context
 @create_db_context
+@create_apk_scanner_log_context
 def quark_engine_worker_multiprocessing(android_app_id):
     """
     Start the analysis with quark-engine on a multiprocessor queue.
@@ -101,7 +101,7 @@ def get_quark_engine_scan(apk_path, rule_dir_path, timeout=QUARK_SCAN_TIMEOUT):
             result = future.result(timeout=timeout)
             return result
         except TimeoutError:
-            logging.warning(f"Quark Engine scan for {apk_path} terminated due to timeout.")
+            logging.error(f"Quark Engine scan for {apk_path} terminated due to timeout.")
             return None
 
 
@@ -162,7 +162,7 @@ def store_results(android_app, scan_results, scan_status):
         scan_status=scan_status,
         results=scan_results
     ).save()
-    android_app.quark_engine_report_reference = report.id
+    android_app.apk_scanner_report_reference_list.append(report.id)
     android_app.save()
     return report
 
@@ -177,7 +177,7 @@ class QuarkEngineScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
-    @create_log_context
+    @create_apk_scanner_log_context
     @create_db_context
     def start_scan(self):
         """
@@ -191,6 +191,5 @@ class QuarkEngineScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="quark_engine_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH)
             python_process.wait()

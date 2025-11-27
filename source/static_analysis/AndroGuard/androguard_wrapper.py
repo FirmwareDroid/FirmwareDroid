@@ -6,7 +6,7 @@ import logging
 import os
 import traceback
 from model.Interfaces.ScanJob import ScanJob
-from context.context_creator import create_db_context, create_log_context
+from context.context_creator import create_db_context, create_apk_scanner_log_context
 from model import AndroGuardReport, GenericFile
 from model import AndroGuardMethodClassAnalysisReference
 from model import AndroGuardStringAnalysis, AndroGuardClassAnalysis, AndroGuardMethodAnalysis, \
@@ -435,7 +435,7 @@ def store_result(android_app, apk, scan_status, permission_details=None, permiss
     )
 
     report = AndroGuardReport(**report_data).save()
-    android_app.androguard_report_reference = report.id
+    android_app.apk_scanner_report_reference_list.append(report.id)
     if scan_status == "completed":
         add_report_crossreferences(report)
         android_app.packagename = report.packagename
@@ -445,57 +445,6 @@ def store_result(android_app, apk, scan_status, permission_details=None, permiss
     report.android_app_id_reference = android_app.id
     report.save()
     return report
-
-# def store_result(android_app, results, scan_status):
-#     from androguard import __version__
-#     report = AndroGuardReport(android_app_id_reference=android_app.id,
-#                               scanner_version=__version__,
-#                               scanner_name=SCANNER_NAME,
-#                               packagename=apk.get_package(),
-#                               is_valid_APK=apk.is_valid_APK(),
-#                               is_androidtv=apk.is_androidtv(),
-#                               is_leanback=apk.is_leanback(),
-#                               is_wearable=apk.is_wearable(),
-#                               file_name_list=apk.get_files(),
-#                               is_multidex=apk.is_multidex(),
-#                               main_activity=apk.get_main_activity(),
-#                               main_activity_list=apk.get_main_activities(),
-#                               permissions=apk.get_permissions(),
-#                               permission_details=permission_details,
-#                               permissions_implied=apk.get_uses_implied_permission_list(),
-#                               permissions_declared=apk.get_declared_permissions(),
-#                               permissions_declared_details=permissions_declared_details,
-#                               permissions_requested_third_party=apk.get_requested_third_party_permissions(),
-#                               activities=apk.get_activities(),
-#                               providers=apk.get_providers(),
-#                               services=apk.get_services(),
-#                               receivers=apk.get_receivers(),
-#                               manifest_libraries=apk.get_libraries(),
-#                               manifest_features=apk.get_features(),
-#                               dex_names=apk.get_dex_names(),
-#                               signature_names=apk.get_signature_names(),
-#                               app_name=apk.get_app_name(),
-#                               intent_filters_dict=search_intent_filters(apk, components_dict),
-#                               android_version_code=apk.get_androidversion_code(),
-#                               android_version_name=apk.get_androidversion_name(),
-#                               min_sdk_version=str(apk.get_min_sdk_version()),
-#                               max_sdk_version=str(apk.get_max_sdk_version()),
-#                               target_sdk_version=str(apk.get_target_sdk_version()),
-#                               effective_target_version=str(apk.get_effective_target_sdk_version()),
-#                               manifest_xml=apk.get_android_manifest_axml().get_xml(),
-#                               string_analysis_id_list=string_analysis_id_list,
-#                               is_signed_v1=apk.is_signed_v1(),
-#                               is_signed_v2=apk.is_signed_v2(),
-#                               is_signed_v3=apk.is_signed_v3(),
-#                               scan_status=scan_status
-#                               ).save()
-#     add_report_crossreferences(report)
-#     android_app.androguard_report_reference = report.id
-#     android_app.packagename = report.packagename
-#     android_app.certificate_id_list = certificate_id_list
-#     android_app.save()
-#     return report
-
 
 def analyse_and_save(android_app):
     """"
@@ -512,7 +461,7 @@ def analyse_and_save(android_app):
 
 
 @create_db_context
-@create_log_context
+@create_apk_scanner_log_context
 def androguard_worker_multiprocessing(android_app_id):
     """
     Worker process which will work on the given queue.
@@ -558,7 +507,7 @@ class AndroGuardScanJob(ScanJob):
         os.chdir(self.SOURCE_DIR)
 
     @create_db_context
-    @create_log_context
+    @create_apk_scanner_log_context
     def start_scan(self):
         """
         Starts multiple instances of AndroGuard to analyse a list of Android apps on multiple processors.
@@ -571,6 +520,5 @@ class AndroGuardScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="androguard_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH)
             python_process.wait()

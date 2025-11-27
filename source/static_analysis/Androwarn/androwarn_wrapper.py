@@ -10,13 +10,13 @@ from multiprocessing import Lock
 
 from model.Interfaces.ScanJob import ScanJob
 from model import AndrowarnReport, AndroidApp
-from context.context_creator import create_db_context, create_log_context
+from context.context_creator import create_db_context, create_apk_scanner_log_context
 from processing.standalone_python_worker import start_python_interpreter
 
 lock = Lock()
 
 
-@create_log_context
+@create_apk_scanner_log_context
 @create_db_context
 def androwarn_worker_multiprocessing(android_app_id):
     """
@@ -30,9 +30,10 @@ def androwarn_worker_multiprocessing(android_app_id):
     from androwarn.warn.report.report import dump_analysis_results, generate_report
     from androwarn.warn.search.application.application import grab_application_package_name
 
-    android_app = AndroidApp.objects.get(pk=android_app_id)
-    logging.info(f"Androwarn scan: {android_app.filename} {android_app.id} ")
+    android_app = None
     try:
+        android_app = AndroidApp.objects.get(pk=android_app_id)
+        logging.info(f"Androwarn scan: {android_app.filename} {android_app.id} ")
         with_playstore_lookup = False
         display_report = False
         report_type = 'json'
@@ -49,9 +50,11 @@ def androwarn_worker_multiprocessing(android_app_id):
         results = parse_json_report(report_file_path)
         store_result(android_app, results=results, scan_status="completed")
     except Exception as err:
-        store_result(android_app, results={}, scan_status="failed")
+        if android_app:
+            store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
         logging.error(f"Androwarn could not scan app {android_app.filename} id: {android_app.id} - "
                       f"error: {str(err)}")
+        raise RuntimeError(f"Androwarn could not scan app {android_app.filename}")
 
 
 def store_result(android_app, results, scan_status):
@@ -66,6 +69,7 @@ def store_result(android_app, results, scan_status):
 
     """
     from androwarn import androwarn
+    logging.error(f"Storing androwarn {android_app.id} report")
     androwarn_report = AndrowarnReport(scanner_version=androwarn.VERSION,
                                        scanner_name="Androwarn",
                                        android_app_id_reference=android_app.id,
@@ -73,7 +77,7 @@ def store_result(android_app, results, scan_status):
                                        scan_status=scan_status,
                                        )
     androwarn_report.save()
-    android_app.androwarn_report_reference = androwarn_report.id
+    android_app.apk_scanner_report_reference_list.append(androwarn_report)
     android_app.save()
 
 
@@ -107,7 +111,7 @@ class AndrowarnScanJob(ScanJob):
         os.chdir(self.SOURCE_DIR)
 
     @create_db_context
-    @create_log_context
+    @create_apk_scanner_log_context
     def start_scan(self):
         """
         Starts multiple instances of the scanner to analyse a list of Android apps on multiple processors.
@@ -120,6 +124,5 @@ class AndrowarnScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="androwarn_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH)
             python_process.wait()

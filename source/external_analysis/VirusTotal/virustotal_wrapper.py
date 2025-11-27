@@ -6,7 +6,7 @@ import os
 from model.Interfaces.ScanJob import ScanJob
 from model import AndroidApp
 from model import VirusTotalReport
-from context.context_creator import create_db_context, create_log_context
+from context.context_creator import create_db_context, create_apk_scanner_log_context
 from processing.standalone_python_worker import start_python_interpreter
 
 
@@ -24,7 +24,7 @@ def store_virustotal_result(android_app, analysis):
     logging.info(f"Storing VirusTotal result for {android_app.id} with Result:{analysis}")
     report = VirusTotalReport(file_info=analysis, android_app_id_reference=android_app.id)
     report.save()
-    android_app.virustotal_report_reference = report.id
+    android_app.apk_scanner_report_reference_list.append(report.id)
     android_app.save()
 
 
@@ -34,7 +34,7 @@ def scan_file(client, file_path):
     return analysis
 
 
-@create_log_context
+@create_apk_scanner_log_context
 @create_db_context
 def start_virustotal_multiprocessing(android_app_id, vt_api_key):
     logging.info(f"Scanning APK file with VirusTotal: {android_app_id}")
@@ -56,7 +56,7 @@ class VirusTotalScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
-    @create_log_context
+    @create_apk_scanner_log_context
     @create_db_context
     def start_scan(self, vt_api_key):
         android_app_id_list = self.object_id_list
@@ -68,7 +68,6 @@ class VirusTotalScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="virustotal_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH,
                                                       worker_args_list=worker_args_list)
             python_process.wait()

@@ -5,11 +5,11 @@ import logging
 import os
 from model.Interfaces.ScanJob import ScanJob
 from model import ExodusReport, AndroidApp
-from context.context_creator import create_db_context, create_log_context
+from context.context_creator import create_db_context, create_apk_scanner_log_context
 from processing.standalone_python_worker import start_python_interpreter
 
 
-@create_log_context
+@create_apk_scanner_log_context
 @create_db_context
 def exodus_worker_multiprocessing(android_app_id):
     """
@@ -24,7 +24,7 @@ def exodus_worker_multiprocessing(android_app_id):
         exodus_json_report = get_exodus_analysis(android_app.absolute_store_path)
         store_result(android_app, results=exodus_json_report, scan_status="completed")
     except Exception as err:
-        store_result(android_app, results={}, scan_status="failed")
+        store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
         logging.error(f"Exodus could not scan app {android_app.filename} id: {android_app.id} - "
                       f"error: {err}")
 
@@ -82,7 +82,7 @@ def store_result(android_app, results, scan_status):
         results=results,
         scan_status=scan_status
     ).save()
-    android_app.exodus_report_reference = exodus_report.id
+    android_app.apk_scanner_report_reference_list.append(exodus_report.id)
     android_app.save()
 
 
@@ -96,7 +96,7 @@ class ExodusScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
-    @create_log_context
+    @create_apk_scanner_log_context
     @create_db_context
     def start_scan(self):
         """
@@ -110,6 +110,5 @@ class ExodusScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="exodus_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH)
             python_process.wait()

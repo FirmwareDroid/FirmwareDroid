@@ -9,6 +9,7 @@ from model.ApkScannerReport import ApkScannerReport
 class QarkReport(ApkScannerReport):
     issue_list = ListField(LazyReferenceField('QarkIssue', reverse_delete_rule=DO_NOTHING), required=False)
     report_file_json = FileField(required=True)
+    results = mongoengine.DictField(required=True)
 
     @classmethod
     def pre_delete(cls, sender, document, **kwargs):

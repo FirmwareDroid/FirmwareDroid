@@ -4,7 +4,7 @@ import re
 import subprocess
 import tempfile
 from pathlib import Path
-from context.context_creator import create_log_context, create_db_context
+from context.context_creator import create_apk_scanner_log_context, create_db_context
 from model import AndroidApp, FlowDroidReport
 from model.Interfaces.ScanJob import ScanJob
 from processing.standalone_python_worker import start_python_interpreter
@@ -37,7 +37,7 @@ def process_android_app(android_app, flowdroid_cmd_arg_list, rule_filename=DEFAU
                     data_dict = {"NoMatch": "No taints matched!"}
             store_result(android_app, results=data_dict, scan_status="completed")
         except Exception as err:
-            store_result(android_app, results={}, scan_status="failed")
+            store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
             logging.error(f"FlowDroid analysis failed for app id {android_app.id}: {str(err)}")
 
 
@@ -167,12 +167,12 @@ def store_result(android_app, results, scan_status):
                                       scan_status=scan_status,
                                       results=results)
     analysis_report.save()
-    android_app.flowdroid_report_reference = analysis_report.id
+    android_app.apk_scanner_report_reference_list.append(analysis_report.id)
     android_app.save()
     return analysis_report
 
 
-@create_log_context
+@create_apk_scanner_log_context
 @create_db_context
 def flowdroid_worker_multiprocessing(android_app_id,
                                      android_api_version,
@@ -218,7 +218,7 @@ class FlowDroidScanJob(ScanJob):
             self.worker_args_list.append(rule_filename)
         os.chdir(self.SOURCE_DIR)
 
-    @create_log_context
+    @create_apk_scanner_log_context
     @create_db_context
     def start_scan(self):
         """
@@ -233,7 +233,6 @@ class FlowDroidScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="flowdroid_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH,
                                                       worker_args_list=self.worker_args_list)
             python_process.wait()

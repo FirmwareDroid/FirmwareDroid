@@ -3,7 +3,7 @@ import os
 import tempfile
 import traceback
 import pkg_resources
-from context.context_creator import create_log_context, create_db_context
+from context.context_creator import create_apk_scanner_log_context, create_db_context
 from decompiler.jadx_wrapper import decompile_with_jadx
 from model import AndroidApp, MobSFScanReport
 from model.Interfaces.ScanJob import ScanJob
@@ -27,7 +27,7 @@ def store_result(android_app, results, scan_status):
                              scan_status=scan_status,
                              results=results)
     report.save()
-    android_app.mobsfscan_report_reference = report.id
+    android_app.apk_scanner_report_reference_list.append(report.id)
     android_app.save()
     return report
 
@@ -53,11 +53,11 @@ def process_android_app(android_app):
             store_result(android_app, results=json_report, scan_status="completed")
             logging.info(f"MobSFScan finished: {android_app.filename} {android_app.id}")
         except Exception as err:
-            store_result(android_app, results={}, scan_status="failed")
+            store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
             logging.error(f"MobSFScan failed: {android_app.filename} {android_app.id} Error: {err}")
 
 
-@create_log_context
+@create_apk_scanner_log_context
 @create_db_context
 def mobsfscan_worker_multiprocessing(android_app_id):
     """
@@ -88,7 +88,7 @@ class MobSFScanJob(ScanJob):
         os.chdir(self.SOURCE_DIR)
 
     @create_db_context
-    @create_log_context
+    @create_apk_scanner_log_context
     def start_scan(self):
         """
         Starts multiple instances of Mobsfscan to analyse a list of Android apps on multiple processors.
@@ -101,6 +101,5 @@ class MobSFScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="mobsfscan_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH)
             python_process.wait()

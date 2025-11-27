@@ -46,4 +46,5 @@ from .FirmwareImporterSetting import FirmwareImporterSetting
 from .ServerSetting import ServerSetting
 from .FlowDroidReport import FlowDroidReport
 from .TrueseeingReport import TrueseeingReport
+from .ApkScannerReport import ApkScannerReport
 from . import *

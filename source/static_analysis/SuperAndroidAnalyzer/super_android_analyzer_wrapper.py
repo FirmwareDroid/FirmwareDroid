@@ -11,11 +11,11 @@ import tempfile
 from pathlib import Path
 from model.Interfaces.ScanJob import ScanJob
 from model import AndroidApp, SuperReport
-from context.context_creator import create_db_context, create_log_context
+from context.context_creator import create_db_context, create_apk_scanner_log_context
 from processing.standalone_python_worker import start_python_interpreter
 
 
-@create_log_context
+@create_apk_scanner_log_context
 @create_db_context
 def super_android_analyzer_multiprocessing(android_app_id):
     """
@@ -31,7 +31,7 @@ def super_android_analyzer_multiprocessing(android_app_id):
         super_json_results = get_super_android_analyzer_analysis(android_app.absolute_store_path, tempdir.name)
         store_result(android_app, results=super_json_results, scan_status="completed")
     except Exception as err:
-        store_result(android_app, results={}, scan_status="completed")
+        store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
         logging.error(f"Super could not scan app {android_app.filename} id: {android_app.id} - "
                       f"error: {err}")
 
@@ -75,7 +75,7 @@ def store_result(android_app, results, scan_status):
                                super_version="0.5.1",
                                scan_status=scan_status,
                                results=results).save()
-    android_app.super_report_reference = super_report.id
+    android_app.apk_scanner_report_reference_list.append(super_report.id)
     android_app.save()
     return super_report
 
@@ -90,7 +90,7 @@ class SuperAndroidAnalyzerScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
-    @create_log_context
+    @create_apk_scanner_log_context
     @create_db_context
     def start_scan(self):
         """
@@ -104,6 +104,5 @@ class SuperAndroidAnalyzerScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="super_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH)
             python_process.wait()

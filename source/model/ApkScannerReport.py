@@ -2,7 +2,7 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import datetime
-from mongoengine import LazyReferenceField, CASCADE, StringField, DateTimeField, Document
+from mongoengine import LazyReferenceField, CASCADE, StringField, DateTimeField, Document, GenericLazyReferenceField
 from model import AndroidApp
 
 

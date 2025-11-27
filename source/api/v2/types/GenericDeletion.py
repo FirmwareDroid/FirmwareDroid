@@ -1,6 +1,6 @@
 import logging
 from api.v2.types.GenericFilter import get_filtered_queryset
-from context.context_creator import create_db_context, create_log_context
+from context.context_creator import create_db_context, create_apk_scanner_log_context
 
 
 def delete_queryset_in_batches(queryset, document_model, batch_size=100):
@@ -19,7 +19,7 @@ def delete_queryset_in_batches(queryset, document_model, batch_size=100):
         document_model.objects(id__in=ids_to_delete).delete()
 
 
-@create_log_context
+@create_apk_scanner_log_context
 @create_db_context
 def delete_queryset_background(object_id_list, document_model):
     """
