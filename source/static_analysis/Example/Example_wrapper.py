@@ -1,6 +1,6 @@
 import logging
 import os
-from context.context_creator import create_apk_scanner_log_context, create_db_context
+from context.context_creator import create_log_context, create_db_context
 from model import AndroidApp
 from model.Interfaces.ScanJob import ScanJob
 from processing.standalone_python_worker import start_python_interpreter
@@ -41,7 +41,7 @@ def store_result(android_app, json_report_path):
     return analysis_report
 
 
-@create_apk_scanner_log_context
+@create_log_context
 @create_db_context
 # TODO: Change the worker function name
 def your_analyzer_worker_multiprocessing(android_app_id):
@@ -67,7 +67,7 @@ class YourAnalyzerJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
-    @create_apk_scanner_log_context
+    @create_log_context
     @create_db_context
     def start_scan(self):
         """

@@ -3,13 +3,15 @@ import os
 import tempfile
 import traceback
 import pkg_resources
-from context.context_creator import create_apk_scanner_log_context, create_db_context
+from context.context_creator import create_log_context, create_db_context, setup_apk_scanner_logger
 from decompiler.jadx_wrapper import decompile_with_jadx
 from model import AndroidApp, MobSFScanReport
 from model.Interfaces.ScanJob import ScanJob
 from model.StoreSetting import get_active_store_by_index
 from processing.standalone_python_worker import start_python_interpreter
 
+
+DB_LOGGER = setup_apk_scanner_logger(tag="mobsfscan")
 
 def store_result(android_app, results, scan_status):
     """
@@ -46,18 +48,19 @@ def process_android_app(android_app):
         is_success = decompile_with_jadx(android_app.absolute_store_path, temp_dir)
         if not is_success:
             raise RuntimeError("Could not extract apk file with jadx.")
-        logging.info(f"Now scanning: {android_app.filename} {android_app.id} with mobsfscan.")
+        DB_LOGGER.info(f"Mobsfscan now scanning: {android_app.filename} {android_app.id}.")
         try:
             scanner = MobSFScan([temp_dir], json=True)
             json_report = scanner.scan()
             store_result(android_app, results=json_report, scan_status="completed")
-            logging.info(f"MobSFScan finished: {android_app.filename} {android_app.id}")
+            DB_LOGGER.info(f"MobSFScan finished: {android_app.filename} {android_app.id}")
         except Exception as err:
+            DB_LOGGER.error(f"MobSFScan failed to scan app {android_app.filename} {android_app.id}")
             store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
             logging.error(f"MobSFScan failed: {android_app.filename} {android_app.id} Error: {err}")
 
 
-@create_apk_scanner_log_context
+@create_log_context
 @create_db_context
 def mobsfscan_worker_multiprocessing(android_app_id):
     """
@@ -88,7 +91,7 @@ class MobSFScanJob(ScanJob):
         os.chdir(self.SOURCE_DIR)
 
     @create_db_context
-    @create_apk_scanner_log_context
+    @create_log_context
     def start_scan(self):
         """
         Starts multiple instances of Mobsfscan to analyse a list of Android apps on multiple processors.

@@ -3,16 +3,18 @@ import logging
 import os
 import subprocess
 import tempfile
-import time
 import traceback
-
-from context.context_creator import create_apk_scanner_log_context, create_db_context
+from context.context_creator import create_db_context, setup_apk_scanner_logger, \
+    create_log_context
 from model import AndroidApp, TrueseeingReport
 from model.Interfaces.ScanJob import ScanJob
 from processing.standalone_python_worker import start_python_interpreter
 
+DB_LOGGER = setup_apk_scanner_logger(tag="trueseeing")
+
 
 def process_android_app(android_app):
+    DB_LOGGER.info(f"TrueSeeing starts scan: {android_app.filename}")
     apk_path = android_app.absolute_store_path
     with tempfile.NamedTemporaryFile(suffix=".json") as temp_file:
         try:
@@ -22,7 +24,9 @@ def process_android_app(android_app):
                 logging.info(f"Data: {data}")
                 results = json.loads(data)
             store_result(android_app, results, scan_status="completed")
+            DB_LOGGER.info(f"TrueSeeing scan completed for {android_app.filename}")
         except Exception as err:
+            DB_LOGGER.error(f"ERROR: TrueSeeing scan failed for {android_app.filename}")
             store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
             logging.error(f"Error processing {apk_path}: {err}")
             traceback.print_exc()
@@ -87,7 +91,6 @@ def store_result(android_app, results, scan_status):
     return analysis_report
 
 
-@create_apk_scanner_log_context
 @create_db_context
 def trueseeing_worker_multiprocessing(android_app_id):
     """
@@ -114,7 +117,7 @@ class TrueseeingScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
-    @create_apk_scanner_log_context
+    @create_log_context
     @create_db_context
     def start_scan(self):
         """

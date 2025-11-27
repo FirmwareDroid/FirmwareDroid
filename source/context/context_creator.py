@@ -5,6 +5,7 @@
 import functools
 import logging
 import sys
+from log4mongo.handlers import MongoHandler
 
 
 def create_db_context(f):
@@ -20,6 +21,7 @@ def create_db_context(f):
         return f(*args, **kwargs)
 
     return decorated
+
 
 @create_db_context
 def create_app_context():
@@ -68,29 +70,30 @@ def create_multithread_log_context(f):
     def decorated(*args, **kwargs):
         setup_thread_logging()
         return f(*args, **kwargs)
+
     return decorated
 
 
+class TaggedMongoHandler(MongoHandler):
+    def __init__(self, tag, *args, **kwargs):
+        if not tag or not isinstance(tag, str) or not tag.strip():
+            raise ValueError("A non-empty 'tag' must be provided to TaggedMongoHandler.")
+        super().__init__(*args, **kwargs)
+        self.tag = tag
 
-def setup_file_log(logfile_name="app.log", logger_name="file_logger"):
-    log_file = "example.log"
-    logger = logging.getLogger("file_logger")
-    logger.setLevel(logging.DEBUG)
-    if not any(isinstance(h, logging.FileHandler) for h in logger.handlers):
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
+    def emit(self, record):
+        if not hasattr(record, 'tag'):
+            record.tag = self.tag
+        super().emit(record)
 
 
-def setup_apk_scanner_logger():
-    from log4mongo.handlers import MongoHandler
+def setup_apk_scanner_logger(tag=""):
     from webserver.settings import MONGO_DATABASES
     logger = logging.getLogger("apk_scanner_logger")
     logger.setLevel(logging.DEBUG)
-    if not any(isinstance(h, MongoHandler) or h.__class__.__name__ == "MongoHandler" for h in logger.handlers):
-        mongo_handler = MongoHandler(
+    if not any(h.__class__.__name__ == "TaggedMongoHandler" for h in logger.handlers):
+        mongo_handler = TaggedMongoHandler(
+            tag=tag,
             host=MONGO_DATABASES["default"]["host"],
             port=MONGO_DATABASES["default"]["port"],
             database_name=MONGO_DATABASES["default"]["db"],
@@ -102,34 +105,6 @@ def setup_apk_scanner_logger():
         mongo_handler.setLevel(logging.DEBUG)
         logger.addHandler(mongo_handler)
     return logger
-
-
-def create_apk_scanner_log_context(f):
-    """
-    Decorator for creating a log context and pushing into.
-    Attaches a MongoHandler once to the root logger so records are also saved
-    into the `ApkScannerLog` collection.
-    """
-    @functools.wraps(f)
-    def decorated(*args, **kwargs):
-        try:
-            from log4mongo.handlers import MongoHandler
-            from webserver.settings import MONGO_DATABASES
-            logger = logging.getLogger("apk_scanner_logger")
-            if not any(isinstance(h, MongoHandler) or h.__class__.__name__ == "MongoHandler" for h in logger.handlers):
-                mongo_handler = MongoHandler(host=MONGO_DATABASES["default"]["host"],
-                                             port=MONGO_DATABASES["default"]["port"],
-                                             database_name=MONGO_DATABASES["default"]["db"],
-                                             username=MONGO_DATABASES["default"]["username"],
-                                             password=MONGO_DATABASES["default"]["password"],
-                                             collection="apk_scanner_log",
-                                             capped=True)
-                mongo_handler.setLevel(logging.DEBUG)
-                logger.addHandler(mongo_handler)
-        except Exception as e:
-            pass
-        return f(*args, **kwargs)
-    return decorated
 
 
 def create_log_context(f):
@@ -144,4 +119,5 @@ def create_log_context(f):
         except Exception as e:
             pass
         return f(*args, **kwargs)
+
     return decorated

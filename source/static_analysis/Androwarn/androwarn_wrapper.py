@@ -7,16 +7,16 @@ import os
 import sys
 import tempfile
 from multiprocessing import Lock
-
 from model.Interfaces.ScanJob import ScanJob
 from model import AndrowarnReport, AndroidApp
-from context.context_creator import create_db_context, create_apk_scanner_log_context
+from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from processing.standalone_python_worker import start_python_interpreter
 
+DB_LOGGER = setup_apk_scanner_logger(tag="androwarn")
 lock = Lock()
 
 
-@create_apk_scanner_log_context
+@create_log_context
 @create_db_context
 def androwarn_worker_multiprocessing(android_app_id):
     """
@@ -33,7 +33,7 @@ def androwarn_worker_multiprocessing(android_app_id):
     android_app = None
     try:
         android_app = AndroidApp.objects.get(pk=android_app_id)
-        logging.info(f"Androwarn scan: {android_app.filename} {android_app.id} ")
+        DB_LOGGER.info(f"Androwarn scan: {android_app.filename} {android_app.id} ")
         with_playstore_lookup = False
         display_report = False
         report_type = 'json'
@@ -45,10 +45,12 @@ def androwarn_worker_multiprocessing(android_app_id):
         data = perform_analysis(android_app.absolute_store_path, a, d, x, with_playstore_lookup)
         if display_report:
             dump_analysis_results(data, sys.stdout)
+        DB_LOGGER.info(f"Androwarn generating report for app: {android_app.id} - file: {android_app.filename}")
         generate_report(package_name, data, verbose, report_type, output.name)
         report_file_path = output.name + "." + report_type
         results = parse_json_report(report_file_path)
         store_result(android_app, results=results, scan_status="completed")
+        DB_LOGGER.info(f"Androwarn completed scan: {android_app.id} - file: {android_app.filename}")
     except Exception as err:
         if android_app:
             store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
@@ -111,7 +113,7 @@ class AndrowarnScanJob(ScanJob):
         os.chdir(self.SOURCE_DIR)
 
     @create_db_context
-    @create_apk_scanner_log_context
+    @create_log_context
     def start_scan(self):
         """
         Starts multiple instances of the scanner to analyse a list of Android apps on multiple processors.

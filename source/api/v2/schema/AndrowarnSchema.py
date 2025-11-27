@@ -4,6 +4,8 @@
 import graphene
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
+from graphene.relay import Node
+from api.v2.schema.ApkScannerReportSchema import ApkScannerReportInterface
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from model import AndrowarnReport
 
@@ -13,6 +15,8 @@ ModelFilter = generate_filter(AndrowarnReport)
 class AndrowarnReportType(MongoengineObjectType):
     class Meta:
         model = AndrowarnReport
+        interfaces = (ApkScannerReportInterface, Node)
+        name = "AndrowarnReport"
 
 
 class AndrowarnReportQuery(graphene.ObjectType):

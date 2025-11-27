@@ -5,11 +5,12 @@ import logging
 import os
 from model.Interfaces.ScanJob import ScanJob
 from model import ExodusReport, AndroidApp
-from context.context_creator import create_db_context, create_apk_scanner_log_context
+from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from processing.standalone_python_worker import start_python_interpreter
 
+DB_LOGGER = setup_apk_scanner_logger(tag="exodus")
 
-@create_apk_scanner_log_context
+
 @create_db_context
 def exodus_worker_multiprocessing(android_app_id):
     """
@@ -19,11 +20,13 @@ def exodus_worker_multiprocessing(android_app_id):
 
     """
     android_app = AndroidApp.objects.get(pk=android_app_id)
-    logging.info(f"Exodus scans: {android_app.id}")
+    DB_LOGGER.info(f"Exodus scans: {android_app.id} - file: {android_app.filename}")
     try:
         exodus_json_report = get_exodus_analysis(android_app.absolute_store_path)
         store_result(android_app, results=exodus_json_report, scan_status="completed")
+        DB_LOGGER.info(f"Exodus completed scan: {android_app.id} - file: {android_app.filename}")
     except Exception as err:
+        DB_LOGGER.error(f"Exodus scan failed for app: {android_app.id} - file: {android_app.filename}")
         store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
         logging.error(f"Exodus could not scan app {android_app.filename} id: {android_app.id} - "
                       f"error: {err}")
@@ -96,7 +99,7 @@ class ExodusScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
-    @create_apk_scanner_log_context
+    @create_log_context
     @create_db_context
     def start_scan(self):
         """

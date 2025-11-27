@@ -7,7 +7,7 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from model.Interfaces.ScanJob import ScanJob
 from model import QuarkEngineReport, AndroidApp
-from context.context_creator import create_db_context, create_apk_scanner_log_context
+from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from static_analysis.QuarkEngine.vuln_checkers import *
 from processing.standalone_python_worker import start_python_interpreter
 
@@ -15,22 +15,15 @@ MAX_WAITING_TIME = 60 * 10
 MAX_EXECUTION_TIME = 60 * 30
 QUARK_SCAN_TIMEOUT = 60 * 2
 
+DB_LOGGER = setup_apk_scanner_logger(tag="quark_engine")
 
-@create_db_context
-@create_apk_scanner_log_context
-def quark_engine_worker_multiprocessing(android_app_id):
-    """
-    Start the analysis with quark-engine on a multiprocessor queue.
 
-    :param android_app_id: str - id of the android app.
-
-    """
-
+def start_quark_engine_app_analysis(android_app):
     rule_dir_path = get_quark_engine_rules()
     if rule_dir_path is None or os.path.isdir(rule_dir_path) is False or os.path.exists(rule_dir_path) is False:
+        DB_LOGGER.error(f"Could not get quark-engine scanning rules.")
         raise RuntimeError(f"Could not get quark-engine scanning rules from {rule_dir_path}.")
 
-    android_app = get_android_app_by_id(android_app_id)
     try:
         # TODO remove this if filesize check as soon as quark-engine fixes the issue with large apk files.
         if android_app.file_size_bytes <= 83886080:
@@ -41,11 +34,15 @@ def quark_engine_worker_multiprocessing(android_app_id):
             scan_results_vulns = {k: v for k, v in scan_results_vulns.items() if v}
             results = {"malware": scan_results_malware, "vulnerabilities": scan_results_vulns}
             store_results(android_app, results, scan_status="completed")
+            DB_LOGGER.info(f"SUCCESS: SUPER Android Analyzer completed scan: {android_app.filename} {android_app.id}")
         else:
+            DB_LOGGER.error(f"ERROR: Could not scan app {android_app.filename} id: {android_app.id} - beacause it is over "
+                            f"the maximal file size for quark-engine.")
             store_results(android_app, {}, scan_status="failed")
             logging.error(f"Skipping: Android apk is over maximal file size for quark-engine. "
                           f"{android_app.filename} {android_app.id}")
     except Exception as err:
+        DB_LOGGER.error(f"ERROR: Quark-Engine could not scan app {android_app.filename} id: {android_app.id}")
         logging.error(f"Quark-Engine could not scan app {android_app.filename} id: {android_app.id} - "
                       f"error: {err}")
         traceback.print_exc()
@@ -53,13 +50,6 @@ def quark_engine_worker_multiprocessing(android_app_id):
     finally:
         logging.info(f"Quark-Engine finished scanning: {android_app.filename} {android_app.id}")
         remove_logs()
-
-
-def get_android_app_by_id(android_app_id):
-    android_app = AndroidApp.objects.get(pk=android_app_id)
-    logging.info(f"Quark-Engine scans: {android_app.filename} {android_app.id} ")
-    if os.path.exists(android_app.absolute_store_path) is False:
-        raise FileNotFoundError(f"Android app not found in store: {android_app.filename} {android_app.id}")
 
 
 def get_quark_engine_rules():
@@ -167,6 +157,25 @@ def store_results(android_app, scan_results, scan_status):
     return report
 
 
+@create_db_context
+@create_log_context
+def quark_engine_worker_multiprocessing(android_app_id):
+    """
+    Start the analysis with quark-engine on a multiprocessor queue.
+
+    :param android_app_id: str - id of the android app.
+
+    """
+    try:
+        android_app = AndroidApp.objects.get(pk=android_app_id)
+        if android_app:
+            start_quark_engine_app_analysis(android_app)
+        else:
+            raise RuntimeError(f"Could not find Android app with id: {android_app_id}")
+    except Exception as err:
+        logging.error(f"Quark-Engine could not scan app id: {android_app_id} - "
+                      f"error: {err}")
+
 class QuarkEngineScanJob(ScanJob):
     object_id_list = []
     SOURCE_DIR = "/var/www/source"
@@ -177,7 +186,7 @@ class QuarkEngineScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
-    @create_apk_scanner_log_context
+    @create_log_context
     @create_db_context
     def start_scan(self):
         """

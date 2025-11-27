@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
-
 import json
 import logging
 import os
@@ -11,11 +10,14 @@ import tempfile
 from pathlib import Path
 from model.Interfaces.ScanJob import ScanJob
 from model import AndroidApp, SuperReport
-from context.context_creator import create_db_context, create_apk_scanner_log_context
+from context.context_creator import create_db_context, setup_apk_scanner_logger, \
+    create_log_context
 from processing.standalone_python_worker import start_python_interpreter
 
 
-@create_apk_scanner_log_context
+DB_LOGGER = setup_apk_scanner_logger(tag="super")
+
+
 @create_db_context
 def super_android_analyzer_multiprocessing(android_app_id):
     """
@@ -25,12 +27,14 @@ def super_android_analyzer_multiprocessing(android_app_id):
 
     """
     android_app = AndroidApp.objects.get(pk=android_app_id)
-    logging.info(f"SUPER Android Analyzer scans: {android_app.filename} {android_app.id}")
+    DB_LOGGER.info(f"SUPER Android Analyzer scans: {android_app.filename} {android_app.id}")
     try:
         tempdir = tempfile.TemporaryDirectory()
         super_json_results = get_super_android_analyzer_analysis(android_app.absolute_store_path, tempdir.name)
         store_result(android_app, results=super_json_results, scan_status="completed")
+        DB_LOGGER.info(f"SUCCESS: SUPER Android Analyzer completed scan: {android_app.filename} {android_app.id}")
     except Exception as err:
+        DB_LOGGER.error(f"ERROR: SUPER Android Analyzer failed to scan: {android_app.filename} {android_app.id}")
         store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
         logging.error(f"Super could not scan app {android_app.filename} id: {android_app.id} - "
                       f"error: {err}")
@@ -90,7 +94,7 @@ class SuperAndroidAnalyzerScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
-    @create_apk_scanner_log_context
+    @create_log_context
     @create_db_context
     def start_scan(self):
         """

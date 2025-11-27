@@ -6,18 +6,22 @@ import os
 from model.Interfaces.ScanJob import ScanJob
 from model import AndroidApp
 from model import VirusTotalReport
-from context.context_creator import create_db_context, create_apk_scanner_log_context
+from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from processing.standalone_python_worker import start_python_interpreter
 
+DB_LOGGER = setup_apk_scanner_logger(tag="virustotal")
 
-def scan_apk_files(android_app_id, vt_api_key):
+
+def scan_apk_files(android_app, vt_api_key):
     import vt
+    DB_LOGGER.info(f"Scanning APK file with VirusTotal: {android_app.id} file: {android_app.filename}")
     client = vt.Client(vt_api_key)
-    android_app = AndroidApp.objects.get(pk=android_app_id)
     if not os.path.exists(android_app.absolute_store_path):
         raise ValueError(f"File does not exist: {android_app.absolute_store_path}")
     analysis = scan_file(client, android_app.absolute_store_path)
+    DB_LOGGER.info(f"VirusTotal scan completed for {android_app.id} storing Result: {analysis}...")
     store_virustotal_result(android_app, analysis)
+    DB_LOGGER.info(f"VirusTotal result stored for {android_app.id}.")
 
 
 def store_virustotal_result(android_app, analysis):
@@ -29,17 +33,18 @@ def store_virustotal_result(android_app, analysis):
 
 
 def scan_file(client, file_path):
+    DB_LOGGER.info(f"Invoking VirusTotal")
     with open(file_path, "rb") as f:
         analysis = client.scan_file(f, wait_for_completion=True)
     return analysis
 
 
-@create_apk_scanner_log_context
 @create_db_context
 def start_virustotal_multiprocessing(android_app_id, vt_api_key):
     logging.info(f"Scanning APK file with VirusTotal: {android_app_id}")
     try:
-        scan_apk_files(android_app_id, vt_api_key)
+        android_app = AndroidApp.objects.get(pk=android_app_id)
+        scan_apk_files(android_app, vt_api_key)
     except Exception as e:
         logging.error(f"Error scanning APK file with VirusTotal: {android_app_id}")
         logging.error(e)
@@ -56,7 +61,7 @@ class VirusTotalScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
-    @create_apk_scanner_log_context
+    @create_log_context
     @create_db_context
     def start_scan(self, vt_api_key):
         android_app_id_list = self.object_id_list

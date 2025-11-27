@@ -9,7 +9,7 @@ import tempfile
 import traceback
 from queue import Empty
 from threading import Thread
-from context.context_creator import create_db_context, create_apk_scanner_log_context, create_multithread_log_context
+from context.context_creator import create_db_context, create_multithread_log_context, create_log_context
 from extractor.expand_archives import extract_first_layer
 from model import StoreSetting, AndroidFirmware
 from processing.standalone_python_worker import create_multi_threading_queue
@@ -21,8 +21,8 @@ UNBLBOB_DEPTH = 10
 FILES_TO_NOT_EXTRACT = [".unknown", ".padding", "_extract", "raw.image", ".unblob.json"]
 
 
+@create_log_context
 @create_db_context
-@create_apk_scanner_log_context
 def start_file_export_by_regex(filename_regex, firmware_id_list, store_setting_id):
     """
     Starts a firmware file export. Uses a regex and the given firmware to pre-filter firmware-files.

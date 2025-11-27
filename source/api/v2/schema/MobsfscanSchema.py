@@ -6,6 +6,8 @@ from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from model import MobSFScanReport
+from graphene.relay import Node
+from api.v2.schema.ApkScannerReportSchema import ApkScannerReportInterface
 
 ModelFilter = generate_filter(MobSFScanReport)
 
@@ -13,16 +15,17 @@ ModelFilter = generate_filter(MobSFScanReport)
 class MobSFScanReportType(MongoengineObjectType):
     class Meta:
         model = MobSFScanReport
+        interfaces = (ApkScannerReportInterface, Node)
+        name = "MobSFScanReport"
 
 
 class MobSFScanReportQuery(graphene.ObjectType):
     mobsfscan_report_list = graphene.List(MobSFScanReportType,
-                                        object_id=graphene.List(graphene.String),
-                                        field_filter=graphene.Argument(ModelFilter),
-                                        name="mobsfscan_report_list"
-                                        )
+                                          object_id=graphene.List(graphene.String),
+                                          field_filter=graphene.Argument(ModelFilter),
+                                          name="mobsfscan_report_list"
+                                          )
 
     @superuser_required
     def resolve_mobsfscan_report_list(self, info, object_id_list=None, field_filter=None):
         return get_filtered_queryset(MobSFScanReport, object_id_list, filter)
-

@@ -12,6 +12,8 @@ from context.context_creator import create_db_context, create_log_context, setup
 from processing.standalone_python_worker import start_python_interpreter
 from typing import List, Optional
 
+DB_LOGGER = setup_apk_scanner_logger(tag="apkid")
+
 
 def find_files(root_dir: str, target_filename: str, max_results: Optional[int] = None) -> List[str]:
     """
@@ -34,11 +36,12 @@ def process_android_app(android_app):
     :param android_app: class:'AndroidApp'
 
     """
-    LOGGER = setup_apk_scanner_logger()
     logging.info(f"Processing Android app with APKiD: {android_app.id}")
     try:
         from apkid.apkid import Options, Scanner
-        LOGGER.info(f"APKid Scans app: {android_app.filename} id: {android_app.id}", extra={'ip': '127.0.0.1'})
+        DB_LOGGER.info(f"APKid Scans app: {android_app.filename}",
+                       extra={'tag': 'apkid',
+                              "android_app_id": str(android_app.id)})
         with tempfile.TemporaryDirectory() as output_dir:
             if not os.path.exists(output_dir):
                 raise OSError(f"Could not create temp dir for apkid: {output_dir}")
@@ -67,15 +70,11 @@ def process_android_app(android_app):
             with open(report_file_path, 'r') as json_file:
                 results = json.load(json_file)
                 store_result(android_app, results=results, scan_status="completed")
-        LOGGER.info(f"APKid completed for app: {android_app.filename} id: {android_app.id}")
+        DB_LOGGER.info(f"APKid completed for app: {android_app.filename}")
     except Exception as err:
-        LOGGER.error(f"APKid Scan failed. ERROR: {err}")
-        if android_app:
-            LOGGER.error(f"APKid Scan failed. ERROR for app: {android_app.filename} id: {android_app.id} - {err}")
-            try:
-                store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
-            except Exception as err2:
-                pass
+        logging.error(err)
+        DB_LOGGER.error(f"Error: PKid Scan failed")
+        store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
 
 
 @create_db_context
@@ -89,7 +88,10 @@ def apkid_worker_multiprocessing(android_app_id):
     logging.debug(f"APKiD sub-process worker started for app id: {android_app_id}")
     try:
         android_app = AndroidApp.objects.get(pk=android_app_id)
-        process_android_app(android_app)
+        if android_app:
+            process_android_app(android_app)
+        else:
+            raise RuntimeError(f"Could not find Android app with id: {android_app_id}")
     except Exception as err:
         logging.error(err)
         traceback.print_exc()

@@ -4,7 +4,7 @@ import re
 import subprocess
 import tempfile
 from pathlib import Path
-from context.context_creator import create_apk_scanner_log_context, create_db_context
+from context.context_creator import create_log_context, create_db_context, setup_apk_scanner_logger
 from model import AndroidApp, FlowDroidReport
 from model.Interfaces.ScanJob import ScanJob
 from processing.standalone_python_worker import start_python_interpreter
@@ -15,19 +15,24 @@ FLOWDROID_MAIN_PATH = "/opt/flowdroid/"
 FLOWDROID_RULES_FOLDER_PATH = "/opt/flowdroid/rules/"
 DEFAULT_RULE_NAME = "SourcesAndSinks.txt"
 
+DB_LOGGER = setup_apk_scanner_logger(tag="flowdroid")
 
 def process_android_app(android_app, flowdroid_cmd_arg_list, rule_filename=DEFAULT_RULE_NAME):
     import xmltodict
+    DB_LOGGER.info(f"FlowDroid scans app: {android_app.filename} - id: {android_app.id}")
     apk_path = android_app.absolute_store_path
     rules_file_path = get_rules_file_path(rule_filename)
+    DB_LOGGER.info(f"Using rules file for FlowDroid: {rule_filename}")
 
     with tempfile.NamedTemporaryFile(suffix=".xml", delete=True) as temp_file:
         xml_file_path = temp_file.name
         try:
+            DB_LOGGER.info(f"Invoking FlowDroid analysis for app id {android_app.id} - file: {android_app.filename}")
             start_flowdroid_analysis(apk_path,
                                      rules_file_path,
                                      xml_file_path,
                                      flowdroid_cmd_arg_list)
+            DB_LOGGER.info(f"FlowDroid analysis finished, reading results for app id {android_app.id} - file: {android_app.filename}")
             with open(xml_file_path, "r") as file:
                 lines = file.readlines()
                 xml_data = ''.join(lines)
@@ -36,7 +41,9 @@ def process_android_app(android_app, flowdroid_cmd_arg_list, rule_filename=DEFAU
                 else:
                     data_dict = {"NoMatch": "No taints matched!"}
             store_result(android_app, results=data_dict, scan_status="completed")
+            DB_LOGGER.info(f"FlowDroid analysis completed for app id {android_app.id} - file: {android_app.filename}")
         except Exception as err:
+            DB_LOGGER.error(f"ERROR: FlowDroid analysis failed for app id {android_app.id} - file: {android_app.filename}")
             store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
             logging.error(f"FlowDroid analysis failed for app id {android_app.id}: {str(err)}")
 
@@ -172,7 +179,7 @@ def store_result(android_app, results, scan_status):
     return analysis_report
 
 
-@create_apk_scanner_log_context
+@create_log_context
 @create_db_context
 def flowdroid_worker_multiprocessing(android_app_id,
                                      android_api_version,
@@ -218,7 +225,7 @@ class FlowDroidScanJob(ScanJob):
             self.worker_args_list.append(rule_filename)
         os.chdir(self.SOURCE_DIR)
 
-    @create_apk_scanner_log_context
+    @create_log_context
     @create_db_context
     def start_scan(self):
         """

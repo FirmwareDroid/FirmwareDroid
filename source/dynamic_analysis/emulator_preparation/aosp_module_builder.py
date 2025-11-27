@@ -11,7 +11,7 @@ import tempfile
 import logging
 import traceback
 import uuid
-from context.context_creator import create_db_context, create_apk_scanner_log_context
+from context.context_creator import create_db_context, create_log_context
 from dynamic_analysis.emulator_preparation.aosp_apk_module_builer import create_build_files_for_apps, \
     process_android_apps
 from dynamic_analysis.emulator_preparation.aosp_file_exporter import export_files_by_regex
@@ -22,8 +22,8 @@ from model.StoreSetting import get_active_store_paths_by_uuid
 from processing.standalone_python_worker import start_mp_process_pool_executor
 
 
+@create_log_context
 @create_db_context
-@create_apk_scanner_log_context
 def start_aosp_module_file_creator(format_name, firmware_id_list, skip_file_export=False):
     worker_argument_list = [format_name, skip_file_export]
     number_of_processes = len(firmware_id_list) if len(firmware_id_list) < os.cpu_count() else os.cpu_count()
@@ -36,8 +36,8 @@ def start_aosp_module_file_creator(format_name, firmware_id_list, skip_file_expo
                                    worker_args_list=worker_argument_list)
 
 
+@create_log_context
 @create_db_context
-@create_apk_scanner_log_context
 def worker_process_firmware_multiprocessing(firmware_id, format_name, skip_file_export):
     """
     Worker process for creating build files for a given firmware.

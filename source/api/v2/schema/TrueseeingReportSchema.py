@@ -6,6 +6,8 @@ from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from model import TrueseeingReport
+from graphene.relay import Node
+from api.v2.schema.ApkScannerReportSchema import ApkScannerReportInterface
 
 ModelFilter = generate_filter(TrueseeingReport)
 
@@ -13,6 +15,8 @@ ModelFilter = generate_filter(TrueseeingReport)
 class TrueseeingReportType(MongoengineObjectType):
     class Meta:
         model = TrueseeingReport
+        interfaces = (ApkScannerReportInterface, Node)
+        name = "TrueseeingReport"
 
 
 class TrueseeingReportQuery(graphene.ObjectType):

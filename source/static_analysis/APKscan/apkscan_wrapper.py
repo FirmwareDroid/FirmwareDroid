@@ -4,10 +4,13 @@ import os
 import subprocess
 import tempfile
 import pkg_resources
-from context.context_creator import create_apk_scanner_log_context, create_db_context
+from context.context_creator import create_log_context, create_db_context, setup_apk_scanner_logger
 from model import AndroidApp, APKscanReport
 from model.Interfaces.ScanJob import ScanJob
 from processing.standalone_python_worker import start_python_interpreter
+
+
+DB_LOGGER = setup_apk_scanner_logger(tag="apkscan")
 
 
 def json_file_to_dict(file_path):
@@ -18,7 +21,7 @@ def json_file_to_dict(file_path):
 
 def process_android_app(android_app):
     apk_path = android_app.absolute_store_path
-    logging.info(f"Processing {apk_path}")
+    DB_LOGGER.info(f"Apkscan scans app: {android_app.filename} - id: {android_app.id} ")
     with (tempfile.TemporaryDirectory() as temp_dir):
         json_report_path = os.path.join(temp_dir, "scan_results.json")
         command = [
@@ -47,6 +50,7 @@ def process_android_app(android_app):
 
         for line in process.stdout:
             logging.info(f"APKscan: {line.strip()}")
+            DB_LOGGER.info(f"{line.strip()}")
 
         process.wait(timeout=60 * 60)
         stderr = process.stderr.read()
@@ -85,7 +89,7 @@ def store_result(android_app, results, scan_status):
     return analysis_report
 
 
-@create_apk_scanner_log_context
+@create_log_context
 @create_db_context
 def apkscan_worker_multiprocessing(android_app_id):
     """
@@ -105,9 +109,10 @@ def apkscan_worker_multiprocessing(android_app_id):
             logging.info(f"Changed working directory to: {temp_work_dir}")
 
             results = process_android_app(android_app)
+            DB_LOGGER.info(f"APKScan completed for app: {android_app.filename} id: {android_app.id}")
             store_result(android_app, results, scan_status="completed")
-
     except Exception as err:
+        DB_LOGGER.error(f"APKscan Scan failed for app id: {android_app_id}")
         if android_app:
             store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
         logging.error(f"Error processing {android_app_id}: {err}")
@@ -127,7 +132,7 @@ class APKScanScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
-    @create_apk_scanner_log_context
+    @create_log_context
     @create_db_context
     def start_scan(self):
         """

@@ -7,12 +7,14 @@ import tempfile
 import traceback
 import pkg_resources
 from model import AndroidApp, ApkleaksReport
-from context.context_creator import create_db_context, create_apk_scanner_log_context
+from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from model.Interfaces.ScanJob import ScanJob
 from processing.standalone_python_worker import start_python_interpreter
 
+DB_LOGGER = setup_apk_scanner_logger(tag="apkleaks")
 
-@create_apk_scanner_log_context
+
+@create_log_context
 @create_db_context
 def apkleaks_worker_multiprocessing(android_app_id):
     """
@@ -24,11 +26,13 @@ def apkleaks_worker_multiprocessing(android_app_id):
     android_app = None
     try:
         android_app = AndroidApp.objects.get(pk=android_app_id)
-        logging.info(f"APKLeaks scans: {android_app.filename} {android_app.id} ")
+        DB_LOGGER.info(f"APKLeaks scans: {android_app.filename} {android_app.id} ")
         tempdir = tempfile.TemporaryDirectory()
         json_results = get_apkleaks_analysis(android_app.absolute_store_path, tempdir.name)
         store_result(android_app, results=json_results, scan_status="completed")
+        DB_LOGGER.info(f"SUCCESS: APKLeaks completed scan: {android_app.filename} {android_app.id} ")
     except Exception as err:
+        DB_LOGGER.error(f"ERROR: APKLeaks could not scan app id: {android_app_id} - filename: {android_app.filename}")
         if android_app:
             store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
         traceback.print_exc()
@@ -99,7 +103,7 @@ class APKLeaksScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
-    @create_apk_scanner_log_context
+    @create_log_context
     @create_db_context
     def start_scan(self):
         """

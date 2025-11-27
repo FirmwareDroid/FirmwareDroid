@@ -8,10 +8,13 @@ import tempfile
 import json
 from model.Interfaces.ScanJob import ScanJob
 from model import QarkReport, QarkIssue, AndroidApp
-from context.context_creator import create_db_context, create_apk_scanner_log_context
+from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from processing.standalone_python_worker import start_python_interpreter
 
-@create_apk_scanner_log_context
+DB_LOGGER = setup_apk_scanner_logger(tag="qark")
+
+
+@create_log_context
 @create_db_context
 def qark_worker_multiprocessing(android_app_id):
     """
@@ -23,7 +26,7 @@ def qark_worker_multiprocessing(android_app_id):
     android_app = None
     try:
         android_app = AndroidApp.objects.get(pk=android_app_id)
-        logging.info(f"Qark scans: {android_app.filename} {android_app.id} ")
+        DB_LOGGER.info(f"Qark scans: {android_app.filename} {android_app.id} ")
         report_path = start_qark_app_analysis(android_app)
         logging.info("Create qark report for " + report_path)
         with open(report_path, 'rb') as report_file:
@@ -33,7 +36,9 @@ def qark_worker_multiprocessing(android_app_id):
                           scan_status="completed",
                           report_file=report_file,
                           report_file_path=report_path)
+            DB_LOGGER.info(f"Qark completed scan for app: {android_app.filename} {android_app.id} ")
     except Exception as err:
+        DB_LOGGER.error(f"ERROR: Qark could not scan app {android_app_id}")
         if android_app:
             store_results(android_app, results={"error": f"{err}"}, scan_status="failed", report_file=None, report_file_path=None)
         logging.error(f"Could not analyze app {android_app_id} with qark: {err}")
@@ -142,7 +147,7 @@ class QarkScanJob(ScanJob):
         self.object_id_list = object_id_list
         os.chdir(self.SOURCE_DIR)
 
-    @create_apk_scanner_log_context
+    @create_log_context
     @create_db_context
     def start_scan(self):
         """

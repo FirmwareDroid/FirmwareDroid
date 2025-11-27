@@ -6,7 +6,7 @@ import logging
 import os
 import traceback
 from model.Interfaces.ScanJob import ScanJob
-from context.context_creator import create_db_context, create_apk_scanner_log_context
+from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from model import AndroGuardReport, GenericFile
 from model import AndroGuardMethodClassAnalysisReference
 from model import AndroGuardStringAnalysis, AndroGuardClassAnalysis, AndroGuardMethodAnalysis, \
@@ -15,6 +15,8 @@ from model import AppCertificate
 from model.AndroGuardReport import SCANNER_NAME
 from database.mongodb_key_replacer import filter_mongodb_dict_chars
 from processing.standalone_python_worker import start_python_interpreter
+
+DB_LOGGER = setup_apk_scanner_logger(tag="androguard")
 
 
 def add_report_crossreferences(report):
@@ -262,10 +264,11 @@ def analyse_single_apk(android_app):
     :return: class:'AndroGuardReport'
 
     """
-
+    DB_LOGGER.info(f"Starting AndroGuard Analysis for app: {android_app.filename} {android_app.id}")
     from androguard.misc import AnalyzeAPK
     try:
         apk, _, dx = AnalyzeAPK(android_app.absolute_store_path)
+        DB_LOGGER.info(f"AndroGuard Analysis completed for app: {android_app.filename} {android_app.id}. Continue storing results...")
         _, certificate_id_list = create_certificate_object_list(apk.get_certificates(), android_app)
         permission_details = filter_mongodb_dict_chars(apk.get_details_permissions())
         permissions_declared_details = filter_mongodb_dict_chars(apk.get_declared_permissions_details())
@@ -283,8 +286,9 @@ def analyse_single_apk(android_app):
                      string_analysis_id_list=string_analysis_id_list,
                      components_dict=components_dict,
                      certificate_id_list=certificate_id_list)
+        DB_LOGGER.info(f"AndroGuard results stored for app: {android_app.filename} {android_app.id}")
     except Exception as err:
-        logging.error(f"AndroGuard scan failed for app {android_app.filename} {android_app.id} - error: {str(err)}")
+        DB_LOGGER.error(f"AndroGuard scan failed for app {android_app.filename} {android_app.id} - error: {str(err)}")
         scan_status = "failed"
         apk = None
         permission_details = {}
@@ -461,7 +465,7 @@ def analyse_and_save(android_app):
 
 
 @create_db_context
-@create_apk_scanner_log_context
+@create_log_context
 def androguard_worker_multiprocessing(android_app_id):
     """
     Worker process which will work on the given queue.
@@ -507,7 +511,7 @@ class AndroGuardScanJob(ScanJob):
         os.chdir(self.SOURCE_DIR)
 
     @create_db_context
-    @create_apk_scanner_log_context
+    @create_log_context
     def start_scan(self):
         """
         Starts multiple instances of AndroGuard to analyse a list of Android apps on multiple processors.

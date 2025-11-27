@@ -14,7 +14,7 @@ from hashing.fuzzy_hash_creator import add_fuzzy_hashes
 from model import AndroidFirmware, FirmwareFile, AndroidApp
 from threading import Thread
 from firmware_handler.image_importer import find_image_firmware_file
-from context.context_creator import create_db_context, create_apk_scanner_log_context
+from context.context_creator import create_db_context, create_log_context
 from firmware_handler.firmware_file_indexer import create_firmware_file_list, add_firmware_file_references
 from firmware_handler.const_regex_patterns import BUILD_PROP_PATTERN_LIST, EXT_IMAGE_PATTERNS_DICT
 from android_app_importer.android_app_import import store_android_apps_from_firmware
@@ -36,7 +36,7 @@ lock = threading.Lock()
 
 
 @create_db_context
-@create_apk_scanner_log_context
+@create_log_context
 def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0):
     """
     Imports all .zip files from the import folder.

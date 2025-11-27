@@ -6,6 +6,8 @@ from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from model.ApkleaksReport import ApkleaksReport
+from graphene.relay import Node
+from api.v2.schema.ApkScannerReportSchema import ApkScannerReportInterface
 
 ModelFilter = generate_filter(ApkleaksReport)
 
@@ -13,6 +15,8 @@ ModelFilter = generate_filter(ApkleaksReport)
 class ApkleaksReportType(MongoengineObjectType):
     class Meta:
         model = ApkleaksReport
+        interfaces = (ApkScannerReportInterface, Node)
+        name = "ApkleaksReport"
 
 
 class ApkleaksReportQuery(graphene.ObjectType):

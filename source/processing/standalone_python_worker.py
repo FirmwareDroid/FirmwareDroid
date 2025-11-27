@@ -5,7 +5,7 @@ import logging
 import sys
 import concurrent.futures
 sys.path.append("/var/www/source/")
-from database.query_document import get_filtered_list, fetch_document_by_id_list
+from database.query_document import fetch_document_by_id_list
 from model import AndroidApp
 import importlib
 import os
@@ -104,9 +104,16 @@ def start_python_interpreter(item_list,
                                )
 
     def log_stream(stream, log_level):
+        logger = logging.getLogger("subprocess_logger")
+        if not logger.handlers:
+            handler = logging.StreamHandler(sys.stdout)
+            formatter = logging.Formatter('%(asctime)s - %(processName)s/%(process)d - %(message)s')
+            handler.setFormatter(formatter)
+            logger.addHandler(handler)
+            logger.propagate = False
         for line in iter(stream.readline, ''):
             if line:
-                logging.log(log_level, line.strip())
+                logger.log(log_level, line.strip())
         stream.close()
 
     stdout_thread = threading.Thread(target=log_stream, args=(process.stdout, logging.INFO), daemon=True)
@@ -161,17 +168,13 @@ def start_mp_process_pool_executor(item_list,
     worker_task_list = [obj.id for obj in item_list] if create_id_list else item_list
     result_list = []
 
-    # Set up logging queue and listener in the main process
+    # # Set up logging queue and listener in the main process
     log_queue = multiprocessing.Queue(-1)
     handler = logging.StreamHandler()
-    formatter = logging.Formatter('%(asctime)s - %(processName)s/%(process)d - %(levelname)s - %(message)s')
+    formatter = logging.Formatter('%(processName)s/%(process)d - %(levelname)s - %(message)s')
     handler.setFormatter(formatter)
     listener = QueueListener(log_queue, handler)
     listener.start()
-
-    def wrapped_worker(*args, **kwargs):
-        worker_init(log_queue)
-        return worker_function(*args, **kwargs)
 
     logging.info(f"Starting multiprocessing pool with {number_of_processes} processes for function {worker_function}.")
     with concurrent.futures.ProcessPoolExecutor(max_workers=number_of_processes, initializer=worker_init, initargs=(log_queue,)) as executor:

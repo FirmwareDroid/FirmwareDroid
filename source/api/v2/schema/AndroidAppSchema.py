@@ -10,6 +10,8 @@ from enum import Enum
 from graphene.relay import Node
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
+
+#from api.v2.schema.ApkScannerReportSchema import ApkScannerReportType
 from api.v2.schema.RqJobsSchema import ONE_WEEK_TIMEOUT, MAX_OBJECT_ID_LIST_SIZE
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
 from api.v2.validators.chunking import create_object_id_chunks
@@ -41,7 +43,6 @@ class ScannerModules(Enum):
 
 class AndroidAppType(MongoengineObjectType):
     pk = graphene.String(source='pk')
-    apk_scanner_report_reference_list = graphene.List(graphene.String)
 
     class Meta:
         model = AndroidApp
@@ -188,7 +189,10 @@ class CreateApkScanJob(graphene.Mutation):
                 else:
                     logging.info("No kwargs")
                     func_to_run = import_module_function(module_name, object_id_chunk)
-                job = queue.enqueue(func_to_run, job_timeout=ONE_WEEK_TIMEOUT)
+                job = queue.enqueue(func_to_run,
+                                        job_timeout=ONE_WEEK_TIMEOUT,
+                                        meta={"module_name": module_name}
+                                    )
                 job_id_list.append(job.id)
                 response = cls(job_id_list=job_id_list)
         return response

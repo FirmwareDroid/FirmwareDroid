@@ -9,14 +9,14 @@ from threading import Thread
 from hashing.tlsh.tlsh_hasher import create_tlsh_hash
 from model import AndroidFirmware
 from firmware_handler.firmware_file_exporter import extract_firmware
-from context.context_creator import create_db_context, create_apk_scanner_log_context, create_multithread_log_context
+from context.context_creator import create_db_context, create_log_context, create_multithread_log_context
 from model.StoreSetting import get_active_store_by_index
 from processing.standalone_python_worker import create_multi_threading_queue
 
 NUMBER_OF_FUZZY_HASH_THREADS = 4
 
 
-@create_apk_scanner_log_context
+@create_log_context
 @create_db_context
 def start_fuzzy_hasher(firmware_id_list, storage_index):
     """

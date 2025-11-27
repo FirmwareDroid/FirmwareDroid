@@ -2,13 +2,13 @@ import logging
 import os
 import shutil
 from api.v2.types.GenericDeletion import delete_queryset_background
-from context.context_creator import create_db_context, create_apk_scanner_log_context
+from context.context_creator import create_db_context, create_log_context
 from firmware_handler.firmware_importer import import_firmware_from_store
 from model import AndroidFirmware, StoreSetting
 
 
 @create_db_context
-@create_apk_scanner_log_context
+@create_log_context
 def start_firmware_re_import(firmware_id_list, create_fuzzy_hashes=False):
     """
     The reimporter is a function that reimports firmware files into the importer queue.

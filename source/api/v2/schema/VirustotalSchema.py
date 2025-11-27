@@ -14,6 +14,8 @@ from api.v2.validators.validation import (
 )
 from model.VirusTotalReport import VirusTotalReport
 from webserver.settings import RQ_QUEUES
+from graphene.relay import Node
+from api.v2.schema.ApkScannerReportSchema import ApkScannerReportInterface
 
 ModelFilter = generate_filter(VirusTotalReport)
 
@@ -21,6 +23,8 @@ ModelFilter = generate_filter(VirusTotalReport)
 class VirustotalReportType(MongoengineObjectType):
     class Meta:
         model = VirusTotalReport
+        interfaces = (ApkScannerReportInterface, Node)
+        name = "VirusTotalReport"
 
 
 class VirustotalReportQuery(graphene.ObjectType):
