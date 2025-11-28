@@ -4,8 +4,8 @@
 import logging
 
 import graphene
-from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
+from api.v2.schema.AndroidAppSchema import AndroidAppType
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from model.ApkScannerReport import ApkScannerReport
 from graphene.relay import Node
@@ -15,11 +15,21 @@ ModelFilter = generate_filter(ApkScannerReport)
 
 class ApkScannerReportInterface(graphene.Interface):
     _cls = graphene.String()
+    id = graphene.ID(required=True)
     pk = graphene.String(source='pk')
     report_date = graphene.DateTime()
     scan_status = graphene.String()
     scanner_name = graphene.String()
     scanner_version = graphene.String()
+    android_app_id_reference = graphene.Field(AndroidAppType)
+
+    class Meta:
+        interfaces = (Node,)
+
+    def resolve_android_app_id_reference(parent, info):
+        if parent.android_app_id_reference:
+            return parent.android_app_id_reference.fetch()
+        return None
 
     @classmethod
     def resolve_type(cls, instance, info):
@@ -61,16 +71,16 @@ class ApkScannerReportInterface(graphene.Interface):
         elif getattr(instance, "_cls", None) == "ApkScannerReport.TrueseeingReport":
             return TrueseeingReportType
 
-        return ApkScannerReportType
+        raise Exception(f"Unknown ApkScannerReport subclass: {getattr(instance, '_cls', None)}")
 
-
-class ApkScannerReportType(MongoengineObjectType):
-
-
-    class Meta:
-        model = ApkScannerReport
-        interfaces = (ApkScannerReportInterface, Node)
-        name = "MetaApkScannerReport"
+#         return ApkScannerReportType
+#
+#
+# class ApkScannerReportType(MongoengineObjectType):
+#     class Meta:
+#         model = ApkScannerReport
+#         interfaces = (ApkScannerReportInterface, Node)
+#         name = "MetaApkScannerReport"
 
 
 class ApkScannerReportQuery(graphene.ObjectType):
@@ -83,7 +93,6 @@ class ApkScannerReportQuery(graphene.ObjectType):
 
     @superuser_required
     def resolve_apk_scanner_report_list(self, info, object_id_list=None, field_filter=None):
-        # Map GraphQL type names to model classes
         type_to_model = {
             "ApkidReport": "model.ApkidReport.ApkidReport",
             "AndroGuardReport": "model.AndroGuardReport.AndroGuardReport",
@@ -92,7 +101,7 @@ class ApkScannerReportQuery(graphene.ObjectType):
             "ExodusReport": "model.ExodusReport.ExodusReport",
             "ApkleaksReport": "model.ApkleaksReport.ApkleaksReport",
             "MobSFScanReport": "model.MobSFScanReport.MobSFScanReport",
-            "VirustotalReport": "model.VirustotalReport.VirustotalReport",
+            "VirustotalReport": "model.VirusTotalReport.VirusTotalReport",
             "SuperReport": "model.SuperReport.SuperReport",
             "QuarkEngineReport": "model.QuarkEngineReport.QuarkEngineReport",
             "FlowDroidReport": "model.FlowDroidReport.FlowDroidReport",
@@ -106,11 +115,16 @@ class ApkScannerReportQuery(graphene.ObjectType):
                     if hasattr(selection, "type_condition") and selection.type_condition is not None:
                         requested_types.add(selection.type_condition.name.value)
 
-        # If no specific types requested, return all
-        if not requested_types:
-            return get_filtered_queryset(ApkScannerReport, object_id_list, field_filter)
+        # If MetaApkScannerReport is requested, treat as "all"
+        if "MetaApkScannerReport" in requested_types or not requested_types:
+            all_reports = []
+            for model_path in type_to_model.values():
+                module_name, class_name = model_path.rsplit(".", 1)
+                model_cls = getattr(__import__(module_name, fromlist=[class_name]), class_name)
+                all_reports.extend(get_filtered_queryset(model_cls, object_id_list, field_filter))
+            return all_reports
 
-        # Collect all documents from the requested types
+        # Otherwise, collect only requested types
         all_reports = []
         for type_name in requested_types:
             model_path = type_to_model.get(type_name)
