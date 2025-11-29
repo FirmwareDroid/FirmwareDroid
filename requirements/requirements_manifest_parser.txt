@@ -1,2 +1,2 @@
 defusedxml~=0.7.1
-xmltodict~=0.13.0
+xmltodict~=0.15.0
