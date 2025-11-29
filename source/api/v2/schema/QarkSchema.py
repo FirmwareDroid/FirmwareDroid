@@ -6,6 +6,8 @@ from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
 from model.QarkReport import QarkReport
+from graphene.relay import Node
+from api.v2.schema.ApkScannerReportSchema import ApkScannerReportInterface
 
 ModelFilter = generate_filter(QarkReport)
 
@@ -13,6 +15,8 @@ ModelFilter = generate_filter(QarkReport)
 class QarkReportType(MongoengineObjectType):
     class Meta:
         model = QarkReport
+        interfaces = (ApkScannerReportInterface, Node)
+        name = "QarkReport"
 
 
 class QarkReportQuery(graphene.ObjectType):

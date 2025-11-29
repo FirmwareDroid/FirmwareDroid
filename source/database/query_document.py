@@ -114,6 +114,18 @@ def get_filtered_list(document_id_list, document_class, reference_attribute_name
     return result_list
 
 
+def fetch_document_by_id_list(document_id_list, document_class):
+    """
+    Fetches a single document instance from the database by its object-id.
+
+    :param document_id_list: list(object-id) - document object-id list.
+    :param document_class: document - type of the document to fetch.
+
+    :return: document_instance
+
+    """
+    document_list = create_document_list_by_ids(document_id_list, document_class)
+    return document_list
 
 
 

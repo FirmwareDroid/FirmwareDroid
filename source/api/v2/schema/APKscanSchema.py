@@ -6,6 +6,8 @@ from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from model.APKscanReport import APKscanReport
+from graphene.relay import Node
+from api.v2.schema.ApkScannerReportSchema import ApkScannerReportInterface
 
 ModelFilter = generate_filter(APKscanReport)
 
@@ -13,6 +15,8 @@ ModelFilter = generate_filter(APKscanReport)
 class APKscanReportType(MongoengineObjectType):
     class Meta:
         model = APKscanReport
+        interfaces = (ApkScannerReportInterface, Node)
+        name = "APKscanReport"
 
 
 class APKscanReportQuery(graphene.ObjectType):
@@ -25,3 +29,4 @@ class APKscanReportQuery(graphene.ObjectType):
     @superuser_required
     def resolve_apkscan_report_list(self, info, object_id_list=None, field_filter=None):
         return get_filtered_queryset(APKscanReport, object_id_list, filter)
+

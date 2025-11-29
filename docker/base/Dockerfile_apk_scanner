@@ -146,6 +146,8 @@ RUN set -eux; \
     for i in $(seq 1 5); do \
         wget -O /opt/flowdroid/rules/SourcesAndSinks_SharedPrefsOnly.txt https://raw.githubusercontent.com/secure-software-engineering/FlowDroid/develop/soot-infoflow-android/SourcesAndSinks_SharedPrefsOnly.txt && break || sleep 15; \
     done;
+# Copy custom rules from source tree
+RUN cp -r /var/www/source/static_analysis/FlowDroid/rules/* /opt/flowdroid/rules/
 
 ########################################################
 # Install Python requirements                          #

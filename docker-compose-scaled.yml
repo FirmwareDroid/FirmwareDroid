@@ -88,13 +88,13 @@ services:
     networks:
       - backend
 
-  extractor-worker-high-1:
+  extractor-worker-1:
     platform: "linux/amd64"
     user: www
     build:
       context: .
       dockerfile: docker/base/Dockerfile_extractor
-    container_name: extractor-worker-high-1
+    container_name: extractor-worker-1
     restart: unless-stopped
     depends_on:
       - redis
@@ -112,17 +112,17 @@ services:
       - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
     env_file:
       - ./.env
-    command: rqworker --logging_level INFO --name extractor-worker-high-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
+    command: rqworker --logging_level INFO --name extractor-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 extractor
     networks:
       - backend
 
-  extractor-worker-high-2:
+  extractor-worker-2:
     platform: "linux/amd64"
     user: www
     build:
       context: .
       dockerfile: docker/base/Dockerfile_extractor
-    container_name: extractor-worker-high-2
+    container_name: extractor-worker-2
     restart: unless-stopped
     depends_on:
       - redis
@@ -140,47 +140,18 @@ services:
       - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
     env_file:
       - ./.env
-    command: rqworker --logging_level INFO --name extractor-worker-high-2 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
-    networks:
-      - backend
-
-
-  extractor-worker-high-3:
-    platform: "linux/amd64"
-    user: www
-    build:
-      context: .
-      dockerfile: docker/base/Dockerfile_extractor
-    container_name: extractor-worker-high-3
-    restart: unless-stopped
-    depends_on:
-      - redis
-    volumes:
-      - .:/var/www/
-      - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
-      - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
-      - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
-      - ${LOCAL_STORAGE_PATH_03}:/var/www/file_store/03_file_storage
-      - ${LOCAL_STORAGE_PATH_04}:/var/www/file_store/04_file_storage
-      - ${LOCAL_STORAGE_PATH_05}:/var/www/file_store/05_file_storage
-      - ${LOCAL_STORAGE_PATH_06}:/var/www/file_store/06_file_storage
-      - ${LOCAL_STORAGE_PATH_07}:/var/www/file_store/07_file_storage
-      - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
-      - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
-    env_file:
-      - ./.env
-    command: rqworker --logging_level INFO --name extractor-worker-high-3 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
+    command: rqworker --logging_level INFO --name extractor-worker-2 --url redis://:${REDIS_PASSWORD}@redis:6379/0 extractor
     networks:
       - backend
 
 
-  extractor-worker-high-4:
+  extractor-worker-3:
     platform: "linux/amd64"
     user: www
     build:
       context: .
       dockerfile: docker/base/Dockerfile_extractor
-    container_name: extractor-worker-high-4
+    container_name: extractor-worker-3
     restart: unless-stopped
     depends_on:
       - redis
@@ -198,7 +169,36 @@ services:
       - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
     env_file:
       - ./.env
-    command: rqworker --logging_level INFO --name extractor-worker-high-4 --url redis://:${REDIS_PASSWORD}@redis:6379/0 high-python
+    command: rqworker --logging_level INFO --name extractor-worker-3 --url redis://:${REDIS_PASSWORD}@redis:6379/0 extractor
+    networks:
+      - backend
+
+
+  extractor-worker-4:
+    platform: "linux/amd64"
+    user: www
+    build:
+      context: .
+      dockerfile: docker/base/Dockerfile_extractor
+    container_name: extractor-worker-4
+    restart: unless-stopped
+    depends_on:
+      - redis
+    volumes:
+      - .:/var/www/
+      - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
+      - ${LOCAL_STORAGE_PATH_03}:/var/www/file_store/03_file_storage
+      - ${LOCAL_STORAGE_PATH_04}:/var/www/file_store/04_file_storage
+      - ${LOCAL_STORAGE_PATH_05}:/var/www/file_store/05_file_storage
+      - ${LOCAL_STORAGE_PATH_06}:/var/www/file_store/06_file_storage
+      - ${LOCAL_STORAGE_PATH_07}:/var/www/file_store/07_file_storage
+      - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
+      - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
+    env_file:
+      - ./.env
+    command: rqworker --logging_level INFO --name extractor-worker-4 --url redis://:${REDIS_PASSWORD}@redis:6379/0 extractor
     networks:
       - backend
 

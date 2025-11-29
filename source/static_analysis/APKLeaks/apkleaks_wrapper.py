@@ -7,9 +7,11 @@ import tempfile
 import traceback
 import pkg_resources
 from model import AndroidApp, ApkleaksReport
-from context.context_creator import create_db_context, create_log_context
+from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from model.Interfaces.ScanJob import ScanJob
 from processing.standalone_python_worker import start_python_interpreter
+
+DB_LOGGER = setup_apk_scanner_logger(tag="apkleaks")
 
 
 @create_log_context
@@ -21,13 +23,18 @@ def apkleaks_worker_multiprocessing(android_app_id):
     :param android_app_id: str - id of the AndroidApp to be scanned.
 
     """
+    android_app = None
     try:
         android_app = AndroidApp.objects.get(pk=android_app_id)
-        logging.info(f"APKLeaks scans: {android_app.filename} {android_app.id} ")
+        DB_LOGGER.info(f"APKLeaks scans: {android_app.filename} {android_app.id} ")
         tempdir = tempfile.TemporaryDirectory()
         json_results = get_apkleaks_analysis(android_app.absolute_store_path, tempdir.name)
-        create_report(android_app, json_results)
+        store_result(android_app, results=json_results, scan_status="completed")
+        DB_LOGGER.info(f"SUCCESS: APKLeaks completed scan: {android_app.filename} {android_app.id} ")
     except Exception as err:
+        DB_LOGGER.error(f"ERROR: APKLeaks could not scan app id: {android_app_id} - filename: {android_app.filename}")
+        if android_app:
+            store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
         traceback.print_exc()
         logging.error(f"APKleaks could not scan app id: {android_app_id} - "
                       f"error: {err}")
@@ -67,20 +74,22 @@ def get_apkleaks_analysis(apk_file_path, result_folder_path):
     return json_result
 
 
-def create_report(android_app, json_results):
+def store_result(android_app, results, scan_status):
     """
     Create a class:'ApkleaksReport' and save the scan results in the database.
 
     :param android_app: class:'AndroidApp' - app that was scanned.
-    :param json_results: str - scanning results in json format.
+    :param results: str - scanning results in json format.
+    :param scan_status: str - status of the scan.
 
     """
     version = pkg_resources.get_distribution("apkleaks").version
     apkleaks_report = ApkleaksReport(android_app_id_reference=android_app.id,
-                                     scanner_version=version, #"2.6.1",
+                                     scanner_version=version,
                                      scanner_name="APKLeaks",
-                                     results=json_results).save()
-    android_app.apkleaks_report_reference = apkleaks_report.id
+                                     scan_status=scan_status,
+                                     results=results).save()
+    android_app.apk_scanner_report_reference_list.append(apkleaks_report.id)
     android_app.save()
 
 
@@ -108,6 +117,5 @@ class APKLeaksScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="apkleaks_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH)
             python_process.wait()

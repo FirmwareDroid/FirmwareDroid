@@ -6,21 +6,20 @@ import logging
 import django_rq
 import graphene
 from graphene import relay
-from graphql import GraphQLError
 from graphene_mongo import MongoengineObjectType
-from graphql import GraphQLError
 from graphql_jwt.decorators import superuser_required
 from api.v2.schema.RqJobsSchema import ONE_DAY_TIMEOUT, ONE_WEEK_TIMEOUT
 from api.v2.types.GenericDeletion import delete_queryset_background
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from api.v2.validators.validation import (
-    sanitize_and_validate, validate_object_id_list, validate_queue_name
+    sanitize_and_validate, validate_object_id_list, validate_queue_name, validate_queue_extractor_task
 )
 from firmware_handler.firmware_reimporter import start_firmware_re_import
 from hashing.fuzzy_hash_creator import start_fuzzy_hasher
 from model.AndroidFirmware import AndroidFirmware
 from firmware_handler.firmware_importer import start_firmware_mass_import
 from firmware_handler.firmware_os_detect import update_firmware_vendor_by_build_prop
+from webserver.settings import RQ_QUEUES
 
 ModelFilter = generate_filter(AndroidFirmware)
 
@@ -81,14 +80,14 @@ class DeleteAndroidFirmwareMutation(graphene.Mutation):
 
     class Arguments:
         firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
-        queue_name = graphene.String(required=True, default_value="default-python")
+        queue_name = graphene.String(required=True, default_value=list(RQ_QUEUES.keys())[1])
 
     @classmethod
     @superuser_required
     @sanitize_and_validate(
         validators={
             'firmware_id_list': validate_object_id_list,
-            'queue_name': validate_queue_name
+            'queue_name': validate_queue_name,
         },
         sanitizers={}
     )
@@ -108,14 +107,16 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
     job_id = graphene.String()
 
     class Arguments:
-        queue_name = graphene.String(required=True, default_value="high-python")
+        queue_name = graphene.String(required=True, default_value=list(RQ_QUEUES.keys())[0])
         create_fuzzy_hashes = graphene.Boolean(required=True)
         storage_index = graphene.Int(required=True, default_value=0)
 
     @classmethod
     @superuser_required
     @sanitize_and_validate(
-        validators={'queue_name': validate_queue_name},
+        validators={
+            'queue_name': [validate_queue_name, validate_queue_extractor_task],
+        },
         sanitizers={}
     )
     def mutate(cls, root, info, queue_name, create_fuzzy_hashes, storage_index):
@@ -142,7 +143,7 @@ class CreateFirmwareReImportJob(graphene.Mutation):
     job_id = graphene.String()
 
     class Arguments:
-        queue_name = graphene.String(required=True, default_value="high-python")
+        queue_name = graphene.String(required=True, default_value=list(RQ_QUEUES.keys())[0])
         firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
         create_fuzzy_hashes = graphene.Boolean(required=False, default_value=False)
 
@@ -150,7 +151,7 @@ class CreateFirmwareReImportJob(graphene.Mutation):
     @superuser_required
     @sanitize_and_validate(
         validators={
-            'queue_name': validate_queue_name,
+            'queue_name': [validate_queue_name, validate_queue_extractor_task],
             'firmware_id_list': validate_object_id_list
         },
         sanitizers={}
@@ -170,7 +171,7 @@ class CreateFuzzyHashesJob(graphene.Mutation):
     job_id = graphene.String()
 
     class Arguments:
-        queue_name = graphene.String(required=True, default_value="high-python")
+        queue_name = graphene.String(required=True, default_value=list(RQ_QUEUES.keys())[0])
         firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=False)
         storage_index = graphene.Int(required=True, default_value=0)
 
@@ -178,7 +179,7 @@ class CreateFuzzyHashesJob(graphene.Mutation):
     @superuser_required
     @sanitize_and_validate(
         validators={
-            'queue_name': validate_queue_name,
+            'queue_name': [validate_queue_name, validate_queue_extractor_task],
             'firmware_id_list': validate_object_id_list
         },
         sanitizers={}
@@ -199,7 +200,7 @@ class UpdateFirmwareVendorMutation(graphene.Mutation):
     
     class Arguments:
         queue_name = graphene.String(required=True,
-                                     default_value="default-python")
+                                     default_value=list(RQ_QUEUES.keys())[1])
         firmware_id_list = graphene.List(graphene.String,
                                          required=False,
                                          description="Specific firmware IDs to update. "

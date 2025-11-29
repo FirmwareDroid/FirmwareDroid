@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
-
 import json
 import logging
 import os
@@ -11,11 +10,14 @@ import tempfile
 from pathlib import Path
 from model.Interfaces.ScanJob import ScanJob
 from model import AndroidApp, SuperReport
-from context.context_creator import create_db_context, create_log_context
+from context.context_creator import create_db_context, setup_apk_scanner_logger, \
+    create_log_context
 from processing.standalone_python_worker import start_python_interpreter
 
 
-@create_log_context
+DB_LOGGER = setup_apk_scanner_logger(tag="super")
+
+
 @create_db_context
 def super_android_analyzer_multiprocessing(android_app_id):
     """
@@ -25,12 +27,15 @@ def super_android_analyzer_multiprocessing(android_app_id):
 
     """
     android_app = AndroidApp.objects.get(pk=android_app_id)
-    logging.info(f"SUPER Android Analyzer scans: {android_app.filename} {android_app.id}")
+    DB_LOGGER.info(f"SUPER Android Analyzer scans: {android_app.filename} {android_app.id}")
     try:
         tempdir = tempfile.TemporaryDirectory()
         super_json_results = get_super_android_analyzer_analysis(android_app.absolute_store_path, tempdir.name)
-        create_report(android_app, super_json_results)
+        store_result(android_app, results=super_json_results, scan_status="completed")
+        DB_LOGGER.info(f"SUCCESS: SUPER Android Analyzer completed scan: {android_app.filename} {android_app.id}")
     except Exception as err:
+        DB_LOGGER.error(f"ERROR: SUPER Android Analyzer failed to scan: {android_app.filename} {android_app.id}")
+        store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
         logging.error(f"Super could not scan app {android_app.filename} id: {android_app.id} - "
                       f"error: {err}")
 
@@ -62,18 +67,19 @@ def get_super_android_analyzer_analysis(apk_file_path, result_folder_path):
     return json.loads(open(result_file_path).read())
 
 
-def create_report(android_app, super_json_results):
+def store_result(android_app, results, scan_status):
     """
     Create a class:'SuperReport' and save the super android analyzer scan results in the database.
     :param android_app: class:'AndroidApp' - app that was scanned with super.
-    :param super_json_results: str - super scanning result in json format.
+    :param results: str - super scanning result in json format.
     :return: class:'SuperReport'
     """
     # TODO remove static version and replace with dynamic one
     super_report = SuperReport(android_app_id_reference=android_app.id,
                                super_version="0.5.1",
-                               results=super_json_results).save()
-    android_app.super_report_reference = super_report.id
+                               scan_status=scan_status,
+                               results=results).save()
+    android_app.apk_scanner_report_reference_list.append(super_report.id)
     android_app.save()
     return super_report
 
@@ -102,6 +108,5 @@ class SuperAndroidAnalyzerScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="super_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH)
             python_process.wait()

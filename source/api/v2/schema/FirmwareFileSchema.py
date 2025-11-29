@@ -10,10 +10,13 @@ from api.v2.schema.RqJobsSchema import ONE_DAY_TIMEOUT
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
 from api.v2.validators.validation import (
     sanitize_and_validate, validate_object_id_list, validate_queue_name,
-    validate_regex_pattern, validate_object_id
+    validate_regex_pattern, validate_object_id, validate_queue_extractor_task
 )
 from firmware_handler.firmware_file_exporter import start_file_export_by_regex
 from model.FirmwareFile import FirmwareFile
+from webserver.settings import RQ_QUEUES
+
+
 
 ModelFilter = generate_filter(FirmwareFile)
 
@@ -41,7 +44,7 @@ class ExportFirmwareFileByRegexMutation(graphene.Mutation):
 
     class Arguments:
         firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
-        queue_name = graphene.String(required=True, default_value="high-python")
+        queue_name = graphene.String(required=True, default_value=list(RQ_QUEUES.keys())[0])
         filename_regex = graphene.String(required=True)
         store_setting_id = graphene.String(required=True)
 
@@ -51,7 +54,7 @@ class ExportFirmwareFileByRegexMutation(graphene.Mutation):
         validators={
             'firmware_id_list': validate_object_id_list,
             'filename_regex': validate_regex_pattern,
-            'queue_name': validate_queue_name,
+            'queue_name': [validate_queue_name, validate_queue_extractor_task],
             'store_setting_id': validate_object_id  # Single ObjectId
         },
         sanitizers={}

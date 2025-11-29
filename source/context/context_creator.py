@@ -1,44 +1,25 @@
+# File: `source/context/context_creator.py`
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 import functools
 import logging
 import sys
+from log4mongo.handlers import MongoHandler
 
 
 def create_db_context(f):
     """
     Decorator for creating an app context and pushing into to the context stack.
-
-    :param f: function to test for basic auth.
-    :return: function
-
     """
+
     @functools.wraps(f)
     def decorated(*args, **kwargs):
         from database.connector import init_db
         from webserver.settings import MONGO_DATABASES
         init_db(MONGO_DATABASES["default"])
         return f(*args, **kwargs)
-    return decorated
 
-
-def create_db_context_subprocess(f):
-    """
-    Decorator for creating an app context and pushing into to the context stack.
-
-    :param f: function to test for basic auth.
-    :return: function
-
-    """
-    @functools.wraps(f)
-    def decorated(*args, **kwargs):
-        from database.connector import reconnect
-        from database.connector import multiprocess_disconnect_all
-        alias = "default"
-        multiprocess_disconnect_all()
-        reconnect(alias)
-        return f(*args, **kwargs)
     return decorated
 
 
@@ -62,6 +43,7 @@ def setup_logging(log_level=logging.INFO):
         formatter = logging.Formatter(f'%(asctime)s - %(processName)s/%(process)d - %(levelname)s - %(message)s')
         handler.setFormatter(formatter)
         logger.addHandler(handler)
+    return logger
 
 
 def setup_thread_logging(log_level=logging.INFO):
@@ -82,28 +64,60 @@ def setup_thread_logging(log_level=logging.INFO):
 def create_multithread_log_context(f):
     """
     Decorator for creating a log context for multiple threads.
-
-    :param f: function to test for basic auth.
-    :return: function
-
     """
+
     @functools.wraps(f)
     def decorated(*args, **kwargs):
         setup_thread_logging()
         return f(*args, **kwargs)
+
     return decorated
+
+
+class TaggedMongoHandler(MongoHandler):
+    def __init__(self, tag, *args, **kwargs):
+        if not tag or not isinstance(tag, str) or not tag.strip():
+            raise ValueError("A non-empty 'tag' must be provided to TaggedMongoHandler.")
+        super().__init__(*args, **kwargs)
+        self.tag = tag
+
+    def emit(self, record):
+        if not hasattr(record, 'tag'):
+            record.tag = self.tag
+        super().emit(record)
+
+
+def setup_apk_scanner_logger(tag=""):
+    from webserver.settings import MONGO_DATABASES
+    logger = logging.getLogger("apk_scanner_logger")
+    logger.setLevel(logging.DEBUG)
+    if not any(h.__class__.__name__ == "TaggedMongoHandler" for h in logger.handlers):
+        mongo_handler = TaggedMongoHandler(
+            tag=tag,
+            host=MONGO_DATABASES["default"]["host"],
+            port=MONGO_DATABASES["default"]["port"],
+            database_name=MONGO_DATABASES["default"]["db"],
+            username=MONGO_DATABASES["default"]["username"],
+            password=MONGO_DATABASES["default"]["password"],
+            collection="apk_scanner_log",
+            capped=True
+        )
+        mongo_handler.setLevel(logging.DEBUG)
+        logger.addHandler(mongo_handler)
+    return logger
 
 
 def create_log_context(f):
     """
     Decorator for creating a log context and pushing into.
-
-    :param f: function to test for basic auth.
-    :return: function
-
     """
+
     @functools.wraps(f)
     def decorated(*args, **kwargs):
-        setup_logging()
+        try:
+            setup_logging()
+        except Exception as e:
+            pass
         return f(*args, **kwargs)
+
     return decorated

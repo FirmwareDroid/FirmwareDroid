@@ -6,6 +6,8 @@ from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
 from model.SuperReport import SuperReport
+from graphene.relay import Node
+from api.v2.schema.ApkScannerReportSchema import ApkScannerReportInterface
 
 ModelFilter = generate_filter(SuperReport)
 
@@ -13,6 +15,8 @@ ModelFilter = generate_filter(SuperReport)
 class SuperReportType(MongoengineObjectType):
     class Meta:
         model = SuperReport
+        interfaces = (ApkScannerReportInterface, Node)
+        name = "SuperReport"
 
 
 class SuperReportQuery(graphene.ObjectType):

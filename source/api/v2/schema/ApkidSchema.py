@@ -4,6 +4,8 @@
 import graphene
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
+from graphene.relay import Node
+from api.v2.schema.ApkScannerReportSchema import ApkScannerReportInterface
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from model.ApkidReport import ApkidReport
 
@@ -11,8 +13,11 @@ ModelFilter = generate_filter(ApkidReport)
 
 
 class ApkidReportType(MongoengineObjectType):
+
     class Meta:
         model = ApkidReport
+        interfaces = (ApkScannerReportInterface, Node)
+        name = "ApkidReport"
 
 
 class ApkidReportQuery(graphene.ObjectType):

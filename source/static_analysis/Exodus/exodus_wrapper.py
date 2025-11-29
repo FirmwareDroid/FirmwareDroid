@@ -5,11 +5,12 @@ import logging
 import os
 from model.Interfaces.ScanJob import ScanJob
 from model import ExodusReport, AndroidApp
-from context.context_creator import create_db_context, create_log_context
+from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from processing.standalone_python_worker import start_python_interpreter
 
+DB_LOGGER = setup_apk_scanner_logger(tag="exodus")
 
-@create_log_context
+
 @create_db_context
 def exodus_worker_multiprocessing(android_app_id):
     """
@@ -19,11 +20,14 @@ def exodus_worker_multiprocessing(android_app_id):
 
     """
     android_app = AndroidApp.objects.get(pk=android_app_id)
-    logging.info(f"Exodus scans: {android_app.id}")
+    DB_LOGGER.info(f"Exodus scans: {android_app.id} - file: {android_app.filename}")
     try:
         exodus_json_report = get_exodus_analysis(android_app.absolute_store_path)
-        create_report(android_app, exodus_json_report)
+        store_result(android_app, results=exodus_json_report, scan_status="completed")
+        DB_LOGGER.info(f"Exodus completed scan: {android_app.id} - file: {android_app.filename}")
     except Exception as err:
+        DB_LOGGER.error(f"Exodus scan failed for app: {android_app.id} - file: {android_app.filename}")
+        store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
         logging.error(f"Exodus could not scan app {android_app.filename} id: {android_app.id} - "
                       f"error: {err}")
 
@@ -64,12 +68,13 @@ def get_exodus_analysis(apk_file_path):
     return analysis.create_json_report()
 
 
-def create_report(android_app, exodus_results):
+def store_result(android_app, results, scan_status):
     """
     Create a exodus report in the database.
 
     :param android_app: class:'AndroidApp'
-    :param exodus_results: dict - results of the exodus scan.
+    :param results: dict - results of the exodus scan.
+    :param scan_status: str - status of the scan.
 
     """
     from exodus_core import __version__
@@ -77,9 +82,10 @@ def create_report(android_app, exodus_results):
         android_app_id_reference=android_app.id,
         scanner_version=__version__,
         scanner_name="Exodus",
-        results=exodus_results
+        results=results,
+        scan_status=scan_status
     ).save()
-    android_app.exodus_report_reference = exodus_report.id
+    android_app.apk_scanner_report_reference_list.append(exodus_report.id)
     android_app.save()
 
 
@@ -107,6 +113,5 @@ class ExodusScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="exodus_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH)
             python_process.wait()

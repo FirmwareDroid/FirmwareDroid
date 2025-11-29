@@ -10,12 +10,15 @@ from enum import Enum
 from graphene.relay import Node
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
+
+#from api.v2.schema.ApkScannerReportSchema import ApkScannerReportType
 from api.v2.schema.RqJobsSchema import ONE_WEEK_TIMEOUT, MAX_OBJECT_ID_LIST_SIZE
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
 from api.v2.validators.chunking import create_object_id_chunks
 from api.v2.validators.validation import *
 from model import AndroidApp, AndroidFirmware
 from android_app_importer.standalone_importer import start_android_app_standalone_importer
+from webserver.settings import RQ_QUEUES
 
 ModelFilter = generate_filter(AndroidApp)
 APK_SCAN_FUNCTION_NAME = "start_scan"
@@ -44,6 +47,7 @@ class AndroidAppType(MongoengineObjectType):
     class Meta:
         model = AndroidApp
         interfaces = (Node,)
+
 
 class AndroidAppQuery(graphene.ObjectType):
     android_app_list = graphene.List(AndroidAppType,
@@ -125,12 +129,12 @@ class CreateApkScanJob(graphene.Mutation):
     class Arguments:
         """
         Arguments for the CreateApkScanJob mutation.
-        :param queue_name: str - Name of the rq queue to use. For instance, "high-python".
+        :param queue_name: str - Name of the rq queue to use.
         :param module_name: str - Name of the module to use. For instance, "ANDROGUARD".
         :param object_id_list: list(str) - List of objectId to scan.
         :param kwargs: dict - Additional arguments passed to the scan instance.
         """
-        queue_name = graphene.String(required=True, default_value="default-python")
+        queue_name = graphene.String(required=True, default_value=list(RQ_QUEUES.keys())[1])
         module_name = graphene.String(required=True)
         firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=False, default_value=[])
         object_id_list = graphene.List(graphene.NonNull(graphene.String), required=False, default_value=[])
@@ -159,7 +163,7 @@ class CreateApkScanJob(graphene.Mutation):
         will be split into smaller chunks and each chunk will be processed in a separate RQ job.
 
         :param kwargs: Additional arguments passed to the scan instance.
-        :param queue_name: str - Name of the rq queue to use. For instance, "high-python".
+        :param queue_name: str - Name of the rq queue to use.
         :param module_name: str - Name of the module to use. For instance, "ANDROGUARD".
         :param firmware_id_list: list(str) - List of firmwareId to scan. Optional if object_id_list is defined.
         :param object_id_list: list(str) - List of objectId to scan. Optional if firmware_id_list is defined.
@@ -185,7 +189,10 @@ class CreateApkScanJob(graphene.Mutation):
                 else:
                     logging.info("No kwargs")
                     func_to_run = import_module_function(module_name, object_id_chunk)
-                job = queue.enqueue(func_to_run, job_timeout=ONE_WEEK_TIMEOUT)
+                job = queue.enqueue(func_to_run,
+                                        job_timeout=ONE_WEEK_TIMEOUT,
+                                        meta={"module_name": module_name}
+                                    )
                 job_id_list.append(job.id)
                 response = cls(job_id_list=job_id_list)
         return response
@@ -195,13 +202,15 @@ class CreateAppImportJob(graphene.Mutation):
     job_id = graphene.String()
 
     class Arguments:
-        queue_name = graphene.String(required=True, default_value="high-python")
+        queue_name = graphene.String(required=True, default_value=list(RQ_QUEUES.keys())[0])
         storage_index = graphene.Int(required=True, default_value=0)
 
     @classmethod
     @superuser_required
     @sanitize_and_validate(
-        validators={'queue_name': validate_queue_name},
+        validators={
+            'queue_name': [validate_queue_name, validate_queue_extractor_task],
+        },
         sanitizers={}
     )
     def mutate(cls, root, info, queue_name, storage_index):

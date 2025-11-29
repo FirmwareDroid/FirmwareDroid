@@ -3,7 +3,7 @@ import os
 import tempfile
 import traceback
 import pkg_resources
-from context.context_creator import create_log_context, create_db_context
+from context.context_creator import create_log_context, create_db_context, setup_apk_scanner_logger
 from decompiler.jadx_wrapper import decompile_with_jadx
 from model import AndroidApp, MobSFScanReport
 from model.Interfaces.ScanJob import ScanJob
@@ -11,21 +11,25 @@ from model.StoreSetting import get_active_store_by_index
 from processing.standalone_python_worker import start_python_interpreter
 
 
-def save_result(android_app, json_report):
+DB_LOGGER = setup_apk_scanner_logger(tag="mobsfscan")
+
+def store_result(android_app, results, scan_status):
     """
     Stores the results of the mobsfscan in the database.
 
     :param android_app: object of class:'AndroidApp'
-    :param json_report: str - json report of the mobsfscan.
+    :param results: str - json report of the mobsfscan.
+    :param scan_status: str - status of the scan ('completed' or 'failed').
 
     """
     mobsfscan_version = pkg_resources.get_distribution("mobsfscan").version
     report = MobSFScanReport(android_app_id_reference=android_app.id,
                              scanner_version=mobsfscan_version,
                              scanner_name="MobSFScan",
-                             results=json_report)
+                             scan_status=scan_status,
+                             results=results)
     report.save()
-    android_app.mobsfscan_report_reference = report.id
+    android_app.apk_scanner_report_reference_list.append(report.id)
     android_app.save()
     return report
 
@@ -44,11 +48,16 @@ def process_android_app(android_app):
         is_success = decompile_with_jadx(android_app.absolute_store_path, temp_dir)
         if not is_success:
             raise RuntimeError("Could not extract apk file with jadx.")
-        logging.info(f"Now scanning: {android_app.filename} {android_app.id} with mobsfscan.")
-        scanner = MobSFScan([temp_dir], json=True)
-        json_report = scanner.scan()
-        save_result(android_app, json_report)
-        logging.info(f"MobSFScan finished: {android_app.filename} {android_app.id}")
+        DB_LOGGER.info(f"Mobsfscan now scanning: {android_app.filename} {android_app.id}.")
+        try:
+            scanner = MobSFScan([temp_dir], json=True)
+            json_report = scanner.scan()
+            store_result(android_app, results=json_report, scan_status="completed")
+            DB_LOGGER.info(f"MobSFScan finished: {android_app.filename} {android_app.id}")
+        except Exception as err:
+            DB_LOGGER.error(f"MobSFScan failed to scan app {android_app.filename} {android_app.id}")
+            store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
+            logging.error(f"MobSFScan failed: {android_app.filename} {android_app.id} Error: {err}")
 
 
 @create_log_context
@@ -95,6 +104,5 @@ class MobSFScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="mobsfscan_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH)
             python_process.wait()

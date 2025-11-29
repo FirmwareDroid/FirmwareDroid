@@ -3,20 +3,33 @@ import logging
 import os
 import subprocess
 import tempfile
-import time
 import traceback
-
-from context.context_creator import create_log_context, create_db_context
+from context.context_creator import create_db_context, setup_apk_scanner_logger, \
+    create_log_context
 from model import AndroidApp, TrueseeingReport
 from model.Interfaces.ScanJob import ScanJob
 from processing.standalone_python_worker import start_python_interpreter
 
+DB_LOGGER = setup_apk_scanner_logger(tag="trueseeing")
+
 
 def process_android_app(android_app):
+    DB_LOGGER.info(f"TrueSeeing starts scan: {android_app.filename}")
     apk_path = android_app.absolute_store_path
     with tempfile.NamedTemporaryFile(suffix=".json") as temp_file:
-        start_trueseeing_analysis(apk_path, temp_file.name)
-        store_result(android_app, temp_file.name)
+        try:
+            start_trueseeing_analysis(apk_path, temp_file.name)
+            with open(temp_file.name, 'r') as json_report:
+                data = json_report.read()
+                logging.info(f"Data: {data}")
+                results = json.loads(data)
+            store_result(android_app, results, scan_status="completed")
+            DB_LOGGER.info(f"TrueSeeing scan completed for {android_app.filename}")
+        except Exception as err:
+            DB_LOGGER.error(f"ERROR: TrueSeeing scan failed for {android_app.filename}")
+            store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
+            logging.error(f"Error processing {apk_path}: {err}")
+            traceback.print_exc()
 
 
 def start_trueseeing_analysis(apk_path, report_file_path):
@@ -56,31 +69,28 @@ def start_trueseeing_analysis(apk_path, report_file_path):
         raise FileNotFoundError(f"Report file is empty: {report_file_path}")
 
 
-def store_result(android_app, json_report_path):
+def store_result(android_app, results, scan_status):
     """
     Store the results of the analysis in the database.
 
-    :param android_app: rclass:'AndroidApp' object.
-    :param json_report_path: path to the report file.
+    :param android_app: class:'AndroidApp' object.
+    :param results: dict - results of the analysis.
+    :param scan_status: str - status of the scan ('completed' or 'failed').
 
     :return: class:'YourAnalyzerReport' object.
     """
     import trueseeing
-    with open(json_report_path, 'r') as json_report:
-        data = json_report.read()
-        logging.info(f"Data: {data}")
-        results = json.loads(data)
-        analysis_report = TrueseeingReport(android_app_id_reference=android_app.id,
-                                           scanner_version=trueseeing.__version__,
-                                           scanner_name="Trueseeing",
-                                           results=results)
+    analysis_report = TrueseeingReport(android_app_id_reference=android_app.id,
+                                       scanner_version=trueseeing.__version__,
+                                       scanner_name="Trueseeing",
+                                       scan_status=scan_status,
+                                       results=results)
     analysis_report.save()
-    android_app.trueseeing_report_reference = analysis_report.id
+    android_app.apk_scanner_report_reference_list.append(analysis_report.id)
     android_app.save()
     return analysis_report
 
 
-@create_log_context
 @create_db_context
 def trueseeing_worker_multiprocessing(android_app_id):
     """
@@ -121,6 +131,5 @@ class TrueseeingScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="trueseeing_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH)
             python_process.wait()

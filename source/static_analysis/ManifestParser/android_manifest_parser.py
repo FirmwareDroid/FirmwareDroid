@@ -231,6 +231,5 @@ class ManifestParserScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="",
                                                       interpreter_path=self.INTERPRETER_PATH)
             python_process.wait()

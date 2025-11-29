@@ -6,7 +6,7 @@ import logging
 import os
 import traceback
 from model.Interfaces.ScanJob import ScanJob
-from context.context_creator import create_db_context, create_log_context
+from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from model import AndroGuardReport, GenericFile
 from model import AndroGuardMethodClassAnalysisReference
 from model import AndroGuardStringAnalysis, AndroGuardClassAnalysis, AndroGuardMethodAnalysis, \
@@ -15,6 +15,8 @@ from model import AppCertificate
 from model.AndroGuardReport import SCANNER_NAME
 from database.mongodb_key_replacer import filter_mongodb_dict_chars
 from processing.standalone_python_worker import start_python_interpreter
+
+DB_LOGGER = setup_apk_scanner_logger(tag="androguard")
 
 
 def add_report_crossreferences(report):
@@ -262,66 +264,191 @@ def analyse_single_apk(android_app):
     :return: class:'AndroGuardReport'
 
     """
-    from androguard import __version__
+    DB_LOGGER.info(f"Starting AndroGuard Analysis for app: {android_app.filename} {android_app.id}")
     from androguard.misc import AnalyzeAPK
-    apk, _, dx = AnalyzeAPK(android_app.absolute_store_path)
-    _, certificate_id_list = create_certificate_object_list(apk.get_certificates(), android_app)
-    permission_details = filter_mongodb_dict_chars(apk.get_details_permissions())
-    permissions_declared_details = filter_mongodb_dict_chars(apk.get_declared_permissions_details())
-    string_analysis_id_list = get_string_analysis(dx)
+    try:
+        apk, _, dx = AnalyzeAPK(android_app.absolute_store_path)
+        DB_LOGGER.info(f"AndroGuard Analysis completed for app: {android_app.filename} {android_app.id}. Continue storing results...")
+        _, certificate_id_list = create_certificate_object_list(apk.get_certificates(), android_app)
+        permission_details = filter_mongodb_dict_chars(apk.get_details_permissions())
+        permissions_declared_details = filter_mongodb_dict_chars(apk.get_declared_permissions_details())
+        string_analysis_id_list = get_string_analysis(dx)
+        components_dict = {"activity": apk.get_activities(),
+                           "provider": apk.get_providers(),
+                           "service": apk.get_services(),
+                           "receiver": apk.get_receivers()}
+        scan_status = "completed"
+        store_result(android_app,
+                     apk,
+                     scan_status,
+                     permission_details=permission_details,
+                     permissions_declared_details=permissions_declared_details,
+                     string_analysis_id_list=string_analysis_id_list,
+                     components_dict=components_dict,
+                     certificate_id_list=certificate_id_list)
+        DB_LOGGER.info(f"AndroGuard results stored for app: {android_app.filename} {android_app.id}")
+    except Exception as err:
+        DB_LOGGER.error(f"AndroGuard scan failed for app {android_app.filename} {android_app.id} - error: {str(err)}")
+        scan_status = "failed"
+        apk = None
+        permission_details = {}
+        permissions_declared_details = {}
+        string_analysis_id_list = []
+        components_dict = {}
+        certificate_id_list = []
+        store_result(android_app,
+                     apk,
+                     scan_status,
+                     permission_details=permission_details,
+                     permissions_declared_details=permissions_declared_details,
+                     string_analysis_id_list=string_analysis_id_list,
+                     components_dict=components_dict,
+                     certificate_id_list=certificate_id_list)
 
-    comoponents_dict = {"activity": apk.get_activities(),
-                        "provider": apk.get_providers(),
-                        "service": apk.get_services(),
-                        "receiver": apk.get_receivers()}
 
-    report = AndroGuardReport(android_app_id_reference=android_app.id,
-                              scanner_version=__version__,
-                              scanner_name=SCANNER_NAME,
-                              packagename=apk.get_package(),
-                              is_valid_APK=apk.is_valid_APK(),
-                              is_androidtv=apk.is_androidtv(),
-                              is_leanback=apk.is_leanback(),
-                              is_wearable=apk.is_wearable(),
-                              file_name_list=apk.get_files(),
-                              is_multidex=apk.is_multidex(),
-                              main_activity=apk.get_main_activity(),
-                              main_activity_list=apk.get_main_activities(),
-                              permissions=apk.get_permissions(),
-                              permission_details=permission_details,
-                              permissions_implied=apk.get_uses_implied_permission_list(),
-                              permissions_declared=apk.get_declared_permissions(),
-                              permissions_declared_details=permissions_declared_details,
-                              permissions_requested_third_party=apk.get_requested_third_party_permissions(),
-                              activities=apk.get_activities(),
-                              providers=apk.get_providers(),
-                              services=apk.get_services(),
-                              receivers=apk.get_receivers(),
-                              manifest_libraries=apk.get_libraries(),
-                              manifest_features=apk.get_features(),
-                              dex_names=apk.get_dex_names(),
-                              signature_names=apk.get_signature_names(),
-                              app_name=apk.get_app_name(),
-                              intent_filters_dict=search_intent_filters(apk, comoponents_dict),
-                              android_version_code=apk.get_androidversion_code(),
-                              android_version_name=apk.get_androidversion_name(),
-                              min_sdk_version=str(apk.get_min_sdk_version()),
-                              max_sdk_version=str(apk.get_max_sdk_version()),
-                              target_sdk_version=str(apk.get_target_sdk_version()),
-                              effective_target_version=str(apk.get_effective_target_sdk_version()),
-                              manifest_xml=apk.get_android_manifest_axml().get_xml(),
-                              string_analysis_id_list=string_analysis_id_list,
-                              is_signed_v1=apk.is_signed_v1(),
-                              is_signed_v2=apk.is_signed_v2(),
-                              is_signed_v3=apk.is_signed_v3()
-                              ).save()
-    add_report_crossreferences(report)
-    android_app.androguard_report_reference = report.id
-    android_app.packagename = report.packagename
-    android_app.certificate_id_list = certificate_id_list
+def create_report_data(android_app, apk, scan_status, permission_details, permissions_declared_details,
+                       string_analysis_id_list, components_dict):
+    """
+    Create AndroGuardReport data dictionary with proper handling for failed scans.
+
+    :param android_app: AndroidApp instance
+    :param apk: AndroGuard APK object (or None if scan failed)
+    :param scan_status: str - "completed" or "failed"
+    :param permission_details: dict - Permission details
+    :param permissions_declared_details: dict - Declared permissions details
+    :param string_analysis_id_list: list - String analysis IDs
+    :param components_dict: dict - Component dictionary
+    :return: dict - Report data ready for AndroGuardReport creation
+    """
+    from androguard import __version__
+
+    base_data = {
+        'android_app_id_reference': android_app.id,
+        'scanner_version': __version__,
+        'scanner_name': SCANNER_NAME,
+        'scan_status': scan_status
+    }
+
+    if scan_status == "failed" or apk is None:
+        # Return minimal data with empty placeholders for failed scans
+        return {
+            **base_data,
+            'packagename': "",
+            'is_valid_APK': False,
+            'is_androidtv': False,
+            'is_leanback': False,
+            'is_wearable': False,
+            'file_name_list': [],
+            'is_multidex': False,
+            'main_activity': "",
+            'main_activity_list': [],
+            'permissions': [],
+            'permission_details': {},
+            'permissions_implied': [],
+            'permissions_declared': [],
+            'permissions_declared_details': {},
+            'permissions_requested_third_party': [],
+            'activities': [],
+            'providers': [],
+            'services': [],
+            'receivers': [],
+            'manifest_libraries': [],
+            'manifest_features': [],
+            'dex_names': [],
+            'signature_names': [],
+            'app_name': "",
+            'intent_filters_dict': {},
+            'android_version_code': "",
+            'android_version_name': "",
+            'min_sdk_version': "",
+            'max_sdk_version': "",
+            'target_sdk_version': "",
+            'effective_target_version': "",
+            'manifest_xml': "",
+            'string_analysis_id_list': [],
+            'is_signed_v1': False,
+            'is_signed_v2': False,
+            'is_signed_v3': False,
+        }
+
+    # Successful scan - extract all data from APK
+    return {
+        **base_data,
+        'packagename': apk.get_package(),
+        'is_valid_APK': apk.is_valid_APK(),
+        'is_androidtv': apk.is_androidtv(),
+        'is_leanback': apk.is_leanback(),
+        'is_wearable': apk.is_wearable(),
+        'file_name_list': apk.get_files(),
+        'is_multidex': apk.is_multidex(),
+        'main_activity': apk.get_main_activity(),
+        'main_activity_list': apk.get_main_activities(),
+        'permissions': apk.get_permissions(),
+        'permission_details': permission_details,
+        'permissions_implied': apk.get_uses_implied_permission_list(),
+        'permissions_declared': apk.get_declared_permissions(),
+        'permissions_declared_details': permissions_declared_details,
+        'permissions_requested_third_party': apk.get_requested_third_party_permissions(),
+        'activities': apk.get_activities(),
+        'providers': apk.get_providers(),
+        'services': apk.get_services(),
+        'receivers': apk.get_receivers(),
+        'manifest_libraries': apk.get_libraries(),
+        'manifest_features': apk.get_features(),
+        'dex_names': apk.get_dex_names(),
+        'signature_names': apk.get_signature_names(),
+        'app_name': apk.get_app_name(),
+        'intent_filters_dict': search_intent_filters(apk, components_dict),
+        'android_version_code': apk.get_androidversion_code(),
+        'android_version_name': apk.get_androidversion_name(),
+        'min_sdk_version': str(apk.get_min_sdk_version()),
+        'max_sdk_version': str(apk.get_max_sdk_version()),
+        'target_sdk_version': str(apk.get_target_sdk_version()),
+        'effective_target_version': str(apk.get_effective_target_sdk_version()),
+        'manifest_xml': apk.get_android_manifest_axml().get_xml(),
+        'string_analysis_id_list': string_analysis_id_list,
+        'is_signed_v1': apk.is_signed_v1(),
+        'is_signed_v2': apk.is_signed_v2(),
+        'is_signed_v3': apk.is_signed_v3(),
+    }
+
+
+def store_result(android_app, apk, scan_status, permission_details=None, permissions_declared_details=None,
+                 string_analysis_id_list=None, components_dict=None, certificate_id_list=None):
+    """
+    Store AndroGuard analysis result with proper handling for failed scans.
+
+    :param android_app: AndroidApp instance
+    :param apk: AndroGuard APK object (or None if scan failed)
+    :param scan_status: str - "completed" or "failed"
+    :param permission_details: dict - Optional permission details
+    :param permissions_declared_details: dict - Optional declared permissions
+    :param string_analysis_id_list: list - Optional string analysis IDs
+    :param components_dict: dict - Optional component dictionary
+    :param certificate_id_list: list - Optional certificate IDs
+    :return: AndroGuardReport instance
+    """
+    report_data = create_report_data(
+        android_app=android_app,
+        apk=apk,
+        scan_status=scan_status,
+        permission_details=permission_details or {},
+        permissions_declared_details=permissions_declared_details or {},
+        string_analysis_id_list=string_analysis_id_list or [],
+        components_dict=components_dict or {}
+    )
+
+    report = AndroGuardReport(**report_data).save()
+    android_app.apk_scanner_report_reference_list.append(report.id)
+    if scan_status == "completed":
+        add_report_crossreferences(report)
+        android_app.packagename = report.packagename
+        android_app.certificate_id_list = certificate_id_list or []
     android_app.save()
-    return report
 
+    report.android_app_id_reference = android_app.id
+    report.save()
+    return report
 
 def analyse_and_save(android_app):
     """"
@@ -331,11 +458,7 @@ def analyse_and_save(android_app):
 
     """
     try:
-        andro_guard_report = analyse_single_apk(android_app)
-        android_app.andro_guard_report_reference = andro_guard_report.id
-        andro_guard_report.android_app_id_reference = android_app.id
-        andro_guard_report.save()
-        android_app.save()
+        analyse_single_apk(android_app)
     except Exception as err:
         logging.error(f"AndroGuard could not scan app {android_app.filename} {android_app.id} - error: {str(err)}")
         traceback.print_stack()
@@ -401,6 +524,5 @@ class AndroGuardScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      report_reference_name="androguard_report_reference",
                                                       interpreter_path=self.INTERPRETER_PATH)
             python_process.wait()
