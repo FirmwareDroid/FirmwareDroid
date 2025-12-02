@@ -210,7 +210,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     "file_download",
-    "file_upload"
+    "file_upload",
+    "mcp_server"
 ]
 
 MIDDLEWARE = [

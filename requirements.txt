@@ -18,5 +18,11 @@ rq~=2.5.0
 pymongo~=4.8.0 # mongoengine dependency -> Newer versions may not be compatible
 mongoengine~=0.29.1
 blinker~=1.9.0
+python-redis-lock~=4.0.0
+##############################
+# MCP Server
+mcp~=1.13.1
+httpx~=0.28.1
+uvicorn~=0.35.0
 ##############################
 log4mongo~=1.8.1
