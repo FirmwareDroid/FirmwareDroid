@@ -10,7 +10,7 @@ from model import AndroidApp, TrueseeingReport
 from model.Interfaces.ScanJob import ScanJob
 from processing.standalone_python_worker import start_python_interpreter
 
-DB_LOGGER = setup_apk_scanner_logger(tag="trueseeing")
+DB_LOGGER = setup_apk_scanner_logger(tags=["trueseeing"])
 
 
 def process_android_app(android_app):

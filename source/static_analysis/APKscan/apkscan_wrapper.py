@@ -10,7 +10,7 @@ from model.Interfaces.ScanJob import ScanJob
 from processing.standalone_python_worker import start_python_interpreter
 
 
-DB_LOGGER = setup_apk_scanner_logger(tag="apkscan")
+DB_LOGGER = setup_apk_scanner_logger(tags=["apkscan"])
 
 
 def json_file_to_dict(file_path):

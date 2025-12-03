@@ -9,7 +9,7 @@ from model import VirusTotalReport
 from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from processing.standalone_python_worker import start_python_interpreter
 
-DB_LOGGER = setup_apk_scanner_logger(tag="virustotal")
+DB_LOGGER = setup_apk_scanner_logger(tags=["virustotal"])
 
 
 def scan_apk_files(android_app, vt_api_key):

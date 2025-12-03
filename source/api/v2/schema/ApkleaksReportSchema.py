@@ -28,4 +28,4 @@ class ApkleaksReportQuery(graphene.ObjectType):
 
     @superuser_required
     def resolve_apkleaks_report_list(self, info, object_id_list=None, field_filter=None):
-        return get_filtered_queryset(ApkleaksReport, object_id_list, filter)
+        return get_filtered_queryset(ApkleaksReport, object_id_list, field_filter)

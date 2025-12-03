@@ -10,8 +10,6 @@ from enum import Enum
 from graphene.relay import Node
 from graphene_mongo import MongoengineObjectType
 from graphql_jwt.decorators import superuser_required
-
-#from api.v2.schema.ApkScannerReportSchema import ApkScannerReportType
 from api.v2.schema.RqJobsSchema import ONE_WEEK_TIMEOUT, MAX_OBJECT_ID_LIST_SIZE
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
 from api.v2.validators.chunking import create_object_id_chunks
@@ -178,13 +176,14 @@ class CreateApkScanJob(graphene.Mutation):
                 object_id_list = []
             android_app_list = AndroidApp.objects(firmware_id_reference__in=firmware_id_list).only('pk')
             object_id_list.extend([app.pk for app in android_app_list])
-        logging.info(f"Object ID list: {object_id_list}")
+        logging.info(f"Object ID list: {object_id_list}, kwargs: {kwargs}")
 
         if len(object_id_list) > 0:
             object_id_chunks = create_object_id_chunks(object_id_list, chunk_size=MAX_OBJECT_ID_LIST_SIZE)
             job_id_list = []
             for object_id_chunk in object_id_chunks:
-                if kwargs and bool(json.loads(kwargs)):
+                if kwargs:
+                    logging.info("With kwargs")
                     func_to_run = import_module_function(module_name, object_id_chunk, kwargs)
                 else:
                     logging.info("No kwargs")

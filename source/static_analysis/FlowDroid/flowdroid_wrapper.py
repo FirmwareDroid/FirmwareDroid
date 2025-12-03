@@ -15,7 +15,7 @@ FLOWDROID_MAIN_PATH = "/opt/flowdroid/"
 FLOWDROID_RULES_FOLDER_PATH = "/opt/flowdroid/rules/"
 DEFAULT_RULE_NAME = "SourcesAndSinks.txt"
 
-DB_LOGGER = setup_apk_scanner_logger(tag="flowdroid")
+DB_LOGGER = setup_apk_scanner_logger(tags=["flowdroid"])
 
 def process_android_app(android_app, flowdroid_cmd_arg_list, rule_filename=DEFAULT_RULE_NAME):
     import xmltodict

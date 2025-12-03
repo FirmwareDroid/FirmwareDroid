@@ -15,7 +15,7 @@ from context.context_creator import create_db_context, setup_apk_scanner_logger,
 from processing.standalone_python_worker import start_python_interpreter
 
 
-DB_LOGGER = setup_apk_scanner_logger(tag="super")
+DB_LOGGER = setup_apk_scanner_logger(tags=["super"])
 
 
 @create_db_context

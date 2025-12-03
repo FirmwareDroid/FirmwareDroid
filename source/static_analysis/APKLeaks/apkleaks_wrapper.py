@@ -11,7 +11,7 @@ from context.context_creator import create_db_context, create_log_context, setup
 from model.Interfaces.ScanJob import ScanJob
 from processing.standalone_python_worker import start_python_interpreter
 
-DB_LOGGER = setup_apk_scanner_logger(tag="apkleaks")
+DB_LOGGER = setup_apk_scanner_logger(tags=["apkleaks"])
 
 
 @create_log_context
