@@ -68,7 +68,7 @@ def extract_xmltree_with_aapt2(apk_file_path, output_dir):
     :raises RuntimeError: if the extraction fails.
     """
     command = ["aapt2", "dump", "xmltree", "--file", "AndroidManifest.xml", apk_file_path]
-    DB_LOGGER.info(f"Extracting xmltree with aapt2: {command}")
+    DB_LOGGER.info(f"Extracting xmltree with aapt2")
     process = subprocess.Popen(command,
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
