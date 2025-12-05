@@ -57,6 +57,7 @@ CORS_ALLOWED_ORIGINS = [HTTPS_DOMAIN_NAME,
                         "https://fmd.localhost",
                         "https://localhost",
                         "https://fmd.localhost:4443",
+                        "https://fmd.localhost:7687",
                         "https://127.0.0.1"]
 CORS_ORIGIN_WHITELIST = [DOMAIN_NAME,
                          "fmd.localhost",
@@ -64,6 +65,7 @@ CORS_ORIGIN_WHITELIST = [DOMAIN_NAME,
                          "127.0.0.1",
                          "https://fmd.localhost",
                          "https://fmd.localhost:4443",
+                         "https://fmd.localhost:7687",
                          "https://localhost",
                          "https://127.0.0.1"]
 CORS_ALLOW_HEADERS = [

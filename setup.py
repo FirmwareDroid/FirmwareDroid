@@ -17,7 +17,9 @@ REDIS_CONFIG_NAME = "redis.conf"
 REDIS_CONFIG_PATH = "env/redis/"
 MONGO_CONFIG_PATH = "env/mongo/"
 NGINX_CONFIG_NAME = "app.conf"
+NGINX_STEAM_NAME = "stream.conf"
 NGINX_CONFIG_PATH = "env/nginx/"
+NEO4J_CONFIG_PATH = "env/neo4j/"
 ENV_FILE_NAME = "env"
 REPLICA_SET_SCRIPT_NAME = "mongo_replica_set_setup.sh"
 BLOB_STORAGE_NAME = "blob_storage/"
@@ -126,6 +128,11 @@ class FmdEnvironment:
     docker_memory_limit = None
     docker_memory_swap_limit = None
     docker_cpu_limit = None
+    local_neo4j_db_path = None
+    neo4j_password = None
+    neo4j_auth_enabled = None
+    neo4j_connector_http_listen_address= None
+    neo4j_default_advertised_address= None
 
     def __init__(self, use_defaults):
         self.use_defaults = use_defaults
@@ -186,6 +193,17 @@ class FmdEnvironment:
                          f"(default: '{self.django_sqlite_database_mount_path}'):") \
                 or self.django_sqlite_database_mount_path
 
+
+    def _get_neo4j_database_path(self):
+        self.local_neo4j_db_path = os.path.join(self.blob_storage_path, "neo4j_database/")
+        if self.use_defaults:
+            return self.local_neo4j_db_path
+        else:
+            return input(f"Where do you want to store the ne04j database? "
+                         f"(default: '{self.local_neo4j_db_path}'):") \
+                or self.local_neo4j_db_path
+
+
     def _get_blob_storage(self):
         """
         Asks the user for the blob storage configuration. If the user enters an invalid path, the user is asked again.
@@ -213,6 +231,9 @@ class FmdEnvironment:
             if not _create_directory(os.path.dirname(self.django_sqlite_database_mount_path)):
                 continue
 
+            self.neo4j_database_path = self._get_neo4j_database_path()
+            if not _create_directory(os.path.dirname(self.neo4j_database_path)):
+                continue
             break
 
         print(f"Set blob storage to: {self.blob_storage_path}")
@@ -289,6 +310,16 @@ class FmdEnvironment:
                 self.docker_cpu_limit = input("Enter the cpu limit for the docker container "
                                               "(default: 0.5):") or "0.5"
 
+    def _get_neo4j_settings(self):
+        """
+        Sets up the neo4j database settings.
+        """
+        self.neo4j_password = uuid.uuid4()
+        self.neo4j_auth_enabled = True
+        self.neo4j_connector_http_listen_address = "0.0.0.0"
+        self.neo4j_default_advertised_address = "neo4j"
+
+
     def create_env_file(self):
         """
         Creates the .env file for the FirmwareDroid service.
@@ -298,6 +329,7 @@ class FmdEnvironment:
         self._get_mongodb_settings()
         self._get_web_config()
         self._get_docker_limits()
+        self._get_neo4j_settings()
         template = TEMPLATE_ENV.get_template(ENV_FILE_NAME)
         content = template.render(
             app_env=self.app_env,
@@ -341,7 +373,12 @@ class FmdEnvironment:
             django_superuser_email=self.django_superuser_email,
             docker_memory_limit=self.docker_memory_limit,
             docker_memory_swap_limit=self.docker_memory_swap_limit,
-            docker_cpu_limit=self.docker_cpu_limit
+            docker_cpu_limit=self.docker_cpu_limit,
+            local_neo4j_db_path=self.local_neo4j_db_path,
+            neo4j_password=self.neo4j_password,
+            neo4j_auth_enabled=self.neo4j_auth_enabled,
+            neo4j_connector_http_listen_address=self.neo4j_connector_http_listen_address,
+            neo4j_default_advertised_address=self.neo4j_default_advertised_address
         )
         out_file_path = os.path.join(self.script_file_path, "." + ENV_FILE_NAME)
         with open(out_file_path, mode="w", encoding="utf-8") as out_file:
@@ -355,6 +392,15 @@ def setup_environment_variables(use_defaults):
     return env_instance
 
 
+def render_and_write(env_instance, template_name, out_name, context):
+    template = TEMPLATE_ENV.get_template(template_name)
+    content = template.render(**context)
+    out_file_path = os.path.join(env_instance.script_file_path, NGINX_CONFIG_PATH, out_name)
+    os.makedirs(os.path.dirname(out_file_path), exist_ok=True)
+    with open(out_file_path, mode="w", encoding="utf-8") as out_file:
+        out_file.write(content)
+
+
 def setup_nginx(env_instance):
     """
     Uses an config template to create a valid runtime configuration for nginx.
@@ -366,18 +412,39 @@ def setup_nginx(env_instance):
         os.makedirs("./env/nginx")
         os.makedirs(f"./env/nginx/live/{env_instance.domain_name}")
 
-    template = TEMPLATE_ENV.get_template(NGINX_CONFIG_NAME)
-    content = template.render(
-        domain_name=env_instance.domain_name
-    )
-    out_file_path = os.path.join(env_instance.script_file_path, NGINX_CONFIG_PATH, NGINX_CONFIG_NAME)
-    with open(out_file_path, mode="w", encoding="utf-8") as out_file:
-        out_file.write(content)
-    generate_certificate(env_instance)
+    render_and_write(env_instance, NGINX_CONFIG_NAME, NGINX_CONFIG_NAME, {"domain_name": env_instance.domain_name})
+    render_and_write(env_instance, NGINX_STEAM_NAME, NGINX_STEAM_NAME, {"domain_name": env_instance.domain_name})
+
+    output_path = os.path.join(env_instance.script_file_path, NGINX_CONFIG_PATH, f"live/{env_instance.domain_name}/")
+    generate_certificate(env_instance, output_path)
     print("Completed nginx env setup.")
 
 
-def generate_certificate(env_instance):
+def setup_neo4j(env_instance):
+    neo4j_path = os.path.join(env_instance.script_file_path, NEO4J_CONFIG_PATH)
+
+    os.makedirs(NEO4J_CONFIG_PATH, exist_ok=True)
+    os.makedirs(f"{NEO4J_CONFIG_PATH}/ssl/https", exist_ok=True)
+    os.makedirs(f"{NEO4J_CONFIG_PATH}/ssl/bolt", exist_ok=True)
+    output_path = os.path.join(env_instance.script_file_path, NEO4J_CONFIG_PATH, f"ssl/https/")
+    generate_certificate(env_instance,
+                         output_path,
+                         port=7473,
+                         private_key_filename="private.key",
+                         public_key_filename="public.crt"
+                         )
+    output_path = os.path.join(env_instance.script_file_path, NEO4J_CONFIG_PATH, f"ssl/bolt/")
+    generate_certificate(env_instance,
+                         output_path,
+                         port=7687,
+                         private_key_filename="private.key",
+                         public_key_filename="public.crt"
+                         )
+    print("Completed neo4j env setup.")
+
+
+
+def generate_certificate(env_instance, output_path, port=None, private_key_filename=None, public_key_filename=None):
     """
     Generates a self-signed x509 certificate for the nginx service. This certificate is used for the webserver as
     default certificate.
@@ -398,13 +465,18 @@ def generate_certificate(env_instance):
         backend=default_backend()
     )
 
+    if port:
+        domain_name = f"{env_instance.domain_name}:{port}"
+    else:
+        domain_name = env_instance.domain_name
+
     # Create a subject for the certificate
     subject = x509.Name([
         x509.NameAttribute(NameOID.COUNTRY_NAME, "CH"),
         x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, "Zurich"),
         x509.NameAttribute(NameOID.LOCALITY_NAME, "Winterthur"),
         x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Zurich University of Applied Sciences"),
-        x509.NameAttribute(NameOID.COMMON_NAME, env_instance.domain_name),
+        x509.NameAttribute(NameOID.COMMON_NAME, domain_name),
     ])
 
     # Create a certificate
@@ -417,9 +489,9 @@ def generate_certificate(env_instance):
     ).serial_number(
         x509.random_serial_number()
     ).not_valid_before(
-        datetime.datetime.utcnow()
+        datetime.datetime.now(datetime.UTC)
     ).not_valid_after(
-        datetime.datetime.utcnow() + datetime.timedelta(days=1024)
+        datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1024)
     ).sign(private_key, hashes.SHA256(), default_backend())
 
     # Serialize the private key to PEM format
@@ -434,9 +506,13 @@ def generate_certificate(env_instance):
         encoding=serialization.Encoding.PEM
     )
 
-    cert_out_path = os.path.join(env_instance.script_file_path, NGINX_CONFIG_PATH, f"live/{env_instance.domain_name}/")
-    privkey_pem_path = os.path.join(cert_out_path, 'privkey.pem')
-    cert_pem_path = os.path.join(cert_out_path, 'certificate.pem')
+    if not private_key_filename:
+        private_key_filename = 'privkey.pem'
+    if not public_key_filename:
+        public_key_filename = "certificate.pem"
+
+    privkey_pem_path = os.path.join(output_path, private_key_filename)
+    cert_pem_path = os.path.join(output_path, public_key_filename)
     with open(privkey_pem_path, 'wb') as f:
         f.write(private_key_pem)
 
@@ -533,6 +609,7 @@ def main():
 
     env_instance = setup_environment_variables(use_defaults=use_defaults)
     setup_nginx(env_instance)
+    setup_neo4j(env_instance)
     setup_redis(env_instance)
     setup_mongo_env(env_instance)
     setup_frontend_env(env_instance)

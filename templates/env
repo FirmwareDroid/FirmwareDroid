@@ -55,6 +55,25 @@ DJANGO_SUPERUSER_PASSWORD={{ django_superuser_password }}
 DJANGO_SUPERUSER_USERNAME={{ django_superuser_username }}
 DJANGO_SUPERUSER_EMAIL={{ django_superuser_email }}
 
+# Neo4j-Database
+LOCAL_NEO4J_DB_PATH={{ local_neo4j_db_path }}
+NEO4J_AUTH=neo4j/{{ neo4j_password }}
+NEO4J_dbms_security_auth__enabled={{ neo4j_auth_enabled }}
+NEO4J_dbms_connector_http_listen__address={{ neo4j_connector_http_listen_address }}
+NEO4J_dbms_default__advertised__address={{ neo4j_default_advertised_address }}
+
+NEO4J_server_https_enabled=true
+NEO4J_dbms_ssl_policy_https_enabled=true
+NEO4J_dbms_ssl_policy_https_base_directory=certificates/https
+NEO4J_dbms_ssl_policy_https_private_key=neo4j.key
+NEO4J_dbms_ssl_policy_https_public_certificate=neo4j.crt
+
+NEO4J_dbms_ssl_policy_bolt_enabled=true
+NEO4J_dbms_ssl_policy_bolt_base_directory=certificates/bolt
+NEO4J_dbms_ssl_policy_bolt_private_key=neo4j.key
+NEO4J_dbms_ssl_policy_bolt_public_certificate=neo4j.cert
+NEO4J_dbms_ssl_policy_bolt_client_auth=NONE
+
 # Container constants - DO NOT CHANGE
 APP_PORT=5000
 PYTHONPATH="/home/www/source/"
