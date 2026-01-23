@@ -83,8 +83,12 @@ def start_python_interpreter(item_list,
     """
     if worker_args_list is None:
         worker_args_list = []
+    worker_args_list = [str(x) for x in (worker_args_list or [])]
+
     serialized_list_str = ",".join(map(str, item_list))
     current_file = os.path.abspath(__file__)
+
+    logging.debug(f"Worker args list: {worker_args_list}")
     # Starting the python interpreter with the given script and arguments
     command = [interpreter_path,
                current_file,
@@ -176,7 +180,7 @@ def start_mp_process_pool_executor(item_list,
     listener = QueueListener(log_queue, handler)
     listener.start()
 
-    logging.info(f"Starting multiprocessing pool with {number_of_processes} processes for function {worker_function}.")
+    logging.info(f"Starting multiprocessing pool with {number_of_processes} processes for function {worker_function} with worker args {worker_args_list}")
     with concurrent.futures.ProcessPoolExecutor(max_workers=number_of_processes, initializer=worker_init, initargs=(log_queue,)) as executor:
         future_to_task = {executor.submit(worker_function, task, *(worker_args_list or [])): task for task in worker_task_list}
         for future in concurrent.futures.as_completed(future_to_task):
@@ -200,7 +204,7 @@ def main():
     pid = os.getpid()
     setup_logging()
     create_app_context()
-    logging.info(f"Starting standalone python worker - PID: {pid}")
+    logging.debug(f"Starting standalone python worker - PID: {pid}")
     id_list = sys.argv[1].split(",")
     if len(id_list) <= 0:
         sys.exit(-1)
@@ -215,8 +219,15 @@ def main():
     worker_function = getattr(scanner_module, worker_function_name)
     number_of_processes = int(sys.argv[3])
     use_id_list = bool(sys.argv[4])
-    if len(sys.argv) > 7:
-        worker_args_list = sys.argv[7:]
+    logging.debug(f"Standalone worker - Using module: {module_name}, "
+                 f"function: {worker_function_name}, "
+                 f"number of processes: {number_of_processes}, "
+                 f"use_id_list: {use_id_list}, "
+                 f", items to process: {len(item_list)}, "
+                 f"arguments: {sys.argv}, ")
+    if len(sys.argv) >= 7:
+        worker_args_list = sys.argv[6:]
+        logging.debug(f"Standalone worker - Using arguments: {worker_args_list}")
     else:
         worker_args_list = []
     start_mp_process_pool_executor(item_list, worker_function, number_of_processes, use_id_list, worker_args_list)

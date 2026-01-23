@@ -47,4 +47,5 @@ from .ServerSetting import ServerSetting
 from .FlowDroidReport import FlowDroidReport
 from .TrueseeingReport import TrueseeingReport
 from .ApkScannerReport import ApkScannerReport
+from .ApkScannerLog import ApkScannerLog
 from . import *

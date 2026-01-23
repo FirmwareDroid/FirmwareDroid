@@ -11,8 +11,10 @@ from model import ApkidReport, AndroidApp
 from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from processing.standalone_python_worker import start_python_interpreter
 from typing import List, Optional
+from rq import get_current_job
 
-DB_LOGGER = setup_apk_scanner_logger(tag="apkid")
+JOB_ID = None
+DB_LOGGER = setup_apk_scanner_logger(tags=["apkid"])
 
 
 def find_files(root_dir: str, target_filename: str, max_results: Optional[int] = None) -> List[str]:
@@ -39,9 +41,12 @@ def process_android_app(android_app):
     logging.info(f"Processing Android app with APKiD: {android_app.id}")
     try:
         from apkid.apkid import Options, Scanner
+
         DB_LOGGER.info(f"APKid Scans app: {android_app.filename}",
-                       extra={'tag': 'apkid',
-                              "android_app_id": str(android_app.id)})
+                       extra={
+                           'details': {'job_id': JOB_ID},
+                        }
+                       )
         with tempfile.TemporaryDirectory() as output_dir:
             if not os.path.exists(output_dir):
                 raise OSError(f"Could not create temp dir for apkid: {output_dir}")
@@ -70,21 +75,25 @@ def process_android_app(android_app):
             with open(report_file_path, 'r') as json_file:
                 results = json.load(json_file)
                 store_result(android_app, results=results, scan_status="completed")
-        DB_LOGGER.info(f"APKid completed for app: {android_app.filename}")
+        DB_LOGGER.info(f"APKid completed for app: {android_app.filename}",
+                       extra={'details': {'job_id': JOB_ID}})
     except Exception as err:
         logging.error(err)
-        DB_LOGGER.error(f"Error: PKid Scan failed")
+        DB_LOGGER.error(f"Error: APKid Scan failed",
+                       extra={'details': {'job_id': JOB_ID}})
         store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
 
 
 @create_db_context
-def apkid_worker_multiprocessing(android_app_id):
+def apkid_worker_multiprocessing(android_app_id, job_id):
     """
     Starts to analyze the given android apps with apkid tool.
 
     :param android_app_id: str - object-id for document of  class:'AndroidApp'
 
     """
+    global JOB_ID
+    JOB_ID = job_id
     logging.debug(f"APKiD sub-process worker started for app id: {android_app_id}")
     try:
         android_app = AndroidApp.objects.get(pk=android_app_id)
@@ -136,6 +145,12 @@ class APKiDScanJob(ScanJob):
         """
         Starts multiple instances of the scanner to analyse a list of Android apps on multiple processors.
         """
+        worker_args_list = []
+        job = get_current_job()
+        job_id = job.id if job else None
+        if job_id:
+            worker_args_list = [job_id]
+            DB_LOGGER.info(f"APKiD Scan Job started", extra={'details': {'job_id': job_id}})
         android_app_id_list = self.object_id_list
         logging.info(f"APKiD analysis started! With {str(len(android_app_id_list))} apps. ID List: {android_app_id_list}")
         if len(android_app_id_list) > 0:
@@ -144,7 +159,8 @@ class APKiDScanJob(ScanJob):
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      interpreter_path=self.INTERPRETER_PATH
+                                                      interpreter_path=self.INTERPRETER_PATH,
+                                                      worker_args_list=worker_args_list
                                                       )
             python_process.wait()
         else:

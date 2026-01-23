@@ -149,6 +149,12 @@ RUN set -eux; \
 # Copy custom rules from source tree
 RUN cp -r /var/www/source/static_analysis/FlowDroid/rules/* /opt/flowdroid/rules/
 
+
+########################################################
+# Install MobSFScam requirements                          #
+########################################################
+RUN pip install semgrep
+
 ########################################################
 # Install Python requirements                          #
 ########################################################

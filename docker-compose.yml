@@ -41,14 +41,18 @@ services:
     restart: unless-stopped
     depends_on:
       - web
+      - neo4j
     volumes:
-      - ./env/nginx:/etc/nginx/conf.d
+      - ./env/nginx/conf.d:/etc/nginx/conf.d
+      - ./env/nginx/stream.conf:/etc/nginx/stream.conf
       - ./env/nginx/live/:/etc/letsencrypt/live/
-      #- ./firmware-droid-client/build:/usr/share/nginx/html # Dev-Route
+     # - ./firmware-droid-client/build:/usr/share/nginx/html # Dev-Route
       - ./source/static:/usr/share/nginx/django_static
     ports:
       - "80:80"
       - "443:443"
+      - "7687:7687"
+      - "7688:7688"
     networks:
       - frontend
 
@@ -148,13 +152,29 @@ services:
     networks:
       - backend
 
-#  frontend:
-#    platform: "linux/amd64"
-#    build:
-#      context: ./
-#      dockerfile: ./firmware-droid-client/Dockerfile
-#    image: firmwaredroid-frontend
-#    command: sleep infinity
+  neo4j:
+    image: neo4j:5.26.17-community-bullseye
+    container_name: neo4j
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    volumes:
+      - ${LOCAL_NEO4J_DB_PATH}:/data
+      - ./env/neo4j/ssl/bolt:/var/lib/neo4j/certificates/bolt
+      - ./env/neo4j/ssl/https:/var/lib/neo4j/certificates/https
+    ports:
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7473:7473"
+    networks:
+      - frontend
+    cpus: ${DOCKER_CPU_LIMIT}
+    mem_limit: ${DOCKER_MEMORY_LIMIT}
+    memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:7474/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
   frontend:

@@ -6,6 +6,7 @@ import graphql_jwt
 from graphene_django.debug import DjangoDebug
 
 from api.v2.schema.APKscanSchema import APKscanReportQuery
+from api.v2.schema.ApkScannerLogSchema import ApkScannerLogQuery
 from api.v2.schema.FirmwareImporterSettingSchema import FirmwareImporterSettingMutation, FirmwareImporterSettingQuery
 from api.v2.schema.FlowDroidReportSchema import FlowDroidReportQuery
 from api.v2.schema.HealthCheckSchema import HealthCheckQuery
@@ -77,6 +78,7 @@ class Query(WebclientSettingQuery,
             FlowDroidReportQuery,
             MobSFScanReportQuery,
             TrueseeingReportQuery,
+            ApkScannerLogQuery,
             graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name='_debug')
     token_auth = graphql_jwt.ObtainJSONWebToken.Field()
@@ -94,6 +96,9 @@ class Mutation(AndroidAppMutation,
     debug = graphene.Field(DjangoDebug, name='_debug')
     delete_token_cookie = graphql_jwt.DeleteJSONWebTokenCookie.Field()
     delete_refresh_token_cookie = graphql_jwt.DeleteRefreshTokenCookie.Field()
+
+
+
 
 
 schema = graphene.Schema(query=Query, mutation=Mutation)

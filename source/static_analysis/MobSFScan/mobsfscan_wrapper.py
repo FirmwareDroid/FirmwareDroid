@@ -11,7 +11,7 @@ from model.StoreSetting import get_active_store_by_index
 from processing.standalone_python_worker import start_python_interpreter
 
 
-DB_LOGGER = setup_apk_scanner_logger(tag="mobsfscan")
+DB_LOGGER = setup_apk_scanner_logger(tags=["mobsfscan"])
 
 def store_result(android_app, results, scan_status):
     """

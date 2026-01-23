@@ -75,25 +75,32 @@ def create_multithread_log_context(f):
 
 
 class TaggedMongoHandler(MongoHandler):
-    def __init__(self, tag, *args, **kwargs):
-        if not tag or not isinstance(tag, str) or not tag.strip():
+    def __init__(self, tags, details, *args, **kwargs):
+        if not tags or not isinstance(tags, list):
             raise ValueError("A non-empty 'tag' must be provided to TaggedMongoHandler.")
         super().__init__(*args, **kwargs)
-        self.tag = tag
+        self.tags = tags
+        self.details = details
 
+    # Model: ApkScannerLog
     def emit(self, record):
-        if not hasattr(record, 'tag'):
-            record.tag = self.tag
+        if not hasattr(record, 'tags'):
+            record.tags = self.tags
+        if not hasattr(record,  'details'):
+            record.details = self.details
         super().emit(record)
 
 
-def setup_apk_scanner_logger(tag=""):
+def setup_apk_scanner_logger(tags=None, details=None):
+    if tags is None:
+        tags = []
     from webserver.settings import MONGO_DATABASES
     logger = logging.getLogger("apk_scanner_logger")
     logger.setLevel(logging.DEBUG)
     if not any(h.__class__.__name__ == "TaggedMongoHandler" for h in logger.handlers):
         mongo_handler = TaggedMongoHandler(
-            tag=tag,
+            tags=tags,
+            details=details,
             host=MONGO_DATABASES["default"]["host"],
             port=MONGO_DATABASES["default"]["port"],
             database_name=MONGO_DATABASES["default"]["db"],

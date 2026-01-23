@@ -16,7 +16,7 @@ from model.AndroGuardReport import SCANNER_NAME
 from database.mongodb_key_replacer import filter_mongodb_dict_chars
 from processing.standalone_python_worker import start_python_interpreter
 
-DB_LOGGER = setup_apk_scanner_logger(tag="androguard")
+DB_LOGGER = setup_apk_scanner_logger(tags=["androguard"])
 
 
 def add_report_crossreferences(report):

@@ -154,9 +154,11 @@ def validate_object_id_list(object_id_list):
 
 def validate_kwargs(kwargs):
     try:
-        json.loads(kwargs)
+        return json.loads(kwargs)
     except json.JSONDecodeError:
         raise ValueError("Invalid JSON string for kwargs.")
+    except Exception as e:
+        raise ValueError(f"Error validating kwargs: {e}")
 
 
 def validate_queue_name(queue_name):
@@ -170,6 +172,7 @@ def validate_queue_extractor_task(queue_name):
     if "extractor" not in queue_name:
         raise ValueError(f"Invalid queue name for extractor task: {queue_name}. Must contain 'extractor'")
     return queue_name
+
 
 def validate_email(email):
     """Validate email format using regex pattern."""

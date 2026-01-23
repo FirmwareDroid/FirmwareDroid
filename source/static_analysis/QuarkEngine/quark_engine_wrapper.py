@@ -15,7 +15,7 @@ MAX_WAITING_TIME = 60 * 10
 MAX_EXECUTION_TIME = 60 * 30
 QUARK_SCAN_TIMEOUT = 60 * 2
 
-DB_LOGGER = setup_apk_scanner_logger(tag="quark_engine")
+DB_LOGGER = setup_apk_scanner_logger(tags=["quark_engine"])
 
 
 def start_quark_engine_app_analysis(android_app):
