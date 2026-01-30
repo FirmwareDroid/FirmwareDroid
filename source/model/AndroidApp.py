@@ -57,8 +57,33 @@ class AndroidApp(Document):
 
     @classmethod
     def pre_delete(cls, sender, document, **kwargs):
-        cls._clean_app_twin(document)
-        cls._clean_generic_files(document)
+        """Signal handler invoked before a document is deleted.
+
+        Calls cleanup helpers if they exist on the class. Guarded against
+        missing methods and exceptions to avoid breaking the delete flow.
+        """
+        try:
+            # call _clean_app_twin if available
+            clean_app_twin = getattr(cls, '_clean_app_twin', None)
+            if callable(clean_app_twin):
+                try:
+                    clean_app_twin(document)
+                except Exception as err:
+                    logging.warning(f"{cls.__name__}._clean_app_twin failed: {err}")
+            else:
+                logging.debug(f"{cls.__name__} has no _clean_app_twin method; skipping.")
+
+            # call _clean_generic_files if available
+            clean_generic = getattr(cls, '_clean_generic_files', None)
+            if callable(clean_generic):
+                try:
+                    clean_generic(document)
+                except Exception as err:
+                    logging.warning(f"{cls.__name__}._clean_generic_files failed: {err}")
+            else:
+                logging.debug(f"{cls.__name__} has no _clean_generic_files method; skipping.")
+        except Exception as err:
+            logging.exception(f"Unexpected error in pre_delete for {cls.__name__}: {err}")
 
 
 mongoengine.signals.pre_delete.connect(AndroidApp.pre_delete, sender=AndroidApp)

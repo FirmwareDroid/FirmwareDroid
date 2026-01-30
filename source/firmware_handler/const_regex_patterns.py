@@ -86,7 +86,9 @@ SYSTEM_DAT_PATCH_PATTERN_LIST = ["system[.]patch[.]dat"]
 # ONLY EXACT MATCHES - NO REGEX MATCHING HERE
 ##########################################################################################
 BUILD_PRODUCT_LIST = ["ro_build_product", "ro_odm_build_product"]
-BUILD_VERSION_RELEASE_LIST = ["ro_build_version_release", "ro_odm_build_version_release"]
+BUILD_VERSION_RELEASE_LIST = ["ro_build_version_release",
+                              "ro_odm_build_version_release",
+                              "ro_product_build_version_release"]
 BUILD_VERSION_SECURITY_PATCH_LIST = ["ro_build_version_security_patch", "ro_odm_build_version_security_patch"]
 
 PRODUCT_MANUFACTURER_LIST = ["ro_product_manufacturer", "ro_product_odm_manufacturer"]
@@ -103,8 +105,13 @@ SYSTEM_BUILD_FINGERPRINT_LIST = ["ro_system_build_fingerprint", "ro_odm_build_fi
 # OS Vendor detection properties - for detecting firmware manufacturer/brand
 ##########################################################################################
 OS_VENDOR_PROPERTY_LIST = [
-    "ro_product_manufacturer", "ro_product_odm_manufacturer",
-    "ro_product_brand", "ro_product_odm_brand",
-    "ro_system_build_fingerprint", "ro_odm_build_fingerprint",
-    "ro_build_fingerprint"
+    "ro_product_manufacturer",
+    "ro_product_odm_manufacturer",
+    "ro_product_brand",
+    "ro_product_odm_brand",
+    "ro_product_product_brand",
+    "ro_vendor_product_brand",
+    "ro_system_build_fingerprint",
+    "ro_odm_build_fingerprint",
+    "ro_build_fingerprint",
 ]

@@ -158,11 +158,12 @@ def extract_firmware(firmware_archive_file_path, temp_extract_dir):
         logging.info(f"Attempt to index files for partition: {partition_name}")
         partition_temp_dir = tempfile.mkdtemp(dir=temp_extract_dir, prefix=f"fmd_extract_{partition_name}_")
         partition_temp_dir = os.path.abspath(partition_temp_dir)
-        partition_firmware_file_list, is_successful = create_partition_file_index(partition_name,
-                                                                                  file_pattern_list,
-                                                                                  top_level_firmware_file_list,
-                                                                                  temp_extract_dir,
-                                                                                  partition_temp_dir)
+        partition_firmware_file_list, is_successful = create_partition_file_index(partition_name=partition_name,
+                                                                                  file_pattern_list=file_pattern_list,
+                                                                                  archive_firmware_file_list=top_level_firmware_file_list,
+                                                                                  temp_extract_dir=temp_extract_dir,
+                                                                                  partition_temp_dir=partition_temp_dir)
+
         if is_successful:
             if partition_name == "super":
                 top_level_firmware_file_list.extend(partition_firmware_file_list)

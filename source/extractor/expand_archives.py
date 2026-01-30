@@ -24,6 +24,7 @@ from firmware_handler.const_regex_patterns import EXT_IMAGE_PATTERNS_DICT
 from firmware_handler.ext4_mount_util import run_simg2img_convert
 from firmware_handler.firmware_file_indexer import create_firmware_file_list
 
+
 EXTRACTION_SEMAPHORE = threading.Semaphore(20)
 MAX_EXTRACTION_DEPTH = 10
 SUPPORTED_FILE_TYPE_REGEX = r"(zip|tar|md5|lz4|pac|nb0|bin|br|dat|tgz|gz|app|rar|ozip|APP)$"
@@ -158,7 +159,21 @@ def extract_first_layer(firmware_archive_file_path, destination_dir):
                                       delete_compressed_file=False,
                                       unblob_depth=1)
     logging.info(f"Extracted files count: {len(file_list)}")
-    file_list = extract_support_file_types_recursively(file_list, destination_dir)
+    logging.info(f"Checking if enough data is extracted in folder : {destination_dir}")
+    is_enough_depth = False
+    folder_list = set()
+    for file_path in file_list:
+        parent_dir = os.path.dirname(file_path)
+        if os.path.isdir(parent_dir) and parent_dir not in folder_list:
+            logging.info(f"Folder test : {parent_dir}")
+            is_enough_depth = is_enough_extracted(parent_dir)
+            main_folder = parent_dir
+            if is_enough_depth:
+                break
+        folder_list.add(parent_dir)
+    logging.info(f"Encountered enough depth: {is_enough_depth}")
+    if not is_enough_depth:
+        file_list = extract_support_file_types_recursively(file_list, destination_dir)
     return file_list
 
 
@@ -338,6 +353,44 @@ def extract_image_file(image_path, extract_dir_path):
         raise RuntimeError(f"Could not extract data from image: {image_path} Maybe unknown format or mount error.")
 
 
+def is_enough_extracted(file_path):
+    logging.info(f"is_enough_extracted: {file_path}")
+    FOLDER_NAMES = ["system", "vendor", "product"]
+    result = True
+    try:
+        if not os.path.isdir(file_path):
+            logging.debug(f"is_already_extracted: path is not a directory: {file_path}")
+            result = False
+        else:
+            for folder in FOLDER_NAMES:
+                if not result:
+                    break
+                folder_path = os.path.join(file_path, folder)
+                if not os.path.isdir(folder_path):
+                    logging.debug(f"is_already_extracted: missing folder: {folder_path}")
+                    result = False
+                    break
+
+                # Check recursively if there is at least one regular file inside the folder
+                has_file = False
+                for root, dirs, files in os.walk(folder_path, followlinks=True):
+                    if files:
+                        has_file = True
+                        break
+                if not has_file:
+                    logging.debug(f"is_already_extracted: folder exists but contains no files: {folder_path}")
+                    result = False
+                    break
+
+        if result:
+            logging.info(f"is_already_extracted: all required folders present and non-empty under {file_path}")
+    except Exception as err:
+        logging.warning(f"is_already_extracted error for {file_path}: {err}")
+        result = False
+
+    return result
+
+
 def extract_list_of_files(file_path_list,
                           destination_dir,
                           delete_compressed_file,
@@ -355,7 +408,7 @@ def extract_list_of_files(file_path_list,
     extracted_files_path_list = []
     for file_path in file_path_list:
         if not os.path.exists(file_path):
-            logging.warning(f"File does not exist: {file_path}")
+            #logging.warning(f"File does not exist: {file_path}")
             continue
         if os.path.isfile(file_path):
             with EXTRACTION_SEMAPHORE:
@@ -366,7 +419,6 @@ def extract_list_of_files(file_path_list,
                 for extract_file_path in extracted_files_for_current_path:
                     if os.path.exists(extract_file_path):
                         extracted_files_path_list.append(extract_file_path)
-
     return extracted_files_path_list
 
 
@@ -482,3 +534,4 @@ def process_single_file_path(file_path,
     extracted_file_list = get_file_list(destination_dir)
     logging.info(f"Extracted files: {len(extracted_file_list)}")
     return extracted_file_list
+
