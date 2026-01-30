@@ -2,7 +2,7 @@
 # Webserver
 Django~=5.2.5
 django-environ~=0.12.0
-django-rq~=3.1
+django-rq~=3.2.2
 django-cors-headers~=4.7.0
 ##############################
 # GrahpQL API
@@ -14,7 +14,7 @@ django-graphql-jwt~=0.4.0
 djangorestframework~=3.16.1
 ##############################
 # Databases
-rq~=2.5.0
+rq~=2.6.1
 pymongo~=4.8.0 # mongoengine dependency -> Newer versions may not be compatible
 mongoengine~=0.29.1
 blinker~=1.9.0

@@ -28,6 +28,7 @@ from firmware_handler.firmware_version_detect import detect_by_build_prop
 from processing.standalone_python_worker import create_multi_threading_queue
 from bson import ObjectId
 from firmware_handler.firmware_os_detect import detect_vendor_by_build_prop
+from typing import List
 
 ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar", ".gz", ".bz2", ".md5", ".lz4", ".tgz", ".rar", ".7z", "lzma", ".xz",
                                    ".ozip"]
@@ -169,8 +170,11 @@ def open_firmware(firmware_archive_file_path, temp_extract_dir):
     return archive_firmware_file_list
 
 
-def create_partition_file_index(partition_name, file_pattern_list, archive_firmware_file_list,
-                                temp_extract_dir, partition_temp_dir):
+def create_partition_file_index(partition_name,
+                                file_pattern_list,
+                                archive_firmware_file_list,
+                                temp_extract_dir,
+                                partition_temp_dir):
     """
     Gets a list of all files found in a specific partition.
 
@@ -183,11 +187,11 @@ def create_partition_file_index(partition_name, file_pattern_list, archive_firmw
 
     :return: list(class:'FirmwareFile') - with all found firmware files within a particular partition.
     """
-    partition_firmware_file_list, is_successful = create_partition_firmware_files(archive_firmware_file_list,
-                                                                                  temp_extract_dir,
-                                                                                  file_pattern_list,
-                                                                                  partition_name,
-                                                                                  partition_temp_dir)
+    partition_firmware_file_list, is_successful = create_partition_firmware_files(archive_firmware_file_list=archive_firmware_file_list,
+                                                                                  extracted_archive_dir_path=temp_extract_dir,
+                                                                                  file_pattern_list=file_pattern_list,
+                                                                                  partition_name=partition_name,
+                                                                                  temp_dir_path=partition_temp_dir)
     return partition_firmware_file_list, is_successful
 
 
@@ -210,12 +214,12 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
         build_prop_list = []
         with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"],
                                          suffix=f"fmd_extract_root_{partition_name}") as partition_temp_dir:
-            partition_firmware_file_list, is_successful = create_partition_file_index(partition_name,
-                                                                                      file_pattern_list,
-                                                                                      files_dict[
+            partition_firmware_file_list, is_successful = create_partition_file_index(partition_name=partition_name,
+                                                                                      file_pattern_list=file_pattern_list,
+                                                                                      archive_firmware_file_list=files_dict[
                                                                                           "archive_firmware_file_list"],
-                                                                                      temp_extract_dir,
-                                                                                      partition_temp_dir)
+                                                                                      temp_extract_dir=temp_extract_dir,
+                                                                                      partition_temp_dir=partition_temp_dir)
             if is_successful:
                 if partition_name == "super":
                     files_dict["archive_firmware_file_list"].extend(partition_firmware_file_list)
@@ -353,6 +357,8 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
             archive_firmware_file_list = open_firmware(archive_copy_file_path, temp_extract_dir)
             files_dict["archive_firmware_file_list"].extend(archive_firmware_file_list)
             files_dict["firmware_file_list"].extend(archive_firmware_file_list)
+
+            temp_extract_dir = os.path.abspath(temp_extract_dir)
             files_dict, partition_info_dict = index_partitions(temp_extract_dir,
                                                                files_dict,
                                                                create_fuzzy_hashes,
@@ -423,6 +429,88 @@ def get_firmware_archive_content(cache_temp_file_dir_path):
     return firmware_files
 
 
+def is_already_extracted(root_path, partition_name=None):
+    """Determine whether firmware was already extracted.
+
+    If partition_name is provided, search top-level subdirectories of `root_path`
+    for a candidate directory that contains all required folders (FOLDER_NAMES)
+    and the requested partition. If found, return the path to that partition
+    (os.path.join(candidate_dir, partition_name)).
+
+    If partition_name is None, keep backwards-compatible behavior: check
+    whether `root_path` itself contains all required folders and each of them
+    contains at least one file; if so, return root_path.
+
+    Returns:
+        str | None: path to partition or root path if satisfied, otherwise None.
+    """
+    FOLDER_NAMES = ["system", "vendor", "product"]
+    result = None
+    try:
+        if not os.path.isdir(root_path):
+            logging.debug(f"is_already_extracted: path is not a directory: {root_path}")
+            result = None
+        else:
+            if partition_name:
+                # search immediate children of root_path for a candidate
+                for entry in os.listdir(root_path):
+                    candidate = os.path.join(root_path, entry)
+                    if not os.path.isdir(candidate):
+                        continue
+                    # candidate must contain all required folder names
+                    candidate_ok = True
+                    for folder in FOLDER_NAMES:
+                        folder_path = os.path.join(candidate, folder)
+                        if not os.path.isdir(folder_path):
+                            candidate_ok = False
+                            break
+                        # ensure the folder contains at least one file
+                        has_file = False
+                        for _r, _d, files in os.walk(folder_path, followlinks=True):
+                            if files:
+                                has_file = True
+                                break
+                        if not has_file:
+                            candidate_ok = False
+                            break
+                    if not candidate_ok:
+                        continue
+                    # ensure requested partition exists inside candidate
+                    partition_path = os.path.join(candidate, partition_name)
+                    if not os.path.isdir(partition_path):
+                        logging.debug(f"is_already_extracted: candidate missing partition {partition_path}")
+                        continue
+                    # found suitable candidate
+                    result = os.path.abspath(partition_path)
+                    logging.info(f"is_already_extracted: found extracted partition at {result}")
+                    break
+            else:
+                # Backwards-compatible: check root_path directly
+                root_ok = True
+                for folder in FOLDER_NAMES:
+                    folder_path = os.path.join(root_path, folder)
+                    if not os.path.isdir(folder_path):
+                        logging.debug(f"is_already_extracted: missing folder: {folder_path}")
+                        root_ok = False
+                        break
+                    has_file = False
+                    for _r, _d, files in os.walk(folder_path, followlinks=True):
+                        if files:
+                            has_file = True
+                            break
+                    if not has_file:
+                        logging.debug(f"is_already_extracted: folder exists but contains no files: {folder_path}")
+                        root_ok = False
+                        break
+                if root_ok:
+                    result = os.path.abspath(root_path)
+                    logging.info(f"is_already_extracted: all required folders present and non-empty under {root_path}")
+    except Exception as err:
+        logging.warning(f"is_already_extracted error for {root_path}: {err}")
+        result = None
+
+    return result
+
 def create_partition_firmware_files(archive_firmware_file_list,
                                     extracted_archive_dir_path,
                                     file_pattern_list,
@@ -444,9 +532,20 @@ def create_partition_firmware_files(archive_firmware_file_list,
     is_successful = False
     partition_firmware_files = []
     try:
-        partition_folder = str(os.path.join(extracted_archive_dir_path, partition_name))
-        if os.path.exists(partition_folder) and os.path.isdir(partition_folder) and any(os.scandir(partition_folder)):
-            shutil.move(partition_folder, temp_dir_path)
+        partition_folder = is_already_extracted(extracted_archive_dir_path, partition_name)
+        if (partition_folder
+                and os.path.exists(partition_folder)
+                and os.path.isdir(partition_folder)
+                and any(os.scandir(partition_folder))):
+            logging.info(f"Partition {partition_name} already extracted at {partition_folder}. Skipping extraction.")
+            shutil.copytree(partition_folder,
+                            temp_dir_path,
+                            dirs_exist_ok=True,
+                            symlinks=True,
+                            ignore_dangling_symlinks=True)
+            firmware_file_list = create_firmware_file_list(temp_dir_path, partition_name)
+            partition_firmware_files.extend(firmware_file_list)
+            is_successful = True
         else:
             potential_image_files = find_image_firmware_file(archive_firmware_file_list, file_pattern_list, partition_name)
             for image_firmware_file in potential_image_files:

@@ -34,11 +34,15 @@ services:
       - frontend
 
   nginx:
+    container_name: nginx
     platform: "linux/amd64"
     build:
       context: ./
       dockerfile: Dockerfile_NGINX
     restart: unless-stopped
+    environment:
+      DOMAIN_NAME: "test.localhost"
+      VITE_DOMAIN_NAME: "test.localhost"
     depends_on:
       - web
       - neo4j
@@ -46,7 +50,7 @@ services:
       - ./env/nginx/conf.d:/etc/nginx/conf.d
       - ./env/nginx/stream.conf:/etc/nginx/stream.conf
       - ./env/nginx/live/:/etc/letsencrypt/live/
-     # - ./firmware-droid-client/build:/usr/share/nginx/html # Dev-Route
+      #- ./firmware-droid-client/build:/usr/share/nginx/html # Dev-Route
       - ./source/static:/usr/share/nginx/django_static
     ports:
       - "80:80"
