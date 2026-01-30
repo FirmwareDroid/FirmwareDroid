@@ -40,9 +40,6 @@ services:
       context: ./
       dockerfile: Dockerfile_NGINX
     restart: unless-stopped
-    environment:
-      DOMAIN_NAME: "test.localhost"
-      VITE_DOMAIN_NAME: "test.localhost"
     depends_on:
       - web
       - neo4j
