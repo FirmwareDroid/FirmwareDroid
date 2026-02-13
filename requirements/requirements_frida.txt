@@ -1,3 +1,4 @@
 adb-shell==0.3.0
 frida==14.2.3
 frida-tools==9.0.1
+cryptography>=46.0.5 # not directly required, pinned by Snyk to avoid a vulnerability
