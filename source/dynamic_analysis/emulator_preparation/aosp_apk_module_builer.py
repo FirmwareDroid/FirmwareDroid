@@ -15,11 +15,8 @@ from dynamic_analysis.emulator_preparation.templates.android_app_module_template
 def create_build_files_for_apps(android_app_id_list, format_name):
     """
     Creates build files for a list of Android apps.
-
     :param android_app_id_list: list - A list of ObjectIDs for class:'AndroidApp'.
     :param format_name: str - 'mk' or 'bp' file format.
-
-
     """
     for android_app_lazy in android_app_id_list:
         android_app = android_app_lazy.fetch()
