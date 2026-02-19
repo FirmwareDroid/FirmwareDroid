@@ -169,7 +169,7 @@ def validate_queue_name(queue_name):
 
 
 def validate_queue_extractor_task(queue_name):
-    if "extractor" not in queue_name:
+    if queue_name != "extractor":
         raise ValueError(f"Invalid queue name for extractor task: {queue_name}. Must contain 'extractor'")
     return queue_name
 

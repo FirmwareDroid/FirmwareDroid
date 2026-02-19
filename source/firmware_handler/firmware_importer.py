@@ -411,6 +411,14 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
                 logging.error(f"Cleanup: Failed to remove firmware files and android apps from DB: {e}")
             finally:
                 dst_file_path = os.path.join(store_paths["FIRMWARE_FOLDER_IMPORT_FAILED"], original_filename)
+                if os.path.exists(dst_file_path):
+                    md5_target = md5_from_file(dst_file_path)
+                    md5_source = md5_from_file(firmware_archive_file_path)
+                    if md5_target != md5_source:
+                        logging.warning(f"File with same name already exists in failed folder but has different content. "
+                                        f"Source MD5: {md5_source} Target MD5: {md5_target}. "
+                                        f"Renaming file to avoid overwrite.")
+                        dst_file_path = os.path.join(store_paths["FIRMWARE_FOLDER_IMPORT_FAILED"], md5_source)
                 shutil.move(firmware_archive_file_path, str(dst_file_path))
                 logging.info(f"Cleanup: Firmware file moved to failed folder: {original_filename}")
 
@@ -432,79 +440,120 @@ def get_firmware_archive_content(cache_temp_file_dir_path):
 def is_already_extracted(root_path, partition_name=None):
     """Determine whether firmware was already extracted.
 
-    If partition_name is provided, search top-level subdirectories of `root_path`
-    for a candidate directory that contains all required folders (FOLDER_NAMES)
-    and the requested partition. If found, return the path to that partition
-    (os.path.join(candidate_dir, partition_name)).
+    Search is limited to `root_path` and its subdirectories up to a maximum depth of 3.
 
-    If partition_name is None, keep backwards-compatible behavior: check
-    whether `root_path` itself contains all required folders and each of them
-    contains at least one file; if so, return root_path.
+    If `partition_name` is provided, the function searches for a directory (within the
+    allowed depth) that contains all required folders (FOLDER_NAMES) and also contains
+    the requested partition folder. If found, returns the absolute path to that
+    partition (os.path.join(candidate_dir, partition_name)). The partition folder
+    must contain at least MIN_PARTITION_SIZE_BYTES bytes (default 500 MB).
+
+    If `partition_name` is None, the function searches for any directory within the
+    allowed depth that contains all required folders and each of those folders has at
+    least one file; if found it returns that directory's absolute path.
 
     Returns:
-        str | None: path to partition or root path if satisfied, otherwise None.
+        str | None: path to partition or matching directory if satisfied, otherwise None.
     """
-    FOLDER_NAMES = ["system", "vendor", "product"]
+    FOLDER_NAMES = ["system"]
+    MIN_PARTITION_SIZE_BYTES = 500 * 1024 * 1024  # 500 MB
     result = None
     try:
         if not os.path.isdir(root_path):
             logging.debug(f"is_already_extracted: path is not a directory: {root_path}")
             result = None
-        else:
-            if partition_name:
-                # search immediate children of root_path for a candidate
-                for entry in os.listdir(root_path):
-                    candidate = os.path.join(root_path, entry)
-                    if not os.path.isdir(candidate):
-                        continue
-                    # candidate must contain all required folder names
-                    candidate_ok = True
-                    for folder in FOLDER_NAMES:
-                        folder_path = os.path.join(candidate, folder)
-                        if not os.path.isdir(folder_path):
-                            candidate_ok = False
-                            break
-                        # ensure the folder contains at least one file
-                        has_file = False
-                        for _r, _d, files in os.walk(folder_path, followlinks=True):
-                            if files:
-                                has_file = True
-                                break
-                        if not has_file:
-                            candidate_ok = False
-                            break
-                    if not candidate_ok:
-                        continue
-                    # ensure requested partition exists inside candidate
-                    partition_path = os.path.join(candidate, partition_name)
-                    if not os.path.isdir(partition_path):
-                        logging.debug(f"is_already_extracted: candidate missing partition {partition_path}")
-                        continue
-                    # found suitable candidate
-                    result = os.path.abspath(partition_path)
-                    logging.info(f"is_already_extracted: found extracted partition at {result}")
+            return result
+
+        # base depth for limiting search (count of separators)
+        base_depth = root_path.rstrip(os.sep).count(os.sep)
+        max_rel_depth = 3
+
+        for dirpath, dirnames, filenames in os.walk(root_path, followlinks=True):
+            # compute relative depth from root_path
+            rel_depth = dirpath.rstrip(os.sep).count(os.sep) - base_depth
+            # prune deeper traversal for performance
+            if rel_depth > max_rel_depth:
+                dirnames[:] = []
+                continue
+
+            # candidate directory to check is dirpath
+            candidate = dirpath
+            candidate_ok = True
+
+            for folder in FOLDER_NAMES:
+                folder_path = os.path.join(candidate, folder)
+                if not os.path.isdir(folder_path):
+                    candidate_ok = False
                     break
+                # ensure the folder contains at least one file (non-empty)
+                has_file = False
+                for _r, _d, files in os.walk(folder_path, followlinks=True):
+                    if files:
+                        has_file = True
+                        break
+                if not has_file:
+                    candidate_ok = False
+                    break
+
+            if not candidate_ok:
+                continue
+
+            # candidate contains required folders and they are non-empty
+            if partition_name:
+                partition_path = os.path.join(candidate, partition_name)
+                if not os.path.isdir(partition_path):
+                    logging.debug(f"is_already_extracted: candidate missing partition {partition_path}")
+                    continue
+
+                # compute total size of partition_path (skip counting directories themselves)
+                total_size = 0
+                try:
+                    for root_dir, _, files in os.walk(partition_path, followlinks=True):
+                        for fname in files:
+                            fpath = os.path.join(root_dir, fname)
+                            try:
+                                # skip broken symlinks
+                                if os.path.islink(fpath) and not os.path.exists(os.readlink(fpath)):
+                                    continue
+                                # use lstat to avoid following symlinks twice
+                                stat_info = os.lstat(fpath)
+                                # if it's a symlink, get size of link itself; prefer to include target size if exists
+                                if os.path.islink(fpath):
+                                    # try to add target size if it exists
+                                    try:
+                                        target = os.path.realpath(fpath)
+                                        if os.path.exists(target) and os.path.isfile(target):
+                                            total_size += os.path.getsize(target)
+                                            continue
+                                    except Exception:
+                                        pass
+                                    # fallback: add link size
+                                    total_size += stat_info.st_size
+                                else:
+                                    total_size += stat_info.st_size
+                            except FileNotFoundError:
+                                # file disappeared between listing and stat
+                                continue
+                            except Exception as e:
+                                logging.debug(f"is_already_extracted: error sizing file {fpath}: {e}")
+                                continue
+                except Exception as e:
+                    logging.debug(f"is_already_extracted: failed to compute size for {partition_path}: {e}")
+                    continue
+
+                if total_size < MIN_PARTITION_SIZE_BYTES:
+                    logging.debug(f"is_already_extracted: partition {partition_path} too small ({total_size} bytes)")
+                    continue
+
+                result = os.path.abspath(partition_path)
+                logging.info(f"is_already_extracted: found extracted partition at {result} (size={total_size} bytes)")
+                break
             else:
-                # Backwards-compatible: check root_path directly
-                root_ok = True
-                for folder in FOLDER_NAMES:
-                    folder_path = os.path.join(root_path, folder)
-                    if not os.path.isdir(folder_path):
-                        logging.debug(f"is_already_extracted: missing folder: {folder_path}")
-                        root_ok = False
-                        break
-                    has_file = False
-                    for _r, _d, files in os.walk(folder_path, followlinks=True):
-                        if files:
-                            has_file = True
-                            break
-                    if not has_file:
-                        logging.debug(f"is_already_extracted: folder exists but contains no files: {folder_path}")
-                        root_ok = False
-                        break
-                if root_ok:
-                    result = os.path.abspath(root_path)
-                    logging.info(f"is_already_extracted: all required folders present and non-empty under {root_path}")
+                # return the candidate directory that satisfies the folder requirements
+                result = os.path.abspath(candidate)
+                logging.info(f"is_already_extracted: all required folders present and non-empty under {candidate}")
+                break
+
     except Exception as err:
         logging.warning(f"is_already_extracted error for {root_path}: {err}")
         result = None

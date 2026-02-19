@@ -329,7 +329,7 @@ RQ_QUEUES = {
         'PASSWORD': REDIS_PASSWORD,
         'DEFAULT_TIMEOUT': 60 * 60 * 24 * 14,
         'DEFAULT_RESULT_TTL': 60 * 60 * 24 * 3,
-    },
+    }
 }
 
 

@@ -60,7 +60,25 @@ def detect_vendor_by_build_prop(build_prop_file_id_list):
         'rockchip': 'Rockchip',
         'allwinner': 'Allwinner',
         'spreadtrum': 'Spreadtrum',
-        'unisoc': 'Unisoc'
+        'unisoc': 'Unisoc',
+        'meizu': 'Meizu',
+        'sharp': 'Sharp',
+        'panasonic': 'Panasonic',
+        'alcatel': 'Alcatel',
+        'infinix': 'Infinix',
+        'itel': 'itel',
+        'tecno': 'TECNO',
+        'micromax': 'Micromax',
+        'lava': 'Lava',
+        'blackview': 'Blackview',
+        'ulefone': 'Ulefone',
+        'doogee': 'DOOGEE',
+        'cat': 'Caterpillar',
+        'caterpillar': 'Caterpillar',
+        'coolpad': 'Coolpad',
+        'gionee': 'Gionee',
+        "meta": "Meta",
+        "facebook": "Meta"
     }
     
     detected_vendor = "Unknown"
@@ -140,5 +158,4 @@ def update_firmware_vendor_by_build_prop(firmware_id_list=None):
     
     logging.info(f"Updated vendor for {updated_count} firmware records")
     return updated_count
-
 

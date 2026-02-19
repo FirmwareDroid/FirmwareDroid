@@ -114,4 +114,5 @@ OS_VENDOR_PROPERTY_LIST = [
     "ro_system_build_fingerprint",
     "ro_odm_build_fingerprint",
     "ro_build_fingerprint",
+    "ro_product_system_brand"
 ]

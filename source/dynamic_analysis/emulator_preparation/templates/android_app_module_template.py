@@ -15,8 +15,6 @@ ANDROID_MK_TEMPLATE = "LOCAL_PATH := $$(call my-dir)\n" \
                       "\nLOCAL_OVERRIDES_PACKAGES := ${local_overrides_packages}\n" \
                       "\ninclude $$(BUILD_PREBUILT)\n"
 
-#    relative_install_path: "${local_module_relative_path}",
-#     vendor: ${vendor},
 ANDROID_BP_TEMPLATE = """
 android_app_import {
     name: "${local_module}", 
@@ -34,7 +32,6 @@ android_app_import {
     prefer: true,
     product_specific: ${product_specific},
     proprietary: ${proprietary},
-   
 }
 """
 

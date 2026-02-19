@@ -12,7 +12,7 @@ from api.v2.schema.RqJobsSchema import ONE_DAY_TIMEOUT, ONE_WEEK_TIMEOUT
 from api.v2.types.GenericDeletion import delete_queryset_background
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from api.v2.validators.validation import (
-    sanitize_and_validate, validate_object_id_list, validate_queue_name, validate_queue_extractor_task
+    sanitize_and_validate, validate_object_id_list, validate_queue_name, validate_queue_extractor_task, sanitize_string
 )
 from firmware_handler.firmware_reimporter import start_firmware_re_import
 from hashing.fuzzy_hash_creator import start_fuzzy_hasher
@@ -117,7 +117,9 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
         validators={
             'queue_name': [validate_queue_name, validate_queue_extractor_task],
         },
-        sanitizers={}
+        sanitizers={
+            'queue_name': sanitize_string,
+        }
     )
     def mutate(cls, root, info, queue_name, create_fuzzy_hashes, storage_index):
         """
@@ -131,7 +133,12 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
         """
         queue = django_rq.get_queue(queue_name)
         func_to_run = start_firmware_mass_import
-        job = queue.enqueue(func_to_run, create_fuzzy_hashes, storage_index, job_timeout=ONE_WEEK_TIMEOUT)
+        job = queue.enqueue(func_to_run,
+                            create_fuzzy_hashes,
+                            storage_index,
+                            job_timeout=ONE_WEEK_TIMEOUT,
+                            meta={"storage_index": storage_index}
+                            )
         return cls(job_id=job.id)
 
 
