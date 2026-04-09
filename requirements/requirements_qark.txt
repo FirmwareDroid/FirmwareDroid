@@ -1,1 +1,2 @@
 qark==4.0.0  # In case of update -> please change hardcoded version value in qark_wrapper.py
+urllib3>=2.6.3 # not directly required, pinned by Snyk to avoid a vulnerability
