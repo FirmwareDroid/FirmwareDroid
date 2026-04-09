@@ -1,1 +1,4 @@
 python-dotenv==1.0.0
+pytest>=9.0.0
+pytest-django>=4.0.0
+coverage>=7.0.0
