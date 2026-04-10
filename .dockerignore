@@ -1,4 +1,7 @@
 # root files
+# Exclude Git metadata from build context
+.git
+.git/**
 .gitignore
 .gitmodules
 .travis.yml
@@ -7,8 +10,54 @@ docker-compose.yml
 LICENSE
 README.md
 
+# Security / secrets (exclude common secret and key files from build context)
+# Environment files
+.env
+.env.*
+
+# Secret directories
+secrets/
+secrets/**
+
+# Private keys, certificates and keystores
+*.pem
+*.key
+*.csr
+*.crt
+*.der
+*.pfx
+*.p12
+*.jks
+*.keystore
+*.p7b
+*.p7s
+*.cert
+
+# SSH and GPG
+id_rsa
+id_rsa.pub
+.ssh
+.ssh/**
+*.gpg
+*.asc
+
+# CI/credentials and tokens
+.netrc
+.npmrc
+.npmrc.*
+.yarnrc
+credentials
+credentials/*
+.docker/config.json
+.htpasswd
+
 # folders
 venv
+venv/**
+.venv
+.venv/**
+.github
+.github/**
 .idea
 __pycache__
 firmware-droid-client/build/*

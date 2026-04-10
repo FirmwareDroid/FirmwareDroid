@@ -4,11 +4,22 @@
 FROM python:3.11-slim-bookworm AS firmwaredroid-base
 
 RUN mkdir -p /var/www/tmp/ && mkdir -p /var/www/ && mkdir -p /opt/firmwaredroid/python/
-ADD ./ /var/www/
+COPY requirements.txt /var/www/requirements.txt
+COPY requirements.txt /var/www/requirements_testing.txt
+COPY requirements/ /var/www/requirements/
+COPY source/ /var/www/source/
+COPY setup.py /var/www/setup.py
+COPY docker_entrypoint.sh /var/www/docker_entrypoint.sh
+COPY templates/ /var/www/templates/
+COPY docker/ /var/www/docker/
+COPY firmware-droid-client/ /var/www/firmware-droid-client/
+RUN chmod +x /var/www/docker_entrypoint.sh || true
 WORKDIR /var/www/
 ENV PATH="$PATH:/home/www/.local/bin/"
 ENV PATH="$PATH:/var/www/source/"
 ENV PYTHONPATH="/var/www/source/:\$PYTHONPATH"
+
+USER root
 ########################################################
 # Update installation                                  #
 ########################################################
@@ -24,7 +35,7 @@ ENV GROUP_ID=1000 \
 RUN groupadd -r www -g $GROUP_ID
 # /sbin/nologin -> Debug with -s /bin/sh to get shell
 RUN useradd -r -g $GROUP_ID -u $USER_ID www -s /bin/sh -m
-RUN chown $USER_ID:$GROUP_ID /var/www/
+RUN chown -R $USER_ID:$GROUP_ID /var/www/
 RUN chown -R $USER_ID:$GROUP_ID /opt/firmwaredroid/
 
 ##################################################
@@ -66,13 +77,3 @@ ENV PATH="/home/www/.local/bin/:$PATH"
 ########################################################
 RUN python3 -m pip install --upgrade pip && pip install -r ./requirements.txt
 RUN chown -R $USER_ID:$GROUP_ID /opt/firmwaredroid/
-
-
-
-
-
-
-
-
-
-

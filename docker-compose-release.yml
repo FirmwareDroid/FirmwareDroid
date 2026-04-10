@@ -17,7 +17,7 @@ services:
     expose:
       - 5000
     volumes:
-      - .:/var/www/
+      - .env:/var/www/.env
       - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
       - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
       - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
@@ -97,7 +97,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - .:/var/www/
+      - .env:/var/www/.env
       - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
       - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
       - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
@@ -124,7 +124,7 @@ services:
     depends_on:
       - redis
     volumes:
-      - .:/var/www/
+      - .env:/var/www/.env
       - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
       - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
       - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
@@ -143,15 +143,6 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 scanner
     networks:
       - backend
-
-  # Optional: Frontend service (if using the standalone frontend image)
-  #frontend:
-  #  platform: "linux/amd64"
-  #  image: ghcr.io/firmwaredroid/firmwaredroid-frontend:latest
-  #  ports:
-  #    - "8080:80"
-  #  networks:
-  #    - frontend
 
 networks:
   frontend:

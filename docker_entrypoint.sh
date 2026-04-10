@@ -5,6 +5,17 @@
 
 set -e
 
+# Ensure a mounted /file_store exists and is writable by the www user.
+# We must perform ownership changes as root at container start; do NOT grant
+# the runtime `www` user additional sudo rights. If the container is started
+# as non-root (www), we will warn but continue.
+if [ "$(id -u)" -eq 0 ]; then
+    mkdir -p ./file_store || true
+    chown -R www:www ./file_store || true
+    chmod -R u+rwX,g+rwX,o-rwx ./file_store || true
+else
+    echo "Warning: container not started as root; cannot change ownership of /file_store. Ensure host permissions or use a named volume."
+fi
 mkdir -p /var/www/blob_storage/django_database/
 #chown "$(whoami):$(whoami)" /var/www/blob_storage/django_database/db.sqlite3
 
@@ -29,4 +40,17 @@ User.objects.filter(username="${DJANGO_SUPERUSER_USERNAME}").exists() or \
 EOF
 
 # Start server
-/home/www/.local/bin/gunicorn -w 17 --bind 0.0.0.0:5000 --worker-tmp-dir /dev/shm --chdir /var/www/source/ --timeout 300 --worker-class gevent --threads 12 --log-level debug webserver.wsgi:app
+# If started as root: drop privileges to 'www' for the main server process.
+GUNICORN_CMD=("/home/www/.local/bin/gunicorn" -w 17 --bind 0.0.0.0:5000 --worker-tmp-dir /dev/shm --chdir /var/www/source/ --timeout 300 --worker-class gevent --threads 12 --log-level debug webserver.wsgi:app)
+
+if [ "$(id -u)" -eq 0 ]; then
+    echo "Attempting to drop privileges to user 'www' and start gunicorn as www"
+    # Preferred: su (available in most Debian images)
+    if command -v su >/dev/null 2>&1; then
+        exec su -s /bin/sh www -c "${GUNICORN_CMD[*]}"
+    fi
+    echo "Warning: unable to drop privileges (su/runuser/gosu/python3 not available). Starting gunicorn as root." >&2
+    exec "${GUNICORN_CMD[@]}"
+else
+    exec "${GUNICORN_CMD[@]}"
+fi
