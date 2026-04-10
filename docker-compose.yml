@@ -49,6 +49,7 @@ services:
       - ./env/nginx/stream.conf:/etc/nginx/stream.conf
       - ./env/nginx/live/:/etc/letsencrypt/live/
       - ./source/static:/usr/share/nginx/django_static
+      #- ./firmware-droid-client/build:/usr/share/nginx/html # Dev-Route
     ports:
       - "80:80"
       - "443:443"

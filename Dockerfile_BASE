@@ -21,11 +21,20 @@ ENV PYTHONPATH="/var/www/source/:\$PYTHONPATH"
 
 USER root
 ########################################################
-# Update installation                                  #
+# Update installation and apply latest security updates
+# - Run apt-get update, upgrade (to apply available security fixes),
+#   then install required packages. Use non-interactive frontend.
 ########################################################
-RUN apt-get --allow-releaseinfo-change update -y && \
-    apt-get -y install --no-install-recommends apt-utils && \
-    apt-get -y install tar gzip build-essential git unzip curl wget sudo
+RUN set -eux; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    apt-get --allow-releaseinfo-change update -y; \
+    # Upgrade packages to pull latest security patches
+    apt-get -y upgrade; \
+    # Install essential packages (no-install-recommends to keep image smaller)
+    apt-get -y install --no-install-recommends apt-utils; \
+    apt-get -y install --no-install-recommends tar gzip build-essential git unzip curl wget sudo; \
+    # cleanup apt caches to reduce image size
+    apt-get clean; rm -rf /var/lib/apt/lists/*
 
 ########################################################
 # User generation                                      #
