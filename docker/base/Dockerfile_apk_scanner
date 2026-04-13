@@ -27,7 +27,7 @@ RUN set -eux; \
         wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip && break || sleep 15; \
     done;
 
-RUN unzip commandlinetools-linux-10406996_latest.zip -d /android/tmp
+RUN unzip /android/commandlinetools-linux-10406996_latest.zip -d /android/tmp
 RUN unzip platform-tools-latest-linux.zip -d /android/sdk/
 RUN mv /android/tmp/cmdline-tools/* /android/sdk/cmdline-tools/latest/
 ENV ANDROID_HOME=/android/sdk
@@ -46,9 +46,8 @@ ENV PATH=$ANDROID_SDK_ROOT/build-tools/35.0.0/:$PATH
 # Installing apktool                #
 #####################################
 RUN set -eux; \
-    APKTOOL_VERSION="2.12.1"; \
     for i in $(seq 1 5); do \
-        curl -Lo /usr/local/bin/apktool.jar "https://github.com/iBotPeaches/Apktool/releases/latest/download/apktool_${APKTOOL_VERSION}.jar" && break || sleep 15; \
+        curl -Lo /usr/local/bin/apktool.jar "https://github.com/iBotPeaches/Apktool/releases/download/v3.0.1/apktool_3.0.1.jar" && break || sleep 15; \
     done;
 RUN set -eux; \
     for i in $(seq 1 5); do \
@@ -106,11 +105,10 @@ RUN set -eux; \
     done;
 
 # Install Krakatau
-RUN git clone https://github.com/Storyyeller/Krakatau.git /opt/decompilers/java/krakatau
+RUN git clone --depth 1 https://github.com/Storyyeller/Krakatau.git /opt/decompilers/java/krakatau
 WORKDIR /opt/decompilers/java/krakatau/
 ENV PATH="/home/www/.cargo/bin:${PATH}"
 RUN cargo build --release
-ENV PATH="${PATH}:/opt/firmwaredroid/decompilers/java/krakatau/target/release/krak2"
 
 # Install Fernflower
 # TODO find prebuilt version of fernflower or stable release jar

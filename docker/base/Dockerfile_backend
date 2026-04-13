@@ -7,7 +7,6 @@ ENV PATH="/home/www/.cargo/bin:${PATH}"
 # Copy Source Files                                    #
 ########################################################
 WORKDIR /var/www/
-COPY ./ /var/www/
 
 ########################################################
 # Install Python requirements                          #
@@ -18,4 +17,5 @@ RUN --mount=type=cache,target=/tmp/.cache \
 ########################################################
 # Run Webserver                                        #
 ########################################################
+USER root
 CMD ["/var/www/docker_entrypoint.sh"]

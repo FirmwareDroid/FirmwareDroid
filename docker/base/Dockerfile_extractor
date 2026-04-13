@@ -36,7 +36,7 @@ USER www
 #####################################
 # Install payload dumpers             #
 #####################################
-RUN git clone https://github.com/vm03/payload_dumper.git /opt/firmwaredroid/payload_dumper
+RUN git clone --depth 1 https://github.com/vm03/payload_dumper.git /opt/firmwaredroid/payload_dumper
 RUN python -m venv /opt/firmwaredroid/payload_dumper/venv
 RUN . /opt/firmwaredroid/payload_dumper/venv/bin/activate \
     && pip install -r requirements.txt
@@ -50,8 +50,7 @@ ENV PATH="$PATH:/opt/firmwaredroid/payload_dumper_go/payload-dumper-go"
 #####################################
 # Install lpunpack                  #
 #####################################
-RUN git clone https://github.com/FirmwareDroid/lpunpack.git /opt/firmwaredroid/lpunpack
-
+RUN git clone --depth 1 https://github.com/FirmwareDroid/lpunpack.git /opt/firmwaredroid/lpunpack
 #####################################
 # Install binwalk3                  #
 #####################################

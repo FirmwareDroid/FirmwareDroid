@@ -582,6 +582,71 @@ def setup_frontend_env(env_instance):
     print("Completed frontend env setup.")
 
 
+def setup_monitoring(env_instance):
+    """
+    Create per-service env folders and default configuration files for monitoring stack.
+    """
+    # create env dirs
+    node_env_dir = os.path.join(env_instance.script_file_path, "env", "node-exporter")
+    cadvisor_dir = os.path.join(env_instance.script_file_path, "env", "cadvisor")
+    prometheus_dir = os.path.join(env_instance.script_file_path, "env", "prometheus")
+    grafana_dir = os.path.join(env_instance.script_file_path, "env", "grafana")
+
+    os.makedirs(node_env_dir, exist_ok=True)
+    os.makedirs(cadvisor_dir, exist_ok=True)
+    os.makedirs(prometheus_dir, exist_ok=True)
+    os.makedirs(grafana_dir, exist_ok=True)
+
+    # generate secure random passwords for each monitoring service
+    # using token_urlsafe which is suitable for secrets in env files
+    node_exporter_password = secrets.token_urlsafe(24)
+    cadvisor_password = secrets.token_urlsafe(24)
+    prometheus_password = secrets.token_urlsafe(24)
+    grafana_admin_password = secrets.token_urlsafe(24)
+
+    # write node-exporter env file
+    node_env_file = os.path.join(node_env_dir, "env")
+    node_env_content = (
+        "# node-exporter env\n"
+        f"NODE_EXPORTER_DEFAULT_PASSWORD={node_exporter_password}\n"
+    )
+    with open(node_env_file, "w", encoding="utf-8") as f:
+        f.write(node_env_content)
+    os.chmod(node_env_file, 0o600)
+
+    # write cadvisor env file
+    cadvisor_env_file = os.path.join(cadvisor_dir, "env")
+    cadvisor_env_content = (
+        "# cadvisor env\n"
+        f"CADVISOR_DEFAULT_PASSWORD={cadvisor_password}\n"
+    )
+    with open(cadvisor_env_file, "w", encoding="utf-8") as f:
+        f.write(cadvisor_env_content)
+    os.chmod(cadvisor_env_file, 0o600)
+
+    # write prometheus env file
+    prometheus_env_file = os.path.join(prometheus_dir, "env")
+    prometheus_env_content = (
+        "# prometheus env\n"
+        f"PROMETHEUS_DEFAULT_PASSWORD={prometheus_password}\n"
+    )
+    with open(prometheus_env_file, "w", encoding="utf-8") as f:
+        f.write(prometheus_env_content)
+    os.chmod(prometheus_env_file, 0o600)
+
+    # grafana
+    grafana_env_file = os.path.join(grafana_dir, "env")
+    grafana_env_content = (
+        f"GF_SECURITY_ADMIN_PASSWORD={grafana_admin_password}\n"
+        "GF_USERS_ALLOW_SIGN_UP=false\n"
+        "GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/\n" % {"protocol": "https", "domain": env_instance.domain_name}
+    )
+    with open(grafana_env_file, "w", encoding="utf-8") as f:
+        f.write(grafana_env_content)
+    os.chmod(grafana_env_file, 0o600)
+    print("Completed monitoring env setup.")
+
+
 def main():
     """
     Command-line interface for the setup script. Parses the arguments and calls the setup functions.
@@ -613,6 +678,7 @@ def main():
     setup_redis(env_instance)
     setup_mongo_env(env_instance)
     setup_frontend_env(env_instance)
+    setup_monitoring(env_instance)
     print("Ready for startup!")
 
 

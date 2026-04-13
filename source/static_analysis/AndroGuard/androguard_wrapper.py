@@ -58,7 +58,7 @@ def get_field_analysis(class_analysis):
 
 def get_method_analysis(class_analysis):
     """
-    Creates a androguard method analysis of the given class.
+    Creates an androguard method analysis of the given class.
 
     :param class_analysis: class:'AndroGuardClassAnalysis'
     :return: list of class:'AndroGuardMethodAnalysis'

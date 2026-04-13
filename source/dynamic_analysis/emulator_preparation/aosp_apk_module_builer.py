@@ -33,9 +33,7 @@ def create_build_file_for_app(android_app, format_name):
 
     """
     logging.debug(f"Creating build file for app {android_app.filename}...")
-    #TODO: Support Android.bp files for later Android versions.
     template = ANDROID_MK_TEMPLATE if format_name.lower() == "mk" else ANDROID_BP_TEMPLATE
-    #template = ANDROID_MK_TEMPLATE
     create_make_files(android_app, format_name, template)
 
 
