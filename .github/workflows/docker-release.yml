@@ -146,8 +146,8 @@ jobs:
           IMAGE_NAME=${{ env.IMAGE_NAME }}
         push: true
         tags: |
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk-scanner:${{ steps.meta.outputs.tag }}
-          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk-scanner:latest
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk_scanner:${{ steps.meta.outputs.tag }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk_scanner:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
@@ -163,7 +163,7 @@ jobs:
             "nginx": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-nginx:${{ steps.meta.outputs.tag }}",
             "backend": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ steps.meta.outputs.tag }}",
             "extractor": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-extractor:${{ steps.meta.outputs.tag }}",
-            "apk-scanner": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk-scanner:${{ steps.meta.outputs.tag }}"
+            "apk_scanner": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk_scanner:${{ steps.meta.outputs.tag }}"
           },
           "description": "FirmwareDroid Docker image bundle for version ${{ steps.meta.outputs.tag }}. All images in this bundle are designed to work together."
         }
@@ -190,7 +190,7 @@ jobs:
         echo "| Nginx | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-nginx\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
         echo "| Backend | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
         echo "| Extractor | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-extractor\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
-        echo "| APK Scanner | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk-scanner\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| APK Scanner | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk_scanner\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "**Note:** These images are designed to work together as a complete FirmwareDroid deployment." >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
@@ -207,5 +207,5 @@ jobs:
         echo "  extractor-worker-high-1:" >> $GITHUB_STEP_SUMMARY
         echo "    image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-extractor:${{ steps.meta.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
         echo "  apk_scanner-worker-1:" >> $GITHUB_STEP_SUMMARY
-        echo "    image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk-scanner:${{ steps.meta.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+        echo "    image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk_scanner:${{ steps.meta.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
