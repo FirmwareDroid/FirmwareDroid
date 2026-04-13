@@ -1,5 +1,15 @@
+## Frontend image is provided via build-arg. To support COPY --from with a
+## dynamic image, define an initial stage that uses ARG in the global scope.
+ARG FRONTEND_IMAGE=firmwaredroid-frontend:latest
+
+# Pull the frontend image (uses the build-arg value) into a build stage named
+# 'frontend_build'. This avoids using variable expansion directly in COPY --from
+# which is not supported.
+FROM ${FRONTEND_IMAGE} AS frontend_build
+
+# Now use the nginx base and copy the built frontend files from the pulled
+# frontend image stage.
 FROM nginx:1.29.1-alpine
-# Copy latest build from frontend
-COPY --from=firmwaredroid-frontend /usr/src/app/build /usr/share/nginx/html
+COPY --from=frontend_build /usr/src/app/build /usr/share/nginx/html
 
 CMD ["nginx", "-g", "daemon off;"]

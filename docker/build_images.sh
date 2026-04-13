@@ -13,6 +13,9 @@ IMAGE_TAG="latest"
 REGISTRY="ghcr.io"
 IMAGE_NAME="firmwaredroid/firmwaredroid"
 SEC_TEST=false
+NO_LOGIN=false
+DOCKER_USERNAME=""
+DOCKER_PASSWORD=""
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -37,12 +40,27 @@ while [[ $# -gt 0 ]]; do
             SEC_TEST=true
             shift
             ;;
+        --no-login)
+            NO_LOGIN=true
+            shift
+            ;;
+        --username)
+            DOCKER_USERNAME="$2"
+            shift 2
+            ;;
+        --password)
+            DOCKER_PASSWORD="$2"
+            shift 2
+            ;;
         -h|--help)
-            echo "Usage: $0 [--push] [--tag TAG] [--registry REGISTRY] [--image-name IMAGE_NAME]"
+            echo "Usage: $0 [--push] [--tag TAG] [--registry REGISTRY] [--image-name IMAGE_NAME] [--no-login] [--username USER --password PASS]"
             echo "  --push           Push images to registry after building"
             echo "  --tag TAG        Tag to use for images (default: latest)"
             echo "  --registry REG   Registry to push to (default: ghcr.io)"
             echo "  --image-name IMG Image name prefix (default: firmwaredroid/firmwaredroid)"
+            echo "  --no-login       Do not perform docker login (assume user already authenticated)"
+            echo "  --username USER  Docker registry username (can also be provided via DOCKER_USERNAME env var)"
+            echo "  --password PASS  Docker registry password (can also be provided via DOCKER_PASSWORD env var)"
             exit 0
             ;;
         *)
@@ -60,16 +78,29 @@ fi
 
 # Check Docker registry authentication before building images if an actual push is requested
 if [ "$DO_PUSH" = true ]; then
-    if [ -z "$GITHUB_TOKEN" ]; then
-        echo "Error: GITHUB_TOKEN environment variable not set. Cannot push images."
-        exit 1
+    if [ "$NO_LOGIN" = true ]; then
+        echo "Skipping docker login as requested (--no-login). Ensure you are already authenticated with $REGISTRY."
+    else
+        # Prefer explicit username/password if provided, then GITHUB_TOKEN, otherwise fail.
+        if [ -n "$DOCKER_USERNAME" ] && [ -n "$DOCKER_PASSWORD" ]; then
+            echo "Logging in to $REGISTRY with provided username..."
+            echo "$DOCKER_PASSWORD" | docker login "$REGISTRY" -u "$DOCKER_USERNAME" --password-stdin
+        elif [ -n "$DOCKER_USERNAME" ] && [ -z "$DOCKER_PASSWORD" ]; then
+            echo "Error: --username provided without --password."
+            exit 1
+        elif [ -n "$GITHUB_TOKEN" ]; then
+            echo "Logging in to $REGISTRY with GITHUB_TOKEN..."
+            echo "$GITHUB_TOKEN" | docker login "$REGISTRY" -u "$USER" --password-stdin
+        else
+            echo "Error: No credentials provided. Provide DOCKER_USERNAME/DOCKER_PASSWORD, GITHUB_TOKEN, or use --no-login if already authenticated."
+            exit 1
+        fi
+        if [ $? -ne 0 ]; then
+            echo "Error: Docker login to $REGISTRY failed. Check your credentials and permissions."
+            exit 1
+        fi
+        echo "Docker login to $REGISTRY succeeded."
     fi
-    echo "$GITHUB_TOKEN" | docker login "$REGISTRY" -u "$USER" --password-stdin
-    if [ $? -ne 0 ]; then
-        echo "Error: Docker login to $REGISTRY failed. Check your token and permissions."
-        exit 1
-    fi
-    echo "Docker login to $REGISTRY succeeded."
 fi
 
 # Trivy configuration (used when pushing images)
@@ -210,7 +241,10 @@ fi
 #####################################
 echo "Building nginx image..."
 NGINX_IMAGE="${REGISTRY}/${IMAGE_NAME}-nginx:${IMAGE_TAG}"
-docker build ./ -f ./Dockerfile_NGINX -t firmwaredroid-nginx --platform="linux/amd64"
+# Pass the built/pushed frontend image as a build-arg so the nginx Dockerfile
+# can COPY files from that image. FRONTEND_IMAGE was defined earlier.
+docker build ./ -f ./Dockerfile_NGINX -t firmwaredroid-nginx --platform="linux/amd64" \
+    --build-arg FRONTEND_IMAGE="${FRONTEND_IMAGE}"
 docker tag firmwaredroid-nginx "$NGINX_IMAGE"
 
 if [ "$PUSH_IMAGES" = true ]; then

@@ -27,7 +27,7 @@ RUN set -eux; \
         wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip && break || sleep 15; \
     done;
 
-RUN unzip commandlinetools-linux-10406996_latest.zip -d /android/tmp
+RUN unzip /android/commandlinetools-linux-10406996_latest.zip -d /android/tmp
 RUN unzip platform-tools-latest-linux.zip -d /android/sdk/
 RUN mv /android/tmp/cmdline-tools/* /android/sdk/cmdline-tools/latest/
 ENV ANDROID_HOME=/android/sdk
