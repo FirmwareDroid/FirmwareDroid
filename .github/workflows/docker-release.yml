@@ -32,6 +32,13 @@ jobs:
         submodules: recursive
         token: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Ensure lowercase image name
+      # GitHub repository names may contain uppercase letters; container
+      # registries require lowercase repository names. Convert and export
+      # IMAGE_NAME to the lowercase repository path for subsequent steps.
+      run: |
+        echo "IMAGE_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
 
