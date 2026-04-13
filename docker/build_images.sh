@@ -290,7 +290,10 @@ for dockerfile in "${workers[@]}"; do
     registry_tag="${REGISTRY}/${IMAGE_NAME}-${worker_name}:${IMAGE_TAG}"
 
     # Use repository root as build context so root .dockerignore is applied
-    docker build . -f "./docker/base/Dockerfile_${worker_name}" -t "$local_tag" --platform="linux/amd64"
+    # Pass REGISTRY and IMAGE_NAME so Dockerfiles that reference the published
+    # base image (via build-arg) can pull from the correct registry.
+    docker build . -f "./docker/base/Dockerfile_${worker_name}" -t "$local_tag" --platform="linux/amd64" \
+        --build-arg REGISTRY="${REGISTRY}" --build-arg IMAGE_NAME="${IMAGE_NAME}"
     docker tag "$local_tag" "$registry_tag"
 
     worker_names+=("$worker_name")

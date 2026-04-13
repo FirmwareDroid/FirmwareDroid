@@ -109,6 +109,9 @@ jobs:
         context: .
         file: ./docker/base/Dockerfile_backend
         platforms: linux/amd64
+        build-args: |
+          REGISTRY=${{ env.REGISTRY }}
+          IMAGE_NAME=${{ env.IMAGE_NAME }}
         push: true
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ steps.meta.outputs.tag }}
@@ -122,6 +125,9 @@ jobs:
         context: .
         file: ./docker/base/Dockerfile_extractor
         platforms: linux/amd64
+        build-args: |
+          REGISTRY=${{ env.REGISTRY }}
+          IMAGE_NAME=${{ env.IMAGE_NAME }}
         push: true
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-extractor:${{ steps.meta.outputs.tag }}
@@ -135,6 +141,9 @@ jobs:
         context: .
         file: ./docker/base/Dockerfile_apk_scanner
         platforms: linux/amd64
+        build-args: |
+          REGISTRY=${{ env.REGISTRY }}
+          IMAGE_NAME=${{ env.IMAGE_NAME }}
         push: true
         tags: |
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-apk-scanner:${{ steps.meta.outputs.tag }}
