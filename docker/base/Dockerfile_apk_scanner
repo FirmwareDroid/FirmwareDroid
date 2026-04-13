@@ -1,5 +1,13 @@
+ARG REGISTRY=ghcr.io
+ARG IMAGE_NAME=firmwaredroid/firmwaredroid
+
+# Pull the published base image into a named stage so we can copy files from it
+# without referencing an unqualified name that would default to docker.io.
+FROM ${REGISTRY}/${IMAGE_NAME}-base:latest AS firmwaredroid_base
+
 FROM eclipse-temurin:23 AS apk_scanner-worker
-COPY --from=firmwaredroid-base / /
+# Copy everything from the published base image stage
+COPY --from=firmwaredroid_base / /
 
 #####################################
 # Installing required packages      #
