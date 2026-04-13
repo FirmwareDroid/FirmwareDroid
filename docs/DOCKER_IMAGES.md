@@ -19,7 +19,7 @@ All images are available at: `ghcr.io/firmwaredroid/firmwaredroid-*`
 | Backend | `ghcr.io/firmwaredroid/firmwaredroid-backend` | Main web application backend |
 | Nginx | `ghcr.io/firmwaredroid/firmwaredroid-nginx` | Reverse proxy and static file server |
 | Extractor | `ghcr.io/firmwaredroid/firmwaredroid-extractor` | Firmware extraction worker |
-| APK Scanner | `ghcr.io/firmwaredroid/firmwaredroid-apk-scanner` | APK analysis worker |
+| APK Scanner | `ghcr.io/firmwaredroid/firmwaredroid-apk_scanner` | APK analysis worker |
 
 ## Usage
 
@@ -53,7 +53,7 @@ services:
   extractor-worker-high-1:
     image: ghcr.io/firmwaredroid/firmwaredroid-extractor:v1.0.0
   apk_scanner-worker-1:
-    image: ghcr.io/firmwaredroid/firmwaredroid-apk-scanner:v1.0.0
+    image: ghcr.io/firmwaredroid/firmwaredroid-apk_scanner:v1.0.0
 ```
 
 ### Available Tags
@@ -75,7 +75,7 @@ Each release includes an `image-manifest.json` file that provides metadata about
     "nginx": "ghcr.io/firmwaredroid/firmwaredroid-nginx:v1.0.0",
     "backend": "ghcr.io/firmwaredroid/firmwaredroid-backend:v1.0.0",
     "extractor": "ghcr.io/firmwaredroid/firmwaredroid-extractor:v1.0.0",
-    "apk-scanner": "ghcr.io/firmwaredroid/firmwaredroid-apk-scanner:v1.0.0"
+    "apk_scanner": "ghcr.io/firmwaredroid/firmwaredroid-apk_scanner:v1.0.0"
   },
   "description": "FirmwareDroid Docker image bundle for version v1.0.0. All images in this bundle are designed to work together."
 }
