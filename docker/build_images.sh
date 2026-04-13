@@ -16,6 +16,7 @@ SEC_TEST=false
 NO_LOGIN=false
 DOCKER_USERNAME=""
 DOCKER_PASSWORD=""
+SKIP_SECURITY=false
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -52,6 +53,10 @@ while [[ $# -gt 0 ]]; do
             DOCKER_PASSWORD="$2"
             shift 2
             ;;
+        --skip-security)
+            SKIP_SECURITY=true
+            shift
+            ;;
         -h|--help)
             echo "Usage: $0 [--push] [--tag TAG] [--registry REGISTRY] [--image-name IMAGE_NAME] [--no-login] [--username USER --password PASS]"
             echo "  --push           Push images to registry after building"
@@ -61,6 +66,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --no-login       Do not perform docker login (assume user already authenticated)"
             echo "  --username USER  Docker registry username (can also be provided via DOCKER_USERNAME env var)"
             echo "  --password PASS  Docker registry password (can also be provided via DOCKER_PASSWORD env var)"
+            echo "  --skip-security  Skip all Trivy security scans (do not run sec-test or push-time scans)"
             exit 0
             ;;
         *)
@@ -116,7 +122,7 @@ fi
 # the user requested when the image is missing.
 ensure_trivy_present() {
     if ! docker image inspect "$TRIVY_IMAGE" >/dev/null 2>&1; then
-        echo "Trivy image $TRIVY_IMAGE not found locally."
+        echo "ERROR: Trivy image $TRIVY_IMAGE not found locally."
         echo "Install Image with: docker pull aquasec/trivy:0.69.3"
         exit 1
     fi
@@ -211,7 +217,11 @@ docker build ./firmware-droid-client -f ./firmware-droid-client/Dockerfile -t fi
 docker tag firmwaredroid-frontend "$FRONTEND_IMAGE"
 
 if [ "$PUSH_IMAGES" = true ]; then
-    scan_and_confirm_push "$FRONTEND_IMAGE"
+    if [ "$SKIP_SECURITY" = true ]; then
+        echo "Skipping security scan for frontend image (requested via --skip-security)."
+    else
+        scan_and_confirm_push "$FRONTEND_IMAGE"
+    fi
 fi
 
 if [ "$DO_PUSH" = true ]; then
@@ -228,7 +238,11 @@ docker build ./ -f ./Dockerfile_BASE -t firmwaredroid-base --platform="linux/amd
 docker tag firmwaredroid-base "$BASE_IMAGE"
 
 if [ "$PUSH_IMAGES" = true ]; then
-    scan_and_confirm_push "$BASE_IMAGE"
+    if [ "$SKIP_SECURITY" = true ]; then
+        echo "Skipping security scan for base image (requested via --skip-security)."
+    else
+        scan_and_confirm_push "$BASE_IMAGE"
+    fi
 fi
 
 if [ "$DO_PUSH" = true ]; then
@@ -248,7 +262,11 @@ docker build ./ -f ./Dockerfile_NGINX -t firmwaredroid-nginx --platform="linux/a
 docker tag firmwaredroid-nginx "$NGINX_IMAGE"
 
 if [ "$PUSH_IMAGES" = true ]; then
-    scan_and_confirm_push "$NGINX_IMAGE"
+    if [ "$SKIP_SECURITY" = true ]; then
+        echo "Skipping security scan for nginx image (requested via --skip-security)."
+    else
+        scan_and_confirm_push "$NGINX_IMAGE"
+    fi
 fi
 
 if [ "$DO_PUSH" = true ]; then
@@ -279,7 +297,11 @@ for dockerfile in "${workers[@]}"; do
     worker_tags+=("$registry_tag")
 
     if [ "$PUSH_IMAGES" = true ]; then
-        scan_and_confirm_push "$registry_tag"
+        if [ "$SKIP_SECURITY" = true ]; then
+            echo "Skipping security scan for $worker_name worker image (requested via --skip-security)."
+        else
+            scan_and_confirm_push "$registry_tag"
+        fi
     fi
 
     if [ "$DO_PUSH" = true ]; then
@@ -305,21 +327,25 @@ echo "Building docker-compose images..."
 docker compose build
 
 if [ "$SEC_TEST" = true ]; then
-    # Run security tests against all built images
-    ensure_trivy_present
-    echo "Running security tests (sec-test) against all built images..."
-    failed=0
-    scan_image "$FRONTEND_IMAGE" || failed=1
-    scan_image "$BASE_IMAGE" || failed=1
-    scan_image "$NGINX_IMAGE" || failed=1
-    for tag in "${worker_tags[@]}"; do
-        scan_image "$tag" || failed=1
-    done
-    if [ $failed -ne 0 ]; then
-        echo "One or more images failed the security scan."
-        exit 1
+    if [ "$SKIP_SECURITY" = true ]; then
+        echo "SEC_TEST requested but skipping security tests because --skip-security was set."
     else
-        echo "All images passed the security scan."
+        # Run security tests against all built images
+        ensure_trivy_present
+        echo "Running security tests (sec-test) against all built images..."
+        failed=0
+        scan_image "$FRONTEND_IMAGE" || failed=1
+        scan_image "$BASE_IMAGE" || failed=1
+        scan_image "$NGINX_IMAGE" || failed=1
+        for tag in "${worker_tags[@]}"; do
+            scan_image "$tag" || failed=1
+        done
+        if [ $failed -ne 0 ]; then
+            echo "One or more images failed the security scan."
+            exit 1
+        else
+            echo "All images passed the security scan."
+        fi
     fi
 fi
 
