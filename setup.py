@@ -4,12 +4,26 @@
 import datetime
 import os
 import shutil
+import sys
 import uuid
 import secrets
 from jinja2 import Environment, FileSystemLoader
 from secrets import token_bytes
 from base64 import b64encode
 import argparse
+
+# Make source/ importable so we can reuse env_utils from setup.py
+_SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, os.path.join(_SCRIPT_DIR, "source"))
+from utils.env_utils import (  # noqa: E402 – import after path manipulation
+    generate_key,
+    save_key,
+    load_key,
+    encrypt_value,
+    decrypt_value,
+    decrypt_env_to_dict,
+    Fernet,
+)
 
 TEMPLATE_FOLDER = "templates/"
 TEMPLATE_ENV = Environment(loader=FileSystemLoader(TEMPLATE_FOLDER))
@@ -21,10 +35,21 @@ NGINX_STEAM_NAME = "stream.conf"
 NGINX_CONFIG_PATH = "env/nginx/"
 NEO4J_CONFIG_PATH = "env/neo4j/"
 ENV_FILE_NAME = "env"
+ENV_KEY_FILE_NAME = ".env.key"
 REPLICA_SET_SCRIPT_NAME = "mongo_replica_set_setup.sh"
 BLOB_STORAGE_NAME = "blob_storage/"
 FMD_WEB_CLIENT_ENV_FILE_NAME = "EnvConfig.js"
 FMD_WEB_CLIENT_ENV_PATH = "firmware-droid-client/src/"
+
+# Fields in the .env template whose values must be encrypted on disk.
+SECRET_FIELDS = frozenset({
+    "REDIS_PASSWORD",
+    "MONGO_INITDB_ROOT_PASSWORD",
+    "MONGODB_PASSWORD",
+    "DJANGO_SECRET_KEY",
+    "DJANGO_SUPERUSER_PASSWORD",
+    "NEO4J_AUTH",
+})
 
 
 def is_valid_domain_name(domain_name):
@@ -320,9 +345,12 @@ class FmdEnvironment:
         self.neo4j_default_advertised_address = "neo4j"
 
 
-    def create_env_file(self):
+    def create_env_file(self, key_file_path):
         """
-        Creates the .env file for the FirmwareDroid service.
+        Creates the .env file for the FirmwareDroid service with all secret
+        values encrypted on disk using Fernet symmetric encryption.
+
+        :param key_file_path: str - path where the .env.key file will be saved.
         """
         self._get_environment()
         self._get_blob_storage()
@@ -330,6 +358,30 @@ class FmdEnvironment:
         self._get_web_config()
         self._get_docker_limits()
         self._get_neo4j_settings()
+
+        # Generate and persist the Fernet encryption key.
+        key = generate_key()
+        save_key(key, key_file_path)
+        fernet = Fernet(key)
+        print(f"Generated encryption key and saved to: {key_file_path}")
+        print("IMPORTANT: Keep this key file secure. "
+              "Without it, encrypted secrets cannot be recovered.\n")
+
+        # Collect plaintext secret values for display to the user.
+        neo4j_auth_plaintext = f"neo4j/{self.neo4j_password}"
+        plaintext_secrets = {
+            "REDIS_PASSWORD": str(self.redis_password),
+            "MONGO_INITDB_ROOT_PASSWORD": str(self.mongodb_initdb_root_password),
+            "MONGODB_PASSWORD": str(self.mongodb_password),
+            "DJANGO_SECRET_KEY": str(self.django_secret_key),
+            "DJANGO_SUPERUSER_PASSWORD": str(self.django_superuser_password),
+            "NEO4J_AUTH": neo4j_auth_plaintext,
+        }
+
+        def _enc(value):
+            """Encrypt a string value and return the ENC: prefixed token."""
+            return encrypt_value(str(value), fernet)
+
         template = TEMPLATE_ENV.get_template(ENV_FILE_NAME)
         content = template.render(
             app_env=self.app_env,
@@ -346,16 +398,16 @@ class FmdEnvironment:
             local_storage_path_09=self.local_storage_path_list[9],
             local_mongo_db_path_node1=self.local_mongo_db_path_node1,
             redis_config_path=self.redis_config_path,
-            redis_password=self.redis_password,
+            redis_password=_enc(self.redis_password),
             redis_port=self.redis_port,
             mongodb_database_name=self.mongodb_database_name,
             mongodb_auth_src=self.mongodb_auth_src,
             mongodb_port=self.mongodb_port,
             mongo_db_replicat_set=self.mongo_db_replicat_set,
             mongodb_initdb_root_username=self.mongodb_initdb_root_username,
-            mongodb_initdb_root_password=self.mongodb_initdb_root_password,
+            mongodb_initdb_root_password=_enc(self.mongodb_initdb_root_password),
             mongodb_username=self.mongodb_username,
-            mongodb_password=self.mongodb_password,
+            mongodb_password=_enc(self.mongodb_password),
             mongo_db_hostname=self.mongo_db_hostname,
             mass_import_number_of_threads=self.mass_import_number_of_threads,
             domain_name=self.domain_name,
@@ -365,17 +417,18 @@ class FmdEnvironment:
             api_prefix=self.api_prefix,
             api_doc_folder=self.api_doc_folder,
             cors_additional_host=self.cors_additional_host,
-            django_secret_key=self.django_secret_key,
+            django_secret_key=_enc(self.django_secret_key),
             django_sqlite_database_path=self.django_sqlite_database_path,
             django_sqlite_database_mount_path=self.django_sqlite_database_mount_path,
-            django_superuser_password=self.django_superuser_password,
+            django_superuser_password=_enc(self.django_superuser_password),
             django_superuser_username=self.django_superuser_username,
             django_superuser_email=self.django_superuser_email,
             docker_memory_limit=self.docker_memory_limit,
             docker_memory_swap_limit=self.docker_memory_swap_limit,
             docker_cpu_limit=self.docker_cpu_limit,
             local_neo4j_db_path=self.local_neo4j_db_path,
-            neo4j_password=self.neo4j_password,
+            # NEO4J_AUTH is written as "neo4j/<password>"; encrypt the whole value.
+            neo4j_password=_enc(str(self.neo4j_password)),
             neo4j_auth_enabled=self.neo4j_auth_enabled,
             neo4j_connector_http_listen_address=self.neo4j_connector_http_listen_address,
             neo4j_default_advertised_address=self.neo4j_default_advertised_address
@@ -383,13 +436,137 @@ class FmdEnvironment:
         out_file_path = os.path.join(self.script_file_path, "." + ENV_FILE_NAME)
         with open(out_file_path, mode="w", encoding="utf-8") as out_file:
             out_file.write(content)
-            print("Created .env file")
+        os.chmod(out_file_path, 0o600)
+        print("Created .env file (secrets are encrypted with ENC: prefix)\n")
+
+        _print_plaintext_secrets(plaintext_secrets)
 
 
-def setup_environment_variables(use_defaults):
+def _print_plaintext_secrets(secrets_dict):
+    """Print plaintext secret values to the console for the operator to record."""
+    separator = "=" * 70
+    print(separator)
+    print("PLAINTEXT SECRETS – record these now, they will not be shown again")
+    print(separator)
+    for name, value in secrets_dict.items():
+        print(f"  {name}: {value}")
+    print(separator)
+    print("Store these secrets in a password manager or secure vault.\n")
+
+
+def setup_environment_variables(use_defaults, key_file_path):
     env_instance = FmdEnvironment(use_defaults=use_defaults)
-    env_instance.create_env_file()
+    env_instance.create_env_file(key_file_path)
     return env_instance
+
+
+def rotate_secrets(env_file_path, key_file_path):
+    """
+    Re-generate all secret values in *env_file_path*, encrypt them with the
+    existing key from *key_file_path*, and write the updated file.
+
+    The new plaintext secrets are printed to stdout so the operator can update
+    downstream services (MongoDB users, Redis passwords, etc.) accordingly.
+
+    .. warning::
+        After rotation you **must** restart all services and manually update
+        any credentials that are stored inside MongoDB, Redis, or Neo4j
+        (they are not updated automatically).
+    """
+    key = load_key(key_file_path)
+    fernet = Fernet(key)
+
+    # Read the current env file, decrypting existing ENC: values.
+    current = decrypt_env_to_dict(env_file_path, key_file_path)
+
+    # Generate new random values for every secret field.
+    new_secrets = {
+        "REDIS_PASSWORD": str(uuid.uuid4()),
+        "MONGO_INITDB_ROOT_PASSWORD": str(uuid.uuid4()),
+        "MONGODB_PASSWORD": str(uuid.uuid4()),
+        "DJANGO_SECRET_KEY": secrets.token_hex(100),
+        "DJANGO_SUPERUSER_PASSWORD": str(uuid.uuid4()),
+        "NEO4J_AUTH": f"neo4j/{uuid.uuid4()}",
+    }
+
+    # Re-write the env file, substituting encrypted new values for secret fields.
+    updated_lines = []
+    with open(env_file_path, "r", encoding="utf-8") as f:
+        for line in f:
+            stripped = line.strip()
+            if stripped and not stripped.startswith("#") and "=" in stripped:
+                name, _, _ = stripped.partition("=")
+                name = name.strip()
+                if name in new_secrets:
+                    encrypted = encrypt_value(new_secrets[name], fernet)
+                    updated_lines.append(f"{name}={encrypted}\n")
+                    continue
+            updated_lines.append(line)
+
+    with open(env_file_path, "w", encoding="utf-8") as f:
+        f.writelines(updated_lines)
+    os.chmod(env_file_path, 0o600)
+
+    print(f"Rotated secrets in {env_file_path}")
+    _print_plaintext_secrets(new_secrets)
+    print("Restart all services and update credentials in MongoDB/Redis/Neo4j as needed.")
+
+
+def rekey_env(env_file_path, old_key_file_path, new_key_file_path=None):
+    """
+    Replace the encryption key used for *env_file_path*.
+
+    Decrypts all ``ENC:`` values with the old key, generates a new key,
+    re-encrypts all values with the new key, and writes the updated files.
+
+    :param env_file_path: path to the .env file to re-encrypt.
+    :param old_key_file_path: path to the current .env.key file.
+    :param new_key_file_path: where to save the new key (defaults to the same
+        path, replacing the old key).
+    """
+    if new_key_file_path is None:
+        new_key_file_path = old_key_file_path
+
+    # Decrypt all current ENC: values using the old key.
+    current = decrypt_env_to_dict(env_file_path, old_key_file_path)
+
+    # Generate and save the new key.
+    new_key = generate_key()
+    save_key(new_key, new_key_file_path)
+    new_fernet = Fernet(new_key)
+
+    # Identify which fields are currently encrypted.
+    old_key = load_key(old_key_file_path)
+    old_fernet = Fernet(old_key)
+    encrypted_fields = set()
+    with open(env_file_path, "r", encoding="utf-8") as f:
+        for line in f:
+            stripped = line.strip()
+            if stripped and not stripped.startswith("#") and "=" in stripped:
+                name, _, value = stripped.partition("=")
+                if value.strip().startswith("ENC:"):
+                    encrypted_fields.add(name.strip())
+
+    # Re-write env file with new encryption.
+    updated_lines = []
+    with open(env_file_path, "r", encoding="utf-8") as f:
+        for line in f:
+            stripped = line.strip()
+            if stripped and not stripped.startswith("#") and "=" in stripped:
+                name, _, _ = stripped.partition("=")
+                name = name.strip()
+                if name in encrypted_fields:
+                    encrypted = encrypt_value(current[name], new_fernet)
+                    updated_lines.append(f"{name}={encrypted}\n")
+                    continue
+            updated_lines.append(line)
+
+    with open(env_file_path, "w", encoding="utf-8") as f:
+        f.writelines(updated_lines)
+    os.chmod(env_file_path, 0o600)
+
+    print(f"Re-keyed {env_file_path} with new key saved to {new_key_file_path}")
+    print("Restart all services for the new key to take effect.")
 
 
 def render_and_write(env_instance, template_name, out_name, context):
@@ -658,9 +835,50 @@ def main():
                         default=False,
                         required=False,
                         help="Allows a production setup with advanced settings.")
+    parser.add_argument("--rotate-secrets",
+                        action="store_true",
+                        default=False,
+                        required=False,
+                        help="Generate new random values for all secret fields in an "
+                             "existing .env, re-encrypt with the current key, and print "
+                             "the new plaintext secrets. Services must be restarted and "
+                             "credentials in MongoDB/Redis/Neo4j must be updated manually.")
+    parser.add_argument("--rekey",
+                        action="store_true",
+                        default=False,
+                        required=False,
+                        help="Replace the encryption key in .env.key and re-encrypt all "
+                             "secret values in .env with the new key. Services must be "
+                             "restarted afterwards.")
     args = parser.parse_args()
 
-    env_path = os.path.join("./.env")
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    env_path = os.path.join(script_dir, ".env")
+    key_path = os.path.join(script_dir, ENV_KEY_FILE_NAME)
+
+    # --- rotate-secrets sub-command ---
+    if args.rotate_secrets:
+        if not os.path.exists(env_path):
+            print("Error: .env file not found. Run setup first.")
+            exit(1)
+        if not os.path.exists(key_path):
+            print("Error: .env.key file not found. Run setup first.")
+            exit(1)
+        rotate_secrets(env_path, key_path)
+        return
+
+    # --- rekey sub-command ---
+    if args.rekey:
+        if not os.path.exists(env_path):
+            print("Error: .env file not found. Run setup first.")
+            exit(1)
+        if not os.path.exists(key_path):
+            print("Error: .env.key file not found. Run setup first.")
+            exit(1)
+        rekey_env(env_path, key_path)
+        return
+
+    # --- normal setup ---
     if os.path.exists(env_path):
         print(".env file already exists!")
         exit(1)
@@ -672,14 +890,14 @@ def main():
         use_defaults = True
         print("Using default development settings...")
 
-    env_instance = setup_environment_variables(use_defaults=use_defaults)
+    env_instance = setup_environment_variables(use_defaults=use_defaults, key_file_path=key_path)
     setup_nginx(env_instance)
     setup_neo4j(env_instance)
     setup_redis(env_instance)
     setup_mongo_env(env_instance)
     setup_frontend_env(env_instance)
     setup_monitoring(env_instance)
-    print("Ready for startup!")
+    print("Ready for startup! Use ./start.sh to launch the application.")
 
 
 if __name__ == "__main__":

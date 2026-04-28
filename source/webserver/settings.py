@@ -17,6 +17,7 @@ import os
 from pathlib import Path
 from context.context_creator import setup_logging
 from database.connector import init_db
+from utils.env_utils import load_decrypted_env
 
 env = environ.Env(
     # set casting, default value
@@ -24,7 +25,16 @@ env = environ.Env(
 )
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SOURCE_DIR = Path(__file__).resolve().parent.parent
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+_ENV_FILE = os.path.join(BASE_DIR, '.env')
+_KEY_FILE = os.path.join(BASE_DIR, '.env.key')
+
+# Decrypt secrets into os.environ when the key file is present; fall back to
+# plain-text reading (legacy / CI) if the key file is absent.
+if os.path.exists(_KEY_FILE):
+    load_decrypted_env(_ENV_FILE, _KEY_FILE)
+else:
+    environ.Env.read_env(_ENV_FILE)
 
 APP_ENV = env('APP_ENV')
 if APP_ENV == "production":
