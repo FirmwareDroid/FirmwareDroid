@@ -402,163 +402,13 @@ def run_export(
                 batch_size=batch_size,
             )
             total_docs += count
+        except (KeyboardInterrupt, SystemExit):
+            raise
         except Exception:  # noqa: BLE001
             logger.exception("Failed to export '%s'", key)
 
     logger.info("Export complete.  Total documents written: %d", total_docs)
     client.close()
-
-
-# ---------------------------------------------------------------------------
-# CLI
-# ---------------------------------------------------------------------------
-
-def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description=(
-            "Export FirmwareDroid research data from MongoDB into JSONL, CSV, or Parquet format.\n\n"
-            "Connection parameters can be supplied via CLI flags or loaded from a .env file with "
-            "--env-file.  CLI flags take precedence over the .env file."
-        ),
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-    )
-
-    # Connection
-    conn = parser.add_argument_group("MongoDB connection")
-    conn.add_argument(
-        "--env-file",
-        metavar="PATH",
-        help=(
-            "Path to a .env file that contains connection settings "
-            "(MONGODB_HOSTNAME, MONGODB_PORT, MONGODB_DATABASE_NAME, "
-            "MONGODB_USERNAME, MONGODB_PASSWORD, MONGODB_AUTH_SRC).  "
-            "Requires python-dotenv (pip install python-dotenv)."
-        ),
-    )
-    conn.add_argument("--host", metavar="HOST", default=None, help="MongoDB host (default: localhost)")
-    conn.add_argument("--port", metavar="PORT", type=int, default=None, help="MongoDB port (default: 27017)")
-    conn.add_argument("--db", metavar="DATABASE", default=None, help="Database name (default: firmwaredroid)")
-    conn.add_argument("--username", metavar="USER", help="MongoDB username")
-    conn.add_argument("--password", metavar="PASS", help="MongoDB password")
-    conn.add_argument(
-        "--auth-source",
-        metavar="DB",
-        default=None,
-        help="Authentication database (default: admin)",
-    )
-    conn.add_argument(
-        "--auth-mechanism",
-        metavar="MECHANISM",
-        default="SCRAM-SHA-256",
-        help="Authentication mechanism (default: SCRAM-SHA-256)",
-    )
-    conn.add_argument("--tls", action="store_true", help="Enable TLS for the MongoDB connection")
-
-    # Output
-    out = parser.add_argument_group("Output")
-    out.add_argument(
-        "--output-dir",
-        metavar="DIR",
-        default="./fmd_export",
-        help="Directory where exported files are written (default: ./fmd_export)",
-    )
-    out.add_argument(
-        "--format",
-        choices=["jsonl", "csv", "parquet"],
-        default="jsonl",
-        help="Output format: jsonl (default), csv, or parquet",
-    )
-
-    # Selection / performance
-    sel = parser.add_argument_group("Collection selection and performance")
-    sel.add_argument(
-        "--collections",
-        metavar="NAME",
-        nargs="+",
-        help=(
-            "One or more collection keys to export (from the EXPORT_SCHEMA).  "
-            "Omit to export all research collections.  "
-            "Available keys: " + ", ".join(_SORTED_COLLECTION_KEYS)
-        ),
-    )
-    sel.add_argument(
-        "--batch-size",
-        metavar="N",
-        type=int,
-        default=1000,
-        help=(
-            "Number of documents fetched per MongoDB round-trip.  "
-            "Lower values reduce memory usage; higher values reduce network overhead.  "
-            "Default: 1000"
-        ),
-    )
-    sel.add_argument(
-        "--list-collections",
-        action="store_true",
-        help="List available collection keys and exit without exporting anything",
-    )
-
-    return parser
-
-
-def _load_env_file(path: str) -> Dict[str, str]:
-    """Load key=value pairs from a .env file and return them as a dict."""
-    try:
-        from dotenv import dotenv_values  # type: ignore
-    except ImportError:
-        logger.error(
-            "--env-file requires python-dotenv.  Install it with: pip install python-dotenv"
-        )
-        sys.exit(1)
-    return dict(dotenv_values(path))
-
-
-def main() -> None:
-    parser = _build_parser()
-    args = parser.parse_args()
-
-    if args.list_collections:
-        print("Available collection keys (use with --collections):\n")
-        for key, entry in sorted(EXPORT_SCHEMA.items()):
-            desc = entry.get("description", "")
-            mongo_col = entry.get("collection", key)
-            print(f"  {key:<45} MongoDB collection: {mongo_col}")
-            if desc:
-                print(f"  {'':45} {desc}")
-        return
-
-    # Apply .env file defaults (CLI flags override these)
-    env_values: Dict[str, str] = {}
-    if args.env_file:
-        env_values = _load_env_file(args.env_file)
-
-    def _resolve(cli_val, env_key: str, default=None):
-        """Return CLI value if given, otherwise fall back to .env, then default."""
-        if cli_val is not None:
-            return cli_val
-        return env_values.get(env_key, default)
-
-    host = _resolve(args.host, "MONGODB_HOSTNAME", "localhost")
-    port = int(_resolve(args.port, "MONGODB_PORT", 27017))
-    db_name = _resolve(args.db, "MONGODB_DATABASE_NAME", "firmwaredroid")
-    username = _resolve(args.username, "MONGODB_USERNAME")
-    password = _resolve(args.password, "MONGODB_PASSWORD")
-    auth_source = _resolve(args.auth_source, "MONGODB_AUTH_SRC", "admin")
-
-    run_export(
-        host=host,
-        port=int(port),
-        db_name=db_name,
-        username=username,
-        password=password,
-        auth_source=auth_source,
-        auth_mechanism=args.auth_mechanism,
-        output_dir=Path(args.output_dir),
-        output_format=args.format,
-        selected_collections=args.collections,
-        batch_size=args.batch_size,
-        tls=args.tls,
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -844,6 +694,159 @@ EXPORT_SCHEMA: Dict[str, Dict[str, Any]] = {
 
 # Pre-computed sorted list of collection keys used in --help text.
 _SORTED_COLLECTION_KEYS: List[str] = sorted(EXPORT_SCHEMA.keys())
+
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Export FirmwareDroid research data from MongoDB into JSONL, CSV, or Parquet format.\n\n"
+            "Connection parameters can be supplied via CLI flags or loaded from a .env file with "
+            "--env-file.  CLI flags take precedence over the .env file."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    # Connection
+    conn = parser.add_argument_group("MongoDB connection")
+    conn.add_argument(
+        "--env-file",
+        metavar="PATH",
+        help=(
+            "Path to a .env file that contains connection settings "
+            "(MONGODB_HOSTNAME, MONGODB_PORT, MONGODB_DATABASE_NAME, "
+            "MONGODB_USERNAME, MONGODB_PASSWORD, MONGODB_AUTH_SRC).  "
+            "Requires python-dotenv (pip install python-dotenv)."
+        ),
+    )
+    conn.add_argument("--host", metavar="HOST", default=None, help="MongoDB host (default: localhost)")
+    conn.add_argument("--port", metavar="PORT", type=int, default=None, help="MongoDB port (default: 27017)")
+    conn.add_argument("--db", metavar="DATABASE", default=None, help="Database name (default: firmwaredroid)")
+    conn.add_argument("--username", metavar="USER", help="MongoDB username")
+    conn.add_argument("--password", metavar="PASS", help="MongoDB password")
+    conn.add_argument(
+        "--auth-source",
+        metavar="DB",
+        default=None,
+        help="Authentication database (default: admin)",
+    )
+    conn.add_argument(
+        "--auth-mechanism",
+        metavar="MECHANISM",
+        default="SCRAM-SHA-256",
+        help="Authentication mechanism (default: SCRAM-SHA-256)",
+    )
+    conn.add_argument("--tls", action="store_true", help="Enable TLS for the MongoDB connection")
+
+    # Output
+    out = parser.add_argument_group("Output")
+    out.add_argument(
+        "--output-dir",
+        metavar="DIR",
+        default="./fmd_export",
+        help="Directory where exported files are written (default: ./fmd_export)",
+    )
+    out.add_argument(
+        "--format",
+        choices=["jsonl", "csv", "parquet"],
+        default="jsonl",
+        help="Output format: jsonl (default), csv, or parquet",
+    )
+
+    # Selection / performance
+    sel = parser.add_argument_group("Collection selection and performance")
+    sel.add_argument(
+        "--collections",
+        metavar="NAME",
+        nargs="+",
+        help=(
+            "One or more collection keys to export (from the EXPORT_SCHEMA).  "
+            "Omit to export all research collections.  "
+            "Available keys: " + ", ".join(_SORTED_COLLECTION_KEYS)
+        ),
+    )
+    sel.add_argument(
+        "--batch-size",
+        metavar="N",
+        type=int,
+        default=1000,
+        help=(
+            "Number of documents fetched per MongoDB round-trip.  "
+            "Lower values reduce memory usage; higher values reduce network overhead.  "
+            "Default: 1000"
+        ),
+    )
+    sel.add_argument(
+        "--list-collections",
+        action="store_true",
+        help="List available collection keys and exit without exporting anything",
+    )
+
+    return parser
+
+
+def _load_env_file(path: str) -> Dict[str, str]:
+    """Load key=value pairs from a .env file and return them as a dict."""
+    try:
+        from dotenv import dotenv_values  # type: ignore
+    except ImportError:
+        logger.error(
+            "--env-file requires python-dotenv.  Install it with: pip install python-dotenv"
+        )
+        sys.exit(1)
+    return dict(dotenv_values(path))
+
+
+def main() -> None:
+    parser = _build_parser()
+    args = parser.parse_args()
+
+    if args.list_collections:
+        print("Available collection keys (use with --collections):\n")
+        for key, entry in sorted(EXPORT_SCHEMA.items()):
+            desc = entry.get("description", "")
+            mongo_col = entry.get("collection", key)
+            print(f"  {key:<45} MongoDB collection: {mongo_col}")
+            if desc:
+                print(f"  {'':45} {desc}")
+        return
+
+    # Apply .env file defaults (CLI flags override these)
+    env_values: Dict[str, str] = {}
+    if args.env_file:
+        env_values = _load_env_file(args.env_file)
+
+    def _resolve(cli_val, env_key: str, default=None):
+        """Return CLI value if given, otherwise fall back to .env, then default."""
+        if cli_val is not None:
+            return cli_val
+        return env_values.get(env_key, default)
+
+    host = _resolve(args.host, "MONGODB_HOSTNAME", "localhost")
+    port = int(_resolve(args.port, "MONGODB_PORT", 27017))
+    db_name = _resolve(args.db, "MONGODB_DATABASE_NAME", "firmwaredroid")
+    username = _resolve(args.username, "MONGODB_USERNAME")
+    password = _resolve(args.password, "MONGODB_PASSWORD")
+    auth_source = _resolve(args.auth_source, "MONGODB_AUTH_SRC", "admin")
+
+    run_export(
+        host=host,
+        port=port,
+        db_name=db_name,
+        username=username,
+        password=password,
+        auth_source=auth_source,
+        auth_mechanism=args.auth_mechanism,
+        output_dir=Path(args.output_dir),
+        output_format=args.format,
+        selected_collections=args.collections,
+        batch_size=args.batch_size,
+        tls=args.tls,
+    )
 
 
 if __name__ == "__main__":
