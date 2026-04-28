@@ -244,7 +244,7 @@ def _export_parquet(
     batch: List[Dict[str, Any]] = []
     count = 0
 
-    def _flush(batch: List[Dict[str, Any]]) -> pq.ParquetWriter:
+    def _write_batch(batch: List[Dict[str, Any]]) -> pq.ParquetWriter:
         nonlocal writer
         # Serialise nested objects and dates to strings so pyarrow can infer
         # a stable schema without a predefined schema definition.
@@ -270,11 +270,11 @@ def _export_parquet(
         batch.append(doc)
         count += 1
         if len(batch) >= row_group_size:
-            writer = _flush(batch)
+            writer = _write_batch(batch)
             batch = []
 
     if batch:
-        _flush(batch)
+        _write_batch(batch)
 
     if writer is not None:
         writer.close()
@@ -402,8 +402,8 @@ def run_export(
                 batch_size=batch_size,
             )
             total_docs += count
-        except Exception as exc:  # noqa: BLE001
-            logger.error("Failed to export '%s': %s", key, exc)
+        except Exception:  # noqa: BLE001
+            logger.exception("Failed to export '%s'", key)
 
     logger.info("Export complete.  Total documents written: %d", total_docs)
     client.close()
@@ -435,15 +435,15 @@ def _build_parser() -> argparse.ArgumentParser:
             "Requires python-dotenv (pip install python-dotenv)."
         ),
     )
-    conn.add_argument("--host", metavar="HOST", default="localhost", help="MongoDB host (default: localhost)")
-    conn.add_argument("--port", metavar="PORT", type=int, default=27017, help="MongoDB port (default: 27017)")
-    conn.add_argument("--db", metavar="DATABASE", default="firmwaredroid", help="Database name (default: firmwaredroid)")
+    conn.add_argument("--host", metavar="HOST", default=None, help="MongoDB host (default: localhost)")
+    conn.add_argument("--port", metavar="PORT", type=int, default=None, help="MongoDB port (default: 27017)")
+    conn.add_argument("--db", metavar="DATABASE", default=None, help="Database name (default: firmwaredroid)")
     conn.add_argument("--username", metavar="USER", help="MongoDB username")
     conn.add_argument("--password", metavar="PASS", help="MongoDB password")
     conn.add_argument(
         "--auth-source",
         metavar="DB",
-        default="admin",
+        default=None,
         help="Authentication database (default: admin)",
     )
     conn.add_argument(
@@ -478,7 +478,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help=(
             "One or more collection keys to export (from the EXPORT_SCHEMA).  "
             "Omit to export all research collections.  "
-            "Available keys: " + ", ".join(sorted(EXPORT_SCHEMA.keys()))
+            "Available keys: " + ", ".join(_SORTED_COLLECTION_KEYS)
         ),
     )
     sel.add_argument(
@@ -538,16 +538,12 @@ def main() -> None:
             return cli_val
         return env_values.get(env_key, default)
 
-    host = _resolve(args.host if args.host != "localhost" else None, "MONGODB_HOSTNAME", "localhost")
-    port = int(_resolve(args.port if args.port != 27017 else None, "MONGODB_PORT", 27017))
-    db_name = _resolve(args.db if args.db != "firmwaredroid" else None, "MONGODB_DATABASE_NAME", "firmwaredroid")
+    host = _resolve(args.host, "MONGODB_HOSTNAME", "localhost")
+    port = int(_resolve(args.port, "MONGODB_PORT", 27017))
+    db_name = _resolve(args.db, "MONGODB_DATABASE_NAME", "firmwaredroid")
     username = _resolve(args.username, "MONGODB_USERNAME")
     password = _resolve(args.password, "MONGODB_PASSWORD")
-    auth_source = _resolve(
-        args.auth_source if args.auth_source != "admin" else None,
-        "MONGODB_AUTH_SRC",
-        "admin",
-    )
+    auth_source = _resolve(args.auth_source, "MONGODB_AUTH_SRC", "admin")
 
     run_export(
         host=host,
@@ -845,6 +841,9 @@ EXPORT_SCHEMA: Dict[str, Dict[str, Any]] = {
         "excluded_fields": [],
     },
 }
+
+# Pre-computed sorted list of collection keys used in --help text.
+_SORTED_COLLECTION_KEYS: List[str] = sorted(EXPORT_SCHEMA.keys())
 
 
 if __name__ == "__main__":
