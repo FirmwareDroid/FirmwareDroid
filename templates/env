@@ -57,7 +57,7 @@ DJANGO_SUPERUSER_EMAIL={{ django_superuser_email }}
 
 # Neo4j-Database
 LOCAL_NEO4J_DB_PATH={{ local_neo4j_db_path }}
-NEO4J_AUTH=neo4j/{{ neo4j_password }}
+NEO4J_AUTH={{ neo4j_auth }}
 NEO4J_dbms_security_auth__enabled={{ neo4j_auth_enabled }}
 NEO4J_dbms_connector_http_listen__address={{ neo4j_connector_http_listen_address }}
 NEO4J_dbms_default__advertised__address={{ neo4j_default_advertised_address }}

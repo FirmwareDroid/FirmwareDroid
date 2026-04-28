@@ -13,11 +13,12 @@ services:
     working_dir: /var/www/
     restart: unless-stopped
     env_file:
-      - ./.env
+      - ${FMD_ENV_FILE:-./.env}
     expose:
       - 5000
     volumes:
-      - .env:/var/www/.env
+      - .env:/var/www/.env:ro
+      - .env.key:/var/www/.env.key:ro
       - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
       - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
       - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
@@ -59,7 +60,7 @@ services:
     restart: unless-stopped
     user: 1000:1000
     env_file:
-      - ./.env
+      - ${FMD_ENV_FILE:-./.env}
     ports:
       - "27017:27017"
     volumes:
@@ -97,7 +98,8 @@ services:
     depends_on:
       - redis
     volumes:
-      - .env:/var/www/.env
+      - .env:/var/www/.env:ro
+      - .env.key:/var/www/.env.key:ro
       - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
       - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
       - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
@@ -109,7 +111,7 @@ services:
       - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
       - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
     env_file:
-      - ./.env
+      - ${FMD_ENV_FILE:-./.env}
     command: rqworker --logging_level INFO --name extractor-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 extractor
     privileged: true
     networks:
@@ -124,7 +126,8 @@ services:
     depends_on:
       - redis
     volumes:
-      - .env:/var/www/.env
+      - .env:/var/www/.env:ro
+      - .env.key:/var/www/.env.key:ro
       - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
       - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
       - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
@@ -136,7 +139,7 @@ services:
       - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
       - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
     env_file:
-      - ./.env
+      - ${FMD_ENV_FILE:-./.env}
     cpus: ${DOCKER_CPU_LIMIT}
     mem_limit: ${DOCKER_MEMORY_LIMIT}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
