@@ -34,6 +34,12 @@ _KEY_FILE = os.path.join(BASE_DIR, '.env.key')
 if os.path.exists(_KEY_FILE):
     load_decrypted_env(_ENV_FILE, _KEY_FILE)
 else:
+    import warnings
+    warnings.warn(
+        f".env.key not found at {_KEY_FILE}. Falling back to plain-text .env reading. "
+        "Secrets are NOT encrypted in this mode. Run setup.py to generate the key.",
+        stacklevel=2,
+    )
     environ.Env.read_env(_ENV_FILE)
 
 APP_ENV = env('APP_ENV')

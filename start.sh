@@ -30,7 +30,6 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="${SCRIPT_DIR}/.env"
 KEY_FILE="${SCRIPT_DIR}/.env.key"
-RUNTIME_ENV="/dev/shm/fmd-runtime-$$.env"
 
 # --- Pre-flight checks ------------------------------------------------------
 if [ ! -f "${ENV_FILE}" ]; then
@@ -49,15 +48,19 @@ if ! command -v python3 >/dev/null 2>&1; then
 fi
 
 # --- Decrypt to RAM ---------------------------------------------------------
-python3 "${SCRIPT_DIR}/source/utils/env_utils.py" "${ENV_FILE}" "${KEY_FILE}" \
-    > "${RUNTIME_ENV}" || { echo "Error: Failed to decrypt .env secrets." >&2; exit 1; }
+# Use mktemp to create the temp file with unpredictable name and safe permissions.
+RUNTIME_ENV="$(mktemp /dev/shm/fmd-runtime-XXXXXXXXXX.env)"
 chmod 600 "${RUNTIME_ENV}"
 
-# Ensure the temp file is always removed, even on error or SIGINT.
 cleanup() {
-    rm -f "${RUNTIME_ENV}"
+    if [ -f "${RUNTIME_ENV}" ]; then
+        rm "${RUNTIME_ENV}" || echo "Warning: failed to remove ${RUNTIME_ENV} – plaintext secrets may remain in /dev/shm" >&2
+    fi
 }
 trap cleanup EXIT INT TERM
+
+python3 "${SCRIPT_DIR}/source/utils/env_utils.py" "${ENV_FILE}" "${KEY_FILE}" \
+    > "${RUNTIME_ENV}" || { echo "Error: Failed to decrypt .env secrets." >&2; exit 1; }
 
 # Source decrypted values so Docker Compose ${VAR} substitution works.
 # shellcheck disable=SC1090

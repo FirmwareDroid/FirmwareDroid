@@ -367,7 +367,7 @@ class FmdEnvironment:
         print("IMPORTANT: Keep this key file secure. "
               "Without it, encrypted secrets cannot be recovered.\n")
 
-        # Collect plaintext secret values for display to the user.
+        # Collect plaintext secret values to write to the secrets summary file.
         neo4j_auth_plaintext = f"neo4j/{self.neo4j_password}"
         plaintext_secrets = {
             "REDIS_PASSWORD": str(self.redis_password),
@@ -427,8 +427,9 @@ class FmdEnvironment:
             docker_memory_swap_limit=self.docker_memory_swap_limit,
             docker_cpu_limit=self.docker_cpu_limit,
             local_neo4j_db_path=self.local_neo4j_db_path,
-            # NEO4J_AUTH is written as "neo4j/<password>"; encrypt the whole value.
-            neo4j_password=_enc(str(self.neo4j_password)),
+            # Encrypt the full NEO4J_AUTH value ("neo4j/<password>") as one unit
+            # so the ENC: prefix is correctly detected during decryption.
+            neo4j_auth=_enc(neo4j_auth_plaintext),
             neo4j_auth_enabled=self.neo4j_auth_enabled,
             neo4j_connector_http_listen_address=self.neo4j_connector_http_listen_address,
             neo4j_default_advertised_address=self.neo4j_default_advertised_address
@@ -439,19 +440,34 @@ class FmdEnvironment:
         os.chmod(out_file_path, 0o600)
         print("Created .env file (secrets are encrypted with ENC: prefix)\n")
 
-        _print_plaintext_secrets(plaintext_secrets)
+        secrets_file_path = os.path.join(self.script_file_path, "setup-secrets.txt")
+        _write_plaintext_secrets(plaintext_secrets, secrets_file_path)
 
 
-def _print_plaintext_secrets(secrets_dict):
-    """Print plaintext secret values to the console for the operator to record."""
+def _write_plaintext_secrets(secrets_dict, output_path):
+    """
+    Write plaintext secret values to a file with mode 0600 and print the path.
+
+    Secrets are never printed to stdout/logs to avoid accidental exposure in
+    shell history, log aggregators, or CI output.  The operator reads the file,
+    records the values in a secure password manager, and should then delete it.
+    """
     separator = "=" * 70
-    print(separator)
-    print("PLAINTEXT SECRETS – record these now, they will not be shown again")
-    print(separator)
-    for name, value in secrets_dict.items():
-        print(f"  {name}: {value}")
-    print(separator)
-    print("Store these secrets in a password manager or secure vault.\n")
+    lines = [
+        separator + "\n",
+        "PLAINTEXT SECRETS – record these in a secure location, then delete this file\n",
+        separator + "\n",
+    ]
+    for field_name, field_value in secrets_dict.items():
+        lines.append(f"  {field_name}: {field_value}\n")
+    lines.append(separator + "\n")
+
+    with open(output_path, mode="w", encoding="utf-8") as fh:
+        fh.writelines(lines)
+    os.chmod(output_path, 0o600)
+
+    print(f"Plaintext secrets written to: {output_path}")
+    print("Read the file, store the secrets in a password manager, then delete it.\n")
 
 
 def setup_environment_variables(use_defaults, key_file_path):
@@ -465,28 +481,38 @@ def rotate_secrets(env_file_path, key_file_path):
     Re-generate all secret values in *env_file_path*, encrypt them with the
     existing key from *key_file_path*, and write the updated file.
 
-    The new plaintext secrets are printed to stdout so the operator can update
-    downstream services (MongoDB users, Redis passwords, etc.) accordingly.
+    New plaintext secrets are written to ``setup-secrets.txt`` (mode 0600) in
+    the same directory as *env_file_path* so the operator can update downstream
+    services.
 
     .. warning::
         After rotation you **must** restart all services and manually update
-        any credentials that are stored inside MongoDB, Redis, or Neo4j
-        (they are not updated automatically).
+        any credentials stored inside MongoDB, Redis, or Neo4j.  Use the
+        following commands as a guide:
+
+        MongoDB – connect with mongosh and run:
+          db.updateUser("mongodbroot", { pwd: "<new MONGO_INITDB_ROOT_PASSWORD>" })
+          db.updateUser("mongodbuser", { pwd: "<new MONGODB_PASSWORD>" })
+
+        Redis – no persistent credential store; restart is sufficient.
+
+        Neo4j – connect and run:
+          ALTER USER neo4j SET PASSWORD '<new NEO4J password>'
+
+        Django – the superuser password can be reset via the admin UI or:
+          python manage.py changepassword <username>
     """
     key = load_key(key_file_path)
     fernet = Fernet(key)
 
-    # Read the current env file, decrypting existing ENC: values.
-    current = decrypt_env_to_dict(env_file_path, key_file_path)
-
-    # Generate new random values for every secret field.
+    # Generate new random values for every secret field using secrets module.
     new_secrets = {
-        "REDIS_PASSWORD": str(uuid.uuid4()),
-        "MONGO_INITDB_ROOT_PASSWORD": str(uuid.uuid4()),
-        "MONGODB_PASSWORD": str(uuid.uuid4()),
+        "REDIS_PASSWORD": secrets.token_urlsafe(32),
+        "MONGO_INITDB_ROOT_PASSWORD": secrets.token_urlsafe(32),
+        "MONGODB_PASSWORD": secrets.token_urlsafe(32),
         "DJANGO_SECRET_KEY": secrets.token_hex(100),
-        "DJANGO_SUPERUSER_PASSWORD": str(uuid.uuid4()),
-        "NEO4J_AUTH": f"neo4j/{uuid.uuid4()}",
+        "DJANGO_SUPERUSER_PASSWORD": secrets.token_urlsafe(32),
+        "NEO4J_AUTH": f"neo4j/{secrets.token_urlsafe(32)}",
     }
 
     # Re-write the env file, substituting encrypted new values for secret fields.
@@ -507,9 +533,10 @@ def rotate_secrets(env_file_path, key_file_path):
         f.writelines(updated_lines)
     os.chmod(env_file_path, 0o600)
 
+    secrets_file_path = os.path.join(os.path.dirname(env_file_path), "setup-secrets.txt")
+    _write_plaintext_secrets(new_secrets, secrets_file_path)
     print(f"Rotated secrets in {env_file_path}")
-    _print_plaintext_secrets(new_secrets)
-    print("Restart all services and update credentials in MongoDB/Redis/Neo4j as needed.")
+    print("Restart all services and update credentials in MongoDB/Redis/Neo4j as described above.")
 
 
 def rekey_env(env_file_path, old_key_file_path, new_key_file_path=None):
@@ -527,17 +554,10 @@ def rekey_env(env_file_path, old_key_file_path, new_key_file_path=None):
     if new_key_file_path is None:
         new_key_file_path = old_key_file_path
 
-    # Decrypt all current ENC: values using the old key.
+    # Decrypt all current ENC: values using the old key before generating a new key.
     current = decrypt_env_to_dict(env_file_path, old_key_file_path)
 
-    # Generate and save the new key.
-    new_key = generate_key()
-    save_key(new_key, new_key_file_path)
-    new_fernet = Fernet(new_key)
-
-    # Identify which fields are currently encrypted.
-    old_key = load_key(old_key_file_path)
-    old_fernet = Fernet(old_key)
+    # Identify which fields are currently encrypted (must be done before overwriting key).
     encrypted_fields = set()
     with open(env_file_path, "r", encoding="utf-8") as f:
         for line in f:
@@ -546,6 +566,11 @@ def rekey_env(env_file_path, old_key_file_path, new_key_file_path=None):
                 name, _, value = stripped.partition("=")
                 if value.strip().startswith("ENC:"):
                     encrypted_fields.add(name.strip())
+
+    # Generate and save the new key.
+    new_key = generate_key()
+    save_key(new_key, new_key_file_path)
+    new_fernet = Fernet(new_key)
 
     # Re-write env file with new encryption.
     updated_lines = []

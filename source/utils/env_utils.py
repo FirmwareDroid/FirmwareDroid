@@ -56,7 +56,11 @@ def save_key(key: bytes, key_file_path: str) -> None:
 
 
 def load_key(key_file_path: str) -> bytes:
-    """Read and return the raw key bytes from *key_file_path*."""
+    """Read and return the raw key bytes from *key_file_path*.
+
+    Trailing whitespace (newlines) is stripped; Fernet keys are URL-safe
+    base64 and contain no significant whitespace.
+    """
     with open(key_file_path, "rb") as f:
         return f.read().strip()
 
@@ -93,7 +97,7 @@ def decrypt_env_to_dict(env_file_path: str, key_file_path: str) -> dict:
     in *key_file_path*, and return a plain ``{name: value}`` dictionary.
 
     Comment lines (starting with ``#``) and blank lines are skipped.
-    Inline comments (`` # …``) are stripped from unquoted values.
+    Inline comments are stripped from unquoted, non-ENC: values only.
     """
     key = load_key(key_file_path)
     fernet = Fernet(key)
@@ -111,8 +115,12 @@ def decrypt_env_to_dict(env_file_path: str, key_file_path: str) -> dict:
             name = name.strip()
             value = value.strip()
 
-            # Strip inline comments for unquoted values (space + # acts as comment start)
-            if value and not value.startswith(('"', "'")):
+            # Strip inline comments only for unquoted, unencrypted values.
+            # Encrypted tokens (ENC:...) are never treated as having inline
+            # comments – their content is opaque base64.
+            if (value
+                    and not value.startswith(('"', "'"))
+                    and not value.startswith(SECRET_PREFIX)):
                 comment_pos = value.find(" #")
                 if comment_pos != -1:
                     value = value[:comment_pos].strip()
@@ -157,7 +165,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     for k, v in decrypted.items():
-        # Escape any single quotes in the value so the output is safe for
-        # use with POSIX ``export KEY='value'`` syntax.
+        # Escape single quotes in the value for POSIX shell single-quoted strings.
+        # The pattern "'\\''": end current single-quote string ('), output a
+        # literal backslash-escaped single quote (\\'), then restart the
+        # single-quote string (').  This is the portable POSIX approach.
         v_escaped = v.replace("'", "'\\''")
         print(f"export {k}='{v_escaped}'")

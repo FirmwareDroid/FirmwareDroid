@@ -15,11 +15,15 @@ FMD_KEY_FILE="${FMD_KEY_FILE:-/var/www/.env.key}"
 FMD_DECRYPTED_ENV="/dev/shm/fmd_env_$$.sh"
 
 if [ -f "${FMD_KEY_FILE}" ]; then
-    if python3 /var/www/source/utils/env_utils.py "${FMD_ENV_FILE}" "${FMD_KEY_FILE}" > "${FMD_DECRYPTED_ENV}" 2>/dev/null; then
+    if python3 /var/www/source/utils/env_utils.py "${FMD_ENV_FILE}" "${FMD_KEY_FILE}" > "${FMD_DECRYPTED_ENV}"; then
         # shellcheck disable=SC1090
         . "${FMD_DECRYPTED_ENV}"
+        rm "${FMD_DECRYPTED_ENV}" || echo "Warning: failed to remove ${FMD_DECRYPTED_ENV} – plaintext secrets may remain in /dev/shm" >&2
+    else
+        rm -f "${FMD_DECRYPTED_ENV}"
+        echo "Error: failed to decrypt .env secrets. Ensure .env.key is correct." >&2
+        exit 1
     fi
-    rm -f "${FMD_DECRYPTED_ENV}"
 fi
 
 # Ensure a mounted /file_store exists and is writable by the www user.

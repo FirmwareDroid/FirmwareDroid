@@ -456,6 +456,7 @@ celerybeat.pid
 # Environments
 .env
 .env.key
+setup-secrets.txt
 .venv
 env/
 venv/
