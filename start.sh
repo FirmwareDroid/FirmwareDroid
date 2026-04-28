@@ -54,7 +54,7 @@ chmod 600 "${RUNTIME_ENV}"
 
 cleanup() {
     if [ -f "${RUNTIME_ENV}" ]; then
-        rm "${RUNTIME_ENV}" || echo "Warning: failed to remove ${RUNTIME_ENV} – plaintext secrets may remain in /dev/shm" >&2
+        rm "${RUNTIME_ENV}" || echo "Warning: failed to remove ${RUNTIME_ENV} - plaintext secrets may remain in /dev/shm" >&2
     fi
 }
 trap cleanup EXIT INT TERM

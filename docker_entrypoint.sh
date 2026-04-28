@@ -18,7 +18,7 @@ if [ -f "${FMD_KEY_FILE}" ]; then
     if python3 /var/www/source/utils/env_utils.py "${FMD_ENV_FILE}" "${FMD_KEY_FILE}" > "${FMD_DECRYPTED_ENV}"; then
         # shellcheck disable=SC1090
         . "${FMD_DECRYPTED_ENV}"
-        rm "${FMD_DECRYPTED_ENV}" || echo "Warning: failed to remove ${FMD_DECRYPTED_ENV} – plaintext secrets may remain in /dev/shm" >&2
+        rm "${FMD_DECRYPTED_ENV}" || echo "Warning: failed to remove ${FMD_DECRYPTED_ENV} - plaintext secrets may remain in /dev/shm" >&2
     else
         rm -f "${FMD_DECRYPTED_ENV}"
         echo "Error: failed to decrypt .env secrets. Ensure .env.key is correct." >&2

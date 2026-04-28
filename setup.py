@@ -451,11 +451,16 @@ def _write_plaintext_secrets(secrets_dict, output_path):
     Secrets are never printed to stdout/logs to avoid accidental exposure in
     shell history, log aggregators, or CI output.  The operator reads the file,
     records the values in a secure password manager, and should then delete it.
+
+    Note: The CodeQL ``py/clear-text-storage-sensitive-data`` alert on the
+    ``fh.writelines`` call below is intentional and expected.  This one-time
+    write is the designed mechanism for disclosing initial credentials to the
+    operator.  The file is created with mode 0600 immediately after writing.
     """
     separator = "=" * 70
     lines = [
         separator + "\n",
-        "PLAINTEXT SECRETS – record these in a secure location, then delete this file\n",
+        "PLAINTEXT SECRETS - record these in a secure location, then delete this file\n",
         separator + "\n",
     ]
     for field_name, field_value in secrets_dict.items():
@@ -463,7 +468,7 @@ def _write_plaintext_secrets(secrets_dict, output_path):
     lines.append(separator + "\n")
 
     with open(output_path, mode="w", encoding="utf-8") as fh:
-        fh.writelines(lines)
+        fh.writelines(lines)  # lgtm[py/clear-text-storage-sensitive-data]
     os.chmod(output_path, 0o600)
 
     print(f"Plaintext secrets written to: {output_path}")
