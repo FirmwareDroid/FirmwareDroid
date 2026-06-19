@@ -283,7 +283,7 @@ if [ "$DO_PUSH" = true ]; then
         --push
 else
     docker build ./ -f ./Dockerfile_NGINX -t firmwaredroid-nginx --platform="linux/amd64" \
-        --build-arg FRONTEND_IMAGE="firmwaredroid-frontend"
+        --build-arg FRONTEND_IMAGE="firmwaredroid-frontend:latest"
     docker tag firmwaredroid-nginx "$NGINX_IMAGE"
 fi
 
