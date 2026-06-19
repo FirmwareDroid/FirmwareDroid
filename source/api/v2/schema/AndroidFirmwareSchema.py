@@ -110,6 +110,7 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
         queue_name = graphene.String(required=True, default_value=list(RQ_QUEUES.keys())[0])
         create_fuzzy_hashes = graphene.Boolean(required=True)
         storage_index = graphene.Int(required=True, default_value=0)
+        keep_files_on_disk = graphene.Boolean(required=False, default_value=False)
 
     @classmethod
     @superuser_required
@@ -121,10 +122,11 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
             'queue_name': sanitize_string,
         }
     )
-    def mutate(cls, root, info, queue_name, create_fuzzy_hashes, storage_index):
+    def mutate(cls, root, info, queue_name, create_fuzzy_hashes, storage_index, keep_files_on_disk):
         """
         Create a job to import firmware.
 
+        :param keep_files_on_disk: boolean - True: will keep all files from the extraction on disk.
         :param storage_index: int - index of the storage to use.
         :param queue_name: str - name of the RQ to use.
         :param create_fuzzy_hashes: boolean - True: will create fuzzy hashes for all files in the firmware found.
@@ -136,6 +138,7 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
         job = queue.enqueue(func_to_run,
                             create_fuzzy_hashes,
                             storage_index,
+                            keep_files_on_disk,
                             job_timeout=ONE_WEEK_TIMEOUT,
                             meta={"storage_index": storage_index}
                             )
@@ -153,6 +156,7 @@ class CreateFirmwareReImportJob(graphene.Mutation):
         queue_name = graphene.String(required=True, default_value=list(RQ_QUEUES.keys())[0])
         firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
         create_fuzzy_hashes = graphene.Boolean(required=False, default_value=False)
+        keep_files_on_disk = graphene.Boolean(required=False, default_value=False)
 
     @classmethod
     @superuser_required
@@ -163,10 +167,10 @@ class CreateFirmwareReImportJob(graphene.Mutation):
         },
         sanitizers={}
     )
-    def mutate(cls, root, info, queue_name, firmware_id_list, create_fuzzy_hashes):
+    def mutate(cls, root, info, queue_name, firmware_id_list, create_fuzzy_hashes, keep_files_on_disk):
         queue = django_rq.get_queue(queue_name)
         func_to_run = start_firmware_re_import
-        job = queue.enqueue(func_to_run, firmware_id_list, create_fuzzy_hashes, job_timeout=ONE_WEEK_TIMEOUT)
+        job = queue.enqueue(func_to_run, firmware_id_list, create_fuzzy_hashes, keep_files_on_disk, job_timeout=ONE_WEEK_TIMEOUT)
         return cls(job_id=job.id)
 
 

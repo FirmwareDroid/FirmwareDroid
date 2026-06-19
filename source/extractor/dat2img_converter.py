@@ -59,6 +59,11 @@ def search_transfer_list(search_path, filename):
     transfer_pattern_list = None
     patch_pattern_list = None
 
+    # Normalize the partition prefix from files such as system.new.dat or mi_ext.dat
+    base_name = filename.replace(".new", "")
+    if base_name.endswith(".dat"):
+        base_name = base_name[:-4]
+
     if "vendor" in filename:
         transfer_pattern_list = VENDOR_TRANSFER_PATTERN_LIST
         patch_pattern_list = VENDOR_DAT_PATCH_PATTERN_LIST
@@ -80,6 +85,11 @@ def search_transfer_list(search_path, filename):
     elif "system" in filename:
         transfer_pattern_list = SYSTEM_TRANSFER_PATTERN_LIST
         patch_pattern_list = SYSTEM_DAT_PATCH_PATTERN_LIST
+    elif base_name:
+        # Fallback for custom partition prefixes not covered by known constants.
+        escaped_base_name = re.escape(base_name)
+        transfer_pattern_list = [rf"^{escaped_base_name}\.transfer\.list$"]
+        patch_pattern_list = [rf"^{escaped_base_name}\.patch\.dat$"]
 
     if transfer_pattern_list is None:
         raise RuntimeError(f"Unknown transfer list for partition: {filename}")

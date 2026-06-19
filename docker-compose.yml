@@ -16,6 +16,7 @@ services:
     volumes:
       - .env:/var/www/.env
       - ./env:/var/www/env
+      - ./source:/var/www/source
       - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
       - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
       - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
@@ -49,7 +50,7 @@ services:
       - ./env/nginx/stream.conf:/etc/nginx/stream.conf
       - ./env/nginx/live/:/etc/letsencrypt/live/
       - ./source/static:/usr/share/nginx/django_static
-      #- ./firmware-droid-client/build:/usr/share/nginx/html # Dev-Route
+      - ./firmware-droid-client/build:/usr/share/nginx/html # Dev-Route
     ports:
       - "80:80"
       - "443:443"
@@ -107,6 +108,7 @@ services:
     volumes:
       - .env:/var/www/.env
       - ./env:/var/www/env
+      - ./source:/var/www/source
       - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
       - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
       - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
@@ -137,6 +139,7 @@ services:
     volumes:
       - .env:/var/www/.env
       - ./env:/var/www/env
+      - ./source:/var/www/source
       - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
       - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
       - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
