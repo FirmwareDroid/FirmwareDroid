@@ -32,16 +32,19 @@ from typing import List
 
 ALLOWED_ARCHIVE_FILE_EXTENSIONS = [".zip", ".tar", ".gz", ".bz2", ".md5", ".lz4", ".tgz", ".rar", ".7z", "lzma", ".xz",
                                    ".ozip"]
+NAME_PARTITION_EXPORT_FOLDER = "firmware_extract"
+NAME_INTERMEDIATE_EXPORT_FOLDER = "intermediate_extractions"
 lock = threading.Lock()
 
 
 
 @create_db_context
 @create_log_context
-def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0):
+def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0, keep_files_on_disk=False):
     """
     Imports all .zip files from the import folder.
 
+    :param keep_files_on_disk: boolean indicating whether to keep all files on disk or just index the files
     :param storage_index: int - the index of the StoreSetting to use.
     :param create_fuzzy_hashes: bool - true if fuzzy hash index should be created.
 
@@ -49,12 +52,12 @@ def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0):
     """
     logging.info(f"Firmware extractor starting...Storage index: {storage_index}")
     store_setting = get_active_store_by_index(storage_index)
-    import_firmware_from_store(store_setting, create_fuzzy_hashes)
+    import_firmware_from_store(store_setting, create_fuzzy_hashes, keep_files_on_disk)
 
 
-def import_firmware_from_store(store_setting, create_fuzzy_hashes):
+def import_firmware_from_store(store_setting, create_fuzzy_hashes, keep_files_on_disk):
     store_path, firmware_archives_queue, num_threads = pre_process_firmware_import(store_setting)
-    start_import_threads(num_threads, firmware_archives_queue, create_fuzzy_hashes, store_path)
+    start_import_threads(num_threads, firmware_archives_queue, create_fuzzy_hashes, store_path, keep_files_on_disk)
 
 
 def pre_process_firmware_import(store_setting):
@@ -68,10 +71,10 @@ def pre_process_firmware_import(store_setting):
     return store_path, firmware_archives_queue, num_threads
 
 
-def start_import_threads(num_threads, firmware_archives_queue, create_fuzzy_hashes, store_path):
+def start_import_threads(num_threads, firmware_archives_queue, create_fuzzy_hashes, store_path, keep_files_on_disk):
     for i in range(num_threads):
         logging.debug(f"Start importer thread {i} of {num_threads}")
-        worker = Thread(target=prepare_firmware_import, args=(firmware_archives_queue, create_fuzzy_hashes, store_path))
+        worker = Thread(target=prepare_firmware_import, args=(firmware_archives_queue, create_fuzzy_hashes, store_path, keep_files_on_disk))
         worker.daemon = True
         worker.start()
     firmware_archives_queue.join()
@@ -121,7 +124,7 @@ def allow_import(firmware_file_path, md5):
 
 
 @create_db_context
-def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes, store_path):
+def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes, store_path, keep_files_on_disk):
     """
     A multithreaded import script that extracts meta information of a firmware file from the system.img.
     Stores a firmware into the database if it is not already stored.
@@ -146,7 +149,7 @@ def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes, store_path
             md5 = md5_from_file(firmware_file_path)
             is_allowed, reason = allow_import(firmware_file_path, md5)
             if is_allowed:
-                import_firmware(filename, md5, firmware_file_path, create_fuzzy_hashes, store_path)
+                import_firmware(filename, md5, firmware_file_path, create_fuzzy_hashes, store_path, keep_files_on_disk)
             else:
                 shutil.move(str(firmware_file_path), store_path["FIRMWARE_FOLDER_IMPORT_FAILED"])
                 raise ValueError(reason)
@@ -195,11 +198,12 @@ def create_partition_file_index(partition_name,
     return partition_firmware_file_list, is_successful
 
 
-def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, store_paths):
+def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, store_paths, keep_files_on_disk):
     """
     Creates for every readable partition an index of all files. Special files (apk, build_properties, etc.)
     are indexed in a separated lists for further processing.
 
+    :param keep_files_on_disk: If true, extracted partition files will be stored in the FIRMWARE_FOLDER_FILE_EXTRACT.
     :param store_paths: dict(str, str) - paths of the store setting.
     :param temp_extract_dir: str - path to the directory where the files have been extracted.
     :param files_dict: dict - containing the different file lists.
@@ -238,6 +242,22 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
                         files_dict["build_prop_file_list"].extend(build_prop_list)
                     if create_fuzzy_hashes:
                         add_fuzzy_hashes(partition_firmware_file_list)
+
+                    if keep_files_on_disk:
+                        try:
+                            partition_store_path = os.path.join(store_paths["FIRMWARE_FOLDER_FILE_EXTRACT"],
+                                                                NAME_PARTITION_EXPORT_FOLDER,
+                                                                md5,
+                                                                partition_name)
+                            shutil.copytree(partition_temp_dir,
+                                            partition_store_path,
+                                            dirs_exist_ok=True,
+                                            symlinks=True,
+                                            ignore_dangling_symlinks=True
+                                            )
+                            logging.info(f"Partition stored at {partition_store_path}: {partition_name}")
+                        except Exception as e:
+                            logging.error(f"Partition storing error for {partition_store_path} - {partition_name} with error: {e}")
 
             partition_info_dict[partition_name] = {"is_import_success": is_successful,
                                                    "firmware_file_count": len(partition_firmware_file_list),
@@ -322,10 +342,16 @@ def copy_and_remove_source(src, dst):
         logging.error(f"An error occurred coping the file {src} to {dst}: {e}")
 
 
-def import_firmware(original_filename, md5, firmware_archive_file_path, create_fuzzy_hashes, store_paths):
+def import_firmware(original_filename,
+                    md5,
+                    firmware_archive_file_path,
+                    create_fuzzy_hashes,
+                    store_paths,
+                    keep_files_on_disk):
     """
     Attempts to store a firmware archive into the database.
 
+    :param keep_files_on_disk: If true, keeps file on disk and does not remove the files after indexing.
     :param store_paths: dict(str, str) - paths of the store setting.
     :param create_fuzzy_hashes: boolean - create a fuzzy hash index for all files in the firmware.
     :param original_filename: str - name of the file to import.
@@ -342,6 +368,14 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
             "firmware_file_list": [],
             "archive_firmware_file_list": []
         }
+        firmware_extract_path = os.path.join(store_paths["FIRMWARE_FOLDER_FILE_EXTRACT"],
+                                             NAME_PARTITION_EXPORT_FOLDER,
+                                             md5)
+        if os.path.exists(firmware_extract_path):
+            try:
+                shutil.rmtree(firmware_extract_path)
+            except Exception as e:
+                logging.error(f"Failed to remove {firmware_extract_path}: {e}")
         try:
             sha1 = sha1_from_file(firmware_archive_file_path)
             sha256 = sha256_from_file(firmware_archive_file_path)
@@ -363,7 +397,8 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
                                                                files_dict,
                                                                create_fuzzy_hashes,
                                                                md5,
-                                                               store_paths)
+                                                               store_paths,
+                                                               keep_files_on_disk)
 
             version_detected = detect_by_build_prop(files_dict["build_prop_file_list"])
             os_vendor = detect_vendor_by_build_prop(files_dict["build_prop_file_list"])
@@ -390,6 +425,19 @@ def import_firmware(original_filename, md5, firmware_archive_file_path, create_f
                                   has_fuzzy_hash_index=create_fuzzy_hashes,
                                   partition_info_dict=partition_info_dict)
             logging.info(f"Firmware import success for file: {original_filename}")
+
+            if keep_files_on_disk:
+                try:
+                    intermediate_extraction_path = os.path.join(firmware_extract_path, NAME_INTERMEDIATE_EXPORT_FOLDER)
+                    logging.info(f"Storing extracted firmware files to {intermediate_extraction_path}")
+                    shutil.copytree(temp_extract_dir,
+                                    intermediate_extraction_path,
+                                    dirs_exist_ok=True,
+                                    symlinks=True,
+                                    ignore_dangling_symlinks=True)
+                except Exception as e:
+                    logging.error(f"Failed to store extracted firmware files to {intermediate_extraction_path}. Error: {e}")
+
         except Exception as error:
             logging.exception(f"Firmware Import failed: {original_filename} error: {str(error)}")
 

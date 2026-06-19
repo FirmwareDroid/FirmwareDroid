@@ -9,7 +9,7 @@ from model import AndroidFirmware, StoreSetting
 
 @create_db_context
 @create_log_context
-def start_firmware_re_import(firmware_id_list, create_fuzzy_hashes=False):
+def start_firmware_re_import(firmware_id_list, create_fuzzy_hashes=False, keep_files_on_disk=False):
     """
     The reimporter is a function that reimports firmware files into the importer queue.
 
@@ -34,7 +34,7 @@ def start_firmware_re_import(firmware_id_list, create_fuzzy_hashes=False):
             copy_firmware_to_importer(android_firmware, importer_path)
         firmware_id_list = [firmware.pk for firmware in firmware_list]
         delete_queryset_background(firmware_id_list, AndroidFirmware)
-        import_firmware_from_store(store_setting, create_fuzzy_hashes=create_fuzzy_hashes)
+        import_firmware_from_store(store_setting, create_fuzzy_hashes=create_fuzzy_hashes, keep_files_on_disk=keep_files_on_disk)
 
 
 def bundle_firmware_to_store_dict(firmware_id_list):

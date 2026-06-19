@@ -34,6 +34,7 @@ OEM_IMG_PATTERN_LIST = ["oem[.]img", "oem[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 ODM_IMG_PATTERN_LIST = ["odm[.]img", "odm[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 USERDATA_IMG_PATTERN_LIST = ["userdata[.]img", "userdata[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 PRODUCT_IMG_PATTERN_LIST = ["product[.]img", "product[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
+CUSTOM_EXT_IMG_PATTERN_LIST = ["^(?!system_ext[.]).*_ext[.](img|rfs|bin|img[.]ext4|ext4[.]img)$"]
 PVMFW_IMG_PATTERN_LIST = ["pvmfw[.]img", "pvmfw[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 VBMETA_IMG_PATTERN_LIST = ["vbmeta[.]img", "vbmeta[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
 VBMETA_SYSTEM_IMG_PATTERN_LIST = ["vbmeta_system[.]img", "vbmeta_system[.]*(img|rfs|bin|img.ext4|ext4.img)$"]
@@ -48,7 +49,9 @@ EXT_IMAGE_PATTERNS_DICT = {"super": SUPER_IMG_PATTERN_LIST,
                            "userdata": USERDATA_IMG_PATTERN_LIST,
                            "super_empty": SUPER_EMPTY_PATTERN_LIST,
                            "pvmfw": PVMFW_IMG_PATTERN_LIST,
-                           "product": PRODUCT_IMG_PATTERN_LIST}
+                           "product": PRODUCT_IMG_PATTERN_LIST,
+                           "custom_ext": CUSTOM_EXT_IMG_PATTERN_LIST
+                           }
 
 ##########################################################################################
 # Partitions that are in some proprietary or special format.
@@ -80,6 +83,7 @@ PRODUCT_DAT_PATCH_PATTERN_LIST = ["product[.]patch[.]dat"]
 SYSTEM_EXT_DAT_PATCH_PATTERN_LIST = ["system_ext[.]patch[.]dat"]
 SYSTEM_OTHER_DAT_PATCH_PATTERN_LIST = ["system_other[.]patch[.]dat"]
 SYSTEM_DAT_PATCH_PATTERN_LIST = ["system[.]patch[.]dat"]
+GENERIC_DAT_PATCH_PATTERN_LIST = ["*patch[.]dat"]
 
 ##########################################################################################
 # Build.prop properties

@@ -213,8 +213,17 @@ echo
 echo "Building frontend image..."
 FRONTEND_IMAGE="${REGISTRY}/${IMAGE_NAME}-frontend:${IMAGE_TAG}"
 # Use repository root as build context so the root .dockerignore is respected
-docker build ./firmware-droid-client -f ./firmware-droid-client/Dockerfile -t firmwaredroid-frontend --platform="linux/amd64"
-docker tag firmwaredroid-frontend "$FRONTEND_IMAGE"
+if [ "$DO_PUSH" = true ]; then
+    # Use buildx to build+push a single-arch image to the registry
+    docker buildx build ./firmware-droid-client -f ./firmware-droid-client/Dockerfile \
+        --platform linux/amd64 \
+        --tag "$FRONTEND_IMAGE" \
+        --tag "${REGISTRY}/${IMAGE_NAME}-frontend:latest" \
+        --push
+else
+    docker build ./firmware-droid-client -f ./firmware-droid-client/Dockerfile -t firmwaredroid-frontend --platform="linux/amd64"
+    docker tag firmwaredroid-frontend "$FRONTEND_IMAGE"
+fi
 
 if [ "$PUSH_IMAGES" = true ]; then
     if [ "$SKIP_SECURITY" = true ]; then
@@ -234,8 +243,16 @@ fi
 #####################################
 echo "Building base image..."
 BASE_IMAGE="${REGISTRY}/${IMAGE_NAME}-base:${IMAGE_TAG}"
-docker build ./ -f ./Dockerfile_BASE -t firmwaredroid-base --platform="linux/amd64"
-docker tag firmwaredroid-base "$BASE_IMAGE"
+if [ "$DO_PUSH" = true ]; then
+    docker buildx build . -f ./Dockerfile_BASE \
+        --platform linux/amd64 \
+        --tag "$BASE_IMAGE" \
+        --tag "${REGISTRY}/${IMAGE_NAME}-base:latest" \
+        --push
+else
+    docker build ./ -f ./Dockerfile_BASE -t firmwaredroid-base --platform="linux/amd64"
+    docker tag firmwaredroid-base "$BASE_IMAGE"
+fi
 
 if [ "$PUSH_IMAGES" = true ]; then
     if [ "$SKIP_SECURITY" = true ]; then
@@ -257,9 +274,18 @@ echo "Building nginx image..."
 NGINX_IMAGE="${REGISTRY}/${IMAGE_NAME}-nginx:${IMAGE_TAG}"
 # Pass the built/pushed frontend image as a build-arg so the nginx Dockerfile
 # can COPY files from that image. FRONTEND_IMAGE was defined earlier.
-docker build ./ -f ./Dockerfile_NGINX -t firmwaredroid-nginx --platform="linux/amd64" \
-    --build-arg FRONTEND_IMAGE="${FRONTEND_IMAGE}"
-docker tag firmwaredroid-nginx "$NGINX_IMAGE"
+if [ "$DO_PUSH" = true ]; then
+    docker buildx build . -f ./Dockerfile_NGINX \
+        --platform linux/amd64 \
+        --build-arg FRONTEND_IMAGE="${FRONTEND_IMAGE}" \
+        --tag "$NGINX_IMAGE" \
+        --tag "${REGISTRY}/${IMAGE_NAME}-nginx:latest" \
+        --push
+else
+    docker build ./ -f ./Dockerfile_NGINX -t firmwaredroid-nginx --platform="linux/amd64" \
+        --build-arg FRONTEND_IMAGE="${FRONTEND_IMAGE}"
+    docker tag firmwaredroid-nginx "$NGINX_IMAGE"
+fi
 
 if [ "$PUSH_IMAGES" = true ]; then
     if [ "$SKIP_SECURITY" = true ]; then
@@ -292,9 +318,18 @@ for dockerfile in "${workers[@]}"; do
     # Use repository root as build context so root .dockerignore is applied
     # Pass REGISTRY and IMAGE_NAME so Dockerfiles that reference the published
     # base image (via build-arg) can pull from the correct registry.
-    docker build . -f "./docker/base/Dockerfile_${worker_name}" -t "$local_tag" --platform="linux/amd64" \
-        --build-arg REGISTRY="${REGISTRY}" --build-arg IMAGE_NAME="${IMAGE_NAME}"
-    docker tag "$local_tag" "$registry_tag"
+    if [ "$DO_PUSH" = true ]; then
+        # Buildx build and push directly to registry (single-arch)
+        docker buildx build . -f "./docker/base/Dockerfile_${worker_name}" \
+            --platform linux/amd64 \
+            --build-arg REGISTRY="${REGISTRY}" --build-arg IMAGE_NAME="${IMAGE_NAME}" \
+            --tag "$registry_tag" \
+            --push
+    else
+        docker build . -f "./docker/base/Dockerfile_${worker_name}" -t "$local_tag" --platform="linux/amd64" \
+            --build-arg REGISTRY="${REGISTRY}" --build-arg IMAGE_NAME="${IMAGE_NAME}"
+        docker tag "$local_tag" "$registry_tag"
+    fi
 
     worker_names+=("$worker_name")
     worker_tags+=("$registry_tag")
