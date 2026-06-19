@@ -221,8 +221,12 @@ if [ "$DO_PUSH" = true ]; then
         --tag "${REGISTRY}/${IMAGE_NAME}-frontend:latest" \
         --push
 else
-    docker build ./firmware-droid-client -f ./firmware-droid-client/Dockerfile -t firmwaredroid-frontend --platform="linux/amd64"
-    docker tag firmwaredroid-frontend "$FRONTEND_IMAGE"
+    docker build ./firmware-droid-client \
+    -f ./firmware-droid-client/Dockerfile \
+    -t "$FRONTEND_IMAGE" \
+    -t firmwaredroid-frontend:latest \
+    --platform="linux/amd64"
+    #docker tag firmwaredroid-frontend:latest "$FRONTEND_IMAGE"
 fi
 
 if [ "$PUSH_IMAGES" = true ]; then
@@ -283,7 +287,7 @@ if [ "$DO_PUSH" = true ]; then
         --push
 else
     docker build ./ -f ./Dockerfile_NGINX -t firmwaredroid-nginx --platform="linux/amd64" \
-        --build-arg FRONTEND_IMAGE="firmwaredroid-frontend:latest"
+        --build-arg FRONTEND_IMAGE="${FRONTEND_IMAGE}"
     docker tag firmwaredroid-nginx "$NGINX_IMAGE"
 fi
 
