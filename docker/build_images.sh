@@ -216,7 +216,6 @@ FRONTEND_IMAGE="${REGISTRY}/${IMAGE_NAME}-frontend:${IMAGE_TAG}"
 if [ "$DO_PUSH" = true ]; then
     # Use buildx to build+push a single-arch image to the registry
     docker buildx build ./firmware-droid-client -f ./firmware-droid-client/Dockerfile \
-        --network=host \
         --platform linux/amd64 \
         --tag "$FRONTEND_IMAGE" \
         --tag "${REGISTRY}/${IMAGE_NAME}-frontend:latest" \
@@ -246,7 +245,6 @@ echo "Building base image..."
 BASE_IMAGE="${REGISTRY}/${IMAGE_NAME}-base:${IMAGE_TAG}"
 if [ "$DO_PUSH" = true ]; then
     docker buildx build . -f ./Dockerfile_BASE \
-        --network=host \
         --platform linux/amd64 \
         --tag "$BASE_IMAGE" \
         --tag "${REGISTRY}/${IMAGE_NAME}-base:latest" \
@@ -285,7 +283,7 @@ if [ "$DO_PUSH" = true ]; then
         --push
 else
     docker build ./ -f ./Dockerfile_NGINX -t firmwaredroid-nginx --platform="linux/amd64" \
-        --build-arg FRONTEND_IMAGE="${FRONTEND_IMAGE}"
+        --build-arg FRONTEND_IMAGE="firmwaredroid-frontend"
     docker tag firmwaredroid-nginx "$NGINX_IMAGE"
 fi
 
@@ -323,7 +321,6 @@ for dockerfile in "${workers[@]}"; do
     if [ "$DO_PUSH" = true ]; then
         # Buildx build and push directly to registry (single-arch)
         docker buildx build . -f "./docker/base/Dockerfile_${worker_name}" \
-            --network=host \
             --platform linux/amd64 \
             --build-arg REGISTRY="${REGISTRY}" --build-arg IMAGE_NAME="${IMAGE_NAME}" \
             --tag "$registry_tag" \
