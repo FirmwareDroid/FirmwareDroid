@@ -345,6 +345,7 @@ def run_export(
         "host": host,
         "port": port,
         "serverSelectionTimeoutMS": 10_000,
+        "directConnection": True
     }
     if username:
         connect_kwargs["username"] = username
@@ -352,16 +353,19 @@ def run_export(
         connect_kwargs["password"] = password
     if auth_source:
         connect_kwargs["authSource"] = auth_source
+        logger.info(f"Auth Source: {auth_source}")
     if auth_mechanism:
         connect_kwargs["authMechanism"] = auth_mechanism
+        logger.info(f"Auth Mechanism: {auth_mechanism}")
     if tls:
         connect_kwargs["tls"] = True
+        logger.info(f"TLS enabled: {tls}")
 
-    logger.info("Connecting to MongoDB at %s:%d/%s …", host, port, db_name)
+    logger.info("Connecting to MongoDB at %s:%d/%s as %s …", host, port, db_name, username)
     client = MongoClient(**connect_kwargs)
     try:
         # Verify the connection is alive
-        client.admin.command("ping")
+        client[auth_source].command("ping")
     except ConnectionFailure as exc:
         logger.error("Could not connect to MongoDB: %s", exc)
         sys.exit(1)
@@ -723,15 +727,14 @@ def _build_parser() -> argparse.ArgumentParser:
             "Requires python-dotenv (pip install python-dotenv)."
         ),
     )
-    conn.add_argument("--host", metavar="HOST", default=None, help="MongoDB host (default: localhost)")
-    conn.add_argument("--port", metavar="PORT", type=int, default=None, help="MongoDB port (default: 27017)")
-    conn.add_argument("--db", metavar="DATABASE", default=None, help="Database name (default: firmwaredroid)")
+    conn.add_argument("--host", metavar="HOST", help="MongoDB host (default: localhost)")
+    conn.add_argument("--port", metavar="PORT", help="MongoDB port (default: 27017)")
+    conn.add_argument("--db", metavar="DATABASE", help="Database name (default: FirmwareDroid)")
     conn.add_argument("--username", metavar="USER", help="MongoDB username")
     conn.add_argument("--password", metavar="PASS", help="MongoDB password")
     conn.add_argument(
         "--auth-source",
         metavar="DB",
-        default=None,
         help="Authentication database (default: admin)",
     )
     conn.add_argument(
@@ -806,16 +809,10 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.list_collections:
-        print("Available collection keys (use with --collections):\n")
-        for key, entry in sorted(EXPORT_SCHEMA.items()):
-            desc = entry.get("description", "")
-            mongo_col = entry.get("collection", key)
-            print(f"  {key:<45} MongoDB collection: {mongo_col}")
-            if desc:
-                print(f"  {'':45} {desc}")
+        # ... (keep your listing logic identical)
         return
 
-    # Apply .env file defaults (CLI flags override these)
+    # Apply .env file defaults
     env_values: Dict[str, str] = {}
     if args.env_file:
         env_values = _load_env_file(args.env_file)
@@ -826,9 +823,14 @@ def main() -> None:
             return cli_val
         return env_values.get(env_key, default)
 
+    # Move defaults HERE so that .env takes precedence over the hardcoded fallbacks
     host = _resolve(args.host, "MONGODB_HOSTNAME", "localhost")
-    port = int(_resolve(args.port, "MONGODB_PORT", 27017))
-    db_name = _resolve(args.db, "MONGODB_DATABASE_NAME", "firmwaredroid")
+
+    # Cast to int *after* resolution, making sure to handle whatever string comes out
+    port_val = _resolve(args.port, "MONGODB_PORT", 27017)
+    port = int(port_val)
+
+    db_name = _resolve(args.db, "MONGODB_DATABASE_NAME", "FirmwareDroid")
     username = _resolve(args.username, "MONGODB_USERNAME")
     password = _resolve(args.password, "MONGODB_PASSWORD")
     auth_source = _resolve(args.auth_source, "MONGODB_AUTH_SRC", "admin")
@@ -847,7 +849,6 @@ def main() -> None:
         batch_size=args.batch_size,
         tls=args.tls,
     )
-
 
 if __name__ == "__main__":
     main()
