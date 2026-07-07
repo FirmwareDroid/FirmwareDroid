@@ -187,9 +187,9 @@ networks:
   frontend:
     driver: bridge
     driver_opts:
-      com.docker.network.driver.mtu: 1450
+      com.docker.network.driver.mtu: 1400
   backend:
     driver: bridge
     driver_opts:
-      com.docker.network.driver.mtu: 1450
+      com.docker.network.driver.mtu: 1400
 
