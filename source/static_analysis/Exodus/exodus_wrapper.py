@@ -10,13 +10,13 @@ from model.Interfaces.ScanJob import ScanJob
 from model import ExodusReport, AndroidApp
 from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from processing.standalone_python_worker import start_python_interpreter
-import requests
+
 
 DB_LOGGER = setup_apk_scanner_logger(tags=["exodus"])
-TRACKERS_SIGNATURES_FILE_PATH = "/opt/exodus/trackers.json"
+TRACKERS_SIGNATURES_FILE_PATH = "/tmp/exodus/trackers.json"
 
 @create_db_context
-def exodus_worker_multiprocessing(android_app_id, tracker_signatures):
+def exodus_worker_multiprocessing(android_app_id):
     """
     Start the analysis with exodus on a multiprocessor queue.
 
@@ -45,6 +45,7 @@ def get_or_download_trackers(file_path="/var/www/source/trackers.json"):
     :param file_path: str - The absolute path to cache the trackers.json file.
     :return: dict - The parsed JSON containing all Exodus tracker signatures.
     """
+    import requests
     # 1. If the file already exists locally, load it directly
     if os.path.isfile(file_path):
         try:
@@ -189,13 +190,12 @@ class ExodusScanJob(ScanJob):
         android_app_id_list = self.object_id_list
         logging.info(f"Exodus analysis started! With {str(len(android_app_id_list))} apps.")
         if len(android_app_id_list) > 0:
-            tracker_signatures = get_or_download_trackers(TRACKERS_SIGNATURES_FILE_PATH)
-            worker_args_list = [tracker_signatures]
+            get_or_download_trackers(TRACKERS_SIGNATURES_FILE_PATH)
             python_process = start_python_interpreter(item_list=android_app_id_list,
                                                       worker_function=exodus_worker_multiprocessing,
                                                       number_of_processes=os.cpu_count(),
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
-                                                      interpreter_path=self.INTERPRETER_PATH,
-                                                      worker_args_list=worker_args_list)
+                                                      interpreter_path=self.INTERPRETER_PATH
+                                                      )
             python_process.wait()
