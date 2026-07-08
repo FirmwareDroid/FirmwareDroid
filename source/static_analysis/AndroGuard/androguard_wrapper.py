@@ -528,7 +528,7 @@ class AndroGuardScanJob(ScanJob):
                                                       interpreter_path=self.INTERPRETER_PATH)
             try:
                 # hard timeout: 1 hour (3600 seconds) - Preventing Memory Leak Bug
-                python_process.wait(timeout=3600)
+                python_process.wait(timeout=3600 * 4)
             except subprocess.TimeoutExpired:
                 DB_LOGGER.error(f"AndroGuard analysis exceeded timeout of 3600s; terminating process for apps: {android_app_id_list}")
                 try:
