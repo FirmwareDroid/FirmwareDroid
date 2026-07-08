@@ -6,6 +6,7 @@ import logging
 import os
 import traceback
 import subprocess
+import signal
 from model.Interfaces.ScanJob import ScanJob
 from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from model import AndroGuardReport, GenericFile
@@ -24,14 +25,39 @@ def add_report_crossreferences(report):
     """
     Adds the androguard objectid to the referenced documents (AppCertificate and AndroGuardStringAnalysis) for performance speed up.
 
+    Performs a bulk update for all string analysis documents referenced by the report to avoid
+    N individual fetch()+save() operations which cause significant DB load.
+
     :param report: class:'AndroGuardReport'
 
     """
-    for string_analysis_lazy in report.string_analysis_id_list:
-        string_analysis = string_analysis_lazy.fetch()
-        string_analysis.androguard_report_reference = report.id
-        string_analysis.android_app_id_reference = report.android_app_id_reference
-        string_analysis.save()
+    try:
+        # Build a list of IDs from the lazy references. The entries in report.string_analysis_id_list
+        # may be LazyReference objects or already dereferenced documents.
+        id_list = []
+        for item in report.string_analysis_id_list:
+            try:
+                # If it's a lazy reference with .id attribute
+                if hasattr(item, 'id') and item.id is not None:
+                    id_list.append(item.id)
+                else:
+                    # fallback to fetch() and take its id
+                    fetched = item.fetch()
+                    if hasattr(fetched, 'id'):
+                        id_list.append(fetched.id)
+            except Exception:
+                # last resort: try to treat item as an id string
+                try:
+                    id_list.append(item)
+                except Exception:
+                    continue
+        if id_list:
+            AndroGuardStringAnalysis.objects(id__in=id_list).update(
+                set__androguard_report_reference=report.id,
+                set__android_app_id_reference=report.android_app_id_reference
+            )
+    except Exception as err:
+        DB_LOGGER.error(f"Failed to bulk update string analysis crossreferences for report {getattr(report, 'id', 'unknown')}: {str(err)}")
 
 
 def get_field_analysis(class_analysis):
@@ -451,15 +477,36 @@ def store_result(android_app, apk, scan_status, permission_details=None, permiss
     report.save()
     return report
 
+
+
 def analyse_and_save(android_app):
     """"
     Analyse an android app with AndroGuard and save the result to the database.
 
+    Uses signal.alarm to enforce a per-app hard timeout (1 hour). This avoids nested multiprocessing
+    and keeps DB context within the same worker process spawned by the process pool.
+
     :param android_app: class:'AndroidApp'
 
     """
+    def _timeout_handler(signum, frame):
+        raise TimeoutError("AndroGuard analysis timed out")
+
     try:
-        analyse_single_apk(android_app)
+        previous_handler = signal.getsignal(signal.SIGALRM)
+        signal.signal(signal.SIGALRM, _timeout_handler)
+        signal.alarm(3600)  # 1 hour
+        try:
+            analyse_single_apk(android_app)
+        except TimeoutError:
+            DB_LOGGER.error(f"AndroGuard per-app timeout reached for app {android_app.filename} {android_app.id}")
+            try:
+                store_result(android_app, None, "failed")
+            except Exception as err:
+                DB_LOGGER.error(f"Failed to store failed result for app {android_app.id}: {str(err)}")
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, previous_handler)
     except Exception as err:
         logging.error(f"AndroGuard could not scan app {android_app.filename} {android_app.id} - error: {str(err)}")
         traceback.print_stack()
@@ -528,7 +575,7 @@ class AndroGuardScanJob(ScanJob):
                                                       interpreter_path=self.INTERPRETER_PATH)
             try:
                 # hard timeout: 1 hour (3600 seconds) - Preventing Memory Leak Bug
-                python_process.wait(timeout=3600 * 4)
+                python_process.wait(timeout=3600 * 12)  # 8 hours for the entire batch
             except subprocess.TimeoutExpired:
                 DB_LOGGER.error(f"AndroGuard analysis exceeded timeout of 3600s; terminating process for apps: {android_app_id_list}")
                 try:
