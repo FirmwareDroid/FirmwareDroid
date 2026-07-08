@@ -5,6 +5,7 @@
 import logging
 import os
 import traceback
+import subprocess
 from model.Interfaces.ScanJob import ScanJob
 from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from model import AndroGuardReport, GenericFile
@@ -525,4 +526,24 @@ class AndroGuardScanJob(ScanJob):
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
                                                       interpreter_path=self.INTERPRETER_PATH)
-            python_process.wait()
+            try:
+                # hard timeout: 1 hour (3600 seconds) - Preventing Memory Leak Bug
+                python_process.wait(timeout=3600)
+            except subprocess.TimeoutExpired:
+                DB_LOGGER.error(f"AndroGuard analysis exceeded timeout of 3600s; terminating process for apps: {android_app_id_list}")
+                try:
+                    python_process.terminate()
+                    python_process.wait(timeout=30)
+                except Exception:
+                    try:
+                        python_process.kill()
+                    except Exception:
+                        pass
+                # mark all apps as failed to ensure they are not left hanging
+                from model import AndroidApp
+                for app_id in android_app_id_list:
+                    try:
+                        app = AndroidApp.objects.get(pk=app_id)
+                        store_result(app, None, "failed")
+                    except Exception as err:
+                        DB_LOGGER.error(f"Failed to mark app {app_id} as failed: {str(err)}")
