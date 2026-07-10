@@ -4,6 +4,8 @@
 import json
 import logging
 import os
+import signal
+import traceback
 from collections import namedtuple
 
 from model.Interfaces.ScanJob import ScanJob
@@ -25,15 +27,35 @@ def exodus_worker_multiprocessing(android_app_id):
     """
     android_app = AndroidApp.objects.get(pk=android_app_id)
     DB_LOGGER.info(f"Exodus scans: {android_app.id} - file: {android_app.filename}")
+
+    def _timeout_handler(signum, frame):
+        raise TimeoutError("Exodus analysis timed out")
+
     try:
-        exodus_json_report = get_exodus_analysis(android_app.absolute_store_path)
-        store_result(android_app, results=exodus_json_report, scan_status="completed")
-        DB_LOGGER.info(f"Exodus completed scan: {android_app.id} - file: {android_app.filename}")
+        previous_handler = signal.getsignal(signal.SIGALRM)
+        signal.signal(signal.SIGALRM, _timeout_handler)
+        signal.alarm(3600)  # 1 hour
+        try:
+            exodus_json_report = get_exodus_analysis(android_app.absolute_store_path)
+            store_result(android_app, results=exodus_json_report, scan_status="completed")
+            DB_LOGGER.info(f"Exodus completed scan: {android_app.id} - file: {android_app.filename}")
+        except TimeoutError:
+            DB_LOGGER.error(f"Exodus per-app timeout reached for app {android_app.filename} {android_app.id}")
+            try:
+                store_result(android_app, None, "failed")
+            except Exception as err:
+                DB_LOGGER.error(f"Failed to store failed result for app {android_app.id}: {str(err)}")
+        except Exception as err:
+            DB_LOGGER.error(f"Exodus scan failed for app: {android_app.id} - file: {android_app.filename}")
+            store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
+            logging.error(f"Exodus could not scan app {android_app.filename} id: {android_app.id} - "
+                          f"error: {err}")
+        finally:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, previous_handler)
     except Exception as err:
-        DB_LOGGER.error(f"Exodus scan failed for app: {android_app.id} - file: {android_app.filename}")
-        store_result(android_app, results={"error": f"{err}"}, scan_status="failed")
-        logging.error(f"Exodus could not scan app {android_app.filename} id: {android_app.id} - "
-                      f"error: {err}")
+        logging.error(f"Exodus could not scan app {android_app.filename} {android_app.id} - error: {str(err)}")
+        traceback.print_stack()
 
 
 def get_or_download_trackers(file_path="/var/www/source/trackers.json"):
