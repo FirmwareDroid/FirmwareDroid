@@ -52,6 +52,7 @@ def add_report_crossreferences(report):
                 except Exception:
                     continue
         if id_list:
+            id_list = [getattr(item, "id", item) for item in report.string_analysis_id_list if item is not None]
             AndroGuardStringAnalysis.objects(id__in=id_list).update(
                 set__androguard_report_reference=report.id,
                 set__android_app_id_reference=report.android_app_id_reference
@@ -125,20 +126,19 @@ def get_string_analysis(dx):
     :return: class:'AndroGuardStringAnalysis'
 
     """
-    androguard_string_analysis_id_list = []
-    analysis_list = dx.get_strings()
-    for string_analysis in analysis_list:
-        string_text = string_analysis.value
-        xref_method_dict_list = []
-        for class_obj, method_obj in string_analysis.get_xref_from():
-            xref_method_dict_list.append({method_obj.class_name: method_obj.name})
-        androguard_string_analysis = AndroGuardStringAnalysis(
-
-            string_value=string_text,
-            xref_method_dict_list=xref_method_dict_list)
-        androguard_string_analysis.save()
-        androguard_string_analysis_id_list.append(androguard_string_analysis.id)
-    return androguard_string_analysis_id_list
+    batch_size = 1000
+    ids, batch = [], []
+    for string_analysis in dx.get_strings():
+        xrefs = [{m.class_name: m.name} for _, m in string_analysis.get_xref_from()]
+        batch.append(AndroGuardStringAnalysis(string_value=string_analysis.value, xref_method_dict_list=xrefs))
+        if len(batch) >= batch_size:
+            inserted = AndroGuardStringAnalysis.objects.insert(batch)  # one DB op
+            ids.extend(doc.id for doc in inserted)
+            batch.clear()
+    if batch:
+        inserted = AndroGuardStringAnalysis.objects.insert(batch)
+        ids.extend(doc.id for doc in inserted)
+    return ids
 
 
 def add_certificate_files(x509, cert):
@@ -575,7 +575,7 @@ class AndroGuardScanJob(ScanJob):
                                                       interpreter_path=self.INTERPRETER_PATH)
             try:
                 # hard timeout: 1 hour (3600 seconds) - Preventing Memory Leak Bug
-                python_process.wait(timeout=3600 * 12)  # 8 hours for the entire batch
+                python_process.wait(timeout=3600 * 12)  # hours for the entire batch
             except subprocess.TimeoutExpired:
                 DB_LOGGER.error(f"AndroGuard analysis exceeded timeout of 3600s; terminating process for apps: {android_app_id_list}")
                 try:
