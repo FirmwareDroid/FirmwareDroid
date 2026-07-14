@@ -314,6 +314,8 @@ def analyse_single_apk(android_app):
                      components_dict=components_dict,
                      certificate_id_list=certificate_id_list)
         DB_LOGGER.info(f"AndroGuard results stored for app: {android_app.filename} {android_app.id}")
+    except TimeoutError:
+        raise
     except Exception as err:
         DB_LOGGER.error(f"AndroGuard scan failed for app {android_app.filename} {android_app.id} - error: {str(err)}")
         scan_status = "failed"
