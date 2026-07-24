@@ -34,6 +34,11 @@ services:
     networks:
       - backend
       - frontend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200m"
+        max-file: "3"
 
   nginx:
     container_name: nginx
@@ -94,6 +99,11 @@ services:
       - "127.0.0.1:6379:6379"
     networks:
       - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200m"
+        max-file: "3"
 
   extractor-worker-1:
     platform: "linux/amd64"
@@ -125,6 +135,11 @@ services:
     privileged: true
     networks:
       - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200m"
+        max-file: "3"
 
   apk_scanner-worker-1:
     platform: "linux/amd64"
@@ -158,6 +173,11 @@ services:
     command: rqworker --logging_level INFO --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 scanner
     networks:
       - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200m"
+        max-file: "3"
 
   neo4j:
     image: neo4j:5.26.17-community-bullseye
