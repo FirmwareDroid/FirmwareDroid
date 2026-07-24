@@ -126,7 +126,7 @@ def get_string_analysis(dx):
     :return: class:'AndroGuardStringAnalysis'
 
     """
-    batch_size = 1000
+    batch_size = 10000
     ids, batch = [], []
     for string_analysis in dx.get_strings():
         xrefs = [{m.class_name: m.name} for _, m in string_analysis.get_xref_from()]
