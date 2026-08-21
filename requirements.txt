@@ -16,7 +16,7 @@ djangorestframework~=3.16.1
 # Databases
 rq~=2.6.1
 pymongo~=4.8.0 # mongoengine dependency -> Newer versions may not be compatible
-mongoengine~=0.29.1
+mongoengine~=0.29.3
 blinker~=1.9.0
 ##############################
 log4mongo~=1.8.1
