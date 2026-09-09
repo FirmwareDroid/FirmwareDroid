@@ -8,6 +8,7 @@ import re
 import shutil
 import tempfile
 import threading
+import filecmp
 from extractor.app_extractor import app_extractor
 from extractor.bin_extractor.payload_dumper_go import payload_dumper_go_extractor
 from extractor.binwalk_extractor import binwalk_extract
@@ -218,6 +219,17 @@ def get_raw_image(file_path_list):
     return raw_image_path
 
 
+def copy_link_or_file(src, dst, *, follow_symlinks=False):
+    if os.path.islink(src):
+        # Recreate the symlink exactly as it points, valid or dangling
+        link_target = os.readlink(src)
+        if os.path.lexists(dst):
+            os.unlink(dst)
+        os.symlink(link_target, dst)
+    else:
+        shutil.copy2(src, dst, follow_symlinks=follow_symlinks)
+
+
 def extract_second_layer(firmware_archive_file_path, destination_dir, extracted_archive_dir_path, partition_name):
     firmware_archive_file_path = os.path.abspath(firmware_archive_file_path)
     destination_dir = os.path.abspath(destination_dir)
@@ -230,9 +242,12 @@ def extract_second_layer(firmware_archive_file_path, destination_dir, extracted_
         is_success = lpunpack_extractor(firmware_archive_file_path, super_extract_dir)
         if is_success:
             logging.info("Successfully extracted super image.")
-            shutil.copytree(super_extract_dir, extracted_archive_dir_path, dirs_exist_ok=True,
+            shutil.copytree(super_extract_dir,
+                            extracted_archive_dir_path,
+                            dirs_exist_ok=True,
                             symlinks=True,
-                            ignore_dangling_symlinks=True)
+                            ignore_dangling_symlinks=False,
+                            copy_function=copy_link_or_file)
             dst_dir_path = os.path.join(extracted_archive_dir_path, os.path.basename(super_extract_dir))
             logging.info(f"Extracted super image to: {dst_dir_path}")
             firmware_file_list = create_firmware_file_list(dst_dir_path, partition_name)
@@ -318,19 +333,43 @@ def attempt_sparse_img_convertion(android_sparse_img_path, destination_dir):
 def remove_fmd_temp_directories(search_path):
     """
     Deletes all temporary directories with a prefix of "fmd_extract_" and moves the files one level up.
+    Targeted cleanup: Only checks for and removes ".unknown" files in the exact folders
+    where an unblob "_extract" directory was found.
 
     :param search_path: str - path to the directory to search in.
-
     """
     for root, dirs, files in os.walk(search_path, followlinks=False):
-        for directory in dirs:
-            if directory.startswith("fmd_extract_") \
-                    and os.path.isdir(os.path.join(root, directory)) \
-                    and os.path.isdir(root):
-                temp_extract_dir = os.path.join(root, directory)
-                move_all_files_and_folders(temp_extract_dir, root)
-                logging.info(f"Removing temporary directory: {temp_extract_dir}")
-                shutil.rmtree(temp_extract_dir, ignore_errors=True)
+        # Flag to track if we found an unblob folder in this specific 'root'
+        clean_unblob_files = False
+
+        for directory in dirs[:]:
+            temp_dir = os.path.join(root, directory)
+
+            # Check directory existence
+            dirs_are_valid = os.path.isdir(temp_dir) and os.path.isdir(root)
+
+            # Check naming conditions
+            is_fmd = directory.startswith("fmd_extract")
+            is_numeric = directory.endswith("_extract") and re.match(r'^\d+[-\d\.]', directory) and not "apex" in directory.lower()
+
+            if dirs_are_valid and (is_fmd or is_numeric):
+                if is_numeric:
+                    clean_unblob_files = True
+
+                move_all_files_and_folders(temp_dir, root)
+                logging.info(f"Removing temporary directory: {temp_dir}")
+                shutil.rmtree(temp_dir, ignore_errors=True)
+                dirs.remove(directory)
+
+        if clean_unblob_files:
+            for file in files:
+                if file.endswith(".unknown") and re.match(r'^\d+[-\d\.]', file):
+                    file_path = os.path.join(root, file)
+                    logging.info(f"Removing unextracted unblob file: {file_path}")
+                    try:
+                        os.remove(file_path)
+                    except OSError as err:
+                        logging.error(f"Failed to remove {file_path}: {err}")
 
 
 def extract_image_file(image_path, extract_dir_path):
@@ -429,34 +468,107 @@ def process_directory(current_path, queue, failed_extractions, processed_files):
             queue.append(next_path)
 
 
-def move_all_files_and_folders(src_dir, dest_dir):
-    """
-    Move all files and folders from src_dir to dest_dir.
+def dircmp_equal(dcmp):
+    # Check for structural differences (missing files, uniquely named files, etc.)
+    if dcmp.left_only or dcmp.right_only or dcmp.diff_files or dcmp.funny_files:
+        return False
 
-    :param src_dir: str - path to the source directory.
-    :param dest_dir: str - path to the destination directory.
-    """
+    # filecmp.dircmp considers files "same" based on shallow os.stat metadata.
+    # We must explicitly do a deep comparison (shallow=False) on these files.
+    for name in dcmp.same_files:
+        file_left = os.path.join(dcmp.left, name)
+        file_right = os.path.join(dcmp.right, name)
+        if not filecmp.cmp(file_left, file_right, shallow=False):
+            return False
+
+    # Recursively check subdirectories
+    for sub in dcmp.subdirs.values():
+        if not dircmp_equal(sub):
+            return False
+
+    return True
+
+
+def are_paths_identical(src, dst):
+    try:
+        # symlink equality: same exact link target string
+        if os.path.islink(src) or os.path.islink(dst):
+            return (os.path.islink(src) and
+                    os.path.islink(dst) and
+                    os.readlink(src) == os.readlink(dst))
+
+        # individual file equality: deep byte-by-byte check
+        if os.path.isfile(src) and os.path.isfile(dst):
+            return filecmp.cmp(src, dst, shallow=False)
+
+        # directory equality: deep structural and file content check
+        if os.path.isdir(src) and os.path.isdir(dst):
+            dcmp = filecmp.dircmp(src, dst)
+            return dircmp_equal(dcmp)
+
+    except Exception as err:
+        logging.debug(f"are_paths_identical error: {err}")
+
+    return False
+
+
+def move_all_files_and_folders(src_dir, dest_dir):
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
 
     if not os.path.isdir(dest_dir) or not os.path.isdir(src_dir):
         raise ValueError(f"Destination and source must be a directory. Src: {src_dir}, Dest: {dest_dir}")
 
-    if not dest_dir.endswith(os.sep):
-        dest_dir += os.sep
-
     for item in os.listdir(src_dir):
         src_item = os.path.join(src_dir, item)
         dest_item = os.path.join(dest_dir, item)
         logging.debug(f"Moving: {src_item} to {dest_item}")
+
         try:
-            if os.path.exists(dest_item) and not filecmp.cmp(src_item, dest_item, shallow=False):
-                dest_item = os.path.join(dest_dir, f"1_{item}")
+            if os.path.lexists(dest_item):
+                # 1. MERGE LOGIC: If both items are standard directories, merge them recursively
+                if (os.path.isdir(src_item) and not os.path.islink(src_item) and
+                        os.path.isdir(dest_item) and not os.path.islink(dest_item)):
+
+                    logging.info(f"Merging directory {src_item} into {dest_item}")
+                    move_all_files_and_folders(src_item, dest_item)
+
+                    # Clean up the source directory if it's empty after the merge
+                    try:
+                        os.rmdir(src_item)
+                    except OSError as e:
+                        logging.warning(
+                            f"Could not remove source dir {src_item} after merge (it may not be empty): {e}")
+
+                    continue
+
+                # 2. IDENTICAL FILE/LINK LOGIC: If they are the exact same, just delete the source
+                if are_paths_identical(src_item, dest_item):
+                    logging.debug(f"Identical item exists at destination; removing source: {src_item}")
+                    if os.path.isdir(src_item) and not os.path.islink(src_item):
+                        shutil.rmtree(src_item, ignore_errors=True)
+                    else:
+                        try:
+                            os.remove(src_item)
+                        except FileNotFoundError:
+                            pass
+                    continue
+
+                # 3. COLLISION LOGIC: Different files/symlinks (or a file replacing a dir), rename source
+                base_name, ext = os.path.splitext(item)
+                counter = 1
+                while os.path.lexists(dest_item):
+                    new_item = f"{base_name}_{counter}{ext}"
+                    dest_item = os.path.join(dest_dir, new_item)
+                    counter += 1
+
+                logging.info(f"Collision resolved: renaming target to {dest_item}")
+
+            # Move the item (happens if it didn't exist at destination, or after renaming)
             shutil.move(src_item, dest_item)
-            if not os.path.exists(dest_item):
-                logging.error(f"Move failed: {src_item} to {dest_item}")
+
         except Exception as err:
-            logging.error(err)
+            logging.error(f"Failed to move {src_item} to {dest_item}: {err}")
 
 
 def process_file(current_path,

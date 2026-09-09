@@ -37,6 +37,7 @@ class ScannerModules(Enum):
     APKSCAN = {"APKScanScanJob": "static_analysis.APKscan.apkscan_wrapper"}
     FLOWDROID = {"FlowDroidScanJob": "static_analysis.FlowDroid.flowdroid_wrapper"}
     TRUESEEING = {"TrueseeingScanJob": "static_analysis.Trueseeing.trueseeing_wrapper"}
+    TRUFFLEHOG = {"TruffleHogScanJob": "static_analysis.Trufflehog.trufflehog_wrapper"}
 
 
 class AndroidAppType(MongoengineObjectType):

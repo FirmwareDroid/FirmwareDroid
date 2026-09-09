@@ -25,6 +25,7 @@ Some of the tools and features included are:
   * [FlowDroid](https://github.com/secure-software-engineering/FlowDroid)
   * [MobSFScan](https://github.com/MobSF/mobsfscan)
   * [Trueseeing](https://github.com/alterakey/trueseeing)
+  * [TruffleHog](https://github.com/trufflesecurity/trufflehog)
   * [Quark-Engine](https://github.com/quark-engine/quark-engine)
   * [Qark](https://github.com/linkedin/qark/) (deprecated, no updates by the author)
   * [Androwarn](https://github.com/maaaaz/androwarn/) (deprecated, no updates by the author)

@@ -3,6 +3,7 @@ import os
 import tempfile
 import traceback
 import pkg_resources
+import signal
 from context.context_creator import create_log_context, create_db_context, setup_apk_scanner_logger
 from decompiler.jadx_wrapper import decompile_with_jadx
 from model import AndroidApp, MobSFScanReport
@@ -10,8 +11,18 @@ from model.Interfaces.ScanJob import ScanJob
 from model.StoreSetting import get_active_store_by_index
 from processing.standalone_python_worker import start_python_interpreter
 
+MOBSFSCAN_TIMEOUT_SECONDS = 7200
 
 DB_LOGGER = setup_apk_scanner_logger(tags=["mobsfscan"])
+
+
+class MobSFScanTimeoutError(TimeoutError):
+    pass
+
+
+def _timeout_handler(signum, frame):
+    raise MobSFScanTimeoutError(f"MobSFScan timed out after {MOBSFSCAN_TIMEOUT_SECONDS} seconds")
+
 
 def store_result(android_app, results, scan_status):
     """
@@ -51,9 +62,20 @@ def process_android_app(android_app):
         DB_LOGGER.info(f"Mobsfscan now scanning: {android_app.filename} {android_app.id}.")
         try:
             scanner = MobSFScan([temp_dir], json=True)
-            json_report = scanner.scan()
+            previous_handler = signal.getsignal(signal.SIGALRM)
+            try:
+                signal.signal(signal.SIGALRM, _timeout_handler)
+                signal.alarm(MOBSFSCAN_TIMEOUT_SECONDS)
+                json_report = scanner.scan()
+            finally:
+                signal.alarm(0)
+                signal.signal(signal.SIGALRM, previous_handler)
             store_result(android_app, results=json_report, scan_status="completed")
             DB_LOGGER.info(f"MobSFScan finished: {android_app.filename} {android_app.id}")
+        except MobSFScanTimeoutError as err:
+            DB_LOGGER.error(f"MobSFScan timeout for app {android_app.filename} {android_app.id}: {err}")
+            store_result(android_app, results={"error": str(err)}, scan_status="failed")
+            logging.error(f"MobSFScan timeout: {android_app.filename} {android_app.id} Error: {err}")
         except Exception as err:
             DB_LOGGER.error(f"MobSFScan failed to scan app {android_app.filename} {android_app.id}")
             store_result(android_app, results={"error": f"{err}"}, scan_status="failed")

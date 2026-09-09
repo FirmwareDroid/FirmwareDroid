@@ -7,13 +7,14 @@ import traceback
 from queue import Empty
 from threading import Thread
 from hashing.tlsh.tlsh_hasher import create_tlsh_hash
-from model import AndroidFirmware
+from model import AndroidFirmware, FirmwareFileSet
 from firmware_handler.firmware_file_exporter import extract_firmware
 from context.context_creator import create_db_context, create_log_context, create_multithread_log_context
 from model.StoreSetting import get_active_store_by_index
 from processing.standalone_python_worker import create_multi_threading_queue
 
 NUMBER_OF_FUZZY_HASH_THREADS = 4
+FIRMWARE_FILE_SET_CHUNK_SIZE = 1000
 
 
 @create_log_context
@@ -71,7 +72,7 @@ def fuzzy_hash_worker_multithreading(firmware_id_queue, storage_index):
             with tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as temp_dir_path:
                 firmware_file_list = extract_firmware(firmware.absolute_store_path, temp_dir_path)
                 replace_firmware_files(firmware_file_list, firmware, store_paths)
-                add_fuzzy_hashes_by_reference(firmware.firmware_file_id_list)
+                add_fuzzy_hashes_by_firmware_file_sets(firmware.firmware_file_set_list)
                 firmware.has_fuzzy_hash_index = True
                 firmware.save()
         except Exception as err:
@@ -92,38 +93,58 @@ def replace_firmware_files(firmware_file_list, firmware, store_paths):
     :return: list(class:'FirmwareFile') - list of firmware files.
 
     """
-    for existing_firmware_file_lazy in firmware.firmware_file_id_list:
+    firmware_file_sets = []
+    for firmware_file_set_lazy in firmware.firmware_file_set_list:
         try:
-            existing_firmware_file = existing_firmware_file_lazy.fetch()
-            existing_firmware_file.delete()
+            firmware_file_sets.append(firmware_file_set_lazy.fetch())
         except Exception as err:
             logging.warning(err)
 
-    firmware.firmware_file_id_list = []
+    for firmware_file_set in firmware_file_sets:
+        for existing_firmware_file_lazy in firmware_file_set.firmware_file_id_list:
+            try:
+                existing_firmware_file = existing_firmware_file_lazy.fetch()
+                existing_firmware_file.delete()
+            except Exception as err:
+                logging.warning(err)
+        firmware_file_set.delete()
+
+    firmware.firmware_file_set_list = []
     firmware.save()
+    firmware_file_ids = []
     for firmware_file in firmware_file_list:
         firmware_file.firmware_id_reference = firmware.id
         firmware_file.save()
-        firmware.firmware_file_id_list.append(firmware_file.id)
-        firmware.save()
+        firmware_file_ids.append(firmware_file.id)
+
+    firmware_file_set_list = []
+    for i in range(0, len(firmware_file_ids), FIRMWARE_FILE_SET_CHUNK_SIZE):
+        firmware_file_set = FirmwareFileSet(firmware_id_reference=firmware.id,
+                                            firmware_file_id_list=firmware_file_ids[i:i + FIRMWARE_FILE_SET_CHUNK_SIZE]).save()
+        firmware_file_set_list.append(firmware_file_set.id)
+
+    firmware.firmware_file_set_list = firmware_file_set_list
+    firmware.save()
 
 
-def add_fuzzy_hashes_by_reference(firmware_file_id_list):
+def add_fuzzy_hashes_by_firmware_file_sets(firmware_file_set_list):
     """
-    Creates fuzzy hashes for the given firmware files and stored them in the database.
+    Creates fuzzy hashes for firmware files referenced by firmware file sets.
 
-    :param firmware_file_id_list: list(class:'FirmwareFile') - list of lazy firmware files to be hashed.
+    :param firmware_file_set_list: list(class:'FirmwareFileSet') - list of lazy firmware file sets.
 
     """
-    for firmware_file_lazy in firmware_file_id_list:
-        firmware_file = firmware_file_lazy.fetch()
-        if not firmware_file.is_directory:
-            logging.info(f"Creating fuzzy hashes for: {firmware_file.absolute_store_path}")
-            try:
-                create_tlsh_hash(firmware_file)
-                #create_ssdeep_hash(firmware_file)
-            except Exception as err:
-                logging.error(err)
+    for firmware_file_set_lazy in firmware_file_set_list:
+        firmware_file_set = firmware_file_set_lazy.fetch()
+        for firmware_file_lazy in firmware_file_set.firmware_file_id_list:
+            firmware_file = firmware_file_lazy.fetch()
+            if not firmware_file.is_directory:
+                logging.info(f"Creating fuzzy hashes for: {firmware_file.absolute_store_path}")
+                try:
+                    create_tlsh_hash(firmware_file)
+                    #create_ssdeep_hash(firmware_file)
+                except Exception as err:
+                    logging.error(err)
 
 
 def add_fuzzy_hashes(firmware_file_list):

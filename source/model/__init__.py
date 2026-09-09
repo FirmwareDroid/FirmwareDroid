@@ -48,5 +48,6 @@ from .FlowDroidReport import FlowDroidReport
 from .TrueseeingReport import TrueseeingReport
 from .ApkScannerReport import ApkScannerReport
 from .ApkScannerLog import ApkScannerLog
+from .TruffleHogReport import TruffleHogReport
 from .FirmwareFileSet import FirmwareFileSet
 from . import *
