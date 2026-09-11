@@ -148,7 +148,7 @@ class CreateApkScanJob(graphene.Mutation):
             'module_name': validate_module_name,
             'object_id_list': validate_object_id_list,
             'firmware_id_list': validate_object_id_list,
-            'kwargs': validate_kwargs
+            'kwargs': [validate_kwargs, validate_trufflehog_kwargs]
         },
         sanitizers={
             'queue_name': sanitize_string,

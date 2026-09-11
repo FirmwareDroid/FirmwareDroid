@@ -19,7 +19,6 @@ Some of the tools and features included are:
 * Static-Analyzers for Android apps (APKs):
   * [AndroGuard](https://github.com/androguard/androguard)
   * [APKiD](https://github.com/rednaga/APKiD/)
-  * [APKLeaks](https://github.com/dwisiswant0/apkleaks/)
   * [APKscan](https://github.com/LucasFaudman/apkscan)
   * [Exodus-Core](https://github.com/Exodus-Privacy/exodus-core/)
   * [FlowDroid](https://github.com/secure-software-engineering/FlowDroid)
@@ -30,6 +29,7 @@ Some of the tools and features included are:
   * [Qark](https://github.com/linkedin/qark/) (deprecated, no updates by the author)
   * [Androwarn](https://github.com/maaaaz/androwarn/) (deprecated, no updates by the author)
   * [SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/) (deprecated, discontinued by the author)
+  * [APKLeaks](https://github.com/dwisiswant0/apkleaks/) (deprecated)
 * APIs:
   * [VirusTotal](https://www.virustotal.com)
 * Fuzzy-Hashing:
