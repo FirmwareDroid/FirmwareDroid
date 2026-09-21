@@ -18,8 +18,7 @@ class AndroidFirmware(Document):
                     "md5",
                     "sha1",
                     "sha256",
-                    "filename",
-                    "firmware_file_id_list"
+                    "filename"
                     ]
     }
     indexed_date = DateTimeField(default=datetime.datetime.now)
@@ -38,9 +37,7 @@ class AndroidFirmware(Document):
     has_file_index = BooleanField(required=False, default=False)
     has_fuzzy_hash_index = BooleanField(required=False, default=False)
     aecs_build_file_path = StringField(required=False)
-    firmware_file_id_list = ListField(LazyReferenceField('FirmwareFile', reverse_delete_rule=DO_NOTHING),
-                                      required=False)
-   # firmware_file_set = LazyReferenceField('FirmwareFileSet', reverse_delete_rule=DO_NOTHING, required=False)
+    firmware_file_set_list = ListField(LazyReferenceField('FirmwareFileSet', reverse_delete_rule=DO_NOTHING), required=False)
     version_detected = IntField(required=False, default=0)
     os_vendor = StringField(max_length=512, required=True, default="Unknown")
     partition_info_dict = DictField(required=False, default={})

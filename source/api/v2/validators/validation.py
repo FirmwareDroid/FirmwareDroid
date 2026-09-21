@@ -22,6 +22,8 @@ def sanitize_and_validate(validators=None, sanitizers=None):
         @wraps(func)
         def wrapper(*args, **kwargs):
             logging.debug(f"Validators applied: {validators}")
+            if "module_name" in kwargs:
+                kwargs["module_name"] = validate_module_name(kwargs["module_name"])
             errors = _collect_validation_errors(func, kwargs, validators, sanitizers)
 
             if errors:
@@ -59,10 +61,10 @@ def _apply_validators(kwargs, validators, errors):
     for field, validator_list in (validators or {}).items():
         logging.debug(f"Applying validator function: {validator_list} to field: {field}")
         if field in kwargs:
-            _validate_field(field, kwargs, validator_list, errors)
+            _validate_field(field, kwargs, validator_list, errors, all_kwargs=kwargs)
 
 
-def _validate_field(field, kwargs, validator_list, errors):
+def _validate_field(field, kwargs, validator_list, errors, all_kwargs=None):
     """Validate a single field with one or more validators."""
     value = kwargs[field]
     validators_to_run = validator_list if isinstance(validator_list, list) else [validator_list]
@@ -70,7 +72,10 @@ def _validate_field(field, kwargs, validator_list, errors):
     for validator in validators_to_run:
         logging.debug(f"Validating {field}: {validator}")
         try:
-            value = validator(value)
+            try:
+                value = validator(value, all_kwargs=all_kwargs)
+            except TypeError:
+                value = validator(value)
             kwargs[field] = value
         except ValueError as e:
             errors.append(f"Validation failed for {field}: {str(e)}")
@@ -99,6 +104,8 @@ def sanitize_string(value):
 
 def sanitize_json(value):
     try:
+        if isinstance(value, dict):
+            return json.dumps(value)
         return json.dumps(json.loads(value))
     except json.JSONDecodeError:
         raise ValueError("Invalid JSON string for kwargs.")
@@ -154,11 +161,28 @@ def validate_object_id_list(object_id_list):
 
 def validate_kwargs(kwargs):
     try:
-        return json.loads(kwargs)
+        if isinstance(kwargs, dict):
+            parsed_kwargs = kwargs
+        else:
+            parsed_kwargs = json.loads(kwargs)
     except json.JSONDecodeError:
         raise ValueError("Invalid JSON string for kwargs.")
     except Exception as e:
         raise ValueError(f"Error validating kwargs: {e}")
+    if not isinstance(parsed_kwargs, dict):
+        raise ValueError("Invalid kwargs payload.")
+
+    return parsed_kwargs
+
+
+def validate_trufflehog_kwargs(kwargs, all_kwargs=None):
+    module_name = (all_kwargs or {}).get("module_name")
+    if module_name != "TRUFFLEHOG" or "scan_mode" not in kwargs:
+        return kwargs
+
+    from static_analysis.Trufflehog.trufflehog_wrapper import _normalise_trufflehog_scan_mode
+    kwargs["scan_mode"] = _normalise_trufflehog_scan_mode(kwargs["scan_mode"])
+    return kwargs
 
 
 def validate_queue_name(queue_name):

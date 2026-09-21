@@ -162,6 +162,23 @@ RUN cp -r /var/www/source/static_analysis/FlowDroid/rules/* /opt/flowdroid/rules
 RUN pip install semgrep
 
 ########################################################
+# Install Go                                            #
+########################################################
+RUN set -eux; \
+    for i in $(seq 1 5); do \
+        wget https://go.dev/dl/go1.23.0.linux-amd64.tar.gz -O /tmp/go.tar.gz && break || sleep 15; \
+    done; \
+    tar -C /usr/local -xzf /tmp/go.tar.gz; \
+    rm /tmp/go.tar.gz
+
+ENV PATH="${PATH}:/usr/local/go/bin"
+
+########################################################
+# Install trufflehog                                   #
+########################################################
+RUN wget -qO- https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
+
+########################################################
 # Install Python requirements                          #
 ########################################################
 RUN --mount=type=cache,target=/tmp/.cache \

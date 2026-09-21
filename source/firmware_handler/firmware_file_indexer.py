@@ -4,11 +4,12 @@
 import logging
 import os
 from multiprocessing import Lock
-from model import FirmwareFile
+from model import FirmwareFile, FirmwareFileSet
 from hashing import md5_from_file
 from utils.file_utils.file_util import get_file_libmagic
 
 lock = Lock()
+FIRMWARE_FILE_SET_CHUNK_SIZE = 1000
 
 
 def create_firmware_file_list(scan_directory, partition_name):
@@ -192,7 +193,12 @@ def add_firmware_file_references(firmware, firmware_file_list):
             firmware_file.firmware_id_reference = firmware.id
             firmware_file.save()
             firmware_file_ids.append(firmware_file.id)
-        firmware.firmware_file_id_list = firmware_file_ids
+        firmware_file_set_list = []
+        for i in range(0, len(firmware_file_ids), FIRMWARE_FILE_SET_CHUNK_SIZE):
+            firmware_file_set = FirmwareFileSet(firmware_id_reference=firmware.id,
+                                                firmware_file_id_list=firmware_file_ids[i:i + FIRMWARE_FILE_SET_CHUNK_SIZE]).save()
+            firmware_file_set_list.append(firmware_file_set.id)
+        firmware.firmware_file_set_list = firmware_file_set_list
         firmware.has_file_index = True
         firmware.save()
         logging.debug(f"Successfully added firmware file references: {firmware.id} {len(firmware_file_list)}")
