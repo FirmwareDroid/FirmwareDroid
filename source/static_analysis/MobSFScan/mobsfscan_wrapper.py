@@ -2,7 +2,6 @@ import logging
 import os
 import tempfile
 import traceback
-import pkg_resources
 import signal
 from context.context_creator import create_log_context, create_db_context, setup_apk_scanner_logger
 from decompiler.jadx_wrapper import decompile_with_jadx
@@ -33,7 +32,8 @@ def store_result(android_app, results, scan_status):
     :param scan_status: str - status of the scan ('completed' or 'failed').
 
     """
-    mobsfscan_version = pkg_resources.get_distribution("mobsfscan").version
+    from importlib.metadata import version
+    mobsfscan_version = version("mobsfscan")
     report = MobSFScanReport(android_app_id_reference=android_app.id,
                              scanner_version=mobsfscan_version,
                              scanner_name="MobSFScan",
