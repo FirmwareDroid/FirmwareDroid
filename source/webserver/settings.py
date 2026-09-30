@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import logging
+import sys
 from datetime import timedelta
 
 import environ
@@ -24,9 +25,25 @@ env = environ.Env(
 )
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SOURCE_DIR = Path(__file__).resolve().parent.parent
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+if str(SOURCE_DIR) not in sys.path or sys.path[0] != str(SOURCE_DIR):
+    sys.path.insert(0, str(SOURCE_DIR))
 
-APP_ENV = env('APP_ENV')
+
+# Read .env from base directory if present
+if os.path.isfile(os.path.join(BASE_DIR, '.env')):
+    environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+# Also read runtime.env from named volume mount if present
+for _runtime_env_candidate in [
+    os.path.join(BASE_DIR, 'config', 'runtime.env'),
+    '/var/www/config/runtime.env',
+    '/config/runtime.env',
+]:
+    if os.path.isfile(_runtime_env_candidate):
+        environ.Env.read_env(_runtime_env_candidate)
+        break
+
+APP_ENV = env('APP_ENV', default='development')
 if APP_ENV == "production":
     DEBUG = False
     setup_logging(logging.ERROR)
@@ -34,10 +51,10 @@ else:
     DEBUG = True
     setup_logging(logging.DEBUG)
 
-DOMAIN_NAME = os.environ['DOMAIN_NAME']
+DOMAIN_NAME = os.environ.get('DOMAIN_NAME', 'fmd.localhost')
 HTTPS_DOMAIN_NAME = "https://" + DOMAIN_NAME
 SERVER_NAME = DOMAIN_NAME
-SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'default-firmwaredroid-insecure-secret-key')
 
 
 # Security Settings
@@ -101,7 +118,7 @@ CORS_ALLOW_METHODS = [
 'PUT',
 ]
 
-CORS_ADDITIONAL_HOST_LIST = os.environ['CORS_ADDITIONAL_HOST'].split(";")
+CORS_ADDITIONAL_HOST_LIST = os.environ.get('CORS_ADDITIONAL_HOST', 'fmd-aosp.init-lab.ch').split(";")
 for cors_host in CORS_ADDITIONAL_HOST_LIST:
     if not cors_host.startswith("https://"):
         cors_host = "https://" + cors_host
@@ -113,91 +130,11 @@ CORS_ALLOW_CREDENTIALS = True
 
 SESSION_COOKIE_NAME = "sessionid"
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_SAMESITE = "Strict"
+SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_AGE = 86400
+SESSION_COOKIE_SAMESITE = "Strict"
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
-GRAPHQL_JWT = {
-    'JWT_COOKIE_NAME': 'jwt_session',
-    'JWT_COOKIE_SECURE': True,
-    'JWT_COOKIE_SAMESITE': "Strict",
-    "JWT_COOKIE_PATH": "/",
-    #"JWT_COOKIE_DOMAIN": os.getenv("DOMAIN_NAME", None),
-    "JWT_CSRF_ROTATION": True,
-    "JWT_HIDE_TOKEN_FIELDS": True,
-    'JWT_EXPIRATION_DELTA': timedelta(days=1),
-    'JWT_REFRESH_EXPIRATION_DELTA': timedelta(days=7),
-}
-
-# Folder Config
-MAIN_FOLDER = "../file_store/"
-FILE_STORAGE_FOLDER = ""
-FIRMWARE_FOLDER_IMPORT = ""
-FIRMWARE_FOLDER_IMPORT_FAILED = ""
-FIRMWARE_FOLDER_STORE = ""
-FIRMWARE_FOLDER_APP_EXTRACT = ""
-FIRMWARE_FOLDER_FILE_EXTRACT = ""
-FIRMWARE_FOLDER_CACHE = ""
-LIBS_FOLDER = ""
-
-# Database Config
-DB_REPLICA_SET = os.environ['MONGODB_REPLICA_SET']
-DB_HOST = os.environ['MONGODB_HOSTNAME']
-DB_HOST_PORT = int(os.environ['MONGODB_PORT'])
-DB_NAME = os.environ['MONGODB_DATABASE_NAME']
-DB_AUTH_SRC = os.environ['MONGODB_AUTH_SRC']
-DB_URI = 'mongodb://' + os.environ['MONGODB_USERNAME'] \
-         + ':' + os.environ['MONGODB_PASSWORD'] \
-         + '@' + os.environ['MONGODB_HOSTNAME'] \
-         + ':' + str(DB_HOST_PORT) \
-         + '/' + os.environ['MONGODB_DATABASE_NAME'] \
-         + '?authSource=' + DB_AUTH_SRC
-
-# Database - Settings side-loaded by mongo-engine
-MONGO_DATABASES = {
-    "default": {
-        "db": DB_NAME,
-        "name": DB_NAME,
-        "host": DB_HOST,
-        "password": os.environ['MONGODB_PASSWORD'],
-        "username": os.environ['MONGODB_USERNAME'],
-        "tz_aware": True,
-        "port": DB_HOST_PORT,
-        "authSource": DB_AUTH_SRC,
-        "authMechanism": "SCRAM-SHA-256"
-    },
-}
-
-db = init_db(MONGO_DATABASES["default"])
-
-# DJANGO REST API Config
-API_TITLE = os.environ['API_TITLE']
-API_VERSION = os.environ['API_VERSION']
-API_DESCRIPTION = os.environ['API_DESCRIPTION']
-API_PREFIX = os.environ['API_PREFIX']
-API_DOC_FOLDER = os.environ['API_DOC_FOLDER']
-
-# FMD - Firmware Mass Import Config
-MASS_IMPORT_NUMBER_OF_THREADS = os.environ['MASS_IMPORT_NUMBER_OF_THREADS']
-
-# Log configuration
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "level": "DEBUG",
-    "formatters": {
-        "verbose": {
-            "format": "{asctime} {name} {levelname} {module} {process:d} {thread:d} {funcName} {message}",
-            "style": "{",
-        },
-        "simple": {
-            "format": "{asctime} {levelname} {funcName} {message}",
-            "style": "{",
-        },
-    },
-}
-
-# Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -205,25 +142,23 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'corsheaders',
     "graphene_django",
-    "setup",
     "django_rq",
-    'rest_framework',
-    'rest_framework.authtoken',
-    "file_download",
-    "file_upload"
+    "corsheaders",
+    "setup",
+    "api",
 ]
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.common.CommonMiddleware",
+    "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
 ]
 
 ROOT_URLCONF = "webserver.urls"
@@ -231,7 +166,7 @@ ROOT_URLCONF = "webserver.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(SOURCE_DIR, "templates/")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -244,19 +179,136 @@ TEMPLATES = [
     },
 ]
 
+# File Storage Config
+MAIN_FOLDER = ""
+CACHE_FOLDER = ""
+IMPORT_FOLDER = ""
+IMPORT_FAILED_FOLDER = ""
+FIRMWARE_FOLDER_CACHE = ""
+LIBS_FOLDER = ""
+
+# Database Config
+DB_REPLICA_SET = os.environ.get('MONGODB_REPLICA_SET', 'mongo_cluster_1')
+DB_HOST = os.environ.get('MONGODB_HOSTNAME', 'mongo-db-1')
+DB_HOST_PORT = int(os.environ.get('MONGODB_PORT', 27017))
+DB_NAME = os.environ.get('MONGODB_DATABASE_NAME', 'FirmwareDroid')
+DB_AUTH_SRC = os.environ.get('MONGODB_AUTH_SRC', 'admin')
+DB_USERNAME = os.environ.get('MONGODB_USERNAME', 'mongodbuser')
+DB_PASSWORD = os.environ.get('MONGODB_PASSWORD', '')
+
+DB_URI = ('mongodb://' + DB_USERNAME
+         + ':' + DB_PASSWORD
+         + '@' + DB_HOST
+         + ':' + str(DB_HOST_PORT)
+         + '/' + DB_NAME
+         + '?authSource=' + DB_AUTH_SRC)
+
+# Database - Settings side-loaded by mongo-engine
+MONGO_DATABASES = {
+    "default": {
+        "db": DB_NAME,
+        "name": DB_NAME,
+        "host": DB_HOST,
+        "password": DB_PASSWORD,
+        "username": DB_USERNAME,
+        "tz_aware": True,
+        "port": DB_HOST_PORT,
+        "authSource": DB_AUTH_SRC,
+        "authMechanism": "SCRAM-SHA-256"
+    },
+}
+
+db = init_db(MONGO_DATABASES["default"])
+
+# DJANGO REST API Config
+API_TITLE = os.environ.get('API_TITLE', 'FirmwareDroid REST API')
+API_VERSION = os.environ.get('API_VERSION', '1.0')
+API_DESCRIPTION = os.environ.get('API_DESCRIPTION', 'REST API documentation for the FirmwareDroid service')
+API_PREFIX = os.environ.get('API_PREFIX', '/api')
+API_DOC_FOLDER = os.environ.get('API_DOC_FOLDER', '/docs')
+
+# FMD - Firmware Mass Import Config
+MASS_IMPORT_NUMBER_OF_THREADS = int(os.environ.get('MASS_IMPORT_NUMBER_OF_THREADS', 3))
+
+# Log configuration
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+        "extractor": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+        "file_system_indexer": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+        "fuzzy_hash_creator": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+        "apk_scanner": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+        "trufflehog": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "propagate": False,
+        },
+    },
+}
+
+GRAPHENE_FRAMEWORK_GRAPHQL_JWT = {
+    "JWT_VERIFY_EXPIRATION": True,
+    "JWT_EXPIRATION_DELTA": timedelta(days=1),
+    "JWT_ALLOW_REFRESH": True,
+    "JWT_REFRESH_EXPIRATION_DELTA": timedelta(days=7),
+    "JWT_COOKIE_NAME": "JWT",
+    "JWT_COOKIE_SAMESITE": "Strict",
+    "JWT_COOKIE_SECURE": True,
+    "JWT_AUTH_HEADER_PREFIX": "Bearer",
+}
+
+GRAPHENE = {
+    "SCHEMA": "api.v2.schema.FirmwareDroidRootSchema.schema",
+    "MIDDLEWARE": [
+        "graphql_jwt.middleware.JSONWebTokenMiddleware",
+    ],
+}
+
 WSGI_APPLICATION = "webserver.wsgi.application"
 
 # SQL-Lite Test Database of DJANGO - Keep it for the user accounts
-DJANGO_SUPERUSER_PASSWORD = os.environ["DJANGO_SUPERUSER_PASSWORD"]
-DJANGO_SUPERUSER_USERNAME = os.environ["DJANGO_SUPERUSER_USERNAME"]
-DJANGO_SUPERUSER_EMAIL = os.environ["DJANGO_SUPERUSER_EMAIL"]
-DJANGO_SQLITE_DATABASE_PATH = os.environ['DJANGO_SQLITE_DATABASE_PATH']
+DJANGO_SUPERUSER_PASSWORD = os.environ.get("DJANGO_SUPERUSER_PASSWORD", "")
+DJANGO_SUPERUSER_USERNAME = os.environ.get("DJANGO_SUPERUSER_USERNAME", "fmd-admin")
+DJANGO_SUPERUSER_EMAIL = os.environ.get("DJANGO_SUPERUSER_EMAIL", f"fmd-admin@{DOMAIN_NAME}")
+DJANGO_SQLITE_DATABASE_PATH = os.environ.get('DJANGO_SQLITE_DATABASE_PATH', '/var/www/blob_storage/django_database/')
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": DJANGO_SQLITE_DATABASE_PATH + "db.sqlite3",
+        "NAME": os.path.join(DJANGO_SQLITE_DATABASE_PATH, "db.sqlite3"),
     }
 }
+
 
 # Internationalization - see https://docs.djangoproject.com/en/4.2/topics/i18n/
 LANGUAGE_CODE = "en-us"
@@ -308,8 +360,8 @@ AUTHENTICATION_BACKENDS = [
 AUTH_USER_MODEL = "setup.User"
 
 # Redis Config
-REDIS_PORT = int(os.environ['REDIS_PORT'])
-REDIS_PASSWORD = os.environ['REDIS_PASSWORD']
+REDIS_PORT = int(os.environ.get('REDIS_PORT', 6379))
+REDIS_PASSWORD = os.environ.get('REDIS_PASSWORD', '')
 REDIS_HOST = "redis"  # "localhost" if DEBUG else "redis"
 
 # RQ Config

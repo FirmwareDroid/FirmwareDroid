@@ -37,6 +37,7 @@ class ScannerModules(Enum):
     APKSCAN = {"APKScanScanJob": "static_analysis.APKscan.apkscan_wrapper"}
     FLOWDROID = {"FlowDroidScanJob": "static_analysis.FlowDroid.flowdroid_wrapper"}
     TRUESEEING = {"TrueseeingScanJob": "static_analysis.Trueseeing.trueseeing_wrapper"}
+    TRUFFLEHOG = {"TruffleHogScanJob": "static_analysis.Trufflehog.trufflehog_wrapper"}
 
 
 class AndroidAppType(MongoengineObjectType):
@@ -147,7 +148,7 @@ class CreateApkScanJob(graphene.Mutation):
             'module_name': validate_module_name,
             'object_id_list': validate_object_id_list,
             'firmware_id_list': validate_object_id_list,
-            'kwargs': validate_kwargs
+            'kwargs': [validate_kwargs, validate_trufflehog_kwargs]
         },
         sanitizers={
             'queue_name': sanitize_string,

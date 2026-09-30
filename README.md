@@ -1,6 +1,31 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 
+## Quick Start
+
+FirmwareDroid supports zero-configuration startup out of the box with Docker Compose.
+
+```bash
+# Clone the repository
+git clone https://github.com/FirmwareDroid/FirmwareDroid.git
+cd FirmwareDroid
+
+# Start FirmwareDroid
+docker compose up -d
+```
+
+On first run, the `init` container automatically generates self-signed TLS certificates, MongoDB replica set credentials, Redis configuration, and Django administrator secrets into an isolated Docker volume (`fmd-config`).
+
+### Retrieving Generated Credentials
+View the generated administrator credentials in the `init` container logs:
+```bash
+docker compose logs init
+```
+Or copy the credentials summary to your current working directory:
+```bash
+docker compose cp init:/config/secrets/generated-secrets.txt .
+```
+
 
 ![FMD-HEADER.png](docs/FMD-HEADER.png)
 
@@ -19,16 +44,17 @@ Some of the tools and features included are:
 * Static-Analyzers for Android apps (APKs):
   * [AndroGuard](https://github.com/androguard/androguard)
   * [APKiD](https://github.com/rednaga/APKiD/)
-  * [APKLeaks](https://github.com/dwisiswant0/apkleaks/)
   * [APKscan](https://github.com/LucasFaudman/apkscan)
   * [Exodus-Core](https://github.com/Exodus-Privacy/exodus-core/)
   * [FlowDroid](https://github.com/secure-software-engineering/FlowDroid)
   * [MobSFScan](https://github.com/MobSF/mobsfscan)
   * [Trueseeing](https://github.com/alterakey/trueseeing)
+  * [TruffleHog](https://github.com/trufflesecurity/trufflehog)
   * [Quark-Engine](https://github.com/quark-engine/quark-engine)
   * [Qark](https://github.com/linkedin/qark/) (deprecated, no updates by the author)
   * [Androwarn](https://github.com/maaaaz/androwarn/) (deprecated, no updates by the author)
   * [SUPER Android Analyzer](https://github.com/SUPERAndroidAnalyzer/super/) (deprecated, discontinued by the author)
+  * [APKLeaks](https://github.com/dwisiswant0/apkleaks/) (deprecated)
 * APIs:
   * [VirusTotal](https://www.virustotal.com)
 * Fuzzy-Hashing:

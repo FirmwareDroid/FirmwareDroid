@@ -6,6 +6,7 @@ import logging
 import os
 import subprocess
 import traceback
+import uuid
 from model.Interfaces.ScanJob import ScanJob
 from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from model import AndroidApp
@@ -47,7 +48,7 @@ def extract_apk_file_with_apktool(apk_file_path, output_dir):
 
     :raises RuntimeError: if the extraction fails.
     """
-    process = subprocess.Popen(["apktool", "d", "-o", output_dir, apk_file_path],
+    process = subprocess.Popen(["apktool", "d", "-f", "-o", output_dir, apk_file_path],
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
     if stderr:
@@ -162,20 +163,22 @@ def analyse_single_apk(android_app):
     """
     manifest_dict = {}
     with tempfile.TemporaryDirectory() as temp_dir:
+        extract_dir = os.path.join(temp_dir, f"{android_app.id}-{uuid.uuid4().hex}")
+        os.makedirs(extract_dir, exist_ok=False)
         try:
-            xmltree_file_path = extract_xmltree_with_aapt2(android_app.absolute_store_path, temp_dir)
+            xmltree_file_path = extract_xmltree_with_aapt2(android_app.absolute_store_path, extract_dir)
             if os.path.exists(xmltree_file_path):
-                manifest_file_path = convert_xmltree_to_xml(xmltree_file_path, temp_dir)
+                manifest_file_path = convert_xmltree_to_xml(xmltree_file_path, extract_dir)
         except Exception as err:
             try:
                 DB_LOGGER.warning(f"Could not analyse AndroidManifest.xml with aapt2, trying with jadx...")
                 logging.info(f"Falling back to jadx for {android_app.filename}")
-                extract_apk_file_with_jadx(android_app.absolute_store_path, temp_dir)
+                extract_apk_file_with_jadx(android_app.absolute_store_path, extract_dir)
             except Exception as err:
                 DB_LOGGER.warning(f"Could not analyse AndroidManifest.xml with aapt2, trying with jadx...")
                 logging.info(f"Falling back to apktool for {android_app.filename}")
-                extract_apk_file_with_apktool(android_app.absolute_store_path, temp_dir)
-            manifest_file_path = search_for_manifest_file(temp_dir)
+                extract_apk_file_with_apktool(android_app.absolute_store_path, extract_dir)
+            manifest_file_path = search_for_manifest_file(extract_dir)
         if manifest_file_path:
             DB_LOGGER.info(f"Found AndroidManifest.xml for {android_app.filename}")
             manifest_dict = get_manifest_as_dict(manifest_file_path)
