@@ -8,7 +8,6 @@ COPY requirements.txt /var/www/requirements.txt
 COPY requirements.txt /var/www/requirements_testing.txt
 COPY requirements/ /var/www/requirements/
 COPY source/ /var/www/source/
-COPY setup.py /var/www/setup.py
 COPY docker_entrypoint.sh /var/www/docker_entrypoint.sh
 COPY templates/ /var/www/templates/
 COPY docker/ /var/www/docker/

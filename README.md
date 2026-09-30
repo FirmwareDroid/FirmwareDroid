@@ -1,34 +1,7 @@
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
 [![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 
-## Quick Start
-
-FirmwareDroid supports zero-configuration startup out of the box with Docker Compose.
-
-```bash
-# Clone the repository
-git clone https://github.com/FirmwareDroid/FirmwareDroid.git
-cd FirmwareDroid
-
-# Start FirmwareDroid
-docker compose up -d
-```
-
-On first run, the `init` container automatically generates self-signed TLS certificates, MongoDB replica set credentials, Redis configuration, and Django administrator secrets into an isolated Docker volume (`fmd-config`).
-
-### Retrieving Generated Credentials
-View the generated administrator credentials in the `init` container logs:
-```bash
-docker compose logs init
-```
-Or copy the credentials summary to your current working directory:
-```bash
-docker compose cp init:/config/secrets/generated-secrets.txt .
-```
-
-
 ![FMD-HEADER.png](docs/FMD-HEADER.png)
-
 # FirmwareDroid (FMD)
 FirmwareDroid is a research project that aims to develop novel methods to analyse Android firmware. It is mainly made 
 to automate the process of extracting and scanning pre-installed Android apps for security research purposes. In this 
@@ -84,6 +57,31 @@ FMD can be used as scanning engine for Android apps (.apk files), but it is main
 apps extracted from Android firmware. It allows you to extract various types of files from firmware images and creates
 an inventory of the extracted files. The inventory can be used to scan the files with the included tools and APIs or to
 analyse the collected data with custom tooling.
+
+## Quick Start
+
+FirmwareDroid supports zero-configuration startup out of the box with Docker Compose.
+
+```bash
+# Clone the repository
+git clone https://github.com/FirmwareDroid/FirmwareDroid.git
+cd FirmwareDroid
+
+# Start FirmwareDroid
+docker compose up -d
+```
+
+On first run, the `init` container automatically generates self-signed TLS certificates, MongoDB replica set credentials, Redis configuration, and Django administrator secrets into an isolated Docker volume (`fmd-config`).
+
+### Retrieving Generated Credentials
+View the generated administrator credentials in the `init` container logs:
+```bash
+docker compose logs init
+```
+Or copy the credentials summary to your current working directory:
+```bash
+docker compose cp init:/config/secrets/generated-secrets.txt .
+```
 
 ### Contributing
 
