@@ -1,4 +1,19 @@
 services:
+  init:
+    platform: "linux/amd64"
+    build:
+      context: .
+      dockerfile: docker/init/Dockerfile_init
+    container_name: fmd-init
+    restart: "no"
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME:-fmd.localhost}
+      - FMD_CONFIG_DIR=/config
+    volumes:
+      - fmd-config:/config
+    networks:
+      - backend
+
   web:
     platform: "linux/amd64"
     user: www
@@ -9,28 +24,53 @@ services:
     container_name: backend-worker
     working_dir: /var/www/
     restart: unless-stopped
+    entrypoint: ["/var/www/config/entrypoint-wrapper.sh"]
+    command: /var/www/docker_entrypoint.sh
     env_file:
-      - ./.env
+      - path: ./.env
+        required: false
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - APP_DEBUG=${APP_DEBUG:-True}
+      - DOMAIN_NAME=${DOMAIN_NAME:-fmd.localhost}
+      - CORS_ADDITIONAL_HOST=${CORS_ADDITIONAL_HOST:-fmd-aosp.init-lab.ch}
+      - MONGODB_REPLICA_SET=${MONGODB_REPLICA_SET:-mongo_cluster_1}
+      - MONGODB_HOSTNAME=${MONGODB_HOSTNAME:-mongo-db-1}
+      - MONGODB_PORT=${MONGODB_PORT:-27017}
+      - MONGODB_DATABASE_NAME=${MONGODB_DATABASE_NAME:-FirmwareDroid}
+      - MONGODB_AUTH_SRC=${MONGODB_AUTH_SRC:-admin}
+      - API_TITLE=${API_TITLE:-FirmwareDroid REST API}
+      - API_VERSION=${API_VERSION:-1.0}
+      - API_DESCRIPTION=${API_DESCRIPTION:-REST API documentation for the FirmwareDroid service}
+      - API_PREFIX=${API_PREFIX:-/api}
+      - API_DOC_FOLDER=${API_DOC_FOLDER:-/docs}
+      - MASS_IMPORT_NUMBER_OF_THREADS=${MASS_IMPORT_NUMBER_OF_THREADS:-3}
+      - DJANGO_SQLITE_DATABASE_PATH=${DJANGO_SQLITE_DATABASE_PATH:-/var/www/blob_storage/django_database/}
+      - REDIS_PORT=${REDIS_PORT:-6379}
     expose:
       - 5000
     volumes:
-      - .env:/var/www/.env
-      - ./env:/var/www/env
+      - fmd-config:/var/www/config:ro
+      - ./docker_entrypoint.sh:/var/www/docker_entrypoint.sh:ro
       - ./source:/var/www/source
-      - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
-      - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
-      - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
-      - ${LOCAL_STORAGE_PATH_03}:/var/www/file_store/03_file_storage
-      - ${LOCAL_STORAGE_PATH_04}:/var/www/file_store/04_file_storage
-      - ${LOCAL_STORAGE_PATH_05}:/var/www/file_store/05_file_storage
-      - ${LOCAL_STORAGE_PATH_06}:/var/www/file_store/06_file_storage
-      - ${LOCAL_STORAGE_PATH_07}:/var/www/file_store/07_file_storage
-      - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
-      - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
-      - ${DJANGO_SQLITE_DATABASE_MOUNT_PATH}:${DJANGO_SQLITE_DATABASE_PATH}
+      - ${LOCAL_STORAGE_PATH_00:-./blob_storage/00_file_storage}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_01:-./blob_storage/01_file_storage}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_02:-./blob_storage/02_file_storage}:/var/www/file_store/02_file_storage
+      - ${LOCAL_STORAGE_PATH_03:-./blob_storage/03_file_storage}:/var/www/file_store/03_file_storage
+      - ${LOCAL_STORAGE_PATH_04:-./blob_storage/04_file_storage}:/var/www/file_store/04_file_storage
+      - ${LOCAL_STORAGE_PATH_05:-./blob_storage/05_file_storage}:/var/www/file_store/05_file_storage
+      - ${LOCAL_STORAGE_PATH_06:-./blob_storage/06_file_storage}:/var/www/file_store/06_file_storage
+      - ${LOCAL_STORAGE_PATH_07:-./blob_storage/07_file_storage}:/var/www/file_store/07_file_storage
+      - ${LOCAL_STORAGE_PATH_08:-./blob_storage/08_file_storage}:/var/www/file_store/08_file_storage
+      - ${LOCAL_STORAGE_PATH_09:-./blob_storage/09_file_storage}:/var/www/file_store/09_file_storage
+      - ${DJANGO_SQLITE_DATABASE_MOUNT_PATH:-./blob_storage/django_database}:${DJANGO_SQLITE_DATABASE_PATH:-/var/www/blob_storage/django_database/}
     depends_on:
-      - mongo-db-1
-      - redis
+      init:
+        condition: service_completed_successfully
+      mongo-db-1:
+        condition: service_started
+      redis:
+        condition: service_started
     networks:
       - backend
       - frontend
@@ -48,12 +88,31 @@ services:
       dockerfile: Dockerfile_NGINX
     restart: unless-stopped
     depends_on:
-      - web
-      - neo4j
+      init:
+        condition: service_completed_successfully
+      web:
+        condition: service_started
+      neo4j:
+        condition: service_started
     volumes:
-      - ./env/nginx/app.conf:/etc/nginx/conf.d/app.conf
-      - ./env/nginx/stream.conf:/etc/nginx/stream.conf
-      - ./env/nginx/live/:/etc/letsencrypt/live/
+      - type: volume
+        source: fmd-config
+        target: /etc/nginx/conf.d/app.conf
+        volume:
+          subpath: nginx/app.conf
+        read_only: true
+      - type: volume
+        source: fmd-config
+        target: /etc/nginx/stream.conf
+        volume:
+          subpath: nginx/stream.conf
+        read_only: true
+      - type: volume
+        source: fmd-config
+        target: /etc/letsencrypt/live
+        volume:
+          subpath: nginx/live
+        read_only: true
       - ./source/static:/usr/share/nginx/django_static
       #- ./firmware-droid-client/build:/usr/share/nginx/html # Dev-Route
     ports:
@@ -69,20 +128,38 @@ services:
     container_name: mongo-db-1
     restart: unless-stopped
     user: 1000:1000
+    entrypoint: ["/config/entrypoint-wrapper.sh", "docker-entrypoint.sh"]
     env_file:
-      - ./.env
+      - path: ./.env
+        required: false
+    environment:
+      - MONGODB_DATABASE_NAME=${MONGODB_DATABASE_NAME:-FirmwareDroid}
     ports:
       - "27017:27017"
     volumes:
-      - ./env/mongo/init/:/docker-entrypoint-initdb.d/
-      - ./env/mongo/auth/cluster.key:/etc/mongodb/cluster.key
-      - ${LOCAL_MONGO_DB_PATH_NODE1}:/data/db
-    command: mongod --bind_ip_all --auth --port 27017 --replSet ${MONGODB_REPLICA_SET} --keyFile /etc/mongodb/cluster.key --dbpath /data/db
+      - type: volume
+        source: fmd-config
+        target: /docker-entrypoint-initdb.d
+        volume:
+          subpath: mongo/init
+        read_only: true
+      - type: volume
+        source: fmd-config
+        target: /etc/mongodb/cluster.key
+        volume:
+          subpath: mongo/auth/cluster.key
+        read_only: true
+      - ${LOCAL_MONGO_DB_PATH_NODE1:-./blob_storage/mongo_database}:/data/db
+      - fmd-config:/config:ro
+    command: mongod --bind_ip_all --auth --port 27017 --replSet ${MONGODB_REPLICA_SET:-mongo_cluster_1} --keyFile /etc/mongodb/cluster.key --dbpath /data/db
+    depends_on:
+      init:
+        condition: service_completed_successfully
     networks:
       - backend
     healthcheck:
       # echo 'db.runCommand("ping").ok' | mongo mongo-db-1:27017/FirmwareDroid --quiet
-      test: curl --connect-timeout 10 --silent --show-error 127.0.0.1:27017
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand('ping')\" || exit 1"]
       interval: 1m30s
       timeout: 10s
       retries: 3
@@ -92,11 +169,19 @@ services:
     platform: "linux/amd64"
     image: redis:8.4.0
     container_name: redis
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server /usr/local/etc/redis/redis.conf
     volumes:
-      - ${REDIS_CONFIG_PATH}:/usr/local/etc/redis/redis.conf
+      - type: volume
+        source: fmd-config
+        target: /usr/local/etc/redis/redis.conf
+        volume:
+          subpath: redis/redis.conf
+        read_only: true
     ports:
       - "127.0.0.1:6379:6379"
+    depends_on:
+      init:
+        condition: service_completed_successfully
     networks:
       - backend
     logging:
@@ -114,24 +199,36 @@ services:
     container_name: extractor-worker-1
     restart: unless-stopped
     depends_on:
-      - redis
+      init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
     volumes:
-      - .env:/var/www/.env
-      - ./env:/var/www/env
+      - fmd-config:/var/www/config:ro
       - ./source:/var/www/source
-      - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
-      - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
-      - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
-      - ${LOCAL_STORAGE_PATH_03}:/var/www/file_store/03_file_storage
-      - ${LOCAL_STORAGE_PATH_04}:/var/www/file_store/04_file_storage
-      - ${LOCAL_STORAGE_PATH_05}:/var/www/file_store/05_file_storage
-      - ${LOCAL_STORAGE_PATH_06}:/var/www/file_store/06_file_storage
-      - ${LOCAL_STORAGE_PATH_07}:/var/www/file_store/07_file_storage
-      - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
-      - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
+      - ${LOCAL_STORAGE_PATH_00:-./blob_storage/00_file_storage}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_01:-./blob_storage/01_file_storage}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_02:-./blob_storage/02_file_storage}:/var/www/file_store/02_file_storage
+      - ${LOCAL_STORAGE_PATH_03:-./blob_storage/03_file_storage}:/var/www/file_store/03_file_storage
+      - ${LOCAL_STORAGE_PATH_04:-./blob_storage/04_file_storage}:/var/www/file_store/04_file_storage
+      - ${LOCAL_STORAGE_PATH_05:-./blob_storage/05_file_storage}:/var/www/file_store/05_file_storage
+      - ${LOCAL_STORAGE_PATH_06:-./blob_storage/06_file_storage}:/var/www/file_store/06_file_storage
+      - ${LOCAL_STORAGE_PATH_07:-./blob_storage/07_file_storage}:/var/www/file_store/07_file_storage
+      - ${LOCAL_STORAGE_PATH_08:-./blob_storage/08_file_storage}:/var/www/file_store/08_file_storage
+      - ${LOCAL_STORAGE_PATH_09:-./blob_storage/09_file_storage}:/var/www/file_store/09_file_storage
     env_file:
-      - ./.env
-    command: rqworker --logging_level INFO --name extractor-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 extractor
+      - path: ./.env
+        required: false
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - DOMAIN_NAME=${DOMAIN_NAME:-fmd.localhost}
+      - MONGODB_REPLICA_SET=${MONGODB_REPLICA_SET:-mongo_cluster_1}
+      - MONGODB_HOSTNAME=${MONGODB_HOSTNAME:-mongo-db-1}
+      - MONGODB_PORT=${MONGODB_PORT:-27017}
+      - MONGODB_DATABASE_NAME=${MONGODB_DATABASE_NAME:-FirmwareDroid}
+      - MONGODB_AUTH_SRC=${MONGODB_AUTH_SRC:-admin}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+    command: /bin/sh -c 'if [ -f /var/www/config/runtime.env ]; then set -a; . /var/www/config/runtime.env; set +a; fi && exec rqworker --logging_level INFO --name extractor-worker-1 --url "redis://:$${REDIS_PASSWORD}@redis:6379/0" extractor'
     privileged: true
     networks:
       - backend
@@ -150,27 +247,39 @@ services:
     container_name: apk_scanner-worker-1
     restart: unless-stopped
     depends_on:
-      - redis
+      init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
     volumes:
-      - .env:/var/www/.env
-      - ./env:/var/www/env
+      - fmd-config:/var/www/config:ro
       - ./source:/var/www/source
-      - ${LOCAL_STORAGE_PATH_00}:/var/www/file_store/00_file_storage
-      - ${LOCAL_STORAGE_PATH_01}:/var/www/file_store/01_file_storage
-      - ${LOCAL_STORAGE_PATH_02}:/var/www/file_store/02_file_storage
-      - ${LOCAL_STORAGE_PATH_03}:/var/www/file_store/03_file_storage
-      - ${LOCAL_STORAGE_PATH_04}:/var/www/file_store/04_file_storage
-      - ${LOCAL_STORAGE_PATH_05}:/var/www/file_store/05_file_storage
-      - ${LOCAL_STORAGE_PATH_06}:/var/www/file_store/06_file_storage
-      - ${LOCAL_STORAGE_PATH_07}:/var/www/file_store/07_file_storage
-      - ${LOCAL_STORAGE_PATH_08}:/var/www/file_store/08_file_storage
-      - ${LOCAL_STORAGE_PATH_09}:/var/www/file_store/09_file_storage
+      - ${LOCAL_STORAGE_PATH_00:-./blob_storage/00_file_storage}:/var/www/file_store/00_file_storage
+      - ${LOCAL_STORAGE_PATH_01:-./blob_storage/01_file_storage}:/var/www/file_store/01_file_storage
+      - ${LOCAL_STORAGE_PATH_02:-./blob_storage/02_file_storage}:/var/www/file_store/02_file_storage
+      - ${LOCAL_STORAGE_PATH_03:-./blob_storage/03_file_storage}:/var/www/file_store/03_file_storage
+      - ${LOCAL_STORAGE_PATH_04:-./blob_storage/04_file_storage}:/var/www/file_store/04_file_storage
+      - ${LOCAL_STORAGE_PATH_05:-./blob_storage/05_file_storage}:/var/www/file_store/05_file_storage
+      - ${LOCAL_STORAGE_PATH_06:-./blob_storage/06_file_storage}:/var/www/file_store/06_file_storage
+      - ${LOCAL_STORAGE_PATH_07:-./blob_storage/07_file_storage}:/var/www/file_store/07_file_storage
+      - ${LOCAL_STORAGE_PATH_08:-./blob_storage/08_file_storage}:/var/www/file_store/08_file_storage
+      - ${LOCAL_STORAGE_PATH_09:-./blob_storage/09_file_storage}:/var/www/file_store/09_file_storage
     env_file:
-      - ./.env
-    cpus: ${DOCKER_CPU_LIMIT}
-    mem_limit: ${DOCKER_MEMORY_LIMIT}
-    memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
-    command: rqworker --logging_level INFO --name apk_scanner-worker-1 --url redis://:${REDIS_PASSWORD}@redis:6379/0 scanner
+      - path: ./.env
+        required: false
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - DOMAIN_NAME=${DOMAIN_NAME:-fmd.localhost}
+      - MONGODB_REPLICA_SET=${MONGODB_REPLICA_SET:-mongo_cluster_1}
+      - MONGODB_HOSTNAME=${MONGODB_HOSTNAME:-mongo-db-1}
+      - MONGODB_PORT=${MONGODB_PORT:-27017}
+      - MONGODB_DATABASE_NAME=${MONGODB_DATABASE_NAME:-FirmwareDroid}
+      - MONGODB_AUTH_SRC=${MONGODB_AUTH_SRC:-admin}
+      - REDIS_PORT=${REDIS_PORT:-6379}
+    cpus: ${DOCKER_CPU_LIMIT:-0.5}
+    mem_limit: ${DOCKER_MEMORY_LIMIT:-10GB}
+    memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT:-10GB}
+    command: /bin/sh -c 'if [ -f /var/www/config/runtime.env ]; then set -a; . /var/www/config/runtime.env; set +a; fi && exec rqworker --logging_level INFO --name apk_scanner-worker-1 --url "redis://:$${REDIS_PASSWORD}@redis:6379/0" scanner'
     networks:
       - backend
     logging:
@@ -183,22 +292,51 @@ services:
     image: neo4j:5.26.17-community-bullseye
     container_name: neo4j
     restart: unless-stopped
+    entrypoint: ["/config/entrypoint-wrapper.sh", "tini", "-g", "--", "/startup/docker-entrypoint.sh"]
+    command: ["neo4j"]
     env_file:
-      - ./.env
+      - path: ./.env
+        required: false
+    environment:
+      - NEO4J_dbms_security_auth__enabled=true
+      - NEO4J_dbms_connector_http_listen__address=0.0.0.0
+      - NEO4J_dbms_default__advertised__address=neo4j
+      - NEO4J_server_https_enabled=true
+      - NEO4J_dbms_ssl_policy_https_enabled=true
+      - NEO4J_dbms_ssl_policy_https_base_directory=certificates/https
+      - NEO4J_dbms_ssl_policy_https_private_key=private.key
+      - NEO4J_dbms_ssl_policy_https_public_certificate=public.crt
+      - NEO4J_dbms_ssl_policy_bolt_enabled=true
+      - NEO4J_dbms_ssl_policy_bolt_base_directory=certificates/bolt
+      - NEO4J_dbms_ssl_policy_bolt_private_key=private.key
+      - NEO4J_dbms_ssl_policy_bolt_public_certificate=public.cert
+      - NEO4J_dbms_ssl_policy_bolt_client_auth=NONE
     volumes:
-      - ${LOCAL_NEO4J_DB_PATH}:/data
-      - ./env/neo4j/ssl/bolt:/var/lib/neo4j/certificates/bolt
-      - ./env/neo4j/ssl/https:/var/lib/neo4j/certificates/https
+      - ${LOCAL_NEO4J_DB_PATH:-./blob_storage/neo4j_database}:/data
+      - type: volume
+        source: fmd-config
+        target: /var/lib/neo4j/certificates/bolt
+        volume:
+          subpath: neo4j/ssl/bolt
+      - type: volume
+        source: fmd-config
+        target: /var/lib/neo4j/certificates/https
+        volume:
+          subpath: neo4j/ssl/https
+      - fmd-config:/config:ro
     ports:
       - "127.0.0.1:7474:7474"
       - "127.0.0.1:7473:7473"
+    depends_on:
+      init:
+        condition: service_completed_successfully
     networks:
       - frontend
-    cpus: ${DOCKER_CPU_LIMIT}
-    mem_limit: ${DOCKER_MEMORY_LIMIT}
-    memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT}
+    cpus: ${DOCKER_CPU_LIMIT:-0.5}
+    mem_limit: ${DOCKER_MEMORY_LIMIT:-10GB}
+    memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT:-10GB}
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:7474/ || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -213,3 +351,5 @@ networks:
     driver_opts:
       com.docker.network.driver.mtu: 1400
 
+volumes:
+  fmd-config:

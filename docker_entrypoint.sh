@@ -5,6 +5,19 @@
 
 set -e
 
+# Source generated secrets and runtime config from fmd-config named volume if present
+if [ -f "/var/www/config/runtime.env" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    . /var/www/config/runtime.env
+    set +a
+elif [ -f "/config/runtime.env" ]; then
+    set -a
+    # shellcheck disable=SC1090
+    . /config/runtime.env
+    set +a
+fi
+
 # Ensure a mounted /file_store exists and is writable by the www user.
 # We must perform ownership changes as root at container start; do NOT grant
 # the runtime `www` user additional sudo rights. If the container is started
