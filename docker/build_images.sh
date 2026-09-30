@@ -208,6 +208,35 @@ echo "Push images: $PUSH_IMAGES"
 echo
 
 #####################################
+# Build Init Bootstrap Image       #
+#####################################
+echo "Building init bootstrap image..."
+INIT_IMAGE="${REGISTRY}/${IMAGE_NAME}-init:${IMAGE_TAG}"
+if [ "$DO_PUSH" = true ]; then
+    docker buildx build . -f ./docker/init/Dockerfile_init \
+        --platform linux/amd64 \
+        --tag "$INIT_IMAGE" \
+        --tag "${REGISTRY}/${IMAGE_NAME}-init:latest" \
+        --push
+else
+    docker build ./ -f ./docker/init/Dockerfile_init -t firmwaredroid-init --platform="linux/amd64"
+    docker tag firmwaredroid-init "$INIT_IMAGE"
+fi
+
+if [ "$PUSH_IMAGES" = true ]; then
+    if [ "$SKIP_SECURITY" = true ]; then
+        echo "Skipping security scan for init image (requested via --skip-security)."
+    else
+        scan_and_confirm_push "$INIT_IMAGE"
+    fi
+fi
+
+if [ "$DO_PUSH" = true ]; then
+    echo "Pushing init image..."
+    docker push "$INIT_IMAGE"
+fi
+
+#####################################
 # Build Frontend                    #
 #####################################
 echo "Building frontend image..."
@@ -379,6 +408,7 @@ if [ "$SEC_TEST" = true ]; then
         scan_image "$FRONTEND_IMAGE" || failed=1
         scan_image "$BASE_IMAGE" || failed=1
         scan_image "$NGINX_IMAGE" || failed=1
+        scan_image "$INIT_IMAGE" || failed=1
         for tag in "${worker_tags[@]}"; do
             scan_image "$tag" || failed=1
         done
@@ -398,6 +428,7 @@ echo "Built images:"
 echo "  Frontend: $FRONTEND_IMAGE"
 echo "  Base: $BASE_IMAGE"
 echo "  Nginx: $NGINX_IMAGE"
+echo "  Init: $INIT_IMAGE"
 for i in "${!worker_names[@]}"; do
     echo "  ${worker_names[$i]^} Worker: ${worker_tags[$i]}"
 done
@@ -415,6 +446,7 @@ if [ "$DO_PUSH" = true ]; then
     "base": "${BASE_IMAGE}",
     "frontend": "${FRONTEND_IMAGE}",
     "nginx": "${NGINX_IMAGE}",
+    "init": "${INIT_IMAGE}",
 $(for i in "${!worker_names[@]}"; do
     echo "    \"${worker_names[$i]}\": \"${worker_tags[$i]}\","
 done | sed '$ s/,$//')

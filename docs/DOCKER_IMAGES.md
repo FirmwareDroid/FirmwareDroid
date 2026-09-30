@@ -25,19 +25,19 @@ All images are available at: `ghcr.io/firmwaredroid/firmwaredroid-*`
 
 ### Quick Start with Release Images
 
-1. **Copy the release docker-compose configuration:**
+1. **Start the services:**
    ```bash
-   cp docker-compose-release.yml docker-compose.yml
+   docker compose -f docker-compose-release.yml up -d
    ```
+   On first startup, the `init` container automatically provisions all secrets, TLS certificates, and configurations into the `fmd-config` named volume. No pre-generated `.env` or manual host file setup is required.
 
-2. **Set up your environment:**
+2. **Retrieve generated administrator credentials:**
    ```bash
-   python setup.py
+   docker compose logs init
    ```
-
-3. **Start the services:**
+   Or copy the generated secrets summary:
    ```bash
-   docker compose up -d
+   docker compose cp init:/config/secrets/generated-secrets.txt .
    ```
 
 ### Using Specific Versions

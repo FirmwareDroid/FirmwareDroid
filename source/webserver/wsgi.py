@@ -8,6 +8,12 @@ https://docs.djangoproject.com/en/4.2/howto/deployment/wsgi/
 """
 
 import os
+import sys
+from pathlib import Path
+
+SOURCE_DIR = Path(__file__).resolve().parent.parent
+if str(SOURCE_DIR) not in sys.path or sys.path[0] != str(SOURCE_DIR):
+    sys.path.insert(0, str(SOURCE_DIR))
 
 from django.core.wsgi import get_wsgi_application
 
