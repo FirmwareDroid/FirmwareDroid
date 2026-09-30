@@ -240,6 +240,13 @@ fi
 # Build Frontend                    #
 #####################################
 echo "Building frontend image..."
+if [ ! -f "./firmware-droid-client/Dockerfile" ]; then
+    echo "Frontend submodule not initialized. Initializing firmware-droid-client submodule..."
+    git submodule update --init --recursive firmware-droid-client || {
+        echo "Error: Failed to initialize firmware-droid-client submodule and Dockerfile is missing."
+        exit 1
+    }
+fi
 FRONTEND_IMAGE="${REGISTRY}/${IMAGE_NAME}-frontend:${IMAGE_TAG}"
 # Use repository root as build context so the root .dockerignore is respected
 if [ "$DO_PUSH" = true ]; then
