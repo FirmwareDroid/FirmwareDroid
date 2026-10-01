@@ -83,6 +83,18 @@ Or copy the credentials summary to your current working directory:
 docker compose cp init:/config/secrets/generated-secrets.txt .
 ```
 
+### Configuration & Environment Variables (Optional)
+
+By default, no `.env` file or pre-configuration is required. The `init` container dynamically provisions unique cryptographically random secrets on first startup into the `fmd-config` volume.
+
+To customize configuration or provide your own secrets:
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Set custom variables in `.env` (such as `DJANGO_SECRET_KEY`, `DOMAIN_NAME`, database passwords, or storage paths). Values defined in `.env` take precedence over auto-generated defaults.
+
+
 ### Contributing
 
 We are happy to accept contributions to the software and documentation. Feel free to open a pull request with your
@@ -90,7 +102,13 @@ enhancements or an issue with your suggestions.
 
 ### Security
 
-FMD has only a minimal set of security features and is not a production ready software. Use at your own risk.
+* **Secret Management:** FirmwareDroid enforces strict secret management. All credentials (Django `SECRET_KEY`, database passwords, cluster keys) are generated cryptographically at runtime and stored in an internal Docker volume (`fmd-config`). There are no insecure hardcoded secret fallbacks in the codebase. If running the backend outside Docker, `DJANGO_SECRET_KEY` is mandatory and must be provided via the environment.
+* **Cookie & Transport Security:** Session and CSRF cookies enforce `Secure`, `HttpOnly`, and `SameSite=Strict` attributes to protect against session hijacking and cross-site scripting attacks.
+* **CORS Restrictions:** Cross-Origin Resource Sharing (CORS) only allows the configured domain by default. Additional external domains can be explicitly whitelisted using `CORS_ADDITIONAL_HOST`.
+* **Production Deployments:** FirmwareDroid is a research platform. For production deployments:
+  * Replace the automatically generated self-signed TLS certificates in `/etc/nginx/live/` with valid CA-issued certificates (such as Let's Encrypt).
+  * Avoid exposing internal database ports (`27017`, `6379`, `7474`) directly to the public internet.
+  * Always use a dedicated `.env` file with strong, unique passwords.
 
 ### Publications
 
