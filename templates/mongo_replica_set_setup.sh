@@ -47,26 +47,33 @@ EOF
         sleep 1
     done
 
-    mongosh mongodb://127.0.0.1:27017/admin -u "${MONGO_ADMIN_USER}" -p "${MONGO_ADMIN_PASS}" <<EOF
+    export MONGO_ADMIN_USER MONGO_ADMIN_PASS MONGO_APPLICATION_DATABASE MONGO_APPLICATION_USER MONGO_APPLICATION_PASS
+    mongosh mongodb://127.0.0.1:27017/admin -u "${MONGO_ADMIN_USER}" -p "${MONGO_ADMIN_PASS}" <<'EOF'
 db.getMongo().setReadPref('nearest');
+var adminUser = process.env.MONGO_ADMIN_USER;
+var adminPass = process.env.MONGO_ADMIN_PASS;
+var appDbName = process.env.MONGO_APPLICATION_DATABASE;
+var appUser = process.env.MONGO_APPLICATION_USER;
+var appPass = process.env.MONGO_APPLICATION_PASS;
+
 try {
-  db.createUser({user: '$MONGO_ADMIN_USER', pwd: '$MONGO_ADMIN_PASS', roles: [ "root" ]});
+  db.createUser({user: adminUser, pwd: adminPass, roles: [ "root" ]});
 } catch(e) {
-  try { db.updateUser('$MONGO_ADMIN_USER', {pwd: '$MONGO_ADMIN_PASS'}); } catch(e2) {}
+  try { db.updateUser(adminUser, {pwd: adminPass}); } catch(e2) {}
 }
 try {
-  db.createUser({user: '$MONGO_APPLICATION_USER', pwd: '$MONGO_APPLICATION_PASS', roles:[{role:'dbOwner', db:'$MONGO_APPLICATION_DATABASE'}]});
+  db.createUser({user: appUser, pwd: appPass, roles:[{role:'dbOwner', db: appDbName}]});
 } catch(e) {
-  try { db.updateUser('$MONGO_APPLICATION_USER', {pwd: '$MONGO_APPLICATION_PASS'}); } catch(e2) {}
+  try { db.updateUser(appUser, {pwd: appPass}); } catch(e2) {}
 }
-var appDb = db.getSiblingDB('$MONGO_APPLICATION_DATABASE');
+var appDb = db.getSiblingDB(appDbName);
 try {
   appDb.createCollection("init");
 } catch(e) {}
 try {
-  appDb.createUser({user: '$MONGO_APPLICATION_USER', pwd: '$MONGO_APPLICATION_PASS', roles:[{role:'dbOwner', db:'$MONGO_APPLICATION_DATABASE'}]});
+  appDb.createUser({user: appUser, pwd: appPass, roles:[{role:'dbOwner', db: appDbName}]});
 } catch(e) {
-  try { appDb.updateUser('$MONGO_APPLICATION_USER', {pwd: '$MONGO_APPLICATION_PASS'}); } catch(e2) {}
+  try { appDb.updateUser(appUser, {pwd: appPass}); } catch(e2) {}
 }
 EOF
 

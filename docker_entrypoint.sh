@@ -43,13 +43,18 @@ python3 ./source/manage.py migrate --noinput
 
 # Create default superuser
 echo "Create default user"
-cat <<EOF | python3 ./source/manage.py shell
+python3 ./source/manage.py shell <<'EOF'
+import os
 from django.contrib.auth import get_user_model
 
-User = get_user_model()
+username = os.environ.get("DJANGO_SUPERUSER_USERNAME")
+email = os.environ.get("DJANGO_SUPERUSER_EMAIL")
+password = os.environ.get("DJANGO_SUPERUSER_PASSWORD")
 
-User.objects.filter(username="${DJANGO_SUPERUSER_USERNAME}").exists() or \
-    User.objects.create_superuser("${DJANGO_SUPERUSER_USERNAME}", "${DJANGO_SUPERUSER_EMAIL}", "${DJANGO_SUPERUSER_PASSWORD}")
+if username and password:
+    User = get_user_model()
+    if not User.objects.filter(username=username).exists():
+        User.objects.create_superuser(username, email or f"{username}@localhost", password)
 EOF
 
 # Start server

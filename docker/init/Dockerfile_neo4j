@@ -1,0 +1,9 @@
+# Thin wrapper around the official Neo4j image that sources the generated NEO4J_AUTH secret
+# from the fmd-config named volume's runtime.env before handing off to the original entrypoint.
+FROM neo4j:5.26.17-community-bullseye
+
+COPY docker/init/entrypoint-wrapper.sh /usr/local/bin/fmd-entrypoint-wrapper.sh
+RUN chmod +x /usr/local/bin/fmd-entrypoint-wrapper.sh
+
+ENTRYPOINT ["/usr/local/bin/fmd-entrypoint-wrapper.sh", "tini", "-g", "--", "/startup/docker-entrypoint.sh"]
+CMD ["neo4j"]

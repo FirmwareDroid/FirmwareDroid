@@ -18,6 +18,7 @@ import os
 from pathlib import Path
 from context.context_creator import setup_logging
 from database.connector import init_db
+from django.core.exceptions import ImproperlyConfigured
 
 env = environ.Env(
     # set casting, default value
@@ -54,7 +55,12 @@ else:
 DOMAIN_NAME = os.environ.get('DOMAIN_NAME', 'fmd.localhost')
 HTTPS_DOMAIN_NAME = "https://" + DOMAIN_NAME
 SERVER_NAME = DOMAIN_NAME
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'default-firmwaredroid-insecure-secret-key')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    raise ImproperlyConfigured(
+        "DJANGO_SECRET_KEY environment variable is missing or empty. "
+        "A secure secret key is required for cryptographic signing."
+    )
 
 
 # Security Settings
@@ -118,9 +124,13 @@ CORS_ALLOW_METHODS = [
 'PUT',
 ]
 
-CORS_ADDITIONAL_HOST_LIST = os.environ.get('CORS_ADDITIONAL_HOST', 'fmd-aosp.init-lab.ch').split(";")
+CORS_ADDITIONAL_HOST_LIST = [
+    host.strip()
+    for host in os.environ.get('CORS_ADDITIONAL_HOST', '').split(';')
+    if host.strip()
+]
 for cors_host in CORS_ADDITIONAL_HOST_LIST:
-    if not cors_host.startswith("https://"):
+    if not cors_host.startswith("https://") and not cors_host.startswith("http://"):
         cors_host = "https://" + cors_host
     CORS_ORIGIN_WHITELIST.append(cors_host)
     CORS_ALLOWED_ORIGINS.append(cors_host)
@@ -130,6 +140,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 SESSION_COOKIE_NAME = "sessionid"
 SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = True
 SESSION_SAVE_EVERY_REQUEST = True
 SESSION_COOKIE_AGE = 86400
 SESSION_COOKIE_SAMESITE = "Strict"
@@ -158,7 +169,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
 ]
 
 ROOT_URLCONF = "webserver.urls"

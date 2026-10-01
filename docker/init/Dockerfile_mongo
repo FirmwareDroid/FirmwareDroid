@@ -1,0 +1,11 @@
+# Thin wrapper around the official Mongo image that sources generated secrets
+# (MONGO_INITDB_ROOT_USERNAME/PASSWORD, etc.) from the fmd-config named volume's runtime.env
+# before handing off to the original entrypoint. Keeps the upstream image's startup behavior
+# (including docker-entrypoint-initdb.d handling) intact.
+FROM mongo:6.0.10
+
+COPY docker/init/entrypoint-wrapper.sh /usr/local/bin/fmd-entrypoint-wrapper.sh
+RUN chmod +x /usr/local/bin/fmd-entrypoint-wrapper.sh
+
+ENTRYPOINT ["/usr/local/bin/fmd-entrypoint-wrapper.sh", "docker-entrypoint.sh"]
+CMD ["mongod"]
