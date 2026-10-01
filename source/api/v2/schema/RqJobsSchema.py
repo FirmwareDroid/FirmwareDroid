@@ -32,6 +32,7 @@ class RqJobType(ObjectType):
     is_failed = Boolean(description="Whether the job has failed")
     result = String(description="String representation of job result")
     exc_info = String(description="Exception information if job failed")
+    meta = graphene.JSONString(description="Metadata of the RQ job")
 
 
 def create_job_data(job, queue_name):
@@ -53,6 +54,17 @@ def create_job_data(job, queue_name):
         if hasattr(job, 'exc_info') and job.exc_info:
             exc_info = str(job.exc_info)
 
+        meta_dict = {}
+        if hasattr(job, 'meta') and isinstance(job.meta, dict):
+            for k, v in job.meta.items():
+                if isinstance(v, (str, int, float, bool, list, dict)):
+                    meta_dict[k] = v
+
+        if hasattr(job, 'instance') and hasattr(job.instance, 'object_id_list'):
+            obj_list = getattr(job.instance, 'object_id_list', None)
+            if isinstance(obj_list, (list, tuple)):
+                meta_dict['object_id_list'] = [str(item) for item in obj_list]
+
         return {
             'id': job.id,
             'status': job.get_status() if hasattr(job, 'get_status') else 'unknown',
@@ -67,6 +79,7 @@ def create_job_data(job, queue_name):
             'is_failed': job.is_failed if hasattr(job, 'is_failed') else False,
             'result': result,
             'exc_info': exc_info,
+            'meta': meta_dict,
         }
     except Exception as e:
         logging.error(f"Failed to create job data for job ID {job.id}: {e}")

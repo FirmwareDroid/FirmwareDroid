@@ -506,3 +506,4 @@ __MACOSX/
 /tmp/firmware_import_demo/
 *.pyc
 __pycache__/
+/generated-secrets.txt

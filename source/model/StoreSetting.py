@@ -45,7 +45,9 @@ def create_file_store_setting(docker_root_folder, storage_folder, is_active):
     import uuid
     store_options_dict = {}
     uuid_str = str(uuid.uuid4())
-    file_storage_folder = docker_root_folder + storage_folder + "/" + uuid_str + "/"
+    if docker_root_folder and not docker_root_folder.endswith("/"):
+        docker_root_folder += "/"
+    file_storage_folder = (docker_root_folder or "") + storage_folder + "/" + uuid_str + "/"
     store_options_dict[uuid_str] = {}
     store_options_dict[uuid_str]["paths"] = {}
     store_options_dict[uuid_str]["paths"]["FILE_STORAGE_FOLDER"] = file_storage_folder

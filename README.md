@@ -37,6 +37,7 @@ Some of the tools and features included are:
   * Android:
     * [Apktool](https://apktool.org/)
     * [Jadx](https://github.com/skylot/jadx)
+    * [ASC](https://github.com/MG1937/ASC)
   * Java:
     * [CFR](https://github.com/leibnitz27/cfr)
     * [Procyon](https://github.com/mstrobel/procyon)
@@ -63,24 +64,28 @@ analyse the collected data with custom tooling.
 FirmwareDroid supports zero-configuration startup out of the box with Docker Compose.
 
 ```bash
-# Clone the repository
-git clone https://github.com/FirmwareDroid/FirmwareDroid.git
-cd FirmwareDroid
-
-# Start FirmwareDroid
-docker compose up -d
+git clone https://github.com/FirmwareDroid/FirmwareDroid.git && cd FirmwareDroid && docker compose -f docker-compose-release.yml up -d && echo "Service started on https://fmd.localhost"
 ```
+Starting a development environment with hot-reloading is also supported:
+```bash
+git clone https://github.com/FirmwareDroid/FirmwareDroid.git && cd FirmwareDroid && ./docker/build_images.sh && docker compose up -d && echo "Service started on https://fmd.localhost"
+````
 
 On first run, the `init` container automatically generates self-signed TLS certificates, MongoDB replica set credentials, Redis configuration, and Django administrator secrets into an isolated Docker volume (`fmd-config`).
 
 ### Retrieving Generated Credentials
-View the generated administrator credentials in the `init` container logs:
-```bash
-docker compose logs init
-```
-Or copy the credentials summary to your current working directory:
+
+For security, generated administrator credentials and database secrets are **never printed in cleartext to container logs**.
+To retrieve your generated credentials, copy the credentials file from the isolated configuration volume to your host:
+
 ```bash
 docker compose cp init:/config/secrets/generated-secrets.txt .
+cat generated-secrets.txt
+```
+
+Alternatively, view them directly from a running container:
+```bash
+docker compose exec web cat /var/www/config/secrets/generated-secrets.txt
 ```
 
 ### Configuration & Environment Variables (Optional)
@@ -94,6 +99,11 @@ To customize configuration or provide your own secrets:
    ```
 2. Set custom variables in `.env` (such as `DJANGO_SECRET_KEY`, `DOMAIN_NAME`, database passwords, or storage paths). Values defined in `.env` take precedence over auto-generated defaults.
 
+#### File Storage Paths
+FirmwareDroid organizes extracted firmwares, APKs, and analysis artifacts into isolated file stores (`00_file_storage` through `09_file_storage`).
+- In Docker, these are mounted from the host `./blob_storage/0X_file_storage` into `/var/www/file_store/0X_file_storage`.
+- You can override individual host mount locations using `LOCAL_STORAGE_PATH_00` through `LOCAL_STORAGE_PATH_09` in `.env`.
+- The storage root within the backend container defaults to `FILE_STORE_ROOT=/var/www/file_store/`. When running outside Docker, it automatically defaults to `<project_root>/blob_storage/`.
 
 ### Contributing
 
@@ -102,13 +112,7 @@ enhancements or an issue with your suggestions.
 
 ### Security
 
-* **Secret Management:** FirmwareDroid enforces strict secret management. All credentials (Django `SECRET_KEY`, database passwords, cluster keys) are generated cryptographically at runtime and stored in an internal Docker volume (`fmd-config`). There are no insecure hardcoded secret fallbacks in the codebase. If running the backend outside Docker, `DJANGO_SECRET_KEY` is mandatory and must be provided via the environment.
-* **Cookie & Transport Security:** Session and CSRF cookies enforce `Secure`, `HttpOnly`, and `SameSite=Strict` attributes to protect against session hijacking and cross-site scripting attacks.
-* **CORS Restrictions:** Cross-Origin Resource Sharing (CORS) only allows the configured domain by default. Additional external domains can be explicitly whitelisted using `CORS_ADDITIONAL_HOST`.
-* **Production Deployments:** FirmwareDroid is a research platform. For production deployments:
-  * Replace the automatically generated self-signed TLS certificates in `/etc/nginx/live/` with valid CA-issued certificates (such as Let's Encrypt).
-  * Avoid exposing internal database ports (`27017`, `6379`, `7474`) directly to the public internet.
-  * Always use a dedicated `.env` file with strong, unique passwords.
+FMD is a research project and should not be used in production environments. It is not hardened for production use and may contain security vulnerabilities. Please use it in a controlled environment only.
 
 ### Publications
 

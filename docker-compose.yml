@@ -9,8 +9,12 @@ services:
     environment:
       - DOMAIN_NAME=${DOMAIN_NAME:-fmd.localhost}
       - FMD_CONFIG_DIR=/config
+      - FRONTEND_DEV_PROXY=${FRONTEND_DEV_PROXY:-false}
     volumes:
       - fmd-config:/config
+      - ./templates:/templates:ro
+      - ./docker/init/bootstrap.py:/app/bootstrap.py:ro
+      - ./docker/init/bootstrap_lib.py:/app/bootstrap_lib.py:ro
     networks:
       - backend
 
@@ -46,6 +50,7 @@ services:
       - API_DOC_FOLDER=${API_DOC_FOLDER:-/docs}
       - MASS_IMPORT_NUMBER_OF_THREADS=${MASS_IMPORT_NUMBER_OF_THREADS:-3}
       - DJANGO_SQLITE_DATABASE_PATH=${DJANGO_SQLITE_DATABASE_PATH:-/var/www/blob_storage/django_database/}
+      - FILE_STORE_ROOT=${FILE_STORE_ROOT:-/var/www/file_store/}
       - REDIS_PORT=${REDIS_PORT:-6379}
     expose:
       - 5000
@@ -115,6 +120,8 @@ services:
         read_only: true
       - ./source/static:/usr/share/nginx/django_static
       #- ./firmware-droid-client/build:/usr/share/nginx/html # Dev-Route
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "80:80"
       - "443:443"
@@ -135,7 +142,7 @@ services:
     environment:
       - MONGODB_DATABASE_NAME=${MONGODB_DATABASE_NAME:-FirmwareDroid}
     ports:
-      - "27017:27017"
+      - "127.0.0.1:27017:27017"
     volumes:
       - type: volume
         source: fmd-config
@@ -227,6 +234,7 @@ services:
       - MONGODB_PORT=${MONGODB_PORT:-27017}
       - MONGODB_DATABASE_NAME=${MONGODB_DATABASE_NAME:-FirmwareDroid}
       - MONGODB_AUTH_SRC=${MONGODB_AUTH_SRC:-admin}
+      - FILE_STORE_ROOT=${FILE_STORE_ROOT:-/var/www/file_store/}
       - REDIS_PORT=${REDIS_PORT:-6379}
     command: /bin/sh -c 'if [ -f /var/www/config/runtime.env ]; then set -a; . /var/www/config/runtime.env; set +a; fi && exec rqworker --logging_level INFO --name extractor-worker-1 --url "redis://:$${REDIS_PASSWORD}@redis:6379/0" extractor'
     privileged: true
@@ -275,6 +283,7 @@ services:
       - MONGODB_PORT=${MONGODB_PORT:-27017}
       - MONGODB_DATABASE_NAME=${MONGODB_DATABASE_NAME:-FirmwareDroid}
       - MONGODB_AUTH_SRC=${MONGODB_AUTH_SRC:-admin}
+      - FILE_STORE_ROOT=${FILE_STORE_ROOT:-/var/www/file_store/}
       - REDIS_PORT=${REDIS_PORT:-6379}
     cpus: ${DOCKER_CPU_LIMIT:-0.5}
     mem_limit: ${DOCKER_MEMORY_LIMIT:-10GB}
