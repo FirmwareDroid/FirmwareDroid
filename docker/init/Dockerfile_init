@@ -1,0 +1,13 @@
+# Bootstrap container that generates all FirmwareDroid secrets/config at first `docker compose up`
+# and writes them into the shared `fmd-config` named volume. Build context must be the repo root
+# so it can access `templates/`.
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir jinja2==3.1.4 cryptography==43.0.1
+
+COPY docker/init/bootstrap_lib.py docker/init/bootstrap.py docker/init/entrypoint-wrapper.sh /app/
+COPY templates/app.conf templates/stream.conf templates/redis.conf templates/mongo_replica_set_setup.sh /templates/
+
+ENTRYPOINT ["python3", "/app/bootstrap.py"]
