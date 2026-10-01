@@ -84,16 +84,19 @@ def bootstrap_redis(secrets_obj: GeneratedSecrets) -> None:
                     redis_password=secrets_obj.redis_password)
 
 
-def bootstrap_nginx(domain_name: str) -> None:
-    print("Generating Nginx config and self-signed TLS certificate...")
+def bootstrap_nginx(domain_name: str, frontend_dev_proxy: bool = False) -> None:
+    print(f"Generating Nginx config (frontend_dev_proxy={frontend_dev_proxy}) and self-signed TLS certificate...")
     env = get_template_env()
-    render_template(env, "app.conf", CONFIG_DIR / "nginx" / "app.conf", domain_name=domain_name)
+    render_template(env, "app.conf", CONFIG_DIR / "nginx" / "app.conf",
+                    domain_name=domain_name,
+                    frontend_dev_proxy=frontend_dev_proxy)
     render_template(env, "stream.conf", CONFIG_DIR / "nginx" / "stream.conf", domain_name=domain_name)
 
     live_dir = CONFIG_DIR / "nginx" / "live" / domain_name
-    generate_certificate(live_dir, domain_name,
-                         private_key_filename="privkey.pem",
-                         public_key_filename="certificate.pem")
+    if not (live_dir / "privkey.pem").exists() or not (live_dir / "certificate.pem").exists():
+        generate_certificate(live_dir, domain_name,
+                             private_key_filename="privkey.pem",
+                             public_key_filename="certificate.pem")
 
 
 def bootstrap_neo4j(domain_name: str) -> None:
@@ -131,7 +134,7 @@ def write_secrets_summary(secrets_obj: GeneratedSecrets, domain_name: str) -> st
     summary = secrets_obj.as_human_readable(domain_name)
     summary_path = secrets_dir / "generated-secrets.txt"
     summary_path.write_text(summary, encoding="utf-8")
-    os.chmod(summary_path, 0o644)
+    os.chmod(summary_path, 0o600)
     return summary
 
 
@@ -140,6 +143,12 @@ def set_permissions() -> None:
     for p in CONFIG_DIR.rglob("*"):
         if p.name == "cluster.key":
             continue  # MongoDB requires cluster.key to stay strict 400
+        if p.name == "generated-secrets.txt" or (p.is_file() and p.parent.name == "secrets"):
+            try:
+                os.chmod(p, 0o600)
+            except Exception:
+                pass
+            continue
         try:
             if p.is_dir():
                 os.chmod(p, 0o755)
@@ -153,13 +162,17 @@ def set_permissions() -> None:
 
 def main() -> int:
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    domain_name = _domain_name()
+    frontend_dev_proxy = os.environ.get("FRONTEND_DEV_PROXY", "false").lower() in ("true", "1", "yes")
 
     if MARKER_FILE.exists():
-        print(f"'{MARKER_FILE}' already present; bootstrap already completed, skipping.")
-        print("Delete the fmd-config volume if you want to regenerate secrets/config.")
+        print(f"'{MARKER_FILE}' already present; secrets bootstrap already completed.")
+        # Ensure Nginx reverse-proxy configuration is kept in sync with environment / templates
+        bootstrap_nginx(domain_name, frontend_dev_proxy=frontend_dev_proxy)
+        set_permissions()
+        print("Updated Nginx configuration in fmd-config volume.")
         return 0
 
-    domain_name = _domain_name()
     print(f"Bootstrapping FirmwareDroid runtime config for domain '{domain_name}'...")
 
     secrets_obj = GeneratedSecrets()
@@ -167,7 +180,7 @@ def main() -> int:
     copy_entrypoint_wrapper()
     bootstrap_mongo(secrets_obj)
     bootstrap_redis(secrets_obj)
-    bootstrap_nginx(domain_name)
+    bootstrap_nginx(domain_name, frontend_dev_proxy=frontend_dev_proxy)
     bootstrap_neo4j(domain_name)
     write_runtime_env(secrets_obj, domain_name)
     summary = write_secrets_summary(secrets_obj, domain_name)
@@ -175,8 +188,22 @@ def main() -> int:
 
     MARKER_FILE.write_text("bootstrapped\n", encoding="utf-8")
 
+    print_secrets = os.environ.get("PRINT_BOOTSTRAP_SECRETS", "false").lower() in ("true", "1", "yes")
+
     print("\n" + "=" * 70)
-    print(summary)
+    if print_secrets:
+        print(summary)
+    else:
+        print("FirmwareDroid runtime configuration and credentials generated!")
+        print("")
+        print("For security reasons, generated credentials are NOT printed to container logs.")
+        print("You can retrieve your administrator credentials and secrets at any time by running:")
+        print("")
+        print("    docker compose cp init:/config/secrets/generated-secrets.txt .")
+        print("    cat generated-secrets.txt")
+        print("")
+        print("Alternatively, view them directly via:")
+        print("    docker compose exec web cat /var/www/config/secrets/generated-secrets.txt")
     print("=" * 70)
     print("Bootstrap complete.")
     return 0

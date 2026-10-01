@@ -1,3 +1,4 @@
+from webserver.jwt_auth import FMDDeleteJSONWebTokenCookie
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
@@ -94,7 +95,7 @@ class Mutation(AndroidAppMutation,
                FirmwareImporterSettingMutation,
                graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name='_debug')
-    delete_token_cookie = graphql_jwt.DeleteJSONWebTokenCookie.Field()
+    delete_token_cookie = FMDDeleteJSONWebTokenCookie.Field()
     delete_refresh_token_cookie = graphql_jwt.DeleteRefreshTokenCookie.Field()
 
 

@@ -190,7 +190,10 @@ TEMPLATES = [
 ]
 
 # File Storage Config
-MAIN_FOLDER = ""
+_default_file_store = '/var/www/file_store/' if os.path.isdir('/var/www/file_store') else str(BASE_DIR / 'blob_storage') + '/'
+MAIN_FOLDER = os.environ.get('FILE_STORE_ROOT', _default_file_store)
+if not MAIN_FOLDER.endswith('/'):
+    MAIN_FOLDER += '/'
 CACHE_FOLDER = ""
 IMPORT_FOLDER = ""
 IMPORT_FAILED_FOLDER = ""
@@ -287,7 +290,7 @@ LOGGING = {
     },
 }
 
-GRAPHENE_FRAMEWORK_GRAPHQL_JWT = {
+GRAPHQL_JWT = {
     "JWT_VERIFY_EXPIRATION": True,
     "JWT_EXPIRATION_DELTA": timedelta(days=1),
     "JWT_ALLOW_REFRESH": True,
@@ -296,13 +299,21 @@ GRAPHENE_FRAMEWORK_GRAPHQL_JWT = {
     "JWT_COOKIE_SAMESITE": "Strict",
     "JWT_COOKIE_SECURE": True,
     "JWT_AUTH_HEADER_PREFIX": "Bearer",
+    "JWT_PAYLOAD_HANDLER": "webserver.jwt_auth.fmd_jwt_payload",
+    "JWT_DECODE_HANDLER": "webserver.jwt_auth.fmd_jwt_decode",
 }
+GRAPHENE_FRAMEWORK_GRAPHQL_JWT = GRAPHQL_JWT
+
+# Graphql Graphene configuration
+GRAPHENE_MIDDLEWARE = [
+    "graphql_jwt.middleware.JSONWebTokenMiddleware",
+]
+if DEBUG:
+    GRAPHENE_MIDDLEWARE.append("graphene_django.debug.DjangoDebugMiddleware")
 
 GRAPHENE = {
     "SCHEMA": "api.v2.schema.FirmwareDroidRootSchema.schema",
-    "MIDDLEWARE": [
-        "graphql_jwt.middleware.JSONWebTokenMiddleware",
-    ],
+    "MIDDLEWARE": GRAPHENE_MIDDLEWARE,
 }
 
 WSGI_APPLICATION = "webserver.wsgi.application"
@@ -338,15 +349,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Default primary key field type - see https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Graphql Graphene configuration
-GRAPHENE = {
-    "SCHEMA": "api.v2.schema.FirmwareDroidRootSchema.schema",
-    "MIDDLEWARE": [
-        "graphql_jwt.middleware.JSONWebTokenMiddleware",
-        'graphene_django.debug.DjangoDebugMiddleware',
-    ],
-}
-
 # Authentication
 # Password validation https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 AUTH_PASSWORD_VALIDATORS = [
@@ -364,7 +366,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 AUTHENTICATION_BACKENDS = [
-    "graphql_jwt.backends.JSONWebTokenBackend",
+    "webserver.jwt_auth.FMDJSONWebTokenBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 AUTH_USER_MODEL = "setup.User"

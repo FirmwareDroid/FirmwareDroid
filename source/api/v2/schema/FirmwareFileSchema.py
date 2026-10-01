@@ -22,6 +22,9 @@ ModelFilter = generate_filter(FirmwareFile)
 
 
 class FirmwareFileType(MongoengineObjectType):
+    file_size_bytes = graphene.Float()
+    pk = graphene.String(source='pk')
+
     class Meta:
         model = FirmwareFile
         interfaces = (Node,)
@@ -31,12 +34,39 @@ class FirmwareFileQuery(graphene.ObjectType):
     firmware_file_list = graphene.List(FirmwareFileType,
                                        object_id_list=graphene.List(graphene.String),
                                        field_filter=graphene.Argument(ModelFilter),
+                                       limit=graphene.Int(description="Maximum number of records to return (capped at 250)"),
+                                       offset=graphene.Int(description="Number of records to skip"),
                                        name="firmware_file_list"
+                                       )
+    firmware_file_count = graphene.Int(object_id_list=graphene.List(graphene.String),
+                                       field_filter=graphene.Argument(ModelFilter),
+                                       name="firmware_file_count",
+                                       description="Total count of matching firmware files"
                                        )
 
     @superuser_required
-    def resolve_firmware_file_list(self, info, object_id_list=None, field_filter=None):
-        return get_filtered_queryset(FirmwareFile, object_id_list, field_filter)
+    def resolve_firmware_file_list(self, info, object_id_list=None, field_filter=None, limit=None, offset=None):
+        qs = get_filtered_queryset(FirmwareFile, object_id_list, field_filter)
+        offset_val = max(0, offset) if (offset is not None and offset > 0) else 0
+        limit_val = min(max(1, limit), 250) if (limit is not None and limit > 0) else None
+
+        if isinstance(qs, list):
+            if limit_val is not None:
+                return qs[offset_val:offset_val + limit_val]
+            return qs[offset_val:]
+
+        if offset_val > 0:
+            qs = qs.skip(offset_val)
+        if limit_val is not None:
+            qs = qs.limit(limit_val)
+        return qs
+
+    @superuser_required
+    def resolve_firmware_file_count(self, info, object_id_list=None, field_filter=None):
+        qs = get_filtered_queryset(FirmwareFile, object_id_list, field_filter)
+        if isinstance(qs, list):
+            return len(qs)
+        return qs.count()
 
 
 class ExportFirmwareFileByRegexMutation(graphene.Mutation):

@@ -27,6 +27,19 @@ def setup_file_store_setting():
     with redis_lock.Lock(redis_con, "fmd_app_setup"):
         store_setting = None
         store_setting_list = StoreSetting.objects.all().order_by('create_date')
+
+        # Automatically migrate any legacy store settings that have relative paths to use MAIN_FOLDER
+        for s in store_setting_list:
+            modified = False
+            for k in s.store_options_dict.keys():
+                paths = s.store_options_dict[k].get("paths", {})
+                for path_key, path_val in paths.items():
+                    if path_val and not os.path.isabs(path_val):
+                        paths[path_key] = os.path.join(MAIN_FOLDER, path_val)
+                        modified = True
+            if modified:
+                s.save()
+
         setup_store_folders(store_setting_list)
 
         if len(store_setting_list) == 0:

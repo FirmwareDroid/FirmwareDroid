@@ -24,14 +24,14 @@ class UserAccountQuery(graphene.ObjectType):
     @superuser_required
     def resolve_users(self, info):
         user = info.context.user
-        if user.is_anonymous and user.is_authenticated:
+        if not user or not user.is_authenticated:
             raise ValueError('Not logged in!')
         return User.objects.all()
 
     def resolve_me(self, info):
         user = info.context.user
-        if user.is_anonymous and user.is_authenticated:
-            raise ValueError(f'Not logged in! {user}')
+        if not user or not user.is_authenticated:
+            return None
         return user
 
 

@@ -6,30 +6,15 @@ from rest_framework.authentication import BaseAuthentication
 from rest_framework import exceptions
 from graphql_jwt.utils import get_payload, get_user_by_payload
 from graphql_jwt.settings import jwt_settings
-#
-# class GraphQLJWTAuthentication(BaseAuthentication):
-#     def authenticate(self, request):
-#         auth_header = request.headers.get('Authorization')
-#         if not auth_header or not auth_header.startswith('Bearer ') or not auth_header.startswith('Token '):
-#             return None
-#
-#         token = auth_header.split(' ')[1]
-#         try:
-#             payload = get_payload(token, jwt_settings.JWT_SECRET_KEY)
-#             user = get_user_by_payload(payload)
-#             if user is None or not user.is_active:
-#                 raise exceptions.AuthenticationFailed('User inactive or deleted')
-#             return (user, None)
-#         except Exception as e:
-#             logging.error(e)
-#             raise exceptions.AuthenticationFailed(f'Invalid JWT Token')
+
 
 class JWTCookieAuthentication(BaseAuthentication):
     """
     DRF authentication that:
     1. Tries Authorization header (Bearer|Token)
     2. Falls back to JWT cookie
-    3. Returns (user, token) or None
+    3. Checks token revocation list
+    4. Returns (user, token) or None
     """
 
     header_prefixes = ("Bearer ", "Token ")
@@ -58,17 +43,23 @@ class JWTCookieAuthentication(BaseAuthentication):
         return None
 
     def _from_cookie(self, request) -> Optional[str]:
-        name = settings.GRAPHQL_JWT.get("JWT_COOKIE_NAME") or jwt_settings.JWT_COOKIE_NAME
+        graphql_jwt_settings = getattr(settings, "GRAPHQL_JWT", None) or getattr(settings, "GRAPHENE_FRAMEWORK_GRAPHQL_JWT", {})
+        name = graphql_jwt_settings.get("JWT_COOKIE_NAME") or getattr(jwt_settings, "JWT_COOKIE_NAME", "JWT")
         val = request.COOKIES.get(name)
         return val.strip() if val else None
 
     def _validate(self, token: str):
         try:
+            from webserver.jwt_auth import is_token_revoked
+            if is_token_revoked(token):
+                raise exceptions.AuthenticationFailed("Token has been revoked")
             payload = get_payload(token, jwt_settings.JWT_SECRET_KEY)
             user = get_user_by_payload(payload)
             if user is None:
                 raise exceptions.AuthenticationFailed("User not found")
             return payload, user
+        except exceptions.AuthenticationFailed:
+            raise
         except Exception as e:
             logging.debug(f"JWT decode failed: {e}")
             raise exceptions.AuthenticationFailed("Invalid JWT token")
