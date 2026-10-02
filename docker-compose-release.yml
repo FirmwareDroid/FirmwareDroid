@@ -145,7 +145,7 @@ services:
         read_only: true
       - ${LOCAL_MONGO_DB_PATH_NODE1:-./blob_storage/mongo_database}:/data/db
       - fmd-config:/config:ro
-    command: mongod --bind_ip_all --auth --port 27017 --replSet ${MONGODB_REPLICA_SET:-mongo_cluster_1} --keyFile /etc/mongodb/cluster.key --dbpath /data/db
+    command: mongod --bind_ip_all --auth --port 27017 --wiredTigerCacheSizeGB ${MONGODB_WIREDTIGER_CACHE_SIZE_GB:-16} --replSet ${MONGODB_REPLICA_SET:-mongo_cluster_1} --keyFile /etc/mongodb/cluster.key --dbpath /data/db
     depends_on:
       init:
         condition: service_completed_successfully
@@ -255,6 +255,9 @@ services:
       - MONGODB_AUTH_SRC=${MONGODB_AUTH_SRC:-admin}
       - FILE_STORE_ROOT=${FILE_STORE_ROOT:-/var/www/file_store/}
       - REDIS_PORT=${REDIS_PORT:-6379}
+      - ANDROGUARD_MAX_WORKERS=${ANDROGUARD_MAX_WORKERS:-8}
+      - ANDROGUARD_EXTRACT_STRINGS=${ANDROGUARD_EXTRACT_STRINGS:-false}
+      - MAX_TASKS_PER_CHILD=${MAX_TASKS_PER_CHILD:-1}
     cpus: ${DOCKER_CPU_LIMIT:-0.5}
     mem_limit: ${DOCKER_MEMORY_LIMIT:-10GB}
     memswap_limit: ${DOCKER_MEMORY_SWAP_LIMIT:-10GB}

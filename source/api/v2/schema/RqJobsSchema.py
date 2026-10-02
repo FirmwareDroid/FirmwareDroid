@@ -7,7 +7,7 @@ import graphene
 import django_rq
 from datetime import datetime
 from graphene import String, ObjectType, List, Field, Boolean, DateTime
-from graphql_jwt.decorators import superuser_required
+from graphql_jwt.decorators import superuser_required, login_required
 from rq.job import Job
 from webserver.settings import RQ_QUEUES
 
@@ -128,11 +128,11 @@ class RqQueueQuery(graphene.ObjectType):
                    name="rq_job"
                    )
 
-    @superuser_required
+    @login_required
     def resolve_rq_queue_name_list(self, info):
         return RQ_QUEUES.keys()
     
-    @superuser_required
+    @login_required
     def resolve_rq_job_list(self, info, queue_name=None, job_ids=None, status=None):
         """Retrieve a list of RQ jobs with optional filtering"""
         jobs = []
@@ -178,7 +178,7 @@ class RqQueueQuery(graphene.ObjectType):
         logging.info(f"Fetched RQ Job List: {jobs}")
         return [RqJobType(**job_data) for job_data in jobs]
     
-    @superuser_required
+    @login_required
     def resolve_rq_job(self, info, job_id, queue_name=None):
         """Retrieve a specific RQ job by ID"""
         # Determine which queues to search

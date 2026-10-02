@@ -189,6 +189,31 @@ def analyse_single_apk(android_app):
     return manifest_dict
 
 
+def extract_packagename_from_manifest(manifest_dict):
+    """
+    Extracts the package name from a parsed AndroidManifest dictionary.
+
+    :param manifest_dict: dict - Parsed AndroidManifest dictionary
+    :return: str or None - Extracted package name if found
+    """
+    if not isinstance(manifest_dict, dict):
+        return None
+
+    manifest = manifest_dict.get("manifest") or manifest_dict.get("Manifest")
+    if isinstance(manifest, dict):
+        for key in ("@package", "package", "@android:package"):
+            val = manifest.get(key)
+            if val and isinstance(val, str) and val.strip():
+                return val.strip()
+
+    for key in ("@package", "package"):
+        val = manifest_dict.get(key)
+        if val and isinstance(val, str) and val.strip():
+            return val.strip()
+
+    return None
+
+
 def analyse_and_save(android_app):
     """"
     Analyse an android app and save the result to the database.
@@ -199,6 +224,10 @@ def analyse_and_save(android_app):
     try:
         manifest_dict = analyse_single_apk(android_app)
         android_app.android_manifest_dict = manifest_dict
+        packagename = extract_packagename_from_manifest(manifest_dict)
+        if packagename:
+            android_app.packagename = packagename
+            DB_LOGGER.info(f"Extracted package name '{packagename}' for app {android_app.filename}")
         android_app.save()
         DB_LOGGER.info(f"ManifestParser completed for app: {android_app.filename}. Result attached to android_manifest_dict field.",)
     except Exception as err:

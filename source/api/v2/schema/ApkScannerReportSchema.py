@@ -10,7 +10,10 @@ from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from model.ApkScannerReport import ApkScannerReport
 from graphene.relay import Node
 
-ModelFilter = generate_filter(ApkScannerReport)
+class ApkScannerReportFilter(generate_filter(ApkScannerReport)):
+    firmware_id_reference = graphene.String(description="Filter reports by firmware ObjectId across all extracted apps")
+
+ModelFilter = ApkScannerReportFilter
 
 
 class ApkScannerReportInterface(graphene.Interface):
@@ -70,6 +73,9 @@ class ApkScannerReportInterface(graphene.Interface):
             return FlowDroidReportType
         elif getattr(instance, "_cls", None) == "ApkScannerReport.TrueseeingReport":
             return TrueseeingReportType
+        elif getattr(instance, "_cls", None) == "ApkScannerReport.TruffleHogReport":
+            from api.v2.schema.TruffleHogReportSchema import TruffleHogReportType
+            return TruffleHogReportType
 
         raise Exception(f"Unknown ApkScannerReport subclass: {getattr(instance, '_cls', None)}")
 
@@ -93,6 +99,13 @@ class ApkScannerReportQuery(graphene.ObjectType):
 
     @superuser_required
     def resolve_apk_scanner_report_list(self, info, object_id_list=None, field_filter=None):
+        if field_filter and "firmware_id_reference" in field_filter:
+            fw_id = field_filter.pop("firmware_id_reference")
+            if fw_id:
+                from bson import ObjectId
+                from model.AndroidApp import AndroidApp
+                app_ids = list(AndroidApp.objects(firmware_id_reference=ObjectId(fw_id)).scalar("id"))
+                field_filter["android_app_id_reference__in"] = app_ids
         type_to_model = {
             "ApkidReport": "model.ApkidReport.ApkidReport",
             "AndroGuardReport": "model.AndroGuardReport.AndroGuardReport",
@@ -106,6 +119,7 @@ class ApkScannerReportQuery(graphene.ObjectType):
             "QuarkEngineReport": "model.QuarkEngineReport.QuarkEngineReport",
             "FlowDroidReport": "model.FlowDroidReport.FlowDroidReport",
             "TrueseeingReport": "model.TrueseeingReport.TrueseeingReport",
+            "TruffleHogReport": "model.TruffleHogReport.TruffleHogReport",
         }
 
         requested_types = set()

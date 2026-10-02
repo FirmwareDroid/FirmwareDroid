@@ -10,10 +10,13 @@ from api.v2.schema.RqJobsSchema import ONE_DAY_TIMEOUT
 from api.v2.types.GenericFilter import generate_filter, get_filtered_queryset
 from api.v2.validators.validation import (
     sanitize_and_validate, validate_object_id_list, validate_queue_name,
-    validate_regex_pattern, validate_object_id, validate_queue_extractor_task
+    validate_regex_pattern, validate_object_id, validate_queue_extractor_task,
+    validate_optional_object_id, validate_optional_regex_pattern
 )
 from firmware_handler.firmware_file_exporter import start_file_export_by_regex
 from model.FirmwareFile import FirmwareFile
+from model.AndroidFirmware import AndroidFirmware
+from model.StoreSetting import StoreSetting
 from webserver.settings import RQ_QUEUES
 
 
@@ -74,23 +77,43 @@ class ExportFirmwareFileByRegexMutation(graphene.Mutation):
 
     class Arguments:
         firmware_id_list = graphene.List(graphene.NonNull(graphene.String), required=True)
-        queue_name = graphene.String(required=True, default_value=list(RQ_QUEUES.keys())[0])
-        filename_regex = graphene.String(required=True)
-        store_setting_id = graphene.String(required=True)
+        queue_name = graphene.String(required=False, default_value=list(RQ_QUEUES.keys())[0])
+        filename_regex = graphene.String(required=False, default_value=".*")
+        store_setting_id = graphene.String(required=False)
 
     @classmethod
     @superuser_required
     @sanitize_and_validate(
         validators={
             'firmware_id_list': validate_object_id_list,
-            'filename_regex': validate_regex_pattern,
+            'filename_regex': validate_optional_regex_pattern,
             'queue_name': [validate_queue_name, validate_queue_extractor_task],
-            'store_setting_id': validate_object_id  # Single ObjectId
+            'store_setting_id': validate_optional_object_id
         },
         sanitizers={}
     )
-    def mutate(cls, root, info, firmware_id_list, filename_regex, store_setting_id, queue_name):
-        # Security check implemented via validate_regex_pattern to prevent ReDoS attacks
+    def mutate(cls, root, info, firmware_id_list, filename_regex=".*", store_setting_id=None, queue_name=None):
+        if not filename_regex:
+            filename_regex = ".*"
+        if not queue_name:
+            queue_name = list(RQ_QUEUES.keys())[0]
+        if not store_setting_id:
+            if firmware_id_list:
+                firmware = AndroidFirmware.objects(pk=firmware_id_list[0]).first()
+                if firmware:
+                    try:
+                        store_setting = firmware.get_store_setting()
+                        if store_setting:
+                            store_setting_id = str(store_setting.id)
+                    except Exception:
+                        pass
+            if not store_setting_id:
+                active_store = StoreSetting.objects(is_active=True).first()
+                if active_store:
+                    store_setting_id = str(active_store.id)
+                else:
+                    raise ValueError("No active storage setting found.")
+
         func_to_run = start_file_export_by_regex
         queue = django_rq.get_queue(queue_name)
         job = queue.enqueue(func_to_run, filename_regex, firmware_id_list, store_setting_id, job_timeout=ONE_DAY_TIMEOUT)

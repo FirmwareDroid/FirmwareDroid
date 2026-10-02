@@ -14,6 +14,7 @@ from api.v2.schema.HealthCheckSchema import HealthCheckQuery
 from api.v2.schema.MobsfscanSchema import MobSFScanReportQuery
 from api.v2.schema.RqJobsSchema import RqQueueQuery
 from api.v2.schema.TrueseeingReportSchema import TrueseeingReportQuery
+from api.v2.schema.TruffleHogReportSchema import TruffleHogReportQuery
 from api.v2.schema.UserAccountSchema import UserAccountQuery
 from api.v2.schema.StoreSettingsSchema import StoreSettingsQuery
 from api.v2.schema.AndroidFirmwareSchema import AndroidFirmwareQuery, AndroidFirmwareMutation
@@ -79,6 +80,7 @@ class Query(WebclientSettingQuery,
             FlowDroidReportQuery,
             MobSFScanReportQuery,
             TrueseeingReportQuery,
+            TruffleHogReportQuery,
             ApkScannerLogQuery,
             graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name='_debug')

@@ -204,27 +204,30 @@ class CreateAppImportJob(graphene.Mutation):
     class Arguments:
         queue_name = graphene.String(required=True, default_value=list(RQ_QUEUES.keys())[0])
         storage_index = graphene.Int(required=True, default_value=0)
+        scan_modules = graphene.List(graphene.NonNull(graphene.String), required=False, default_value=[])
 
     @classmethod
     @superuser_required
     @sanitize_and_validate(
         validators={
-            'queue_name': [validate_queue_name, validate_queue_extractor_task],
+            "queue_name": [validate_queue_name, validate_queue_extractor_task],
+            "scan_modules": validate_scan_modules,
         },
         sanitizers={}
     )
-    def mutate(cls, root, info, queue_name, storage_index):
+    def mutate(cls, root, info, queue_name, storage_index, scan_modules=None):
         """
         Create a job to import android apps without a firmware.
 
         :param queue_name: str - The queue name to use.
         :param storage_index: int - The storage index to use.
+        :param scan_modules: list(str) - Scanners to run after import.
 
         :return: Returns the job id of the job.
         """
         queue = django_rq.get_queue(queue_name)
         func_to_run = start_android_app_standalone_importer
-        job = queue.enqueue(func_to_run, storage_index, job_timeout=ONE_WEEK_TIMEOUT)
+        job = queue.enqueue(func_to_run, storage_index, scan_modules or [], job_timeout=ONE_WEEK_TIMEOUT)
         return cls(job_id=job.id)
 
 

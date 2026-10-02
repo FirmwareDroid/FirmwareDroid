@@ -111,6 +111,15 @@ def sanitize_json(value):
         raise ValueError("Invalid JSON string for kwargs.")
 
 
+def validate_scan_modules(scan_modules):
+    """Validate a list of scanner module names against ScannerModules."""
+    if not scan_modules:
+        return []
+    if not isinstance(scan_modules, (list, tuple)):
+        raise ValueError("scan_modules must be a list of module names.")
+    return [validate_module_name(name) for name in scan_modules]
+
+
 def validate_module_name(module_name):
     """Validate module name against ScannerModules enum members."""
     logging.debug(f"Validating module name: {module_name}")
@@ -147,6 +156,13 @@ def validate_object_id(object_id):
     except Exception:
         raise ValueError(f"Invalid ObjectId: {object_id}")
     return object_id
+
+
+def validate_optional_object_id(object_id):
+    """Validate an optional single ObjectId. Returns None if empty or None."""
+    if object_id is None or object_id == "":
+        return None
+    return validate_object_id(object_id)
 
 
 def validate_object_id_list(object_id_list):
@@ -270,6 +286,13 @@ def validate_regex_pattern(pattern):
         raise ValueError(f"Invalid regex pattern: {e}")
     
     return pattern
+
+
+def validate_optional_regex_pattern(pattern):
+    """Validate optional regex pattern to prevent ReDoS attacks. Defaults to '.*' if empty."""
+    if pattern is None or pattern == "":
+        return ".*"
+    return validate_regex_pattern(pattern)
 
 
 def sanitize_email(email):

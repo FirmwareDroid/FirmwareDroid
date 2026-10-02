@@ -3,7 +3,10 @@ import logging
 import os
 import subprocess
 import tempfile
-import pkg_resources
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
 from context.context_creator import create_log_context, create_db_context, setup_apk_scanner_logger
 from model import AndroidApp, APKscanReport
 from model.Interfaces.ScanJob import ScanJob
@@ -77,7 +80,10 @@ def store_result(android_app, results, scan_status):
 
     :return: class:'APKscanReport' object.
     """
-    version = pkg_resources.get_distribution("apkscan").version
+    try:
+        version = importlib_metadata.version("apkscan")
+    except Exception:
+        version = "unknown"
     analysis_report = APKscanReport(android_app_id_reference=android_app.id,
                                     scanner_version=version,
                                     scanner_name="APKscan",
