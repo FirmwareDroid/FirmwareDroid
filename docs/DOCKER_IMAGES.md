@@ -15,6 +15,7 @@ All images are available at: `ghcr.io/firmwaredroid/firmwaredroid-*`
 | Component | Image Name | Description |
 |-----------|------------|-------------|
 | Base | `ghcr.io/firmwaredroid/firmwaredroid-base` | Base image with common dependencies |
+| Init | `ghcr.io/firmwaredroid/firmwaredroid-init` | Bootstrap container for secret generation and TLS certificates |
 | Frontend | `ghcr.io/firmwaredroid/firmwaredroid-frontend` | Web frontend (nginx-based) |
 | Backend | `ghcr.io/firmwaredroid/firmwaredroid-backend` | Main web application backend |
 | Nginx | `ghcr.io/firmwaredroid/firmwaredroid-nginx` | Reverse proxy and static file server |
@@ -46,6 +47,8 @@ Images are tagged with release versions. To use a specific version, update the i
 
 ```yaml
 services:
+  init:
+    image: ghcr.io/firmwaredroid/firmwaredroid-init:v1.0.0
   web:
     image: ghcr.io/firmwaredroid/firmwaredroid-backend:v1.0.0
   nginx:
@@ -71,6 +74,7 @@ Each release includes an `image-manifest.json` file that provides metadata about
   "timestamp": "2024-01-01T12:00:00Z",
   "images": {
     "base": "ghcr.io/firmwaredroid/firmwaredroid-base:v1.0.0",
+    "init": "ghcr.io/firmwaredroid/firmwaredroid-init:v1.0.0",
     "frontend": "ghcr.io/firmwaredroid/firmwaredroid-frontend:v1.0.0",
     "nginx": "ghcr.io/firmwaredroid/firmwaredroid-nginx:v1.0.0",
     "backend": "ghcr.io/firmwaredroid/firmwaredroid-backend:v1.0.0",
@@ -87,10 +91,10 @@ If you prefer to build images locally, you can use the provided build script:
 
 ```bash
 # Build locally
-./docker/build_and_push_images.sh
+./docker/build_images.sh
 
 # Build and push to your own registry
-./docker/build_and_push_images.sh --push --tag my-version --registry my-registry.com --image-name my-org/firmwaredroid
+./docker/build_images.sh --push --tag my-version --registry my-registry.com --image-name my-org/firmwaredroid
 ```
 
 ## Migration from Local Build
