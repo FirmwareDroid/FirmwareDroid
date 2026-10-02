@@ -75,6 +75,19 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
+    - name: Build and push init bootstrap image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./docker/init/Dockerfile_init
+        platforms: linux/amd64
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-init:${{ steps.meta.outputs.tag }}
+          ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-init:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
     - name: Build and push frontend image
       uses: docker/build-push-action@v5
       with:
@@ -159,6 +172,7 @@ jobs:
           "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
           "images": {
             "base": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-base:${{ steps.meta.outputs.tag }}",
+            "init": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-init:${{ steps.meta.outputs.tag }}",
             "frontend": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:${{ steps.meta.outputs.tag }}",
             "nginx": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-nginx:${{ steps.meta.outputs.tag }}",
             "backend": "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ steps.meta.outputs.tag }}",
@@ -186,6 +200,7 @@ jobs:
         echo "| Component | Image | Tag |" >> $GITHUB_STEP_SUMMARY
         echo "|-----------|-------|-----|" >> $GITHUB_STEP_SUMMARY
         echo "| Base | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-base\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| Init | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-init\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
         echo "| Frontend | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
         echo "| Nginx | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-nginx\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
         echo "| Backend | \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend\` | \`${{ steps.meta.outputs.tag }}\` |" >> $GITHUB_STEP_SUMMARY
@@ -200,6 +215,8 @@ jobs:
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "\`\`\`yaml" >> $GITHUB_STEP_SUMMARY
         echo "services:" >> $GITHUB_STEP_SUMMARY
+        echo "  init:" >> $GITHUB_STEP_SUMMARY
+        echo "    image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-init:${{ steps.meta.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
         echo "  web:" >> $GITHUB_STEP_SUMMARY
         echo "    image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:${{ steps.meta.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
         echo "  nginx:" >> $GITHUB_STEP_SUMMARY
