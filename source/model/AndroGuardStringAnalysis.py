@@ -13,8 +13,9 @@ class AndroGuardStringAnalysis(Document):
     string_meta_analysis_reference = LazyReferenceField('StringMetaAnalysis', reverse_delete_rule=DO_NOTHING,
                                                         required=False)
 
-    meta = {'indexes': [
-        {'fields': ['$string_value'],
-         'default_language': 'english'
-         }
-    ]}
+    meta = {
+        'indexes': [
+            'androguard_report_reference',
+            'android_app_id_reference',
+        ]
+    }

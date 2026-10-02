@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
+import gc
 import logging
 import os
 import traceback
@@ -25,38 +26,32 @@ def add_report_crossreferences(report):
     """
     Adds the androguard objectid to the referenced documents (AppCertificate and AndroGuardStringAnalysis) for performance speed up.
 
-    Performs a bulk update for all string analysis documents referenced by the report to avoid
-    N individual fetch()+save() operations which cause significant DB load.
+    Performs chunked updates for string analysis documents referenced by the report to avoid
+    giant $in queries and memory spikes in MongoDB.
 
     :param report: class:'AndroGuardReport'
 
     """
     try:
-        # Build a list of IDs from the lazy references. The entries in report.string_analysis_id_list
-        # may be LazyReference objects or already dereferenced documents.
+        raw_list = getattr(report, "string_analysis_id_list", []) or []
         id_list = []
-        for item in report.string_analysis_id_list:
-            try:
-                # If it's a lazy reference with .id attribute
-                if hasattr(item, 'id') and item.id is not None:
-                    id_list.append(item.id)
-                else:
-                    # fallback to fetch() and take its id
-                    fetched = item.fetch()
-                    if hasattr(fetched, 'id'):
-                        id_list.append(fetched.id)
-            except Exception:
-                # last resort: try to treat item as an id string
-                try:
-                    id_list.append(item)
-                except Exception:
-                    continue
+        for item in raw_list:
+            if item is None:
+                continue
+            item_id = getattr(item, "id", None)
+            if item_id is not None:
+                id_list.append(item_id)
+            else:
+                id_list.append(item)
+
         if id_list:
-            id_list = [getattr(item, "id", item) for item in report.string_analysis_id_list if item is not None]
-            AndroGuardStringAnalysis.objects(id__in=id_list).update(
-                set__androguard_report_reference=report.id,
-                set__android_app_id_reference=report.android_app_id_reference
-            )
+            batch_size = 500
+            for i in range(0, len(id_list), batch_size):
+                chunk = id_list[i:i + batch_size]
+                AndroGuardStringAnalysis.objects(id__in=chunk).update(
+                    set__androguard_report_reference=report.id,
+                    set__android_app_id_reference=report.android_app_id_reference
+                )
     except Exception as err:
         DB_LOGGER.error(f"Failed to bulk update string analysis crossreferences for report {getattr(report, 'id', 'unknown')}: {str(err)}")
 
@@ -65,8 +60,8 @@ def get_field_analysis(class_analysis):
     """
     Creates a androguard field analysis.
 
-    :param class_analysis: class:'AndroGuardClassAnalysis'
-    :return: list of class:'AndroGuardFieldClassAnalysis'
+    :param class_analysis: class:'AndroGuardClassAnalysis'\
+    :return: list of class:'AndroGuardFieldClassAnalysis'\
 
     """
     result_list = []
@@ -118,21 +113,33 @@ def get_method_analysis(class_analysis):
     return result_list
 
 
-def get_string_analysis(dx):
+def get_string_analysis(dx, android_app=None):
     """
-    Takes AndroGuard string analysis and create a class:'AndroGuardStringAnalysis' from it.
+    Takes AndroGuard string analysis and creates AndroGuardStringAnalysis documents.
 
     :param dx: AndroGuard analysis object.
-    :return: class:'AndroGuardStringAnalysis'
-
+    :param android_app: Optional AndroidApp instance.
+    :return: list of str (document IDs)
     """
-    batch_size = 10000
+    batch_size = 1000
+    max_strings = int(os.environ.get("ANDROGUARD_MAX_STRINGS", 5000))
     ids, batch = [], []
+    app_id = getattr(android_app, "id", None) if android_app else None
+
+    count = 0
     for string_analysis in dx.get_strings():
+        if count >= max_strings:
+            break
+        count += 1
         xrefs = [{m.class_name: m.name} for _, m in string_analysis.get_xref_from()]
-        batch.append(AndroGuardStringAnalysis(string_value=string_analysis.value, xref_method_dict_list=xrefs))
+        doc = AndroGuardStringAnalysis(
+            string_value=string_analysis.value,
+            xref_method_dict_list=xrefs,
+            android_app_id_reference=app_id
+        )
+        batch.append(doc)
         if len(batch) >= batch_size:
-            inserted = AndroGuardStringAnalysis.objects.insert(batch)  # one DB op
+            inserted = AndroGuardStringAnalysis.objects.insert(batch)
             ids.extend(doc.id for doc in inserted)
             batch.clear()
     if batch:
@@ -292,14 +299,28 @@ def analyse_single_apk(android_app):
 
     """
     DB_LOGGER.info(f"Starting AndroGuard Analysis for app: {android_app.filename} {android_app.id}")
-    from androguard.misc import AnalyzeAPK
+    extract_strings = os.environ.get("ANDROGUARD_EXTRACT_STRINGS", "false").lower() in ("true", "1", "yes")
+    apk = None
+    dx = None
+    string_analysis_id_list = []
+
     try:
-        apk, _, dx = AnalyzeAPK(android_app.absolute_store_path)
-        DB_LOGGER.info(f"AndroGuard Analysis completed for app: {android_app.filename} {android_app.id}. Continue storing results...")
+        if extract_strings:
+            from androguard.misc import AnalyzeAPK
+            apk, _, dx = AnalyzeAPK(android_app.absolute_store_path)
+            DB_LOGGER.info(f"AndroGuard Analysis completed for app: {android_app.filename} {android_app.id}. Continue storing results...")
+            string_analysis_id_list = get_string_analysis(dx, android_app)
+        else:
+            try:
+                from androguard.core.apk import APK
+            except ImportError:
+                from androguard.core.bytecodes.apk import APK
+            apk = APK(android_app.absolute_store_path)
+            DB_LOGGER.info(f"AndroGuard APK parsing completed for app: {android_app.filename} {android_app.id}. Continue storing results...")
+
         _, certificate_id_list = create_certificate_object_list(apk.get_certificates(), android_app)
         permission_details = filter_mongodb_dict_chars(apk.get_details_permissions())
         permissions_declared_details = filter_mongodb_dict_chars(apk.get_declared_permissions_details())
-        string_analysis_id_list = get_string_analysis(dx)
         components_dict = {"activity": apk.get_activities(),
                            "provider": apk.get_providers(),
                            "service": apk.get_services(),
@@ -333,6 +354,10 @@ def analyse_single_apk(android_app):
                      string_analysis_id_list=string_analysis_id_list,
                      components_dict=components_dict,
                      certificate_id_list=certificate_id_list)
+    finally:
+        del apk
+        del dx
+        gc.collect()
 
 
 def create_report_data(android_app, apk, scan_status, permission_details, permissions_declared_details,
@@ -411,7 +436,7 @@ def create_report_data(android_app, apk, scan_status, permission_details, permis
         'file_name_list': apk.get_files(),
         'is_multidex': apk.is_multidex(),
         'main_activity': apk.get_main_activity(),
-        'main_activity_list': apk.get_main_activities(),
+        'main_activity_list': list(apk.get_main_activities()),
         'permissions': apk.get_permissions(),
         'permission_details': permission_details,
         'permissions_implied': apk.get_uses_implied_permission_list(),
@@ -424,7 +449,7 @@ def create_report_data(android_app, apk, scan_status, permission_details, permis
         'receivers': apk.get_receivers(),
         'manifest_libraries': apk.get_libraries(),
         'manifest_features': apk.get_features(),
-        'dex_names': apk.get_dex_names(),
+        'dex_names': list(apk.get_dex_names()),
         'signature_names': apk.get_signature_names(),
         'app_name': apk.get_app_name(),
         'intent_filters_dict': search_intent_filters(apk, components_dict),
@@ -480,9 +505,8 @@ def store_result(android_app, apk, scan_status, permission_details=None, permiss
     return report
 
 
-
 def analyse_and_save(android_app):
-    """"
+    """
     Analyse an android app with AndroGuard and save the result to the database.
 
     Uses signal.alarm to enforce a per-app hard timeout (1 hour). This avoids nested multiprocessing
@@ -512,6 +536,8 @@ def analyse_and_save(android_app):
     except Exception as err:
         logging.error(f"AndroGuard could not scan app {android_app.filename} {android_app.id} - error: {str(err)}")
         traceback.print_stack()
+    finally:
+        gc.collect()
 
 
 @create_db_context
@@ -523,9 +549,12 @@ def androguard_worker_multiprocessing(android_app_id):
     :param android_app_id: str - The id of the AndroidApp to analyse.
 
     """
-    android_app = AndroidApp.objects.get(pk=android_app_id)
-    logging.info(f"AndroGuard scan: {android_app.filename} {android_app.id} ")
-    analyse_and_save(android_app)
+    try:
+        android_app = AndroidApp.objects.get(pk=android_app_id)
+        logging.info(f"AndroGuard scan: {android_app.filename} {android_app.id} ")
+        analyse_and_save(android_app)
+    finally:
+        gc.collect()
 
 
 def androguard_worker_multithreading(android_app_queue):
@@ -558,6 +587,7 @@ class AndroGuardScanJob(ScanJob):
 
     def __init__(self, object_id_list, **kwargs):
         self.object_id_list = object_id_list
+        self.kwargs = kwargs
         os.chdir(self.SOURCE_DIR)
 
     @create_db_context
@@ -567,11 +597,12 @@ class AndroGuardScanJob(ScanJob):
         Starts multiple instances of AndroGuard to analyse a list of Android apps on multiple processors.
         """
         android_app_id_list = self.object_id_list
-        logging.info(f"Androguard analysis started! With {str(len(android_app_id_list))} apps.")
+        max_workers = min(os.cpu_count() or 1, int(os.environ.get("ANDROGUARD_MAX_WORKERS", 8)))
+        logging.info(f"Androguard analysis started with {len(android_app_id_list)} apps across {max_workers} worker processes.")
         if len(android_app_id_list) > 0:
             python_process = start_python_interpreter(item_list=android_app_id_list,
                                                       worker_function=androguard_worker_multiprocessing,
-                                                      number_of_processes=os.cpu_count(),
+                                                      number_of_processes=max_workers,
                                                       use_id_list=True,
                                                       module_name=self.MODULE_NAME,
                                                       interpreter_path=self.INTERPRETER_PATH)

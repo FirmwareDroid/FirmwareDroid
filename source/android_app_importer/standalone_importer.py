@@ -32,8 +32,12 @@ class StandaloneImporter:
         Processes all apk files in the import path.
         """
         apk_file_path_list = get_apk_files(self.import_path)
+        imported_apps = []
         for apk_file_path in apk_file_path_list:
-            self.process_single_apk_file(apk_file_path)
+            app = self.process_single_apk_file(apk_file_path)
+            if app:
+                imported_apps.append(app)
+        return imported_apps
 
     def process_single_apk_file(self, apk_file_path):
         """
@@ -52,9 +56,11 @@ class StandaloneImporter:
             renamed_apk_file_path = os.path.join(self.import_path, new_filename)
             android_app = self.create_and_copy_android_app(renamed_apk_file_path, original_filename)
             os.remove(renamed_apk_file_path)
+            return android_app
         except Exception as exception:
             logging.debug(exception)
             self.handle_apk_file_error(android_app, apk_file_path)
+            return None
 
     def create_and_copy_android_app(self, apk_file_path, original_filename):
         """
@@ -97,7 +103,7 @@ class StandaloneImporter:
 
 
 @create_db_context
-def start_android_app_standalone_importer(storage_index=0):
+def start_android_app_standalone_importer(storage_index=0, scan_modules=None):
     """
     Starts the standalone importer.
     """
@@ -107,4 +113,10 @@ def start_android_app_standalone_importer(storage_index=0):
     failed_app_import_path = paths_dict["ANDROID_APP_IMPORT_FAILED"]
     app_store_path = paths_dict["FIRMWARE_FOLDER_APP_EXTRACT"]
     importer = StandaloneImporter(app_import_path, failed_app_import_path, app_store_path)
-    importer.process_apk_files()
+    imported_apps = importer.process_apk_files()
+    if scan_modules and imported_apps:
+        try:
+            from firmware_handler.firmware_importer import enqueue_post_import_scans
+            enqueue_post_import_scans(imported_apps, scan_modules)
+        except Exception as e:
+            logging.error(f"Failed to enqueue standalone import scans: {e}")

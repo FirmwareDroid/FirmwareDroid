@@ -216,11 +216,11 @@ class FlowDroidScanJob(ScanJob):
     MODULE_NAME = "static_analysis.FlowDroid.flowdroid_wrapper"
     INTERPRETER_PATH = "/opt/firmwaredroid/python/flowdroid/bin/python"
 
-    def __init__(self, object_id_list, android_api_version, flowdroid_cmd_arg_list, rule_filename=None, **kwargs):
+    def __init__(self, object_id_list, android_api_version="28", flowdroid_cmd_arg_list=None, rule_filename=None, **kwargs):
         self.object_id_list = object_id_list
         self.worker_args_list = []
         self.worker_args_list.append(android_api_version)
-        self.worker_args_list.append(flowdroid_cmd_arg_list)
+        self.worker_args_list.append(flowdroid_cmd_arg_list or [])
         if rule_filename:
             self.worker_args_list.append(rule_filename)
         os.chdir(self.SOURCE_DIR)

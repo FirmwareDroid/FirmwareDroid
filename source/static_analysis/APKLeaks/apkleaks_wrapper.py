@@ -5,7 +5,10 @@ import logging
 import os
 import tempfile
 import traceback
-import pkg_resources
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
 from model import AndroidApp, ApkleaksReport
 from context.context_creator import create_db_context, create_log_context, setup_apk_scanner_logger
 from model.Interfaces.ScanJob import ScanJob
@@ -83,7 +86,10 @@ def store_result(android_app, results, scan_status):
     :param scan_status: str - status of the scan.
 
     """
-    version = pkg_resources.get_distribution("apkleaks").version
+    try:
+        version = importlib_metadata.version("apkleaks")
+    except Exception:
+        version = "unknown"
     apkleaks_report = ApkleaksReport(android_app_id_reference=android_app.id,
                                      scanner_version=version,
                                      scanner_name="APKLeaks",

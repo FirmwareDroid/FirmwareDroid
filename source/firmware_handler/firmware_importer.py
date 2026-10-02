@@ -40,24 +40,25 @@ lock = threading.Lock()
 
 @create_db_context
 @create_log_context
-def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0, keep_files_on_disk=False):
+def start_firmware_mass_import(create_fuzzy_hashes, storage_index=0, keep_files_on_disk=True, scan_modules=None):
     """
     Imports all .zip files from the import folder.
 
     :param keep_files_on_disk: boolean indicating whether to keep all files on disk or just index the files
     :param storage_index: int - the index of the StoreSetting to use.
     :param create_fuzzy_hashes: bool - true if fuzzy hash index should be created.
+    :param scan_modules: list of scanner module names to automatically run after import.
 
     :return: list of string with the status (errors/success) of every file.
     """
     logging.info(f"Firmware extractor starting...Storage index: {storage_index}")
     store_setting = get_active_store_by_index(storage_index)
-    import_firmware_from_store(store_setting, create_fuzzy_hashes, keep_files_on_disk)
+    import_firmware_from_store(store_setting, create_fuzzy_hashes, keep_files_on_disk, scan_modules)
 
 
-def import_firmware_from_store(store_setting, create_fuzzy_hashes, keep_files_on_disk):
+def import_firmware_from_store(store_setting, create_fuzzy_hashes, keep_files_on_disk, scan_modules=None):
     store_path, firmware_archives_queue, num_threads = pre_process_firmware_import(store_setting)
-    start_import_threads(num_threads, firmware_archives_queue, create_fuzzy_hashes, store_path, keep_files_on_disk)
+    start_import_threads(num_threads, firmware_archives_queue, create_fuzzy_hashes, store_path, keep_files_on_disk, scan_modules)
 
 
 def pre_process_firmware_import(store_setting):
@@ -71,10 +72,10 @@ def pre_process_firmware_import(store_setting):
     return store_path, firmware_archives_queue, num_threads
 
 
-def start_import_threads(num_threads, firmware_archives_queue, create_fuzzy_hashes, store_path, keep_files_on_disk):
+def start_import_threads(num_threads, firmware_archives_queue, create_fuzzy_hashes, store_path, keep_files_on_disk, scan_modules=None):
     for i in range(num_threads):
         logging.debug(f"Start importer thread {i} of {num_threads}")
-        worker = Thread(target=prepare_firmware_import, args=(firmware_archives_queue, create_fuzzy_hashes, store_path, keep_files_on_disk))
+        worker = Thread(target=prepare_firmware_import, args=(firmware_archives_queue, create_fuzzy_hashes, store_path, keep_files_on_disk, scan_modules))
         worker.daemon = True
         worker.start()
     firmware_archives_queue.join()
@@ -124,7 +125,7 @@ def allow_import(firmware_file_path, md5):
 
 
 @create_db_context
-def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes, store_path, keep_files_on_disk):
+def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes, store_path, keep_files_on_disk, scan_modules=None):
     """
     A multithreaded import script that extracts meta information of a firmware file from the system.img.
     Stores a firmware into the database if it is not already stored.
@@ -149,7 +150,7 @@ def prepare_firmware_import(firmware_file_queue, create_fuzzy_hashes, store_path
             md5 = md5_from_file(firmware_file_path)
             is_allowed, reason = allow_import(firmware_file_path, md5)
             if is_allowed:
-                import_firmware(filename, md5, firmware_file_path, create_fuzzy_hashes, store_path, keep_files_on_disk)
+                import_firmware(filename, md5, firmware_file_path, create_fuzzy_hashes, store_path, keep_files_on_disk, scan_modules)
             else:
                 shutil.move(str(firmware_file_path), store_path["FIRMWARE_FOLDER_IMPORT_FAILED"])
                 raise ValueError(reason)
@@ -347,7 +348,8 @@ def import_firmware(original_filename,
                     firmware_archive_file_path,
                     create_fuzzy_hashes,
                     store_paths,
-                    keep_files_on_disk):
+                    keep_files_on_disk,
+                    scan_modules=None):
     """
     Attempts to store a firmware archive into the database.
 
@@ -425,6 +427,9 @@ def import_firmware(original_filename,
                                   has_fuzzy_hash_index=create_fuzzy_hashes,
                                   partition_info_dict=partition_info_dict)
             logging.info(f"Firmware import success for file: {original_filename}")
+
+            if scan_modules and files_dict.get("firmware_app_list"):
+                enqueue_post_import_scans(files_dict["firmware_app_list"], scan_modules)
 
             if keep_files_on_disk:
                 try:
@@ -779,3 +784,35 @@ def find_build_prop_file_paths(firmware_file_list):
             if re.search(pattern, firmware_file.name.lower()):
                 build_prop_firmware_file_list.append(firmware_file)
     return build_prop_firmware_file_list
+
+
+def enqueue_post_import_scans(android_app_list, scan_modules):
+    """
+    Enqueues scanner jobs for newly imported Android applications.
+    Scans are enqueued sequentially in the order specified by scan_modules.
+    """
+    if not scan_modules or not android_app_list:
+        return
+    import django_rq
+    from api.v2.validators.chunking import create_object_id_chunks
+    from api.v2.schema.AndroidAppSchema import import_module_function
+    from api.v2.schema.RqJobsSchema import ONE_WEEK_TIMEOUT, MAX_OBJECT_ID_LIST_SIZE
+    from api.v2.validators.validation import validate_module_name
+
+    scanner_queue = django_rq.get_queue("scanner")
+    app_ids = [str(getattr(app, "id", getattr(app, "pk", app))) for app in android_app_list]
+
+    for module_name in scan_modules:
+        try:
+            validated_module = validate_module_name(module_name)
+            chunks = create_object_id_chunks(app_ids, chunk_size=MAX_OBJECT_ID_LIST_SIZE)
+            for chunk in chunks:
+                func_to_run = import_module_function(validated_module, chunk)
+                job = scanner_queue.enqueue(
+                    func_to_run,
+                    job_timeout=ONE_WEEK_TIMEOUT,
+                    meta={"module_name": validated_module}
+                )
+                logging.info(f"Enqueued automated scan {validated_module} (Job ID: {job.id}) for {len(chunk)} apps")
+        except Exception as e:
+            logging.error(f"Failed to enqueue automated scan {module_name}: {e}")

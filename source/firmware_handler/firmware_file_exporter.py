@@ -8,10 +8,15 @@ import shutil
 import tempfile
 import traceback
 from queue import Empty
-from threading import Thread
+from threading import Thread, Lock
+import time
+try:
+    from rq import get_current_job
+except ImportError:
+    get_current_job = lambda: None
 from context.context_creator import create_db_context, create_multithread_log_context, create_log_context
 from extractor.expand_archives import extract_first_layer
-from model import StoreSetting, AndroidFirmware
+from model import StoreSetting, AndroidFirmware, FirmwareFile
 from processing.standalone_python_worker import create_multi_threading_queue
 
 NUMBER_OF_EXPORTER_THREADS = 10
@@ -33,18 +38,55 @@ def start_file_export_by_regex(filename_regex, firmware_id_list, store_setting_i
     filename.
 
     """
+    job = get_current_job()
+    if job:
+        job.meta['stage'] = 'initializing'
+        job.meta['message'] = f'Initializing extraction for {len(firmware_id_list)} firmware(s)...'
+        job.meta['progress_percent'] = 0.0
+        job.meta['processed_files'] = 0
+        job.meta['total_files'] = 0
+        job.meta['firmware_id'] = str(firmware_id_list[0]) if firmware_id_list else ''
+        job.meta['firmware_id_list'] = [str(fid) for fid in firmware_id_list]
+        job.save_meta()
+
     search_pattern = re.compile(filename_regex, re.IGNORECASE)
     if len(firmware_id_list) == 0:
+        if job:
+            job.meta['stage'] = 'failed'
+            job.meta['error'] = 'No firmware ids given.'
+            job.save_meta()
         raise ValueError("No firmware ids given.")
     if not search_pattern:
+        if job:
+            job.meta['stage'] = 'failed'
+            job.meta['error'] = 'No search pattern given.'
+            job.save_meta()
         raise ValueError("No search pattern given.")
     if not store_setting_id:
+        if job:
+            job.meta['stage'] = 'failed'
+            job.meta['error'] = 'No store setting id given.'
+            job.save_meta()
         raise ValueError("No store setting id given.")
+
     logging.info(f"Start exporting firmware files by regex {filename_regex} for firmware {firmware_id_list}")
-    start_regex_firmware_file_export(search_pattern, firmware_id_list, store_setting_id)
+    try:
+        start_regex_firmware_file_export(search_pattern, firmware_id_list, store_setting_id, job=job)
+        if job:
+            job.meta['stage'] = 'completed'
+            job.meta['progress_percent'] = 100.0
+            job.meta['message'] = 'Extraction completed successfully.'
+            job.save_meta()
+    except Exception as e:
+        if job:
+            job.meta['stage'] = 'failed'
+            job.meta['error'] = str(e)
+            job.meta['message'] = f'Extraction failed: {e}'
+            job.save_meta()
+        raise
 
 
-def start_regex_firmware_file_export(search_pattern, firmware_id_list, store_setting_id):
+def start_regex_firmware_file_export(search_pattern, firmware_id_list, store_setting_id, job=None):
     """
     Starts to export firmware files to the filesystem by a regex pattern. Searches for the files in the firmware
     by filename and exports them to the file system. Using a regex pattern to filter the files and multiple threads
@@ -53,9 +95,18 @@ def start_regex_firmware_file_export(search_pattern, firmware_id_list, store_set
     :return: str - path to the exported file.
 
     """
+    progress_state = {
+        'processed_files': 0,
+        'total_files': 0,
+        'last_save': time.time(),
+        'lock': Lock()
+    }
     firmware_id_queue = create_multi_threading_queue(firmware_id_list)
     for i in range(NUMBER_OF_EXPORTER_THREADS):
-        worker = Thread(target=export_worker_multithreading, args=(firmware_id_queue, store_setting_id, search_pattern))
+        worker = Thread(
+            target=export_worker_multithreading,
+            args=(firmware_id_queue, store_setting_id, search_pattern, job, progress_state)
+        )
         worker.daemon = True
         worker.start()
     firmware_id_queue.join()
@@ -63,7 +114,7 @@ def start_regex_firmware_file_export(search_pattern, firmware_id_list, store_set
 
 @create_db_context
 @create_multithread_log_context
-def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pattern):
+def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pattern, job=None, progress_state=None):
     """
     Copies a firmware file to the file extract store (on disk).
 
@@ -90,8 +141,34 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
             store_paths = store_setting.get_store_paths()
             clear_export_folder(store_paths, firmware.id)
 
+            if job:
+                job.meta['stage'] = 'unpacking_archive'
+                job.meta['message'] = f'Unpacking archive and analyzing partitions for firmware {firmware.id}...'
+                job.meta['progress_percent'] = 10.0
+                job.save_meta()
+
             with (tempfile.TemporaryDirectory(dir=store_paths["FIRMWARE_FOLDER_CACHE"]) as temp_dir_path):
                 firmware_file_list = extract_firmware(firmware.absolute_store_path, temp_dir_path)
+
+                matching_files = [
+                    f for f in firmware_file_list
+                    if not f.is_directory
+                    and re.search(search_pattern, f.name)
+                    and not any(ext in f.name for ext in FILES_TO_NOT_EXTRACT)
+                ]
+                total_to_export = len(matching_files)
+
+                if progress_state:
+                    with progress_state['lock']:
+                        progress_state['total_files'] += total_to_export
+
+                if job:
+                    job.meta['stage'] = 'writing_files'
+                    job.meta['total_files'] = total_to_export
+                    job.meta['processed_files'] = 0
+                    job.meta['progress_percent'] = 20.0
+                    job.meta['message'] = f'Writing {total_to_export:,} files to disk...'
+                    job.save_meta()
 
                 for firmware_file in firmware_file_list:
                     if not firmware_file.is_directory \
@@ -103,9 +180,35 @@ def export_worker_multithreading(firmware_id_queue, store_setting_id, search_pat
                             firmware_file.partition_name = "root"
                         destination_dir_path_abs = get_file_export_path_abs(store_setting, firmware_file)
                         os.makedirs(destination_dir_path_abs, exist_ok=True)
-                        is_successful = export_firmware_file(firmware_file, temp_dir_path, destination_dir_path_abs)
+                        is_successful, exported_file_path = export_firmware_file(firmware_file, temp_dir_path, destination_dir_path_abs)
                         if not is_successful:
                             raise ValueError(f"Could not export firmware file {firmware_file.id} {firmware_file.name}")
+                        try:
+                            FirmwareFile.objects(
+                                firmware_id_reference=firmware.id,
+                                name=firmware_file.name,
+                                relative_path=firmware_file.relative_path
+                            ).update(
+                                set__is_on_disk=True,
+                                set__absolute_store_path=str(exported_file_path)
+                            )
+                        except Exception as update_err:
+                            logging.warning(f"Could not update is_on_disk for {firmware_file.name}: {update_err}")
+
+                        if job and progress_state:
+                            with progress_state['lock']:
+                                progress_state['processed_files'] += 1
+                                cur_processed = progress_state['processed_files']
+                                cur_total = progress_state['total_files']
+                                now = time.time()
+                                if cur_processed % 50 == 0 or (now - progress_state['last_save']) >= 2.0 or cur_processed >= cur_total:
+                                    pct = min(99.0, round(20.0 + (79.0 * (cur_processed / max(1, cur_total))), 1))
+                                    job.meta['processed_files'] = cur_processed
+                                    job.meta['total_files'] = cur_total
+                                    job.meta['progress_percent'] = pct
+                                    job.meta['message'] = f"Extracted {cur_processed:,} of {cur_total:,} files ({pct:.0f}%)..."
+                                    job.save_meta()
+                                    progress_state['last_save'] = now
             logging.info(f"Exported files from firmware {firmware.id} to {store_paths['FIRMWARE_FOLDER_FILE_EXTRACT']}")
         except Exception as e:
             logging.error(f"Could not export firmware files for firmware {firmware_id}. Error: {e}")
@@ -129,6 +232,10 @@ def clear_export_folder(store_paths, firmware_id):
         logging.info(f"Deleting export folder {firmware_file_export_path}")
         shutil.rmtree(firmware_file_export_path)
         os.makedirs(firmware_file_export_path, exist_ok=True)
+    try:
+        FirmwareFile.objects(firmware_id_reference=firmware_id).update(set__is_on_disk=False)
+    except Exception as e:
+        logging.warning(f"Could not reset is_on_disk flag for firmware {firmware_id}: {e}")
 
 
 def extract_firmware(firmware_archive_file_path, temp_extract_dir):
@@ -228,17 +335,18 @@ def export_firmware_file(firmware_file, source_dir_path, destination_dir_path):
     :param firmware_file: class:'FirmwareFile'
     :param source_dir_path: str - path to the extracted firmware.
 
-    :return: bool - flag if the export was successful.
+    :return: tuple(bool, str) - flag if export was successful, and destination file path.
     """
     is_successful = False
+    dst_file_path = None
     if firmware_file and firmware_file.absolute_store_path and os.path.exists(firmware_file.absolute_store_path):
-        copy_firmware_file(firmware_file, firmware_file.absolute_store_path, destination_dir_path)
+        dst_file_path = copy_firmware_file(firmware_file, firmware_file.absolute_store_path, destination_dir_path)
         is_successful = True
     else:
         logging.error(f"Could not find firmware file {firmware_file.id} {firmware_file.name} "
                       f"{firmware_file.absolute_store_path}."
                       f" Skipping file {source_dir_path}")
-    return is_successful
+    return is_successful, dst_file_path
 
 
 def create_directory(destination_path, firmware_file):
@@ -288,3 +396,4 @@ def copy_firmware_file(firmware_file, source_path, destination_path):
 
     if dst_file_path is None or not os.path.exists(dst_file_path):
         raise OSError(f"Could not copy firmware file {firmware_file.id} to {destination_path}")
+    return dst_file_path

@@ -11,13 +11,15 @@ from log4mongo.handlers import MongoHandler
 def create_db_context(f):
     """
     Decorator for creating an app context and pushing into to the context stack.
+    Reuses existing default connection if active to prevent leaking MongoClient pools and threads.
     """
 
     @functools.wraps(f)
     def decorated(*args, **kwargs):
-        from database.connector import init_db
+        from database.connector import init_db, check_connection
         from webserver.settings import MONGO_DATABASES
-        init_db(MONGO_DATABASES["default"])
+        if not check_connection('default'):
+            init_db(MONGO_DATABASES["default"])
         return f(*args, **kwargs)
 
     return decorated

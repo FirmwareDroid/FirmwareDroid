@@ -12,7 +12,7 @@ from api.v2.schema.RqJobsSchema import ONE_DAY_TIMEOUT, ONE_WEEK_TIMEOUT
 from api.v2.types.GenericDeletion import delete_queryset_background
 from api.v2.types.GenericFilter import get_filtered_queryset, generate_filter
 from api.v2.validators.validation import (
-    sanitize_and_validate, validate_object_id_list, validate_queue_name, validate_queue_extractor_task, sanitize_string
+    sanitize_and_validate, validate_object_id_list, validate_queue_name, validate_queue_extractor_task, sanitize_string, validate_scan_modules
 )
 from firmware_handler.firmware_reimporter import start_firmware_re_import
 from hashing.fuzzy_hash_creator import start_fuzzy_hasher
@@ -108,21 +108,23 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
 
     class Arguments:
         queue_name = graphene.String(required=True, default_value=list(RQ_QUEUES.keys())[0])
-        create_fuzzy_hashes = graphene.Boolean(required=True)
+        create_fuzzy_hashes = graphene.Boolean(required=False, default_value=False)
         storage_index = graphene.Int(required=True, default_value=0)
-        keep_files_on_disk = graphene.Boolean(required=False, default_value=False)
+        keep_files_on_disk = graphene.Boolean(required=False, default_value=True)
+        scan_modules = graphene.List(graphene.NonNull(graphene.String), required=False, default_value=[])
 
     @classmethod
     @superuser_required
     @sanitize_and_validate(
         validators={
-            'queue_name': [validate_queue_name, validate_queue_extractor_task],
+            "queue_name": [validate_queue_name, validate_queue_extractor_task],
+            "scan_modules": validate_scan_modules,
         },
         sanitizers={
-            'queue_name': sanitize_string,
+            "queue_name": sanitize_string,
         }
     )
-    def mutate(cls, root, info, queue_name, create_fuzzy_hashes, storage_index, keep_files_on_disk):
+    def mutate(cls, root, info, queue_name, create_fuzzy_hashes, storage_index, keep_files_on_disk, scan_modules=None):
         """
         Create a job to import firmware.
 
@@ -130,6 +132,7 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
         :param storage_index: int - index of the storage to use.
         :param queue_name: str - name of the RQ to use.
         :param create_fuzzy_hashes: boolean - True: will create fuzzy hashes for all files in the firmware found.
+        :param scan_modules: list(str) - list of scanner module names to automatically run.
 
         :return: str - job-id of the string
         """
@@ -139,6 +142,7 @@ class CreateFirmwareExtractorJob(graphene.Mutation):
                             create_fuzzy_hashes,
                             storage_index,
                             keep_files_on_disk,
+                            scan_modules or [],
                             job_timeout=ONE_WEEK_TIMEOUT,
                             meta={"storage_index": storage_index}
                             )

@@ -23,17 +23,23 @@ def multiprocess_disconnect_db_connection(func):
 
 def multiprocess_disconnect_all():
     """
-    Disconnects all mongoEngine connections and then registers default connection.
-    Workaround for using mongoEngine in a multiprocess environment:
-    See link: https://stackoverflow.com/questions/49390825/using-mongoengine-with-multiprocessing-how-do-you-close-mongoengine-connection
-
+    Disconnects all mongoEngine connections and properly closes underlying PyMongo clients.
+    Workaround for using mongoEngine in a multiprocess environment.
     """
-    from webserver.settings import MONGO_DATABASES
-    #mongoengine.disconnect_all()
-    #mongoengine.disconnect()
-    connection._connections = {}
-    connection._connection_settings = {}
-    connection._dbs = {}
+    try:
+        for alias, conn in list(connection._connections.items()):
+            try:
+                if hasattr(conn, "close"):
+                    conn.close()
+            except Exception:
+                pass
+        mongoengine.disconnect_all()
+    except Exception:
+        pass
+    finally:
+        connection._connections = {}
+        connection._connection_settings = {}
+        connection._dbs = {}
 
 
 @multiprocess_disconnect_db_connection
@@ -47,10 +53,9 @@ def init_db(db_settings):
 
     """
     alias = uuid.uuid4()
-    register_connection(db_settings, alias='default', connect=True, maxPoolSize=300)
+    register_connection(db_settings, alias='default', connect=True, maxPoolSize=50)
     db_con = open_db_connection(db_settings, str(alias))
-    register_connection(db_settings, str(alias))
-    #test_connection()
+    register_connection(db_settings, str(alias), maxPoolSize=50)
     return db_con
 
 
@@ -154,7 +159,7 @@ def get_connection_options(db_settings):
 
     :param db_settings: dict - with mongodb configuration.
 
-    :return: db_name, host, port, username, password
+    :return: tuple - db_name, host, port, username, password, authentication_source, authentication_mechanism
 
     """
     db_name = db_settings.get("db")
