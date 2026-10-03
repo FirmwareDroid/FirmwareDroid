@@ -15,7 +15,7 @@ djangorestframework~=3.18.1
 ##############################
 # Databases
 rq~=2.12.0
-pymongo~=4.8.0 # mongoengine dependency -> Newer versions may not be compatible
+pymongo~=4.18.2 # mongoengine dependency -> Newer versions may not be compatible
 mongoengine~=0.29.3
 blinker~=1.9.0
 ##############################
@@ -25,3 +25,4 @@ log4mongo~=1.8.1
 #Setup Dependencies
 jinja2~=3.1.6
 cryptography~=50.0.1
+pyjwt>=2.15.0 # not directly required, pinned by Snyk to avoid a vulnerability
