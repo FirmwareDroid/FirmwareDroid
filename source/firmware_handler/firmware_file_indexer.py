@@ -188,11 +188,37 @@ def add_firmware_file_references(firmware, firmware_file_list):
     """
     if len(firmware_file_list) > 0:
         logging.debug(f"Add file references for: {firmware.id}")
+        from pymongo import UpdateOne
         firmware_file_ids = []
+        bulk_ops = []
         for firmware_file in firmware_file_list:
             firmware_file.firmware_id_reference = firmware.id
-            firmware_file.save()
             firmware_file_ids.append(firmware_file.id)
+            bulk_ops.append(
+                UpdateOne(
+                    {"_id": firmware_file.id},
+                    {
+                        "$set": {
+                            "firmware_id_reference": firmware.id,
+                            "is_on_disk": getattr(firmware_file, "is_on_disk", False) is True,
+                            "absolute_store_path": firmware_file.absolute_store_path,
+                        }
+                    }
+                )
+            )
+            if len(bulk_ops) >= 1000:
+                try:
+                    FirmwareFile._get_collection().bulk_write(bulk_ops, ordered=False)
+                except Exception as e:
+                    logging.warning(f"bulk_write failed during add_firmware_file_references: {e}")
+                bulk_ops = []
+
+        if bulk_ops:
+            try:
+                FirmwareFile._get_collection().bulk_write(bulk_ops, ordered=False)
+            except Exception as e:
+                logging.warning(f"bulk_write failed during add_firmware_file_references: {e}")
+
         firmware_file_set_list = []
         for i in range(0, len(firmware_file_ids), FIRMWARE_FILE_SET_CHUNK_SIZE):
             firmware_file_set = FirmwareFileSet(firmware_id_reference=firmware.id,
@@ -204,3 +230,77 @@ def add_firmware_file_references(firmware, firmware_file_list):
         logging.debug(f"Successfully added firmware file references: {firmware.id} {len(firmware_file_list)}")
     else:
         raise ValueError(f"No firmware file references added: firmware-id {firmware.id} {len(firmware_file_list)}")
+
+
+def reconcile_extracted_firmware_files(firmware=None):
+    """
+    Scans firmware files on disk for imported firmwares and reconciles the
+    database records so that is_on_disk and absolute_store_path match actual disk state.
+    """
+    from model.AndroidFirmware import AndroidFirmware
+    from pymongo import UpdateOne
+
+    firmwares = [firmware] if firmware else AndroidFirmware.objects()
+    total_updated = 0
+
+    for fw in firmwares:
+        try:
+            store_setting = fw.get_store_setting()
+            if not store_setting:
+                continue
+            store_paths = store_setting.get_store_paths()
+            file_extract_base = store_paths.get("FIRMWARE_FOLDER_FILE_EXTRACT")
+            if not file_extract_base or not os.path.isdir(file_extract_base):
+                continue
+
+            extract_base = os.path.join(file_extract_base, "firmware_extract", fw.md5)
+            export_base = os.path.join(file_extract_base, "firmware_file_export", str(fw.id))
+
+            has_extract = os.path.isdir(extract_base)
+            has_export = os.path.isdir(export_base)
+            if not has_extract and not has_export:
+                continue
+
+            files = FirmwareFile.objects(firmware_id_reference=fw.id)
+            bulk_ops = []
+            for f in files:
+                rel = f.relative_path.lstrip("/")
+                candidates = []
+                if has_extract:
+                    if f.partition_name in ["/", "root", "archive", None]:
+                        candidates.append(os.path.join(extract_base, "intermediate_extractions", rel))
+                    else:
+                        candidates.append(os.path.join(extract_base, f.partition_name, rel))
+                if has_export:
+                    candidates.append(os.path.join(export_base, f.partition_name or "root", rel))
+
+                matched_path = None
+                for cand in candidates:
+                    if os.path.exists(cand):
+                        matched_path = os.path.realpath(cand)
+                        break
+
+                if matched_path:
+                    if not f.is_on_disk or f.absolute_store_path != matched_path:
+                        bulk_ops.append(
+                            UpdateOne(
+                                {"_id": f.id},
+                                {
+                                    "$set": {
+                                        "is_on_disk": True,
+                                        "absolute_store_path": matched_path,
+                                    }
+                                }
+                            )
+                        )
+                        total_updated += 1
+                        if len(bulk_ops) >= 1000:
+                            FirmwareFile._get_collection().bulk_write(bulk_ops, ordered=False)
+                            bulk_ops = []
+            if bulk_ops:
+                FirmwareFile._get_collection().bulk_write(bulk_ops, ordered=False)
+        except Exception as err:
+            logging.error(f"Error during reconcile_extracted_firmware_files for firmware {getattr(fw, 'id', None)}: {err}")
+
+    logging.info(f"reconcile_extracted_firmware_files completed. Total files updated: {total_updated}")
+    return total_updated

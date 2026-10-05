@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
+import os
 import django_rq
 import graphene
 from graphene.relay import Node
@@ -27,10 +28,21 @@ ModelFilter = generate_filter(FirmwareFile)
 class FirmwareFileType(MongoengineObjectType):
     file_size_bytes = graphene.Float()
     pk = graphene.String(source='pk')
+    is_on_disk = graphene.Boolean()
 
     class Meta:
         model = FirmwareFile
         interfaces = (Node,)
+
+    @staticmethod
+    def resolve_is_on_disk(root, info):
+        val = getattr(root, "is_on_disk", None)
+        if val is True:
+            return True
+        path = getattr(root, "absolute_store_path", None)
+        if path and os.path.exists(path):
+            return True
+        return False
 
 
 class FirmwareFileQuery(graphene.ObjectType):

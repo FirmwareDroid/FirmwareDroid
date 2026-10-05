@@ -257,6 +257,12 @@ def index_partitions(temp_extract_dir, files_dict, create_fuzzy_hashes, md5, sto
                                             ignore_dangling_symlinks=True
                                             )
                             logging.info(f"Partition stored at {partition_store_path}: {partition_name}")
+                            for fw_file in partition_firmware_file_list:
+                                fw_file.is_on_disk = True
+                                fw_file.absolute_store_path = os.path.join(
+                                    partition_store_path,
+                                    fw_file.relative_path.lstrip("/")
+                                )
                         except Exception as e:
                             logging.error(f"Partition storing error for {partition_store_path} - {partition_name} with error: {e}")
 
@@ -408,6 +414,24 @@ def import_firmware(original_filename,
             if not check_if_successful_import(partition_info_dict):
                 raise ValueError("No partition was successfully imported.")
 
+            if keep_files_on_disk:
+                try:
+                    intermediate_extraction_path = os.path.join(firmware_extract_path, NAME_INTERMEDIATE_EXPORT_FOLDER)
+                    logging.info(f"Storing extracted firmware files to {intermediate_extraction_path}")
+                    shutil.copytree(temp_extract_dir,
+                                    intermediate_extraction_path,
+                                    dirs_exist_ok=True,
+                                    symlinks=True,
+                                    ignore_dangling_symlinks=True)
+                    for fw_file in files_dict.get("archive_firmware_file_list", []):
+                        fw_file.is_on_disk = True
+                        fw_file.absolute_store_path = os.path.join(
+                            intermediate_extraction_path,
+                            fw_file.relative_path.lstrip("/")
+                        )
+                except Exception as e:
+                    logging.error(f"Failed to store extracted firmware files to {intermediate_extraction_path}. Error: {e}")
+
             store_filename, firmware_store_path = store_firmware_archive(firmware_archive_file_path,
                                                                          md5,
                                                                          version_detected,
@@ -433,18 +457,6 @@ def import_firmware(original_filename,
                     enqueue_post_import_scans(files_dict["firmware_app_list"], scan_modules)
                 except Exception as scan_err:
                     logging.exception(f"Failed to enqueue post-import scans for {original_filename}: {scan_err}")
-
-            if keep_files_on_disk:
-                try:
-                    intermediate_extraction_path = os.path.join(firmware_extract_path, NAME_INTERMEDIATE_EXPORT_FOLDER)
-                    logging.info(f"Storing extracted firmware files to {intermediate_extraction_path}")
-                    shutil.copytree(temp_extract_dir,
-                                    intermediate_extraction_path,
-                                    dirs_exist_ok=True,
-                                    symlinks=True,
-                                    ignore_dangling_symlinks=True)
-                except Exception as e:
-                    logging.error(f"Failed to store extracted firmware files to {intermediate_extraction_path}. Error: {e}")
 
         except Exception as error:
             logging.exception(f"Firmware Import failed: {original_filename} error: {str(error)}")

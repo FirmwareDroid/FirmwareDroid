@@ -581,11 +581,58 @@ class FirmwareFileDownloadView(ViewSet):
 
         real_file_path = os.path.realpath(file_path)
         if not os.path.exists(real_file_path) or not os.path.isfile(real_file_path):
-            logger.warning(f"File missing on disk: {real_file_path} for file_id {resolved_id}")
-            return JsonResponse(
-                {"error": "Firmware file is not present on disk. Please extract the firmware files first."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+            fallback_path = None
+            try:
+                firmware = getattr(file_doc, "firmware_id_reference", None)
+                if firmware and hasattr(firmware, "get_store_setting"):
+                    store_setting = firmware.get_store_setting()
+                    if store_setting:
+                        store_paths = store_setting.get_store_paths()
+                        store_path_abs = os.path.abspath(store_paths["FIRMWARE_FOLDER_FILE_EXTRACT"])
+                        from firmware_handler.firmware_importer import NAME_PARTITION_EXPORT_FOLDER, NAME_INTERMEDIATE_EXPORT_FOLDER
+                        from firmware_handler.firmware_file_exporter import NAME_EXPORT_FOLDER
+
+                        rel_path = file_doc.relative_path.lstrip("/") if getattr(file_doc, "relative_path", None) else ""
+                        fw_id = str(firmware.id) if isinstance(getattr(firmware, "id", None), (str, int)) else ""
+                        fw_md5 = str(firmware.md5) if isinstance(getattr(firmware, "md5", None), str) else None
+                        candidates = []
+                        if fw_md5 and rel_path:
+                            if file_doc.partition_name in ["/", "root", "archive", None]:
+                                candidates.append(os.path.join(store_path_abs, NAME_PARTITION_EXPORT_FOLDER, fw_md5, NAME_INTERMEDIATE_EXPORT_FOLDER, rel_path))
+                            else:
+                                candidates.append(os.path.join(store_path_abs, NAME_PARTITION_EXPORT_FOLDER, fw_md5, file_doc.partition_name, rel_path))
+                        if fw_id and rel_path:
+                            part = file_doc.partition_name if file_doc.partition_name not in ["/", "root", "archive", None] else "root"
+                            candidates.append(os.path.join(store_path_abs, NAME_EXPORT_FOLDER, fw_id, part, rel_path))
+
+                        for cand in candidates:
+                            cand_real = os.path.realpath(cand)
+                            if os.path.exists(cand_real) and os.path.isfile(cand_real) and _is_safe_storage_path(cand_real, allowed_roots):
+                                fallback_path = cand_real
+                                try:
+                                    file_doc.update(set__is_on_disk=True, set__absolute_store_path=cand_real)
+                                    file_doc.is_on_disk = True
+                                    file_doc.absolute_store_path = cand_real
+                                except Exception as update_err:
+                                    logger.warning(f"Could not update FirmwareFile {resolved_id} path: {update_err}")
+                                break
+            except Exception as fallback_err:
+                logger.debug(f"Fallback resolution failed for {resolved_id}: {fallback_err}")
+
+            if fallback_path:
+                real_file_path = fallback_path
+            else:
+                logger.warning(f"File missing on disk: {real_file_path} for file_id {resolved_id}")
+                return JsonResponse(
+                    {"error": "Firmware file is not present on disk. Please extract the firmware files first."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+        if not getattr(file_doc, "is_on_disk", False):
+            try:
+                file_doc.update(set__is_on_disk=True)
+            except Exception:
+                pass
 
         safe_filename = _get_safe_firmware_file_filename(file_doc, resolved_id)
 
@@ -655,12 +702,32 @@ class FirmwareExtractedArchiveDownloadView(ViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+        allowed_roots = _get_allowed_storage_roots()
         try:
             store_setting = firmware.get_store_setting()
             store_paths = store_setting.get_store_paths()
             store_path_abs = os.path.abspath(store_paths["FIRMWARE_FOLDER_FILE_EXTRACT"])
             from firmware_handler.firmware_file_exporter import NAME_EXPORT_FOLDER
-            export_dir = os.path.join(store_path_abs, NAME_EXPORT_FOLDER, str(firmware.id))
+            from firmware_handler.firmware_importer import NAME_PARTITION_EXPORT_FOLDER
+
+            fw_id = str(firmware.id) if isinstance(getattr(firmware, "id", None), (str, int)) else ""
+            fw_md5 = str(firmware.md5) if isinstance(getattr(firmware, "md5", None), str) else None
+            candidate_dirs = []
+            if fw_id:
+                candidate_dirs.append(os.path.join(store_path_abs, NAME_EXPORT_FOLDER, fw_id))
+            if fw_md5:
+                candidate_dirs.append(os.path.join(store_path_abs, NAME_PARTITION_EXPORT_FOLDER, fw_md5))
+            export_dir = None
+            for c_dir in candidate_dirs:
+                if os.path.exists(c_dir) and os.path.isdir(c_dir):
+                    if not _is_safe_storage_path(c_dir, allowed_roots):
+                        continue
+                    for _, _, files in os.walk(c_dir):
+                        if files:
+                            export_dir = c_dir
+                            break
+                    if export_dir:
+                        break
         except Exception as err:
             logger.error(f"Error determining export path for firmware {resolved_id}: {err}")
             return JsonResponse(
@@ -668,21 +735,9 @@ class FirmwareExtractedArchiveDownloadView(ViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
-        if not os.path.exists(export_dir) or not os.path.isdir(export_dir):
+        if not export_dir:
             return JsonResponse(
                 {"error": "Firmware files have not been extracted to disk yet. Please trigger extraction first."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        has_files = False
-        for root, dirs, files in os.walk(export_dir):
-            if files:
-                has_files = True
-                break
-
-        if not has_files:
-            return JsonResponse(
-                {"error": "No extracted files found on disk for this firmware. Please trigger extraction first."},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
