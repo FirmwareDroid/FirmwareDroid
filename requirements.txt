@@ -15,6 +15,7 @@ djangorestframework~=3.18.1
 ##############################
 # Databases
 rq~=2.12.0
+python-redis-lock~=4.0.0
 pymongo~=4.8.0 # mongoengine dependency -> Newer versions may not be compatible
 mongoengine~=0.29.3
 blinker~=1.9.0

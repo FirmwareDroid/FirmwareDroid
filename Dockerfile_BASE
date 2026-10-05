@@ -47,6 +47,7 @@ WORKDIR /var/www/
 ENV PATH="$PATH:/home/www/.local/bin/"
 ENV PATH="$PATH:/var/www/source/"
 ENV PYTHONPATH="/var/www/source/"
+ENV DJANGO_SETTINGS_MODULE="webserver.settings"
 
 ########################################################
 # Install Python dependencies (system-wide)            #

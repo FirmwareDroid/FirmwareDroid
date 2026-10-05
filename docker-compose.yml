@@ -75,6 +75,7 @@ services:
       - DJANGO_SQLITE_DATABASE_PATH=${DJANGO_SQLITE_DATABASE_PATH:-/var/www/blob_storage/django_database/}
       - FILE_STORE_ROOT=${FILE_STORE_ROOT:-/var/www/file_store/}
       - REDIS_PORT=${REDIS_PORT:-6379}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-webserver.settings}
     expose:
       - 5000
     volumes:
@@ -263,6 +264,7 @@ services:
       - MONGODB_AUTH_SRC=${MONGODB_AUTH_SRC:-admin}
       - FILE_STORE_ROOT=${FILE_STORE_ROOT:-/var/www/file_store/}
       - REDIS_PORT=${REDIS_PORT:-6379}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-webserver.settings}
     command: /bin/sh -c 'if [ -f /var/www/config/runtime.env ]; then set -a; . /var/www/config/runtime.env; set +a; fi && exec rqworker --logging_level INFO --name extractor-worker-1 --url "redis://:$${REDIS_PASSWORD}@redis:6379/0" extractor'
     privileged: true
     networks:
@@ -314,6 +316,7 @@ services:
       - MONGODB_AUTH_SRC=${MONGODB_AUTH_SRC:-admin}
       - FILE_STORE_ROOT=${FILE_STORE_ROOT:-/var/www/file_store/}
       - REDIS_PORT=${REDIS_PORT:-6379}
+      - DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE:-webserver.settings}
       - ANDROGUARD_MAX_WORKERS=${ANDROGUARD_MAX_WORKERS:-8}
       - ANDROGUARD_EXTRACT_STRINGS=${ANDROGUARD_EXTRACT_STRINGS:-false}
       - MAX_TASKS_PER_CHILD=${MAX_TASKS_PER_CHILD:-1}
