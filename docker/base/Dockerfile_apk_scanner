@@ -1,198 +1,160 @@
+# -*- coding: utf-8 -*-
+# This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
+# See the file 'LICENSE' for copying permission.
+
 ARG REGISTRY=ghcr.io
 ARG IMAGE_NAME=firmwaredroid/firmwaredroid
 
-# Pull the published base image into a named stage so we can copy files from it
-# without referencing an unqualified name that would default to docker.io.
-FROM ${REGISTRY}/${IMAGE_NAME}-base:latest AS firmwaredroid_base
+########################################################
+# Multi-stage builder for Krakatau                     #
+# Compiles krak2 binary and discards Rust toolchain    #
+########################################################
+FROM rust:bookworm AS krakatau-builder
+RUN git clone --depth 1 https://github.com/Storyyeller/Krakatau.git /build/krakatau \
+    && cd /build/krakatau \
+    && cargo build --release
 
-FROM eclipse-temurin:23 AS apk_scanner-worker
-# Copy everything from the published base image stage
-COPY --from=firmwaredroid_base / /
+########################################################
+# APK Scanner Worker Runtime Stage                     #
+########################################################
+FROM ${REGISTRY}/${IMAGE_NAME}-base:latest AS apk_scanner-worker
+
+USER root
+
+########################################################
+# Copy OpenJDK 23 from Eclipse Temurin into Debian base #
+########################################################
+COPY --from=eclipse-temurin:23 /opt/java/openjdk /opt/java/openjdk
+ENV JAVA_HOME=/opt/java/openjdk
+ENV PATH="/opt/java/openjdk/bin:${PATH}"
 
 #####################################
 # Installing required packages      #
 #####################################
-RUN apt --allow-releaseinfo-change update -y
+RUN apt-get --allow-releaseinfo-change update -y && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 #####################################
-# Install Exodus-core dependency (dexdump) #
-# Install Android command line tools and SDK #
+# Install Android command line tools #
 #####################################
-# TODO FIX DEXDUMP Installation: https://github.com/Exodus-Privacy/exodus-standalone/issues/6
-#RUN apt install -y dexdump android-libbacktrace # Debian dexdump package is broken
-# Workaround: Installation via Android sdkmanager
-RUN mkdir -p /android/sdk/cmdline-tools/latest && mkdir -p /android/sdk/avd && mkdir -p /android/sdk/platforms  \
-    && mkdir -p /android/sdk/platforms && mkdir -p /android/sdk/platform-tools && mkdir -p /android/sdk/system-images  \
-    && mkdir /android/tmp && mkdir -p /android/user_home/
-WORKDIR /android
-
-# Retry mechanism for wget commands
-RUN set -eux; \
-    for i in $(seq 1 5); do \
-        wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip && break || sleep 15; \
-    done; \
-    for i in $(seq 1 5); do \
-        wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip && break || sleep 15; \
-    done;
-
-RUN unzip /android/commandlinetools-linux-10406996_latest.zip -d /android/tmp
-RUN unzip platform-tools-latest-linux.zip -d /android/sdk/
-RUN mv /android/tmp/cmdline-tools/* /android/sdk/cmdline-tools/latest/
 ENV ANDROID_HOME=/android/sdk
 ENV ANDROID_SDK_ROOT=/android/sdk
 ENV ANDROID_AVD_HOME=/android/sdk/avd
 ENV ANDROID_EMULATOR_HOME=/android/sdk/emulator
 ENV ANDROID_USER_HOME=/android/user_home/
-ENV PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
-ENV PATH=$ANDROID_HOME/platform-tools:$PATH
-ENV PATH=$ANDROID_HOME/emulator/:$PATH
-RUN yes | /android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses ; exit 0 # Workaround against exit code 133
-RUN /android/sdk/cmdline-tools/latest/bin/sdkmanager --install "build-tools;35.0.0" ; exit 0 # Workaround against exit code 133
-ENV PATH=$ANDROID_SDK_ROOT/build-tools/35.0.0/:$PATH
+ENV PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_SDK_ROOT/build-tools/35.0.0/:$PATH
+
+RUN set -eux; \
+    mkdir -p /android/sdk/cmdline-tools/latest /android/sdk/avd /android/sdk/platforms \
+             /android/sdk/platform-tools /android/sdk/system-images /android/user_home; \
+    for i in $(seq 1 5); do \
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip -O /tmp/cmdline-tools.zip && break || sleep 15; \
+    done; \
+    for i in $(seq 1 5); do \
+        wget -q https://dl.google.com/android/repository/platform-tools-latest-linux.zip -O /tmp/platform-tools.zip && break || sleep 15; \
+    done; \
+    unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-tools-unzip; \
+    mv /tmp/cmdline-tools-unzip/cmdline-tools/* /android/sdk/cmdline-tools/latest/; \
+    unzip -q /tmp/platform-tools.zip -d /android/sdk/; \
+    rm -rf /tmp/cmdline-tools.zip /tmp/platform-tools.zip /tmp/cmdline-tools-unzip; \
+    yes | /android/sdk/cmdline-tools/latest/bin/sdkmanager --licenses || true; \
+    /android/sdk/cmdline-tools/latest/bin/sdkmanager --install "build-tools;35.0.0" || true; \
+    chown -R www:www /android && chmod -R u+rwx /android
 
 #####################################
 # Installing apktool                #
 #####################################
 RUN set -eux; \
     for i in $(seq 1 5); do \
-        curl -Lo /usr/local/bin/apktool.jar "https://github.com/iBotPeaches/Apktool/releases/download/v3.0.1/apktool_3.0.1.jar" && break || sleep 15; \
-    done;
-RUN set -eux; \
+        curl -fsSLo /usr/local/bin/apktool.jar "https://github.com/iBotPeaches/Apktool/releases/download/v3.0.1/apktool_3.0.1.jar" && break || sleep 15; \
+    done; \
     for i in $(seq 1 5); do \
-        curl -o /usr/local/bin/apktool https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool && break || sleep 15; \
-    done;
-RUN chmod a+x /usr/local/bin/apktool.jar && chmod a+x /usr/local/bin/apktool
-RUN apktool v
+        curl -fsSLo /usr/local/bin/apktool https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/linux/apktool && break || sleep 15; \
+    done; \
+    chmod a+x /usr/local/bin/apktool.jar /usr/local/bin/apktool; \
+    apktool v
 
 #####################################
 # Installing jadx                   #
 #####################################
-RUN mkdir -p /tmp/jadx-temp/jadx/ && mkdir -p /opt/jadx/bin
-WORKDIR /tmp/jadx-temp/
-RUN set -eux; \
-    JADX_VERSION="1.5.3"; \
-    for i in $(seq 1 5); do \
-        curl -Lo jadx.zip "https://github.com/skylot/jadx/releases/download/v1.5.3/jadx-${JADX_VERSION}.zip" && break || sleep 15; \
-    done;
-RUN unzip jadx.zip -d /tmp/jadx-temp/
-RUN mv /tmp/jadx-temp/* /opt/jadx/
 ENV JADX="/opt/jadx/bin"
 ENV PATH="${JADX}:${PATH}"
-RUN export PATH=$PATH
-RUN jadx --version
-
-##################################################
-# Install Gradle
-##################################################
-RUN mkdir -p /opt/gradle
-ENV GRADLE_VERSION=7.6.3
 RUN set -eux; \
+    mkdir -p /opt/jadx; \
+    JADX_VERSION="1.5.3"; \
     for i in $(seq 1 5); do \
-        wget https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip -P /tmp && break || sleep 15; \
+        curl -fsSLo /tmp/jadx.zip "https://github.com/skylot/jadx/releases/download/v1.5.3/jadx-${JADX_VERSION}.zip" && break || sleep 15; \
     done; \
-    unzip -d /opt/gradle /tmp/gradle-${GRADLE_VERSION}-bin.zip; \
-    rm /tmp/gradle-${GRADLE_VERSION}-bin.zip
-ENV GRADLE_HOME=/opt/gradle/gradle-${GRADLE_VERSION}
-ENV PATH=${GRADLE_HOME}/bin:${PATH}
-RUN gradle --version
+    unzip -q /tmp/jadx.zip -d /opt/jadx; \
+    rm -f /tmp/jadx.zip; \
+    jadx --version
 
 ##################################################
-# Install Java decompilers
+# Install Java decompilers                       #
 ##################################################
 RUN mkdir -p /opt/decompilers/java/
 # Install CFR
 RUN set -eux; \
     for i in $(seq 1 5); do \
-        wget https://github.com/leibnitz27/cfr/releases/download/0.152/cfr-0.152.jar -O /opt/decompilers/java/cfr.jar && break || sleep 15; \
-    done;
+        wget -q https://github.com/leibnitz27/cfr/releases/download/0.152/cfr-0.152.jar -O /opt/decompilers/java/cfr.jar && break || sleep 15; \
+    done
 
 # Install Procyon
 RUN set -eux; \
     for i in $(seq 1 5); do \
-        wget https://github.com/mstrobel/procyon/releases/download/v0.6.0/procyon-decompiler-0.6.0.jar -O /opt/decompilers/java/procyon.jar && break || sleep 15; \
-    done;
+        wget -q https://github.com/mstrobel/procyon/releases/download/v0.6.0/procyon-decompiler-0.6.0.jar -O /opt/decompilers/java/procyon.jar && break || sleep 15; \
+    done
 
-# Install Krakatau
-RUN git clone --depth 1 https://github.com/Storyyeller/Krakatau.git /opt/decompilers/java/krakatau
-WORKDIR /opt/decompilers/java/krakatau/
-ENV PATH="/home/www/.cargo/bin:${PATH}"
-RUN cargo build --release
+# Install Krakatau from builder stage
+RUN mkdir -p /opt/decompilers/java/krakatau/target/release
+COPY --from=krakatau-builder /build/krakatau/target/release/krak2 /opt/decompilers/java/krakatau/target/release/krak2
 
-# Install Fernflower
-# TODO find prebuilt version of fernflower or stable release jar
-#RUN git clone https://github.com/fesh0r/fernflower.git /opt/decompilers/java/fernflower
-#RUN /opt/firmwaredroid/decompilers/java/fernflower/gradlew build
-
-WORKDIR /var/www/source/
 #####################################
 # Install SUPER Android Analyzer   #
 #####################################
-RUN apt-get install -y default-jre-headless
+WORKDIR /tmp
 RUN set -eux; \
     for i in $(seq 1 5); do \
-        wget -P /tmp/ https://github.com/SUPERAndroidAnalyzer/super/releases/download/0.5.1/super-analyzer_0.5.1_ubuntu_amd64.deb && break || sleep 15; \
-    done;
-RUN dpkg -i /tmp/super-analyzer_0.5.1_ubuntu_amd64.deb
+        wget -q -P /tmp/ https://github.com/SUPERAndroidAnalyzer/super/releases/download/0.5.1/super-analyzer_0.5.1_ubuntu_amd64.deb && break || sleep 15; \
+    done; \
+    dpkg -i /tmp/super-analyzer_0.5.1_ubuntu_amd64.deb || true; \
+    rm -f /tmp/super-analyzer_0.5.1_ubuntu_amd64.deb
 
 #####################################
 # Install FlowDroid                 #
 #####################################
 RUN mkdir -p /opt/flowdroid/rules/
-# Please, update hardcoded version in flowdroid_wrapper.py when updating here!
 RUN set -eux; \
     for i in $(seq 1 5); do \
-        wget -O /opt/flowdroid/soot-infoflow-cmd-jar-with-dependencies.jar https://github.com/secure-software-engineering/FlowDroid/releases/download/v2.13/soot-infoflow-cmd-2.13.0-jar-with-dependencies.jar && break || sleep 15; \
-    done;
-
-# Download examples source and sink rules
-RUN set -eux; \
-    for i in $(seq 1 5); do \
-        wget -O /opt/flowdroid/rules/SourcesAndSinks.txt https://raw.githubusercontent.com/secure-software-engineering/FlowDroid/develop/soot-infoflow-android/SourcesAndSinks.txt && break || sleep 15; \
+        wget -q -O /opt/flowdroid/soot-infoflow-cmd-jar-with-dependencies.jar https://github.com/secure-software-engineering/FlowDroid/releases/download/v2.13/soot-infoflow-cmd-2.13.0-jar-with-dependencies.jar && break || sleep 15; \
     done; \
     for i in $(seq 1 5); do \
-        wget -O /opt/flowdroid/rules/SourcesAndSinks_SharedPrefsOnly.txt https://raw.githubusercontent.com/secure-software-engineering/FlowDroid/develop/soot-infoflow-android/SourcesAndSinks_SharedPrefsOnly.txt && break || sleep 15; \
-    done;
-# Copy custom rules from source tree
-RUN cp -r /var/www/source/static_analysis/FlowDroid/rules/* /opt/flowdroid/rules/
-
-
-########################################################
-# Install MobSFScam requirements                          #
-########################################################
-RUN pip install semgrep
-
-########################################################
-# Install Go                                            #
-########################################################
-RUN set -eux; \
-    for i in $(seq 1 5); do \
-        wget https://go.dev/dl/go1.23.0.linux-amd64.tar.gz -O /tmp/go.tar.gz && break || sleep 15; \
+        wget -q -O /opt/flowdroid/rules/SourcesAndSinks.txt https://raw.githubusercontent.com/secure-software-engineering/FlowDroid/develop/soot-infoflow-android/SourcesAndSinks.txt && break || sleep 15; \
     done; \
-    tar -C /usr/local -xzf /tmp/go.tar.gz; \
-    rm /tmp/go.tar.gz
-
-ENV PATH="${PATH}:/usr/local/go/bin"
+    for i in $(seq 1 5); do \
+        wget -q -O /opt/flowdroid/rules/SourcesAndSinks_SharedPrefsOnly.txt https://raw.githubusercontent.com/secure-software-engineering/FlowDroid/develop/soot-infoflow-android/SourcesAndSinks_SharedPrefsOnly.txt && break || sleep 15; \
+    done; \
+    cp -r /var/www/source/static_analysis/FlowDroid/rules/* /opt/flowdroid/rules/
 
 ########################################################
-# Install trufflehog                                   #
+# Install trufflehog (official static binary)          #
 ########################################################
 RUN wget -qO- https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin
 
 ########################################################
 # Install Python requirements                          #
 ########################################################
-RUN --mount=type=cache,target=/tmp/.cache \
-    pip install -r /var/www/requirements/requirements_apk_scanner.txt
+RUN pip install --no-cache-dir -r /var/www/requirements/requirements_apk_scanner.txt
 
 ##################################################
-# Install python-based static-analysis tools  #
+# Install python-based static-analysis tools     #
+# Strict isolated virtualenv per tool            #
 ##################################################
 USER root
-RUN chown -R www:www /android && chmod u+rwx /android
 RUN chown -R www:www /opt/firmwaredroid/python/
 
 USER www
 ENV PATH="$PATH:/home/www/.local/bin/"
-ENV PYTHONPATH="/var/www/source:${PYTHONPATH}"
+ENV PYTHONPATH="/var/www/source/"
 WORKDIR /var/www/source/
 RUN python3 /var/www/docker/setup_apk_scanner.py

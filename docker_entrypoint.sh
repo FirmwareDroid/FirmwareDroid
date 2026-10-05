@@ -58,8 +58,9 @@ if username and password:
 EOF
 
 # Start server
-# If started as root: drop privileges to 'www' for the main server process.
-GUNICORN_CMD=("/home/www/.local/bin/gunicorn" -w 17 --bind 0.0.0.0:5000 --worker-tmp-dir /dev/shm --chdir /var/www/source/ --timeout 300 --worker-class gevent --threads 12 --log-level debug webserver.wsgi:app)
+# Locate gunicorn dynamically (prefers PATH /usr/local/bin, falls back to legacy ~/.local/bin)
+GUNICORN_BIN="$(command -v gunicorn || which gunicorn || echo "/usr/local/bin/gunicorn")"
+GUNICORN_CMD=("$GUNICORN_BIN" -w 17 --bind 0.0.0.0:5000 --worker-tmp-dir /dev/shm --chdir /var/www/source/ --timeout 300 --worker-class gevent --threads 12 --log-level debug webserver.wsgi:app)
 
 if [ "$(id -u)" -eq 0 ]; then
     echo "Attempting to drop privileges to user 'www' and start gunicorn as www"

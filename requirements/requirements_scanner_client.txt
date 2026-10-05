@@ -1,0 +1,10 @@
+# Minimal database, model and task-queue client dependencies for isolated scanner virtual environments.
+# Omits the Django REST/GraphQL web server stack to keep each isolated scanner venv lean and secure.
+Django~=6.1.1
+django-environ~=0.14.0
+pymongo~=4.8.0
+mongoengine~=0.29.3
+blinker~=1.9.0
+log4mongo~=1.8.1
+rq~=2.12.0
+redis~=5.0.0

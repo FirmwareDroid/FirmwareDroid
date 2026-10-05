@@ -66,6 +66,14 @@ firmware-droid-client/node_modules/*
 jadx/*
 mongodb_data/*
 
+# Test fixtures, exports and documentation
+source/tools/fmd_export/
+source/tools/fmd_export/**
+docs/
+docs/**
+*.drawio
+generated-secrets.txt
+
 # files
 **/blob_storage
 /blob_storage

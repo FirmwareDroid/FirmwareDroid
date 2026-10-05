@@ -1,4 +1,25 @@
 services:
+  # ========================================================
+  # Build-only services (replicas: 0 ensures no container starts)
+  # ========================================================
+  base:
+    platform: "linux/amd64"
+    image: ghcr.io/firmwaredroid/firmwaredroid-base:latest
+    build:
+      context: .
+      dockerfile: Dockerfile_BASE
+    deploy:
+      replicas: 0
+
+  frontend:
+    platform: "linux/amd64"
+    image: ghcr.io/firmwaredroid/firmwaredroid-frontend:latest
+    build:
+      context: ./firmware-droid-client
+      dockerfile: Dockerfile
+    deploy:
+      replicas: 0
+
   init:
     platform: "linux/amd64"
     build:
@@ -24,6 +45,8 @@ services:
     build:
       context: .
       dockerfile: docker/base/Dockerfile_backend
+      additional_contexts:
+        ghcr.io/firmwaredroid/firmwaredroid-base:latest: service:base
     image: backend-worker
     container_name: backend-worker
     working_dir: /var/www/
@@ -91,6 +114,8 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile_NGINX
+      additional_contexts:
+        ghcr.io/firmwaredroid/firmwaredroid-frontend:latest: service:frontend
     restart: unless-stopped
     depends_on:
       init:
@@ -203,6 +228,8 @@ services:
     build:
       context: .
       dockerfile: docker/base/Dockerfile_extractor
+      additional_contexts:
+        ghcr.io/firmwaredroid/firmwaredroid-base:latest: service:base
     container_name: extractor-worker-1
     restart: unless-stopped
     depends_on:
@@ -252,6 +279,8 @@ services:
     build:
       context: .
       dockerfile: ./docker/base/Dockerfile_apk_scanner
+      additional_contexts:
+        ghcr.io/firmwaredroid/firmwaredroid-base:latest: service:base
     container_name: apk_scanner-worker-1
     restart: unless-stopped
     depends_on:

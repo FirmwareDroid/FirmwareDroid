@@ -3,22 +3,18 @@
 ########################################################
 FROM python:3.12-slim-bookworm AS firmwaredroid-base
 
-RUN mkdir -p /var/www/tmp/ && mkdir -p /var/www/ && mkdir -p /opt/firmwaredroid/python/
-COPY requirements.txt /var/www/requirements.txt
-COPY requirements.txt /var/www/requirements_testing.txt
-COPY requirements/ /var/www/requirements/
-COPY source/ /var/www/source/
-COPY docker_entrypoint.sh /var/www/docker_entrypoint.sh
-COPY templates/ /var/www/templates/
-COPY docker/ /var/www/docker/
-COPY firmware-droid-client/ /var/www/firmware-droid-client/
-RUN chmod +x /var/www/docker_entrypoint.sh || true
-WORKDIR /var/www/
-ENV PATH="$PATH:/home/www/.local/bin/"
-ENV PATH="$PATH:/var/www/source/"
-ENV PYTHONPATH="/var/www/source/:\$PYTHONPATH"
-
 USER root
+ENV GROUP_ID=1000 \
+    USER_ID=1000
+
+########################################################
+# User generation & directory setup                    #
+########################################################
+RUN groupadd -r www -g $GROUP_ID && \
+    useradd -r -g $GROUP_ID -u $USER_ID www -s /bin/sh -m && \
+    mkdir -p /var/www/tmp/ /var/www/ /opt/firmwaredroid/python/ /home/www/.local/bin && \
+    chown -R $USER_ID:$GROUP_ID /var/www/ /opt/firmwaredroid/ /home/www
+
 ########################################################
 # Update installation and apply latest security updates
 # - Run apt-get update, upgrade (to apply available security fixes),
@@ -27,61 +23,36 @@ USER root
 RUN set -eux; \
     export DEBIAN_FRONTEND=noninteractive; \
     apt-get --allow-releaseinfo-change update -y; \
-    # Upgrade packages to pull latest security patches
+    # Upgrade packages to pull latest security patches \
     apt-get -y upgrade; \
-    # Install essential packages (no-install-recommends to keep image smaller)
-    apt-get -y install --no-install-recommends apt-utils; \
-    apt-get -y install --no-install-recommends tar gzip build-essential git unzip curl wget sudo; \
-    # cleanup apt caches to reduce image size
+    # Install essential runtime packages (no compilers to keep image small & secure) \
+    apt-get -y install --no-install-recommends \
+        apt-utils tar gzip git unzip curl wget sudo; \
+    # cleanup apt caches to reduce image size \
     apt-get clean; rm -rf /var/lib/apt/lists/*
 
 ########################################################
-# User generation                                      #
+# Copy Source Files (using --chown to prevent layer duplicate)
 ########################################################
-ENV GROUP_ID=1000 \
-    USER_ID=1000
-RUN groupadd -r www -g $GROUP_ID
-# /sbin/nologin -> Debug with -s /bin/sh to get shell
-RUN useradd -r -g $GROUP_ID -u $USER_ID www -s /bin/sh -m
-RUN chown -R $USER_ID:$GROUP_ID /var/www/
-RUN chown -R $USER_ID:$GROUP_ID /opt/firmwaredroid/
+COPY --chown=www:www requirements.txt /var/www/requirements.txt
+COPY --chown=www:www requirements.txt /var/www/requirements_testing.txt
+COPY --chown=www:www requirements/ /var/www/requirements/
+COPY --chown=www:www source/ /var/www/source/
+COPY --chown=www:www docker_entrypoint.sh /var/www/docker_entrypoint.sh
+COPY --chown=www:www templates/ /var/www/templates/
+COPY --chown=www:www docker/ /var/www/docker/
+RUN chmod +x /var/www/docker_entrypoint.sh || true
 
-##################################################
-# Install RUST for root user                       #
-##################################################
-RUN set -eux; \
-    for i in $(seq 1 5); do \
-        curl -fsSL https://sh.rustup.rs -o rustup.sh && break || sleep 15; \
-    done; \
-    for i in $(seq 1 5); do \
-        sh rustup.sh -y && break || sleep 15; \
-    done; \
-    rm rustup.sh
-#RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
-RUN cargo --version
-
-##################################################
-# Install RUST for www user                       #
-##################################################
-USER www
-WORKDIR /home/www
-RUN set -eux; \
-    for i in $(seq 1 5); do \
-        curl -fsSL https://sh.rustup.rs -o rustup.sh && break || sleep 15; \
-    done; \
-    for i in $(seq 1 5); do \
-        sh rustup.sh -y && break || sleep 15; \
-    done; \
-    rm rustup.sh
-ENV PATH="/home/www/.cargo/bin:${PATH}"
-
-################################################
 WORKDIR /var/www/
-ENV PATH="/home/www/.local/bin/:$PATH"
+ENV PATH="$PATH:/home/www/.local/bin/"
+ENV PATH="$PATH:/var/www/source/"
+ENV PYTHONPATH="/var/www/source/"
 
 ########################################################
-# Install Python dependencies                          #
+# Install Python dependencies (system-wide)            #
 ########################################################
-RUN python3 -m pip install --upgrade pip && pip install -r ./requirements.txt
-RUN chown -R $USER_ID:$GROUP_ID /opt/firmwaredroid/
+RUN python3 -m pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r ./requirements.txt && \
+    ln -sf /usr/local/bin/gunicorn /home/www/.local/bin/gunicorn
+
+USER www
