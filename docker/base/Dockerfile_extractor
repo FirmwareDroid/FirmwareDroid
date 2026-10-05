@@ -2,81 +2,78 @@
 # This file is part of FirmwareDroid - https://github.com/FirmwareDroid/FirmwareDroid/blob/main/LICENSE.md
 # See the file 'LICENSE' for copying permission.
 
-# Allow overriding registry and image name so builds can pull/push from a
-# canonical registry (e.g. ghcr.io) instead of docker.io. These ARGs must be
-# declared before any FROM to be used in FROM expressions.
 ARG REGISTRY=ghcr.io
 ARG IMAGE_NAME=firmwaredroid/firmwaredroid
 
-# Use the published base image from the configured registry as the build
-# source. This avoids accidental pulls from docker.io/library/ when using
-# unqualified names.
+########################################################
+# Multi-stage builder for binwalk                      #
+# Compiles binwalk and discards the Rust toolchain     #
+########################################################
+FROM rust:bookworm AS binwalk-builder
+RUN apt-get update && apt-get install -y --no-install-recommends libfontconfig1-dev
+RUN cargo install --root /out binwalk
+
+########################################################
+# Extractor Worker Runtime Stage                       #
+########################################################
 FROM ${REGISTRY}/${IMAGE_NAME}-base:latest AS extractor-worker
 USER root
 
-######################################
-# SET ENV Variables                  #
-######################################
-ENV PATH="/home/www/.cargo/bin:${PATH}"
 #####################################
-# Install apt dependencies          #
+# Install apt runtime dependencies  #
 #####################################
-RUN apt update
-RUN apt install -y pkgconf android-sdk-libsparse-utils liblzo2-dev fuse brotli libmagic1 cmake \
-    exfat-fuse e2fsprogs f2fs-tools fuse dosfstools erofs-utils wget xxd sudo file
+RUN set -eux; \
+    apt-get update; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        android-sdk-libsparse-utils liblzo2-2 fuse brotli libmagic1 \
+        exfat-fuse e2fsprogs f2fs-tools dosfstools erofs-utils wget xxd sudo file \
+        p7zip-full unar zlib1g lzop lziprecover libhyperscan5 zstd lz4 libfontconfig1; \
+    apt-get clean; rm -rf /var/lib/apt/lists/*
 
 #####################################
 # General configuration             #
 #####################################
-# Add to sudoers file to be able to mount image files
-# TODO: This is a security risk, we should find a better way to do this. Basically, giving root access to www user
-# Wait until a f2fs extractor and a erofs extractor are implemented and then remove this mounting approach
 RUN echo "www ALL=(ALL) NOPASSWD: /var/www/source/extractor/mount_copy.sh * * *, /bin/cp" > /etc/sudoers.d/mount
 RUN chmod +x /var/www/source/extractor/mount_copy.sh
 
 #####################################
-# Install unblob dependencies    #
+# Install binwalk from build stage  #
 #####################################
-RUN DEBIAN_FRONTEND=noninteractive apt install -y android-sdk-libsparse-utils e2fsprogs p7zip-full unar \
-    zlib1g-dev liblzo2-dev lzop lziprecover \
-    libhyperscan-dev zstd lz4 && apt-get clean
+COPY --from=binwalk-builder /out/bin/binwalk /usr/local/bin/binwalk
+
+#####################################
+# Install payload dumpers           #
+#####################################
 USER www
+RUN git clone --depth 1 https://github.com/vm03/payload_dumper.git /opt/firmwaredroid/payload_dumper && \
+    python -m venv /opt/firmwaredroid/payload_dumper/venv && \
+    /opt/firmwaredroid/payload_dumper/venv/bin/pip install --no-cache-dir -r /opt/firmwaredroid/payload_dumper/requirements.txt
 
-#####################################
-# Install payload dumpers             #
-#####################################
-RUN git clone --depth 1 https://github.com/vm03/payload_dumper.git /opt/firmwaredroid/payload_dumper
-RUN python -m venv /opt/firmwaredroid/payload_dumper/venv
-RUN . /opt/firmwaredroid/payload_dumper/venv/bin/activate \
-    && pip install -r requirements.txt
-
-RUN mkdir -p /opt/firmwaredroid/payload_dumper-go/
-RUN wget https://github.com/ssut/payload-dumper-go/releases/download/1.2.2/payload-dumper-go_1.2.2_linux_amd64.tar.gz -P /opt/firmwaredroid/payload_dumper-go/
-RUN tar -xvf /opt/firmwaredroid/payload_dumper-go/payload-dumper-go_1.2.2_linux_amd64.tar.gz -C /opt/firmwaredroid/payload_dumper-go/
-RUN chmod +x /opt/firmwaredroid/payload_dumper-go/payload-dumper-go
-ENV PATH="$PATH:/opt/firmwaredroid/payload_dumper_go/payload-dumper-go"
+RUN set -eux; \
+    mkdir -p /opt/firmwaredroid/payload_dumper-go; \
+    wget -q https://github.com/ssut/payload-dumper-go/releases/download/1.2.2/payload-dumper-go_1.2.2_linux_amd64.tar.gz -O /tmp/payload-dumper-go.tar.gz; \
+    tar -xzf /tmp/payload-dumper-go.tar.gz -C /opt/firmwaredroid/payload_dumper-go/; \
+    rm -f /tmp/payload-dumper-go.tar.gz; \
+    chmod +x /opt/firmwaredroid/payload_dumper-go/payload-dumper-go
+ENV PATH="$PATH:/opt/firmwaredroid/payload_dumper-go"
 
 #####################################
 # Install lpunpack                  #
 #####################################
 RUN git clone --depth 1 https://github.com/FirmwareDroid/lpunpack.git /opt/firmwaredroid/lpunpack
-#####################################
-# Install binwalk3                  #
-#####################################
-USER root
-RUN apt-get update && apt-get install -y libfontconfig1-dev
-RUN cargo install binwalk
-USER www
-RUN cargo install binwalk
+
 #####################################
 # Install python dependencies       #
+# Compilers purged after build      #
 #####################################
-
-RUN pip install -r /var/www/requirements/requirements_extractor.txt
-
-RUN --mount=type=cache,target=/var/www/tmp/.cache \
-    pip install -r /var/www/requirements/requirements_backend.txt
-
-ENV PATH="$PATH:/home/www/.local/bin/"
+USER root
+RUN set -eux; \
+    apt-get update; \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        build-essential python3-dev liblzo2-dev zlib1g-dev libhyperscan-dev; \
+    pip install --no-cache-dir -r /var/www/requirements/requirements_extractor.txt; \
+    apt-get purge -y --auto-remove build-essential python3-dev liblzo2-dev zlib1g-dev libhyperscan-dev; \
+    apt-get clean; rm -rf /var/lib/apt/lists/*
 
 WORKDIR /var/www/source/
+USER www

@@ -429,7 +429,10 @@ def import_firmware(original_filename,
             logging.info(f"Firmware import success for file: {original_filename}")
 
             if scan_modules and files_dict.get("firmware_app_list"):
-                enqueue_post_import_scans(files_dict["firmware_app_list"], scan_modules)
+                try:
+                    enqueue_post_import_scans(files_dict["firmware_app_list"], scan_modules)
+                except Exception as scan_err:
+                    logging.exception(f"Failed to enqueue post-import scans for {original_filename}: {scan_err}")
 
             if keep_files_on_disk:
                 try:
@@ -706,7 +709,7 @@ def store_firmware_object(store_filename, original_filename, firmware_store_path
                                md5=md5,
                                sha256=sha256,
                                sha1=sha1,
-                               android_app_id_list=map(lambda x: x.id, android_app_list),
+                               android_app_id_list=[x.id for x in android_app_list],
                                file_size_bytes=file_size,
                                version_detected=version_detected,
                                os_vendor=os_vendor,
@@ -731,7 +734,7 @@ def add_app_firmware_references(firmware, android_app_list):
 
     """
     for app in android_app_list:
-        app.firmware_id_reference = firmware.id
+        app.firmware_id_reference = firmware
         app.save()
 
 
@@ -793,13 +796,44 @@ def enqueue_post_import_scans(android_app_list, scan_modules):
     """
     if not scan_modules or not android_app_list:
         return
-    import django_rq
+
+    try:
+        import os
+        import django
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "webserver.settings")
+        if not django.apps.apps.ready:
+            django.setup()
+    except Exception as e:
+        logging.warning(f"Could not setup django for post-import scans: {e}")
+
     from api.v2.validators.chunking import create_object_id_chunks
     from api.v2.schema.AndroidAppSchema import import_module_function
     from api.v2.schema.RqJobsSchema import ONE_WEEK_TIMEOUT, MAX_OBJECT_ID_LIST_SIZE
     from api.v2.validators.validation import validate_module_name
 
-    scanner_queue = django_rq.get_queue("scanner")
+    scanner_queue = None
+    try:
+        import django_rq
+        scanner_queue = django_rq.get_queue("scanner")
+    except Exception as e:
+        logging.warning(f"Could not obtain scanner queue from django_rq: {e}. Falling back to direct Redis connection.")
+        try:
+            import os
+            from rq import Queue
+            from redis import Redis
+            redis_host = os.environ.get("REDIS_HOST", "redis")
+            redis_port = int(os.environ.get("REDIS_PORT", 6379))
+            redis_password = os.environ.get("REDIS_PASSWORD", None)
+            redis_conn = Redis(host=redis_host, port=redis_port, password=redis_password)
+            scanner_queue = Queue("scanner", connection=redis_conn)
+        except Exception as fallback_err:
+            logging.error(f"Failed to connect to scanner queue: {fallback_err}")
+            return
+
+    if not scanner_queue:
+        logging.error("No scanner queue available for post-import scans.")
+        return
+
     app_ids = [str(getattr(app, "id", getattr(app, "pk", app))) for app in android_app_list]
 
     for module_name in scan_modules:

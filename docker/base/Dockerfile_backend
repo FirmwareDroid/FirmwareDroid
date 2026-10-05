@@ -12,7 +12,7 @@ ARG IMAGE_NAME=firmwaredroid/firmwaredroid
 # source. This avoids accidental pulls from docker.io/library/ when using
 # unqualified names.
 FROM ${REGISTRY}/${IMAGE_NAME}-base:latest AS firmwaredroid-backend-worker
-ENV PATH="/home/www/.cargo/bin:${PATH}"
+
 ########################################################
 # Copy Source Files                                    #
 ########################################################
@@ -21,11 +21,11 @@ WORKDIR /var/www/
 ########################################################
 # Install Python requirements                          #
 ########################################################
-RUN --mount=type=cache,target=/tmp/.cache \
-    pip install -r /var/www/requirements/requirements_backend.txt
+USER root
+RUN pip install --no-cache-dir -r /var/www/requirements/requirements_backend.txt
 
 ########################################################
 # Run Webserver                                        #
 ########################################################
-USER root
+USER www
 CMD ["/var/www/docker_entrypoint.sh"]
