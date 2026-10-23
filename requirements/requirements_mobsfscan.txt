@@ -1,2 +1,2 @@
-mobsfscan~=1.0.0
+mobsfscan~=1.0.1
 semgrep>=1.0.0
