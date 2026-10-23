@@ -61,6 +61,12 @@ def process_android_app(android_app):
             raise RuntimeError("Could not extract apk file with jadx.")
         DB_LOGGER.info(f"Mobsfscan now scanning: {android_app.filename} {android_app.id}.")
         try:
+            # Ensure the virtualenv bin directory is in PATH for semgrep / libsast invocation
+            import sys
+            venv_bin = os.path.dirname(sys.executable)
+            current_path = os.environ.get("PATH", "")
+            if venv_bin not in current_path.split(os.path.pathsep):
+                os.environ["PATH"] = f"{venv_bin}{os.path.pathsep}{current_path}"
             scanner = MobSFScan([temp_dir], json=True)
             previous_handler = signal.getsignal(signal.SIGALRM)
             try:

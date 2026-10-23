@@ -32,6 +32,7 @@ ENV PATH="/opt/java/openjdk/bin:${PATH}"
 # Installing required packages      #
 #####################################
 RUN apt-get --allow-releaseinfo-change update -y && \
+    apt-get -y install --no-install-recommends binutils && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 #####################################

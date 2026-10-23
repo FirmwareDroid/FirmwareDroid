@@ -5,6 +5,7 @@
 import json
 import logging
 import os
+import shutil
 import subprocess
 import traceback
 import uuid
@@ -85,6 +86,11 @@ def extract_apk_file_with_apktool(apk_file_path, output_dir):
 
 
 def _run_subprocess(command, error_message, output_file_path=None):
+    executable = command[0] if command else ""
+    if executable and not shutil.which(executable):
+        msg = f"{error_message}: command '{executable}' not found in PATH"
+        logging.error(msg)
+        raise FileNotFoundError(msg)
     process = subprocess.run(
         command,
         stdout=subprocess.PIPE,

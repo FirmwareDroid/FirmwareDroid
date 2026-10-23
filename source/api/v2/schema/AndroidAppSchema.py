@@ -33,6 +33,7 @@ class ScannerModules(Enum):
     SUPER = {"SuperAndroidAnalyzerScanJob": "static_analysis.SuperAndroidAnalyzer.super_android_analyzer_wrapper"}
     VIRUSTOTAL = {"VirusTotalScanJob": "external_analysis.VirusTotal.virustotal_wrapper"}
     MANIFEST = {"ManifestParserScanJob": "static_analysis.ManifestParser.android_manifest_parser"}
+    CERTIFICATE = {"CertificateParserScanJob": "static_analysis.CertificateParser.certificate_parser"}
     MOBSF = {"MobSFScanJob": "static_analysis.MobSFScan.mobsfscan_wrapper"}
     APKSCAN = {"APKScanScanJob": "static_analysis.APKscan.apkscan_wrapper"}
     FLOWDROID = {"FlowDroidScanJob": "static_analysis.FlowDroid.flowdroid_wrapper"}

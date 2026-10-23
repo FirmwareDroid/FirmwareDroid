@@ -14,6 +14,7 @@ PYTHON_SCANNERS = [
     "quark_engine",
     "virustotal",
     "manifest_parser",
+    "certificate_parser",
     "mobsfscan",
     "apkscan",
     "flowdroid",
@@ -60,3 +61,24 @@ for root, dirs, files in os.walk(INSTALLATION_PATH, topdown=True):
                 os.remove(os.path.join(root, f))
             except OSError:
                 pass
+
+# Symlink scanner helper executables into /home/www/.local/bin to guarantee discoverability in PATH
+local_bin = "/home/www/.local/bin"
+os.makedirs(local_bin, exist_ok=True)
+for venv_bin_name in ["semgrep", "pysemgrep", "mobsfscan"]:
+    src = os.path.join(INSTALLATION_PATH, "mobsfscan", "bin", venv_bin_name)
+    dst = os.path.join(local_bin, venv_bin_name)
+    if os.path.isfile(src) and not os.path.exists(dst):
+        try:
+            os.symlink(src, dst)
+        except OSError:
+            pass
+
+for venv_bin_name in ["droidasc"]:
+    src = os.path.join(INSTALLATION_PATH, "manifest_parser", "bin", venv_bin_name)
+    dst = os.path.join(local_bin, venv_bin_name)
+    if os.path.isfile(src) and not os.path.exists(dst):
+        try:
+            os.symlink(src, dst)
+        except OSError:
+            pass

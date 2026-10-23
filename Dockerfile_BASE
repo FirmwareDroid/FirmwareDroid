@@ -27,7 +27,7 @@ RUN set -eux; \
     apt-get -y upgrade; \
     # Install essential runtime packages (no compilers to keep image small & secure) \
     apt-get -y install --no-install-recommends \
-        apt-utils tar gzip git unzip curl wget sudo; \
+        apt-utils tar gzip git unzip curl wget sudo binutils; \
     # cleanup apt caches to reduce image size \
     apt-get clean; rm -rf /var/lib/apt/lists/*
 

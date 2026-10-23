@@ -20,6 +20,11 @@ from context.context_creator import create_app_context, setup_logging
 import multiprocessing
 from logging.handlers import QueueHandler, QueueListener
 
+# Ensure current interpreter's bin directory is prepended to PATH for spawned child tools
+current_bin_dir = os.path.dirname(os.path.abspath(sys.executable))
+if current_bin_dir not in os.environ.get("PATH", "").split(os.path.pathsep):
+    os.environ["PATH"] = f"{current_bin_dir}{os.path.pathsep}{os.environ.get('PATH', '')}"
+
 MAX_PROCESS_TIME = 60 * 60 * 24
 
 
@@ -100,12 +105,20 @@ def start_python_interpreter(item_list,
                module_name,
                *worker_args_list
                ]
+    env = os.environ.copy()
+    if interpreter_path:
+        interpreter_dir = os.path.dirname(os.path.abspath(interpreter_path))
+        current_path = env.get("PATH", "")
+        if interpreter_dir not in current_path.split(os.path.pathsep):
+            env["PATH"] = f"{interpreter_dir}{os.path.pathsep}{current_path}"
+
     process = subprocess.Popen(command,
                                cwd="/var/www/source/",
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                text=True,
-                               bufsize=1
+                               bufsize=1,
+                               env=env
                                )
 
     def log_stream(stream, log_level):
