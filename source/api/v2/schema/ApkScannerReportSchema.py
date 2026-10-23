@@ -76,6 +76,9 @@ class ApkScannerReportInterface(graphene.Interface):
         elif getattr(instance, "_cls", None) == "ApkScannerReport.TruffleHogReport":
             from api.v2.schema.TruffleHogReportSchema import TruffleHogReportType
             return TruffleHogReportType
+        elif getattr(instance, "_cls", None) == "ApkScannerReport.APKscanReport":
+            from api.v2.schema.APKscanSchema import APKscanReportType
+            return APKscanReportType
 
         raise Exception(f"Unknown ApkScannerReport subclass: {getattr(instance, '_cls', None)}")
 
@@ -99,12 +102,32 @@ class ApkScannerReportQuery(graphene.ObjectType):
 
     @superuser_required
     def resolve_apk_scanner_report_list(self, info, object_id_list=None, field_filter=None):
+        if field_filter:
+            field_filter = dict(field_filter)
         if field_filter and "firmware_id_reference" in field_filter:
             fw_id = field_filter.pop("firmware_id_reference")
-            if fw_id:
+            if fw_id is not None:
                 from bson import ObjectId
+                from graphql_relay import from_global_id
                 from model.AndroidApp import AndroidApp
-                app_ids = list(AndroidApp.objects(firmware_id_reference=ObjectId(fw_id)).scalar("id"))
+
+                if not isinstance(fw_id, str) or len(fw_id) > 128:
+                    return []
+                resolved_fw_id = fw_id.strip()
+                if not ObjectId.is_valid(resolved_fw_id):
+                    try:
+                        _, decoded_id = from_global_id(resolved_fw_id)
+                        if isinstance(decoded_id, str) and ObjectId.is_valid(decoded_id):
+                            resolved_fw_id = decoded_id
+                    except (ValueError, TypeError):
+                        resolved_fw_id = ""
+
+                if not ObjectId.is_valid(resolved_fw_id):
+                    return []
+
+                app_ids = list(AndroidApp.objects(firmware_id_reference=ObjectId(resolved_fw_id)).scalar("id"))
+                if not app_ids:
+                    return []
                 field_filter["android_app_id_reference__in"] = app_ids
         type_to_model = {
             "ApkidReport": "model.ApkidReport.ApkidReport",
@@ -120,6 +143,7 @@ class ApkScannerReportQuery(graphene.ObjectType):
             "FlowDroidReport": "model.FlowDroidReport.FlowDroidReport",
             "TrueseeingReport": "model.TrueseeingReport.TrueseeingReport",
             "TruffleHogReport": "model.TruffleHogReport.TruffleHogReport",
+            "APKscanReport": "model.APKscanReport.APKscanReport",
         }
 
         requested_types = set()

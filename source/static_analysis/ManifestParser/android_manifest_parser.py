@@ -58,6 +58,34 @@ def extract_apk_file_with_apktool(apk_file_path, output_dir):
         raise RuntimeError(f"Error extracting APK with apktool: {e}")
 
 
+def extract_manifest_with_droidasc(apk_file_path, output_dir):
+    """
+    Extracts AndroidManifest.xml from an APK file directly using the ASC decompiler (droidasc).
+
+    :param apk_file_path: str - path to the APK file.
+    :param output_dir: str - path to the output directory.
+    :return: str - path to the AndroidManifest.xml file.
+    :raises RuntimeError: if extraction fails.
+    """
+    output_manifest_path = os.path.join(output_dir, "AndroidManifest.xml")
+    command = ["droidasc", "getmanifest", apk_file_path, "-o", output_manifest_path]
+    DB_LOGGER.info("Extracting AndroidManifest.xml with droidasc")
+    result = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    if result.returncode != 0 or not os.path.isfile(output_manifest_path) or os.path.getsize(output_manifest_path) == 0:
+        err_msg = (result.stderr or result.stdout or "").strip()
+        logging.error(f"Failed to extract manifest with droidasc: {err_msg}")
+        DB_LOGGER.error("Failed to extract manifest with droidasc")
+        raise RuntimeError(f"Error extracting APK manifest with droidasc: {err_msg}")
+    return output_manifest_path
+
+
 def extract_xmltree_with_aapt2(apk_file_path, output_dir):
     """
     Extracts the xmltree of the AndroidManifest.xml from an apk file to a temporary directory using aapt2. Stores the
@@ -165,20 +193,24 @@ def analyse_single_apk(android_app):
     with tempfile.TemporaryDirectory() as temp_dir:
         extract_dir = os.path.join(temp_dir, f"{android_app.id}-{uuid.uuid4().hex}")
         os.makedirs(extract_dir, exist_ok=False)
+        manifest_file_path = None
         try:
-            xmltree_file_path = extract_xmltree_with_aapt2(android_app.absolute_store_path, extract_dir)
-            if os.path.exists(xmltree_file_path):
-                manifest_file_path = convert_xmltree_to_xml(xmltree_file_path, extract_dir)
-        except Exception as err:
+            manifest_file_path = extract_manifest_with_droidasc(android_app.absolute_store_path, extract_dir)
+        except Exception:
             try:
-                DB_LOGGER.warning(f"Could not analyse AndroidManifest.xml with aapt2, trying with jadx...")
-                logging.info(f"Falling back to jadx for {android_app.filename}")
-                extract_apk_file_with_jadx(android_app.absolute_store_path, extract_dir)
+                xmltree_file_path = extract_xmltree_with_aapt2(android_app.absolute_store_path, extract_dir)
+                if os.path.exists(xmltree_file_path):
+                    manifest_file_path = convert_xmltree_to_xml(xmltree_file_path, extract_dir)
             except Exception as err:
-                DB_LOGGER.warning(f"Could not analyse AndroidManifest.xml with aapt2, trying with jadx...")
-                logging.info(f"Falling back to apktool for {android_app.filename}")
-                extract_apk_file_with_apktool(android_app.absolute_store_path, extract_dir)
-            manifest_file_path = search_for_manifest_file(extract_dir)
+                try:
+                    DB_LOGGER.warning(f"Could not analyse AndroidManifest.xml with aapt2, trying with jadx...")
+                    logging.info(f"Falling back to jadx for {android_app.filename}")
+                    extract_apk_file_with_jadx(android_app.absolute_store_path, extract_dir)
+                except Exception as err:
+                    DB_LOGGER.warning(f"Could not analyse AndroidManifest.xml with aapt2, trying with jadx...")
+                    logging.info(f"Falling back to apktool for {android_app.filename}")
+                    extract_apk_file_with_apktool(android_app.absolute_store_path, extract_dir)
+                manifest_file_path = search_for_manifest_file(extract_dir)
         if manifest_file_path:
             DB_LOGGER.info(f"Found AndroidManifest.xml for {android_app.filename}")
             manifest_dict = get_manifest_as_dict(manifest_file_path)

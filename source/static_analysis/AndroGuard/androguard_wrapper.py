@@ -192,9 +192,9 @@ def create_certificate_object_list(x509_cert_list, android_app):
         elif public_key_algorithm == 'EC':
             public_key_curve = x509.public_key.curve
         issuer = get_certificate_name_string(x509.issuer.native, short=False)
-        issuer_dict = x509.issuer.native
+        issuer_dict = filter_mongodb_dict_chars(x509.issuer.native)
         subject = get_certificate_name_string(x509.subject.native, short=False)
-        subject_dict = x509.issuer.native
+        subject_dict = filter_mongodb_dict_chars(x509.subject.native)
 
         public_key_modulus_n = ""
         public_key_exponent = 0
@@ -360,6 +360,24 @@ def analyse_single_apk(android_app):
         gc.collect()
 
 
+def _format_implied_permissions(implied_list):
+    """
+    Format implied permissions list into a clean list of string names.
+    AndroGuard returns elements as [perm_name, maxSdkVersion], which must be extracted
+    to strings to conform to MongoEngine ListField(StringField()).
+    """
+    if not implied_list:
+        return []
+    result = []
+    for item in implied_list:
+        if isinstance(item, (list, tuple)):
+            if len(item) > 0 and item[0] is not None:
+                result.append(str(item[0]))
+        elif item is not None:
+            result.append(str(item))
+    return list(dict.fromkeys(result))
+
+
 def create_report_data(android_app, apk, scan_status, permission_details, permissions_declared_details,
                        string_analysis_id_list, components_dict):
     """
@@ -425,45 +443,57 @@ def create_report_data(android_app, apk, scan_status, permission_details, permis
             'is_signed_v3': False,
         }
 
+    manifest_xml = ""
+    try:
+        axml = apk.get_android_manifest_axml()
+        if axml is not None:
+            xml_data = axml.get_xml()
+            if isinstance(xml_data, bytes):
+                manifest_xml = xml_data.decode("utf-8", errors="replace")
+            elif xml_data is not None:
+                manifest_xml = str(xml_data)
+    except Exception as err:
+        DB_LOGGER.warning(f"Failed to extract manifest XML for {android_app.filename}: {err}")
+
     # Successful scan - extract all data from APK
     return {
         **base_data,
-        'packagename': apk.get_package(),
-        'is_valid_APK': apk.is_valid_APK(),
-        'is_androidtv': apk.is_androidtv(),
-        'is_leanback': apk.is_leanback(),
-        'is_wearable': apk.is_wearable(),
-        'file_name_list': apk.get_files(),
-        'is_multidex': apk.is_multidex(),
-        'main_activity': apk.get_main_activity(),
-        'main_activity_list': list(apk.get_main_activities()),
-        'permissions': apk.get_permissions(),
+        'packagename': apk.get_package() or "",
+        'is_valid_APK': bool(apk.is_valid_APK()),
+        'is_androidtv': bool(apk.is_androidtv()),
+        'is_leanback': bool(apk.is_leanback()),
+        'is_wearable': bool(apk.is_wearable()),
+        'file_name_list': [str(f) for f in (apk.get_files() or [])],
+        'is_multidex': bool(apk.is_multidex()),
+        'main_activity': str(apk.get_main_activity() or ""),
+        'main_activity_list': [str(a) for a in (apk.get_main_activities() or [])],
+        'permissions': [str(p) for p in (apk.get_permissions() or [])],
         'permission_details': permission_details,
-        'permissions_implied': apk.get_uses_implied_permission_list(),
-        'permissions_declared': apk.get_declared_permissions(),
+        'permissions_implied': _format_implied_permissions(apk.get_uses_implied_permission_list()),
+        'permissions_declared': [str(p) for p in (apk.get_declared_permissions() or [])],
         'permissions_declared_details': permissions_declared_details,
-        'permissions_requested_third_party': apk.get_requested_third_party_permissions(),
-        'activities': apk.get_activities(),
-        'providers': apk.get_providers(),
-        'services': apk.get_services(),
-        'receivers': apk.get_receivers(),
-        'manifest_libraries': apk.get_libraries(),
-        'manifest_features': apk.get_features(),
-        'dex_names': list(apk.get_dex_names()),
-        'signature_names': apk.get_signature_names(),
-        'app_name': apk.get_app_name(),
-        'intent_filters_dict': search_intent_filters(apk, components_dict),
-        'android_version_code': apk.get_androidversion_code(),
-        'android_version_name': apk.get_androidversion_name(),
-        'min_sdk_version': str(apk.get_min_sdk_version()),
-        'max_sdk_version': str(apk.get_max_sdk_version()),
-        'target_sdk_version': str(apk.get_target_sdk_version()),
-        'effective_target_version': str(apk.get_effective_target_sdk_version()),
-        'manifest_xml': apk.get_android_manifest_axml().get_xml(),
+        'permissions_requested_third_party': [str(p) for p in (apk.get_requested_third_party_permissions() or [])],
+        'activities': [str(a) for a in (apk.get_activities() or [])],
+        'providers': [str(p) for p in (apk.get_providers() or [])],
+        'services': [str(s) for s in (apk.get_services() or [])],
+        'receivers': [str(r) for r in (apk.get_receivers() or [])],
+        'manifest_libraries': [str(l) for l in (apk.get_libraries() or [])],
+        'manifest_features': [str(f) for f in (apk.get_features() or [])],
+        'dex_names': [str(d) for d in (apk.get_dex_names() or [])],
+        'signature_names': [str(s) for s in (apk.get_signature_names() or [])],
+        'app_name': str(apk.get_app_name() or ""),
+        'intent_filters_dict': filter_mongodb_dict_chars(search_intent_filters(apk, components_dict)),
+        'android_version_code': str(apk.get_androidversion_code() or ""),
+        'android_version_name': str(apk.get_androidversion_name() or ""),
+        'min_sdk_version': str(apk.get_min_sdk_version() or ""),
+        'max_sdk_version': str(apk.get_max_sdk_version() or ""),
+        'target_sdk_version': str(apk.get_target_sdk_version() or ""),
+        'effective_target_version': str(apk.get_effective_target_sdk_version() or ""),
+        'manifest_xml': manifest_xml,
         'string_analysis_id_list': string_analysis_id_list,
-        'is_signed_v1': apk.is_signed_v1(),
-        'is_signed_v2': apk.is_signed_v2(),
-        'is_signed_v3': apk.is_signed_v3(),
+        'is_signed_v1': bool(apk.is_signed_v1()),
+        'is_signed_v2': bool(apk.is_signed_v2()),
+        'is_signed_v3': bool(apk.is_signed_v3()),
     }
 
 

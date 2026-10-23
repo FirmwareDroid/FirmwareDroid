@@ -1,1 +1,2 @@
 mobsfscan~=1.0.0
+semgrep>=1.0.0
