@@ -144,7 +144,7 @@ services:
         volume:
           subpath: nginx/live
         read_only: true
-      - ./source/static:/usr/share/nginx/django_static
+      - ./source/static:/usr/share/nginx/django_static:ro
       #- ./firmware-droid-client/build:/usr/share/nginx/html # Dev-Route
     extra_hosts:
       - "host.docker.internal:host-gateway"
