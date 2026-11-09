@@ -56,6 +56,7 @@ services:
       - 5000
     volumes:
       - fmd-config:/var/www/config:ro
+      - django-static:/var/www/source/static
       - ${LOCAL_STORAGE_PATH_00:-./blob_storage/00_file_storage}:/var/www/file_store/00_file_storage
       - ${LOCAL_STORAGE_PATH_01:-./blob_storage/01_file_storage}:/var/www/file_store/01_file_storage
       - ${LOCAL_STORAGE_PATH_02:-./blob_storage/02_file_storage}:/var/www/file_store/02_file_storage
@@ -108,7 +109,7 @@ services:
         volume:
           subpath: nginx/live
         read_only: true
-      - ./source/static:/usr/share/nginx/django_static
+      - django-static:/usr/share/nginx/django_static:ro
     ports:
       - "80:80"
       - "443:443"
@@ -330,3 +331,4 @@ networks:
 
 volumes:
   fmd-config:
+  django-static:
