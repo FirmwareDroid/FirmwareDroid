@@ -21,12 +21,12 @@ class APKscanReportType(MongoengineObjectType):
 
 class APKscanReportQuery(graphene.ObjectType):
     apkscan_report_list = graphene.List(APKscanReportType,
-                                        object_id=graphene.List(graphene.String),
+                                        object_id_list=graphene.List(graphene.String),
                                         field_filter=graphene.Argument(ModelFilter),
                                         name="apkscan_report_list"
                                         )
 
     @superuser_required
     def resolve_apkscan_report_list(self, info, object_id_list=None, field_filter=None):
-        return get_filtered_queryset(APKscanReport, object_id_list, filter)
+        return get_filtered_queryset(APKscanReport, object_id_list, field_filter)
 

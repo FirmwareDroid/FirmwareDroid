@@ -21,7 +21,7 @@ class ApkleaksReportType(MongoengineObjectType):
 
 class ApkleaksReportQuery(graphene.ObjectType):
     apkleaks_report_list = graphene.List(ApkleaksReportType,
-                                         object_id=graphene.List(graphene.String),
+                                         object_id_list=graphene.List(graphene.String),
                                          field_filter=graphene.Argument(ModelFilter),
                                          name="apkleaks_report_list"
                                          )

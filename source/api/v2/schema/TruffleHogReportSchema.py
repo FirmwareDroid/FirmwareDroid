@@ -21,7 +21,7 @@ class TruffleHogReportType(MongoengineObjectType):
 
 class TruffleHogReportQuery(graphene.ObjectType):
     trufflehog_report_list = graphene.List(TruffleHogReportType,
-                                          object_id=graphene.List(graphene.String),
+                                          object_id_list=graphene.List(graphene.String),
                                           field_filter=graphene.Argument(ModelFilter),
                                           name="trufflehog_report_list"
                                           )

@@ -17,7 +17,7 @@ class ExodusStatisticsReportType(MongoengineObjectType):
 
 class ExodusStatisticsReportQuery(graphene.ObjectType):
     exodus_statistics_report_list = graphene.List(ExodusStatisticsReportType,
-                                                  object_id=graphene.List(graphene.String),
+                                                  object_id_list=graphene.List(graphene.String),
                                                   field_filter=graphene.Argument(ModelFilter),
                                                   name="exodus_statistics_report_list"
                                                   )

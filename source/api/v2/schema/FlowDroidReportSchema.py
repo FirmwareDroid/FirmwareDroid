@@ -21,12 +21,12 @@ class FlowDroidReportType(MongoengineObjectType):
 
 class FlowDroidReportQuery(graphene.ObjectType):
     flowdroid_report_list = graphene.List(FlowDroidReportType,
-                                        object_id=graphene.List(graphene.String),
+                                        object_id_list=graphene.List(graphene.String),
                                         field_filter=graphene.Argument(ModelFilter),
                                         name="flowdroid_report_list"
                                         )
 
     @superuser_required
     def resolve_flowdroid_report_list(self, info, object_id_list=None, field_filter=None):
-        return get_filtered_queryset(FlowDroidReport, object_id_list, filter)
+        return get_filtered_queryset(FlowDroidReport, object_id_list, field_filter)
 

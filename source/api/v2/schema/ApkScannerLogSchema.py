@@ -16,7 +16,7 @@ class ApkScannerLogType(MongoengineObjectType):
 
 class ApkScannerLogQuery(graphene.ObjectType):
     apk_scanner_log_list = graphene.List(ApkScannerLogType,
-                                         object_id=graphene.List(graphene.String),
+                                         object_id_list=graphene.List(graphene.String),
                                          field_filter=graphene.Argument(ModelFilter),
                                          name="apk_scanner_log_list"
                                          )

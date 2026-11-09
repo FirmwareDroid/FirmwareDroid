@@ -17,7 +17,7 @@ class QuarkEngineStatisticsReportType(MongoengineObjectType):
 
 class QuarkEngineStatisticsReportQuery(graphene.ObjectType):
     quark_engine_statistics_report_list = graphene.List(QuarkEngineStatisticsReportType,
-                                                        object_id=graphene.List(graphene.String),
+                                                        object_id_list=graphene.List(graphene.String),
                                                         field_filter=graphene.Argument(ModelFilter),
                                                         name="quark_engine_statistics_report_list"
                                                         )

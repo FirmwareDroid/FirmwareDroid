@@ -21,7 +21,7 @@ class SuperReportType(MongoengineObjectType):
 
 class SuperReportQuery(graphene.ObjectType):
     super_report_list = graphene.List(SuperReportType,
-                                      object_id=graphene.List(graphene.String),
+                                      object_id_list=graphene.List(graphene.String),
                                       field_filter=graphene.Argument(ModelFilter),
                                       name="super_report_list"
                                       )

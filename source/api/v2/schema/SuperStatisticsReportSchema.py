@@ -17,7 +17,7 @@ class SuperStatisticsReportType(MongoengineObjectType):
 
 class SuperStatisticsReportQuery(graphene.ObjectType):
     super_statistics_report_list = graphene.List(SuperStatisticsReportType,
-                                                 object_id=graphene.List(graphene.String),
+                                                 object_id_list=graphene.List(graphene.String),
                                                  field_filter=graphene.Argument(ModelFilter),
                                                  name="super_statistics_report_list"
                                                  )
